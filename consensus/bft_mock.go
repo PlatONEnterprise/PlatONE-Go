@@ -63,7 +63,7 @@ func (bm *BftMock) Finalize(chain ChainReader, header *types.Header, state *stat
 	header.Root = state.IntermediateRoot(chain.Config().IsEIP158(header.Number))
 
 	// Header seems complete, assemble into a block and return
-	return types.NewBlock(header, txs, uncles, receipts), nil
+	return types.NewBlock(header, txs, receipts), nil
 }
 
 // Seal generates a new sealing request for the given input block and pushes
