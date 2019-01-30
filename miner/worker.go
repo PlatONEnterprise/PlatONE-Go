@@ -137,6 +137,7 @@ func (e *commitWorkEnv) getHighestLogicalBlock() *types.Block {
 // worker is the main object which takes care of submitting new work to consensus engine
 // and gathering the sealing result.
 type worker struct {
+	EmptyBlock string
 	config *params.ChainConfig
 	engine consensus.Engine
 	eth    Backend
@@ -244,6 +245,8 @@ func newWorker(config *params.ChainConfig, engine consensus.Engine, eth Backend,
 		log.Warn("Sanitizing miner recommit interval", "provided", recommit, "updated", minRecommitInterval)
 		recommit = minRecommitInterval
 	}
+
+	worker.EmptyBlock = config.EmptyBlock
 
 	worker.recommit = recommit
 	worker.commitDuration = int64((float64)(recommit.Nanoseconds()/1e6) * defaultCommitRatio)
@@ -1135,11 +1138,11 @@ func (w *worker) commitNewWork(interrupt *int32, noempty bool, timestamp int64, 
 		Time:       big.NewInt(timestamp),
 	}
 	// Only set the coinbase if our consensus engine is running (avoid spurious block rewards)
-	if w.isRunning() {
+	if w.isRunning() {/*
 		if w.coinbase == (common.Address{}) {
 			log.Error("Refusing to mine without etherbase")
 			return
-		}
+		}*/
 		header.Coinbase = w.coinbase
 	}
 
@@ -1194,6 +1197,11 @@ func (w *worker) commitNewWork(interrupt *int32, noempty bool, timestamp int64, 
 
 	// Short circuit if there is no available pending transactions
 	if len(pending) == 0 {
+		// No empty block
+		if "off" == w.EmptyBlock {
+			w.updateSnapshot()
+			return
+		}
 		if _, ok := w.engine.(consensus.Bft); ok {
 			w.commit(nil, true, tstart)
 		} else {
@@ -1321,6 +1329,15 @@ func (w *worker) shouldCommit(timestamp int64) (bool, *types.Block) {
 	}
 
 	shouldCommit := baseBlock == nil || baseBlock.Hash().Hex() != highestLogicalBlock.Hash().Hex()
+
+	pending, err := w.eth.TxPool().PendingLimited()
+	// Whether there are trades in the trading pool
+	if err == nil && len(pending) > 0 && nil != baseBlock &&
+		baseBlock.Hash().Hex() == highestLogicalBlock.Hash().Hex() {
+		log.Info("w.eth.TxPool()","pending:", len(pending))
+		shouldCommit = true
+	}
+
 	if shouldCommit && timestamp != 0 {
 		shouldCommit = shouldCommit && (timestamp-commitTime >= w.recommit.Nanoseconds()/1e6)
 	}
