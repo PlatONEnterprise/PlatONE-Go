@@ -8,8 +8,7 @@ import (
 	"github.com/PlatONnetwork/PlatON-Go/core/types"
 	"github.com/PlatONnetwork/PlatON-Go/p2p/discover"
 	"github.com/PlatONnetwork/PlatON-Go/rpc"
-	"math/big"
-)
+	)
 
 type BftMock struct {
 }
@@ -36,12 +35,6 @@ func (bm *BftMock) VerifyHeaders(chain ChainReader, headers []*types.Header, sea
 	return nil, nil
 }
 
-// VerifyUncles verifies that the given block's uncles conform to the consensus
-// rules of a given engine.
-func (bm *BftMock) VerifyUncles(chain ChainReader, block *types.Block) error {
-	return nil
-}
-
 // VerifySeal checks whether the crypto seal on a header is valid according to
 // the consensus rules of the given engine.
 func (bm *BftMock) VerifySeal(chain ChainReader, header *types.Header) error {
@@ -59,7 +52,7 @@ func (bm *BftMock) Prepare(chain ChainReader, header *types.Header) error {
 // Note: The block header and state database might be updated to reflect any
 // consensus rules that happen at finalization (e.g. block rewards).
 func (bm *BftMock) Finalize(chain ChainReader, header *types.Header, state *state.StateDB, txs []*types.Transaction,
-	uncles []*types.Header, receipts []*types.Receipt) (*types.Block, error) {
+	receipts []*types.Receipt) (*types.Block, error) {
 	header.Root = state.IntermediateRoot(chain.Config().IsEIP158(header.Number))
 
 	// Header seems complete, assemble into a block and return
@@ -78,12 +71,6 @@ func (bm *BftMock) Seal(chain ChainReader, block *types.Block, results chan<- *t
 // SealHash returns the hash of a block prior to it being sealed.
 func (bm *BftMock) SealHash(header *types.Header) common.Hash {
 	return common.Hash{}
-}
-
-// CalcDifficulty is the difficulty adjustment algorithm. It returns the difficulty
-// that a new block should have.
-func (bm *BftMock) CalcDifficulty(chain ChainReader, time uint64, parent *types.Header) *big.Int {
-	return nil
 }
 
 // APIs returns the RPC APIs this consensus engine provides.
