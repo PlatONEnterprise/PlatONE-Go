@@ -23,8 +23,6 @@ import (
 
 	"github.com/PlatONnetwork/PlatON-Go/common"
 	"github.com/PlatONnetwork/PlatON-Go/consensus"
-	"github.com/PlatONnetwork/PlatON-Go/consensus/clique"
-	"github.com/PlatONnetwork/PlatON-Go/consensus/ethash"
 	"github.com/PlatONnetwork/PlatON-Go/core"
 	"github.com/PlatONnetwork/PlatON-Go/core/types"
 	"github.com/PlatONnetwork/PlatON-Go/core/vm"
@@ -89,7 +87,6 @@ func newTestWorkerBackend(t *testing.T, chainConfig *params.ChainConfig, engine 
 	case *clique.Clique:
 		gspec.ExtraData = make([]byte, 32+common.AddressLength+65)
 		copy(gspec.ExtraData[32:], testBankAddress[:])
-	case *ethash.Ethash:
 	default:
 		t.Fatalf("unexpected consensus engine type: %T", engine)
 	}
@@ -129,9 +126,6 @@ func newTestWorker(t *testing.T, chainConfig *params.ChainConfig, engine consens
 	return w, backend
 }
 
-func TestPendingStateAndBlockEthash(t *testing.T) {
-	testPendingStateAndBlock(t, ethashChainConfig, ethash.NewFaker())
-}
 func TestPendingStateAndBlockClique(t *testing.T) {
 	testPendingStateAndBlock(t, cliqueChainConfig, clique.New(cliqueChainConfig.Clique, ethdb.NewMemDatabase()))
 }
@@ -161,9 +155,6 @@ func testPendingStateAndBlock(t *testing.T, chainConfig *params.ChainConfig, eng
 	}
 }
 
-func TestEmptyWorkEthash(t *testing.T) {
-	testEmptyWork(t, ethashChainConfig, ethash.NewFaker())
-}
 func TestEmptyWorkClique(t *testing.T) {
 	testEmptyWork(t, cliqueChainConfig, clique.New(cliqueChainConfig.Clique, ethdb.NewMemDatabase()))
 }
@@ -219,10 +210,6 @@ func testEmptyWork(t *testing.T, chainConfig *params.ChainConfig, engine consens
 			t.Error("new task timeout")
 		}
 	}
-}
-
-func TestRegenerateMiningBlockEthash(t *testing.T) {
-	testRegenerateMiningBlock(t, ethashChainConfig, ethash.NewFaker())
 }
 
 func TestRegenerateMiningBlockClique(t *testing.T) {
@@ -284,10 +271,6 @@ func testRegenerateMiningBlock(t *testing.T, chainConfig *params.ChainConfig, en
 	case <-time.NewTimer(time.Second).C:
 		t.Error("new task timeout")
 	}
-}
-
-func TestAdjustIntervalEthash(t *testing.T) {
-	testAdjustInterval(t, ethashChainConfig, ethash.NewFaker())
 }
 
 func TestAdjustIntervalClique(t *testing.T) {
