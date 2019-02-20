@@ -183,7 +183,7 @@ func (pool *VCPool) real_compute(tx *types.TransactionWrap) error {
 
 	input := genCompInput(tx.TaskId)
 	msg := types.NewMessage(caller, tx.To(), 0, new(big.Int).SetInt64(0),
-		tx.Gas(), tx.GasPrice(), common.Hex2Bytes(input), false)
+		tx.Gas(), tx.GasPrice(), common.Hex2Bytes(input), false, tx.Type())
 	context := NewEVMContext(msg, header, bc, nil)
 	evm := vm.NewEVM(context, state, bc.chainConfig, bc.vmConfig)
 	log.Debug("start evm call real_compute")

@@ -40,6 +40,10 @@ var (
 
 		Usage: "the contract address",
 	}
+	ContractCnsNameFlag = cli.StringFlag{
+		Name:  "cns",
+		Usage: "contract name and version ,eg :\"proxyContract\"",
+	}
 	ContractFuncNameFlag = cli.StringFlag{
 		Name:  "func",
 		Usage: "function and param ,eg :set(1,\"a\")",
@@ -84,6 +88,17 @@ var (
 		TransactionTypeFlag,
 	}
 
+	cnsInvokeCmdFlags = []cli.Flag{
+		ContractCnsNameFlag,
+		ContractFuncNameFlag,
+		ContractAbiFilePathFlag,
+		ConfigPathFlag,
+		TransactionTypeFlag,
+	}
+	codeGenCmdFlags = []cli.Flag{
+		ContractWasmFilePathFlag,
+		ContractAbiFilePathFlag,
+	}
 	sendTransactionCmdFlags = []cli.Flag{
 		TxFromFlag,
 		TxToFlag,

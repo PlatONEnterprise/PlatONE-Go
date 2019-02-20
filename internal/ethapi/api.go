@@ -506,6 +506,50 @@ func (s *PublicBlockChainAPI) SetActor(address common.Address) error {
 	return nil
 }
 
+
+
+func (s *PublicBlockChainAPI) SetCnsManager(ctx context.Context, address common.Address) (string, error) {
+	state, _, err := s.b.StateAndHeaderByNumber(ctx, rpc.LatestBlockNumber)
+	if state == nil || err != nil {
+		return "", err
+	}
+
+	fmt.Println("Input address is ",address.String())
+
+	core.CnsManagerAddr = address.String()
+
+	cnsManagerLoc := common.Address{}
+	cnsManagerLoc.SetBytes([]byte{0x11})
+
+	fmt.Println(cnsManagerLoc.String())
+
+	state.SetState(cnsManagerLoc, []byte("cnsManager"), []byte(address.String()))
+
+	str := state.GetState(cnsManagerLoc, []byte("cnsManager"))
+
+	fmt.Println("getState address is ", str)
+
+
+	return string(str), state.Error()
+}
+
+
+func (s *PublicBlockChainAPI) GetCnsManager(ctx context.Context) (string, error) {
+	state, _, err := s.b.StateAndHeaderByNumber(ctx, rpc.LatestBlockNumber)
+	if state == nil || err != nil {
+		return "", err
+	}
+
+	cnsManagerLoc := common.Address{}
+	cnsManagerLoc.SetBytes([]byte{0x11})
+
+	str := state.GetState(cnsManagerLoc, []byte("cnsManager"))
+
+	fmt.Println("getState address is ", str)
+
+	return string(str), state.Error()
+}
+
 // BlockNumber returns the block number of the chain head.
 func (s *PublicBlockChainAPI) BlockNumber() hexutil.Uint64 {
 	header, _ := s.b.HeaderByNumber(context.Background(), rpc.LatestBlockNumber) // latest header should always be available
@@ -580,6 +624,54 @@ type CallArgs struct {
 	GasPrice hexutil.Big     `json:"gasPrice"`
 	Value    hexutil.Big     `json:"value"`
 	Data     hexutil.Bytes   `json:"data"`
+	TxType   uint64 			 `json:"txType"`
+}
+
+func GetCnsAddr(ctx context.Context, b Backend, from common.Address, cnsName string) (*common.Address, error){
+
+	// TODO: 合约管理合约地址，后面设置为全局变量
+	addrProxy := common.HexToAddress("0x01cd664bf3131c657d7a7501139f2448989d83c1")
+
+	paramArr := [][]byte{
+		common.Int64ToBytes(int64(types.NormalTxType)),
+		[]byte("GetAddr"),
+		[]byte(cnsName),
+	}
+	paramBytes, _ := rlp.EncodeToBytes(paramArr)
+
+	msg := types.NewMessage(from, &addrProxy, 0, new(big.Int), 0x333333,  new(big.Int), paramBytes, false, types.CnsTxType)
+
+	state, header, err := b.StateAndHeaderByNumber(ctx, rpc.LatestBlockNumber)
+	if state == nil || err != nil {
+		return nil, err
+	}
+	// Get a new instance of the EVM.
+	 vm, vmError, err := b.GetEVM(ctx, msg, state, header, vm.Config{})
+	 if err != nil {
+    		return nil, nil
+	 }
+	// Wait for the context to be done and cancel the evm. Even if the
+	// EVM has finished, cancelling may be done (repeatedly)
+	go func() {
+		<-ctx.Done()
+		vm.Cancel()
+	}()
+
+	// Setup the gas pool (also for unmetered requests)
+	// and apply the message.
+	gp := new(core.GasPool).AddGas(math.MaxUint64)
+	ret, _, _, err := core.ApplyMessage(vm, msg, gp)
+	if err:=vmError() ; err!= nil {
+		fmt.Println("\n\n vm applyMessage failed\n\n\n")
+		return nil, nil
+	}
+	retStr := string(ret)
+	toAddrStr := string(retStr[strings.Index(retStr, "0x"):])
+	ToAddr := common.HexToAddress(toAddrStr)
+
+	fmt.Println("\n&&&&&&&&&77\nthe address of the cns_name: ", ToAddr.String())
+
+	return &ToAddr, nil
 }
 
 func (s *PublicBlockChainAPI) doCall(ctx context.Context, args CallArgs, blockNr rpc.BlockNumber, vmCfg vm.Config, timeout time.Duration) ([]byte, uint64, bool, error) {
@@ -608,7 +700,7 @@ func (s *PublicBlockChainAPI) doCall(ctx context.Context, args CallArgs, blockNr
 	}
 
 	// Create new call message
-	msg := types.NewMessage(addr, args.To, 0, args.Value.ToInt(), gas, gasPrice, args.Data, false)
+	msg := types.NewMessage(addr, args.To, 0, args.Value.ToInt(), 0x999999999, gasPrice, args.Data, false, args.TxType)
 
 	// Setup context so it may be cancelled the call has completed
 	// or, in case of unmetered gas, setup a context with a timeout.
@@ -1080,6 +1172,7 @@ type SendTxArgs struct {
 	// newer name and should be preferred by clients.
 	Data  *hexutil.Bytes `json:"data"`
 	Input *hexutil.Bytes `json:"input"`
+	TxType    uint64        `json:"txType"`
 }
 
 // setDefaults is a helper function that fills in default values for unspecified tx fields.
@@ -1133,7 +1226,7 @@ func (args *SendTxArgs) toTransaction() *types.Transaction {
 	if args.To == nil {
 		return types.NewContractCreation(uint64(*args.Nonce), (*big.Int)(args.Value), uint64(*args.Gas), (*big.Int)(args.GasPrice), input)
 	}
-	return types.NewTransaction(uint64(*args.Nonce), *args.To, (*big.Int)(args.Value), uint64(*args.Gas), (*big.Int)(args.GasPrice), input)
+	return types.NewTransaction(uint64(*args.Nonce), *args.To, (*big.Int)(args.Value), uint64(*args.Gas), (*big.Int)(args.GasPrice), input, args.TxType)
 }
 
 // submitTransaction is a helper function that submits tx to txPool and logs a message.

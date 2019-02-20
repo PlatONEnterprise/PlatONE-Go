@@ -275,7 +275,7 @@ func (pool *MPCPool) validateActor(wrapTx *types.TransactionWrap, bc *BlockChain
 
 	input := "da880000000000000009906765745f7061727469636970616e7473"
 
-	msg := types.NewMessage(from, wrapTx.To(), 0, new(big.Int).SetInt64(0), wrapTx.Gas(), wrapTx.GasPrice(), common.Hex2Bytes(input), false)
+	msg := types.NewMessage(from, wrapTx.To(), 0, new(big.Int).SetInt64(0), wrapTx.Gas(), wrapTx.GasPrice(), common.Hex2Bytes(input), false, types.NormalTxType)
 	context := NewEVMContext(msg, header, bc, nil)
 	vm := vm.NewEVM(context, state, bc.chainConfig, bc.vmConfig)
 	gp := new(GasPool).AddGas(math.MaxUint64)

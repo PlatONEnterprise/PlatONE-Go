@@ -17,6 +17,7 @@ const (
 	invokeContract
 	vote
 	permission
+	cnsTxType = 0x11
 
 	DefaultConfigFilePath = "/config.json"
 )
@@ -39,6 +40,7 @@ type TxParams struct {
 	GasPrice string `json:"gasPrice"`
 	Value    string `json:"value"`
 	Data     string `json:"data"`
+	TxType   int 	`json:"txType"`
 }
 
 type RawTxParams struct {

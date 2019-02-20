@@ -25,7 +25,57 @@ var (
 		Action:  invoke,
 		Flags:   invokeCmdFlags,
 	}
+
+	CnsInvokeCmd = cli.Command{
+		Name:    "cnsInvoke",
+		Aliases: []string{"ci"},
+		Usage:   "cns invoke contract function",
+		Action:  cnsInvoke,
+		Flags:   cnsInvokeCmdFlags,
+	}
+
+	CodeGenCmd = cli.Command{
+		Name:    "codegen",
+		Aliases: []string{"cg"},
+		Usage:   "generate code bin with abi and wasm file",
+		Action:  codeGen,
+		Flags:   codeGenCmdFlags,
+	}
 )
+
+func codeGen(c *cli.Context) error {
+
+	abiPath := c.String("abi")
+	codePath := c.String("code")
+
+	//parseConfigJson(c.String(ConfigPathFlag.Name))
+	err := CodeGen(abiPath, codePath)
+
+	if err != nil {
+		panic(fmt.Errorf("generate code error,%s", err.Error()))
+	}
+	return nil
+}
+
+func CodeGen(abiFilePath string, codeFilePath string) error{
+	abiBytes := parseFileToBytes(abiFilePath)
+	codeBytes := parseFileToBytes(codeFilePath)
+
+	param := [3][]byte{
+		Int64ToBytes(deployContract),
+		codeBytes,
+		abiBytes,
+	}
+	paramBytes, err := rlp.EncodeToBytes(param)
+	if err != nil {
+		return fmt.Errorf("rlp encode error,%s", err.Error())
+	}
+
+	fmt.Println(hexutil.Encode(paramBytes))
+	return err
+}
+
+
 
 func deploy(c *cli.Context) error {
 
@@ -99,6 +149,47 @@ func parseFileToBytes(file string) []byte {
 	return bytes
 }
 
+func cnsInvoke(c *cli.Context) error {
+	//addr := c.String("addr")
+	cnsName := c.String("cns")
+	abiPath := c.String("abi")
+	funcParams := c.String("func")
+	txType := cnsTxType
+
+
+	//param check
+	if abiPath == "" {
+		fmt.Printf("abi can't be empty!")
+		return nil
+	}
+
+	if cnsName == ""{
+		fmt.Printf("cnsName can't be empty!")
+		return nil
+	}
+	/*
+	if addr == "" {
+		fmt.Printf("addr can't be empty!")
+		return nil
+	}
+	*/
+
+
+	if funcParams == "" {
+		fmt.Printf("func can't be empty!")
+		return nil
+	}
+	parseConfigJson(c.String(ConfigPathFlag.Name))
+
+	err := CnsInvokeContract(cnsName, abiPath, funcParams, txType)
+	if err != nil {
+		panic(fmt.Errorf("invokeContract contract error,%s", err.Error()))
+	}
+	return nil
+}
+
+
+
 func invoke(c *cli.Context) error {
 	addr := c.String("addr")
 	abiPath := c.String("abi")
@@ -123,6 +214,96 @@ func invoke(c *cli.Context) error {
 	err := InvokeContract(addr, abiPath, funcParams, txType)
 	if err != nil {
 		panic(fmt.Errorf("invokeContract contract error,%s", err.Error()))
+	}
+	return nil
+}
+
+// CnsInvokeContract function
+// invoke a contract with contract name
+func CnsInvokeContract(contractName string, abiPath string, funcParams string, txType int) error {
+
+	//parse the function and param
+	funcName, inputParams := GetFuncNameAndParams(funcParams)
+
+	//Judging whether this method exists or not
+	abiFunc, err := parseFuncFromAbi(abiPath, funcName)
+	if err != nil {
+		return err
+	}
+
+	if len(abiFunc.Inputs) != len(inputParams) {
+		return fmt.Errorf("incorrect number of parameters ,request=%d,get=%d\n", len(abiFunc.Inputs), len(inputParams))
+	}
+
+	if txType == 0 {
+		txType = invokeContract
+	}
+
+	paramArr := [][]byte{
+		Int64ToBytes(int64(txType)),
+		[]byte(contractName),
+		[]byte(funcName),
+	}
+
+	for i, v := range inputParams {
+		input := abiFunc.Inputs[i]
+		p, e := StringConverter(v, input.Type)
+		if e != nil {
+			return fmt.Errorf("incorrect param type: %s,index:%d", v, i)
+		}
+		paramArr = append(paramArr, p)
+	}
+
+	paramBytes, e := rlp.EncodeToBytes(paramArr)
+	if e != nil {
+		return fmt.Errorf("rpl encode error,%s", e.Error())
+	}
+
+	txParams := TxParams{
+		From:     config.From,
+		To: 	  "0x0000000000000000000000000000000000000000",
+		GasPrice: config.GasPrice,
+		Gas:      config.Gas,
+		Data:     hexutil.Encode(paramBytes),
+		TxType:   txType,
+	}
+
+	var r string
+	if abiFunc.Constant == "true" {
+		params := make([]interface{}, 2)
+		params[0] = txParams
+		params[1] = "latest"
+
+		paramJson, _ := json.Marshal(params)
+		fmt.Printf("\n request json data：%s \n", string(paramJson))
+		r, err = Send(params, "eth_call")
+	} else {
+		params := make([]interface{}, 1)
+		params[0] = txParams
+
+		paramJson, _ := json.Marshal(params)
+		fmt.Printf("\n request json data：%s \n", string(paramJson))
+		r, err = Send(params, "eth_sendTransaction")
+	}
+
+	fmt.Printf("\n response json：%s \n", r)
+
+	if err != nil {
+		return fmt.Errorf("send http post to invokeContract contract error,%s", e.Error())
+	}
+	resp := parseResponse(r)
+
+	//parse the return type through adi
+	if abiFunc.Constant == "true" {
+		if len(abiFunc.Outputs) != 0 && abiFunc.Outputs[0].Type != "void" {
+			bytes, _ := hexutil.Decode(resp.Result)
+			result := BytesConverter(bytes, abiFunc.Outputs[0].Type)
+			fmt.Printf("\nresult: %v\n", result)
+			return nil
+		}
+		fmt.Printf("\n result: []\n")
+	} else {
+		fmt.Printf("\n trasaction hash: %s\n", resp.Result)
 	}
 	return nil
 }
@@ -179,6 +360,7 @@ func InvokeContract(contractAddr string, abiPath string, funcParams string, txTy
 		GasPrice: config.GasPrice,
 		Gas:      config.Gas,
 		Data:     hexutil.Encode(paramBytes),
+		TxType:   txType,
 	}
 
 	var r string

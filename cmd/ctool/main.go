@@ -19,6 +19,8 @@ func init() {
 	app.Commands = []cli.Command{
 		core.DeployCmd,
 		core.InvokeCmd,
+		core.CnsInvokeCmd,
+		core.CodeGenCmd,
 		core.SendTransactionCmd,
 		core.SendRawTransactionCmd,
 		core.GetTxReceiptCmd,

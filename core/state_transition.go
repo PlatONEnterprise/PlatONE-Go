@@ -18,18 +18,25 @@ package core
 
 import (
 	"errors"
+	"fmt"
+	"github.com/PlatONnetwork/PlatON-Go/core/types"
 	"math"
 	"math/big"
+	"strings"
 
 	"github.com/PlatONnetwork/PlatON-Go/common"
 	"github.com/PlatONnetwork/PlatON-Go/core/vm"
 	"github.com/PlatONnetwork/PlatON-Go/log"
 	"github.com/PlatONnetwork/PlatON-Go/params"
+	"github.com/PlatONnetwork/PlatON-Go/rlp"
 )
 
 var (
 	errInsufficientBalanceForGas = errors.New("insufficient balance to pay for gas")
 )
+
+
+var CnsManagerAddr string = "0x0000000000000000000000000000000000000011"
 
 /*
 A state transition is a change made when a transaction is applied to the current world state
@@ -62,6 +69,11 @@ type Message interface {
 	From() common.Address
 	//FromFrontier() (common.Address, error)
 	To() *common.Address
+	SetTo(common.Address)
+	SetData([]byte)
+	TxType() uint64
+	SetTxType(uint64)
+	SetNonce(uint64)
 
 	GasPrice() *big.Int
 	Gas() uint64
@@ -118,6 +130,60 @@ func NewStateTransition(evm *vm.EVM, msg Message, gp *GasPool) *StateTransition 
 	}
 }
 
+func GetCnsAddr(evm *vm.EVM, msg Message, cnsName string) (*common.Address, error){
+	// TODO: 合约管理合约地址，后面设置为全局变量
+
+	if CnsManagerAddr == ""{
+		str := evm.GetStateDB().GetState(common.Address{}, []byte("cnsManager"))
+		if string(str) == ""{
+			return &common.Address{}, nil
+		}
+		CnsManagerAddr = string(str)
+	}
+
+	if(cnsName == "cnsManager"){
+		addrProxy := common.HexToAddress(CnsManagerAddr)
+		return &addrProxy, nil
+	}
+
+	addrProxy := common.HexToAddress(CnsManagerAddr)
+
+	fmt.Println(addrProxy.String())
+	fmt.Println(cnsName)
+
+	var contractName, contractVer string
+
+	i:=strings.Index(cnsName, ":")
+	if i==-1{
+		contractName = cnsName
+		contractVer = ""
+	}else{
+		contractName = cnsName[:i]
+		contractVer = cnsName[i+1:]
+	}
+
+	paramArr := [][]byte{
+		common.Int64ToBytes(int64(types.NormalTxType)),
+		[]byte("getContractAddress"),
+		[]byte(contractName),
+		[]byte(contractVer),
+	}
+	paramBytes, _ := rlp.EncodeToBytes(paramArr)
+
+	cnsMsg := types.NewMessage(msg.From(), &addrProxy, 0, new(big.Int), 0x99999,  msg.GasPrice(), paramBytes, false, types.CnsTxType)
+	gp := new(GasPool).AddGas(math.MaxUint64/2)
+	ret, _, _, err := NewStateTransition(evm, cnsMsg, gp).TransitionDb()
+	if err!= nil {
+		fmt.Println("\n\n vm applyMessage failed", err)
+		return nil, nil
+	}
+	retStr := string(ret)
+	toAddrStr := string(retStr[strings.Index(retStr, "0x"):])
+	ToAddr := common.HexToAddress(toAddrStr)
+
+	return &ToAddr, nil
+}
+
 // ApplyMessage computes the new state by applying the given message
 // against the old state within the environment.
 //
@@ -126,6 +192,34 @@ func NewStateTransition(evm *vm.EVM, msg Message, gp *GasPool) *StateTransition 
 // indicates a core error meaning that the message would always fail for that particular
 // state and would never be accepted within a block.
 func ApplyMessage(evm *vm.EVM, msg Message, gp *GasPool) ([]byte, uint64, bool, error) {
+
+	if msg.TxType() == types.CnsTxType{
+
+		cnsRawData := msg.Data()
+		var cnsData [][]byte
+
+		if err:=rlp.DecodeBytes(cnsRawData, &cnsData); err!= nil {
+			return nil, 0, false, err
+		}
+
+		toAddr, err := GetCnsAddr(evm, msg,string(cnsData[1]))
+		if err != nil{
+			return nil, 0, false, err
+		}
+		msg.SetTo(*toAddr)
+
+		cnsData = append(cnsData[:1], cnsData[2:]...)
+		cnsRawData, _ = rlp.EncodeToBytes(cnsData)
+
+		msg.SetData(cnsRawData)
+		msg.SetTxType(types.NormalTxType)
+
+		nonce := evm.StateDB.GetNonce(msg.From())
+		fmt.Println("Mid nonce is ",nonce)
+
+		msg.SetNonce(nonce)
+	}
+	fmt.Println()
 	return NewStateTransition(evm, msg, gp).TransitionDb()
 }
 
@@ -207,8 +301,11 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 		ret, _, st.gas, vmerr = evm.Create(sender, st.data, st.gas, st.value)
 	} else {
 		// Increment the nonce for the next transaction
-		st.state.SetNonce(msg.From(), st.state.GetNonce(sender.Address())+1)
-		//log.Debug("Nonce tracking: SetNonce", "from", msg.From(), "nonce", st.state.GetNonce(sender.Address()))
+		// If the transaction is cns-type, do not increment the nonce
+		if msg.TxType() != types.CnsTxType{
+			st.state.SetNonce(msg.From(), st.state.GetNonce(sender.Address())+1)
+		}
+
 		ret, st.gas, vmerr = evm.Call(sender, st.to(), st.data, st.gas, st.value)
 	}
 	if vmerr != nil {

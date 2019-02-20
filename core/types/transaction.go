@@ -35,6 +35,14 @@ var (
 	ErrInvalidSig = errors.New("invalid transaction v, r, s values")
 )
 
+// txType
+const (
+	CreateTxType uint64 = 1
+	NormalTxType uint64 = 2
+
+	CnsTxType uint64 = 0x11
+)
+
 type Transaction struct {
 	data txdata
 	// caches
@@ -50,6 +58,8 @@ type txdata struct {
 	Recipient    *common.Address `json:"to"       rlp:"nil"` // nil means contract creation
 	Amount       *big.Int        `json:"value"    gencodec:"required"`
 	Payload      []byte          `json:"input"    gencodec:"required"`
+	//CnsData      []byte          `json:"cnsData"`
+	TxType       uint64 			 `json:"txType"`
 
 	// Signature values
 	V *big.Int `json:"v" gencodec:"required"`
@@ -66,20 +76,22 @@ type txdataMarshaling struct {
 	GasLimit     hexutil.Uint64
 	Amount       *hexutil.Big
 	Payload      hexutil.Bytes
+	//CnsData	     hexutil.Bytes
+	TxType 		 uint64
 	V            *hexutil.Big
 	R            *hexutil.Big
 	S            *hexutil.Big
 }
 
-func NewTransaction(nonce uint64, to common.Address, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte) *Transaction {
-	return newTransaction(nonce, &to, amount, gasLimit, gasPrice, data)
+func NewTransaction(nonce uint64, to common.Address, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte, txType uint64) *Transaction {
+	return newTransaction(nonce, &to, amount, gasLimit, gasPrice, data,  txType)
 }
 
 func NewContractCreation(nonce uint64, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte) *Transaction {
-	return newTransaction(nonce, nil, amount, gasLimit, gasPrice, data)
+	return newTransaction(nonce, nil, amount, gasLimit, gasPrice, data,  CreateTxType)
 }
 
-func newTransaction(nonce uint64, to *common.Address, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte) *Transaction {
+func newTransaction(nonce uint64, to *common.Address, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte, txType uint64) *Transaction {
 	if len(data) > 0 {
 		data = common.CopyBytes(data)
 	}
@@ -87,6 +99,7 @@ func newTransaction(nonce uint64, to *common.Address, amount *big.Int, gasLimit 
 		AccountNonce: nonce,
 		Recipient:    to,
 		Payload:      data,
+		TxType: 	  txType,
 		Amount:       new(big.Int),
 		GasLimit:     gasLimit,
 		Price:        new(big.Int),
@@ -167,6 +180,8 @@ func (tx *Transaction) UnmarshalJSON(input []byte) error {
 	return nil
 }
 
+func (tx *Transaction) Type()  uint64 	   {return tx.data.TxType}
+//func (tx *Transaction) Cns() []byte    { return common.CopyBytes(tx.data.CnsData) }
 func (tx *Transaction) Data() []byte       { return common.CopyBytes(tx.data.Payload) }
 func (tx *Transaction) Gas() uint64        { return tx.data.GasLimit }
 func (tx *Transaction) GasPrice() *big.Int { return new(big.Int).Set(tx.data.Price) }
@@ -212,7 +227,7 @@ func (tx *Transaction) Size() common.StorageSize {
 // AsMessage requires a signer to derive the sender.
 //
 // XXX Rename message to something less arbitrary?
-func (tx *Transaction) AsMessage(s Signer) (Message, error) {
+func (tx *Transaction) AsMessage(s Signer) (*Message, error) {
 	msg := Message{
 		nonce:      tx.data.AccountNonce,
 		gasLimit:   tx.data.GasLimit,
@@ -221,11 +236,12 @@ func (tx *Transaction) AsMessage(s Signer) (Message, error) {
 		amount:     tx.data.Amount,
 		data:       tx.data.Payload,
 		checkNonce: true,
+		txType: tx.data.TxType,
 	}
 
 	var err error
 	msg.from, err = Sender(s, tx)
-	return msg, err
+	return &msg, err
 }
 
 // WithSignature returns a new transaction with the given signature.
@@ -388,10 +404,12 @@ type Message struct {
 	gasPrice   *big.Int
 	data       []byte
 	checkNonce bool
+	txType 	   uint64
 }
 
-func NewMessage(from common.Address, to *common.Address, nonce uint64, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte, checkNonce bool) Message {
-	return Message{
+func NewMessage(from common.Address, to *common.Address, nonce uint64, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte, checkNonce bool, txType uint64) *Message {
+
+	msg := Message{
 		from:       from,
 		to:         to,
 		nonce:      nonce,
@@ -400,14 +418,23 @@ func NewMessage(from common.Address, to *common.Address, nonce uint64, amount *b
 		gasPrice:   gasPrice,
 		data:       data,
 		checkNonce: checkNonce,
+		txType:		txType,
 	}
+	return &msg
 }
 
-func (m Message) From() common.Address { return m.from }
-func (m Message) To() *common.Address  { return m.to }
-func (m Message) GasPrice() *big.Int   { return m.gasPrice }
-func (m Message) Value() *big.Int      { return m.amount }
-func (m Message) Gas() uint64          { return m.gasLimit }
-func (m Message) Nonce() uint64        { return m.nonce }
-func (m Message) Data() []byte         { return m.data }
-func (m Message) CheckNonce() bool     { return m.checkNonce }
+func (m *Message) From() common.Address { return m.from }
+func (m *Message) To() *common.Address  { return m.to }
+func (m *Message) GasPrice() *big.Int   { return m.gasPrice }
+func (m *Message) Value() *big.Int      { return m.amount }
+func (m *Message) Gas() uint64          { return m.gasLimit }
+func (m *Message) Nonce() uint64        { return m.nonce }
+func (m *Message) Data() []byte         { return m.data }
+func (m *Message) CheckNonce() bool     { return m.checkNonce }
+func (m *Message) TxType() uint64 	   { return m.txType}
+
+func (m *Message) SetTo(to common.Address)  {m.to.SetBytes(to.Bytes())}
+func (m *Message) SetData(b []byte)  {m.data = b}
+func (m *Message) SetTxType(src uint64)  {m.txType = src}
+func (m *Message) SetNonce(n uint64)        {m.nonce = n}
+
