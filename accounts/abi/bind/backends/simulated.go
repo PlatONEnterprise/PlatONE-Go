@@ -418,6 +418,12 @@ func (m callmsg) Gas() uint64          { return m.CallMsg.Gas }
 func (m callmsg) Value() *big.Int      { return m.CallMsg.Value }
 func (m callmsg) Data() []byte         { return m.CallMsg.Data }
 
+func (m callmsg) TxType() uint64 	   {return 0}
+func (m callmsg) SetTo(to common.Address)  {}
+func (m callmsg) SetData(b []byte)  {}
+func (m callmsg) SetTxType(src uint64)  {}
+func (m callmsg) SetNonce(n uint64)        {}
+
 // filterBackend implements filters.Backend to support filtering for logs without
 // taking bloom-bits acceleration structures into account.
 type filterBackend struct {
