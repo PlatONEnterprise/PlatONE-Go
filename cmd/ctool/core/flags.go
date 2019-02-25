@@ -37,7 +37,6 @@ var (
 	}
 	ContractAddrFlag = cli.StringFlag{
 		Name: "addr",
-
 		Usage: "the contract address",
 	}
 	ContractCnsNameFlag = cli.StringFlag{
@@ -47,6 +46,10 @@ var (
 	ContractFuncNameFlag = cli.StringFlag{
 		Name:  "func",
 		Usage: "function and param ,eg :set(1,\"a\")",
+	}
+	ContractParamFlag =  cli.StringSliceFlag {
+		Name:   "param",
+		Usage:  "params trans into contract function, eg: --param \"p1\" --param \"p2\"",
 	}
 	TransactionTypeFlag = cli.IntFlag{
 		Name:  "type",
@@ -82,6 +85,7 @@ var (
 	}
 	invokeCmdFlags = []cli.Flag{
 		ContractFuncNameFlag,
+		ContractParamFlag,
 		ContractAbiFilePathFlag,
 		ContractAddrFlag,
 		ConfigPathFlag,

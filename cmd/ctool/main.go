@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"sort"
+
 	"github.com/PlatONnetwork/PlatON-Go/cmd/ctool/core"
 	"github.com/PlatONnetwork/PlatON-Go/cmd/utils"
 	"gopkg.in/urfave/cli.v1"
-	"os"
-	"sort"
 )
 
 var (

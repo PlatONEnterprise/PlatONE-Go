@@ -193,7 +193,8 @@ func cnsInvoke(c *cli.Context) error {
 func invoke(c *cli.Context) error {
 	addr := c.String("addr")
 	abiPath := c.String("abi")
-	funcParams := c.String("func")
+	funcName := c.String("func")
+	funcParams := c.StringSlice("param")
 	txType := c.Int("type")
 
 	//param check
@@ -201,17 +202,20 @@ func invoke(c *cli.Context) error {
 		fmt.Printf("abi can't be empty!")
 		return nil
 	}
+	
 	if addr == "" {
 		fmt.Printf("addr can't be empty!")
 		return nil
 	}
-	if funcParams == "" {
+	
+	if funcName == "" {
 		fmt.Printf("func can't be empty!")
 		return nil
 	}
+	
 	parseConfigJson(c.String(ConfigPathFlag.Name))
 
-	err := InvokeContract(addr, abiPath, funcParams, txType)
+	err := InvokeContract(addr, abiPath, funcName, funcParams, txType)
 	if err != nil {
 		panic(fmt.Errorf("invokeContract contract error,%s", err.Error()))
 	}
@@ -311,15 +315,13 @@ func CnsInvokeContract(contractName string, abiPath string, funcParams string, t
 /**
 
  */
-func InvokeContract(contractAddr string, abiPath string, funcParams string, txType int) error {
+func InvokeContract(contractAddr string, abiPath string, funcName string, 
+	funcParams []string, txType int) error {
 
 	//Judging whether this contract exists or not
 	if !getContractByAddress(contractAddr) {
 		return fmt.Errorf("the contract address is not exist ...")
 	}
-
-	//parse the function and param
-	funcName, inputParams := GetFuncNameAndParams(funcParams)
 
 	//Judging whether this method exists or not
 	abiFunc, err := parseFuncFromAbi(abiPath, funcName)
@@ -327,8 +329,9 @@ func InvokeContract(contractAddr string, abiPath string, funcParams string, txTy
 		return err
 	}
 
-	if len(abiFunc.Inputs) != len(inputParams) {
-		return fmt.Errorf("incorrect number of parameters ,request=%d,get=%d\n", len(abiFunc.Inputs), len(inputParams))
+	if len(abiFunc.Inputs) != len(funcParams) {
+		return fmt.Errorf("incorrect number of parameters ,request=%d,get=%d\n", 
+			len(abiFunc.Inputs), len(funcParams))
 	}
 
 	if txType == 0 {
@@ -340,7 +343,7 @@ func InvokeContract(contractAddr string, abiPath string, funcParams string, txTy
 		[]byte(funcName),
 	}
 
-	for i, v := range inputParams {
+	for i, v := range funcParams {
 		input := abiFunc.Inputs[i]
 		p, e := StringConverter(v, input.Type)
 		if e != nil {
