@@ -33,6 +33,26 @@ var emptyCodeHash = crypto.Keccak256(nil)
 type Code []byte
 type Abi []byte
 
+// datatypes for firewall
+const (
+	ACCEPTED = iota
+	DENIED
+)
+
+type Action int
+
+type FwStatus struct {
+	ContractAddress common.Address
+	FwActive        bool
+	AcceptedList    []common.Address
+	DeniedList      []common.Address
+}
+
+type FwData struct {
+	acceptedList []common.Address
+	deniedList   []common.Address
+}
+
 func (self Code) String() string {
 	return string(self) //strings.Join(Disassemble(self), " ")
 }

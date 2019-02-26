@@ -21,7 +21,9 @@ import (
 
 	"github.com/PlatONnetwork/PlatON-Go/common"
 	"github.com/PlatONnetwork/PlatON-Go/core/types"
+	"github.com/PlatONnetwork/PlatON-Go/core/state"
 )
+
 
 // StateDB is an EVM database for full state querying.
 type StateDB interface {
@@ -55,7 +57,6 @@ type StateDB interface {
 	GetState(common.Address, []byte) []byte
 	SetState(common.Address, []byte, []byte)
 
-
 	Suicide(common.Address) bool
 	HasSuicided(common.Address) bool
 
@@ -73,6 +74,15 @@ type StateDB interface {
 	AddPreimage(common.Hash, []byte)
 
 	ForEachStorage(common.Address, func(common.Hash, common.Hash) bool)
+	FwAdd(account common.Address, action state.Action, list []common.Address) error
+	FwClear(account common.Address, action state.Action) error
+	FwDel(account common.Address, action state.Action, list []common.Address) error
+	FwSet(account common.Address, action state.Action, list []common.Address) error
+	GetFwData() state.FwData
+	SetFwStatus(status state.FwStatus) error
+	GetFwStatus() (state.FwStatus, error)
+	SetContractCreator(addr common.Address) error
+	GetContractCreator() (common.Address, error)
 }
 
 // CallContext provides a basic interface for the EVM calling conventions. The EVM

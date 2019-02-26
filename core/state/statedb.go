@@ -20,10 +20,11 @@ package state
 import (
 	"bytes"
 	"fmt"
-	"github.com/PlatONnetwork/PlatON-Go/crypto/sha3"
 	"math/big"
 	"sort"
 	"sync"
+
+	"github.com/PlatONnetwork/PlatON-Go/crypto/sha3"
 
 	"github.com/PlatONnetwork/PlatON-Go/common"
 	"github.com/PlatONnetwork/PlatON-Go/core/types"
@@ -749,4 +750,33 @@ func (s *StateDB) SetAbi(addr common.Address, abi []byte) {
 	if stateObject != nil {
 		stateObject.SetAbi(crypto.Keccak256Hash(abi), abi)
 	}
+}
+
+func (s *StateDB) FwAdd(account common.Address, action Action, list []common.Address) error {
+	return nil
+}
+func (s *StateDB) FwClear(account common.Address, action Action) error {
+	return nil
+}
+func (s *StateDB) FwDel(account common.Address, action Action, list []common.Address) error {
+	return nil
+}
+func (s *StateDB) FwSet(account common.Address, action Action, list []common.Address) error {
+	return nil
+}
+func (s *StateDB) GetFwData() FwData {
+	return FwData{}
+}
+func (s *StateDB) SetFwStatus(status FwStatus) error {
+	return nil
+}
+func (s *StateDB) GetFwStatus() (FwStatus, error) {
+	return FwStatus{}, nil
+}
+func (s *StateDB) SetContractCreator(addr common.Address) error {
+	return nil
+}
+func (s *StateDB) GetContractCreator() (common.Address, error) {
+	addr := common.Address{}
+	return addr, nil
 }
