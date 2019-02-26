@@ -19,6 +19,8 @@ package state
 
 import (
 	"bytes"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math/big"
@@ -34,12 +36,12 @@ type Code []byte
 type Abi []byte
 
 // datatypes for firewall
-const (
-	ACCEPTED = iota
-	DENIED
-)
+type Action uint64
 
-type Action int
+const (
+	ACCEPTED Action = 0
+	DENIED   Action = 1
+)
 
 type FwStatus struct {
 	ContractAddress common.Address
@@ -49,8 +51,31 @@ type FwStatus struct {
 }
 
 type FwData struct {
-	acceptedList []common.Address
-	deniedList   []common.Address
+	AcceptedList map[common.Address]bool
+	DeniedList   map[common.Address]bool
+}
+
+func NewFwData() FwData{
+	return FwData{
+		AcceptedList:make(map[common.Address]bool),
+		DeniedList:make(map[common.Address]bool),
+	}
+}
+
+func  FwMarshal(fw FwData) []byte {
+	rawData , err := json.Marshal(fw)
+	if err != nil{
+		return nil
+	}
+	return rawData
+}
+
+func FwUnMarshal(raw []byte, fw *FwData) (*FwData) {
+	err :=json.Unmarshal(raw,fw)
+	if err != nil{
+		fmt.Println(err)
+	}
+	return fw
 }
 
 func (self Code) String() string {
@@ -116,6 +141,8 @@ type stateObject struct {
 	code Code // contract bytecode, which gets set when code is loaded
 
 	abi Abi
+	fwData FwData // firewall data
+	rawFwData []byte
 
 	originStorage      Storage      // Storage cache of original entries to dedup rewrites
 	originValueStorage ValueStorage // Storage cache of original entries to dedup rewrites
@@ -144,6 +171,9 @@ type Account struct {
 	Root     common.Hash // merkle root of the storage trie
 	CodeHash []byte
 	AbiHash  []byte
+	Creator   common.Address
+	FwActive  bool
+	FwDataHash []byte
 }
 
 // newObject creates a state object.
@@ -544,4 +574,90 @@ func (self *stateObject) SetAbi(abiHash common.Hash, abi []byte) {
 func (self *stateObject) setAbi(abiHash common.Hash, abi []byte) {
 	self.abi = abi
 	self.data.AbiHash = abiHash[:]
+}
+
+// todo: setter and getter for contractCreator
+func (self *stateObject) ContractCreator() common.Address{
+	return self.data.Creator
+}
+
+func (self *stateObject) SetContractCreator(addr common.Address) error {
+	if bytes.Equal(self.CodeHash(),emptyCodeHash){
+		return errors.New("not a contract account")
+	}
+	prevCreator := self.ContractCreator()
+
+	self.db.journal.append(creatorChange{
+		account:  &self.address,
+		prevCreator:prevCreator,
+	})
+
+	self.setContractCreator(addr)
+
+	return nil
+}
+func (self *stateObject) setContractCreator(addr common.Address) {
+	self.data.Creator = addr
+}
+
+// todo: setters and getters for firewall data
+
+func (self *stateObject) FwData() FwData{
+	if self.rawFwData != nil{
+		return self.fwData
+	}
+
+	var fwData FwData
+	rawData := self.db.GetState(self.Address(), self.FwDataHash())
+	FwUnMarshal(rawData, &fwData)
+	self.fwData = fwData
+	self.rawFwData = rawData
+
+	return self.fwData
+}
+func (self *stateObject) FwDataHash() []byte{
+	return self.data.FwDataHash
+}
+
+func (self *stateObject) FwActive() bool{
+	return self.data.FwActive
+}
+
+func (self *stateObject) SetFwData(data FwData) {
+	prevFwData := self.FwData()
+
+	self.db.journal.append(fwDataChange{
+		account: &self.address,
+		prevFwData:prevFwData,
+	})
+
+	self.setFwData(data)
+}
+
+func (self *stateObject) setFwData(data FwData) {
+	rawData := FwMarshal(data)
+
+	var fwHash []byte
+	if self.FwDataHash() == nil{
+		fwHash = crypto.Keccak256(rawData)
+	}
+	self.fwData = data
+	self.data.FwDataHash = fwHash
+
+	self.db.SetState(self.Address(),fwHash, rawData)
+}
+
+func (self *stateObject) SetFwActive(active bool) {
+	prevFwActive := self.FwActive()
+
+	self.db.journal.append(fwActiveChange{
+		account:&self.address,
+		prevActive:prevFwActive,
+	})
+
+	self.setFwActive(active)
+}
+
+func (self *stateObject) setFwActive(active bool) {
+	self.data.FwActive = active
 }
