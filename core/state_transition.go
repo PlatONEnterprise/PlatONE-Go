@@ -19,22 +19,24 @@ package core
 import (
 	"errors"
 	"fmt"
-	"github.com/PlatONnetwork/PlatON-Go/core/types"
 	"math"
 	"math/big"
 	"strings"
+	"encoding/json"
+
+	"github.com/PlatONnetwork/PlatON-Go/core/types"
 
 	"github.com/PlatONnetwork/PlatON-Go/common"
 	"github.com/PlatONnetwork/PlatON-Go/core/vm"
 	"github.com/PlatONnetwork/PlatON-Go/log"
 	"github.com/PlatONnetwork/PlatON-Go/params"
 	"github.com/PlatONnetwork/PlatON-Go/rlp"
+	"github.com/PlatONnetwork/PlatON-Go/core/state"
 )
 
 var (
 	errInsufficientBalanceForGas = errors.New("insufficient balance to pay for gas")
 )
-
 
 var CnsManagerAddr string = "0x0000000000000000000000000000000000000011"
 
@@ -130,18 +132,18 @@ func NewStateTransition(evm *vm.EVM, msg Message, gp *GasPool) *StateTransition 
 	}
 }
 
-func GetCnsAddr(evm *vm.EVM, msg Message, cnsName string) (*common.Address, error){
+func GetCnsAddr(evm *vm.EVM, msg Message, cnsName string) (*common.Address, error) {
 	// TODO: 合约管理合约地址，后面设置为全局变量
 
-	if CnsManagerAddr == ""{
+	if CnsManagerAddr == "" {
 		str := evm.GetStateDB().GetState(common.Address{}, []byte("cnsManager"))
-		if string(str) == ""{
+		if string(str) == "" {
 			return &common.Address{}, nil
 		}
 		CnsManagerAddr = string(str)
 	}
 
-	if(cnsName == "cnsManager"){
+	if cnsName == "cnsManager" {
 		addrProxy := common.HexToAddress(CnsManagerAddr)
 		return &addrProxy, nil
 	}
@@ -153,11 +155,11 @@ func GetCnsAddr(evm *vm.EVM, msg Message, cnsName string) (*common.Address, erro
 
 	var contractName, contractVer string
 
-	i:=strings.Index(cnsName, ":")
-	if i==-1{
+	i := strings.Index(cnsName, ":")
+	if i == -1 {
 		contractName = cnsName
 		contractVer = ""
-	}else{
+	} else {
 		contractName = cnsName[:i]
 		contractVer = cnsName[i+1:]
 	}
@@ -170,10 +172,10 @@ func GetCnsAddr(evm *vm.EVM, msg Message, cnsName string) (*common.Address, erro
 	}
 	paramBytes, _ := rlp.EncodeToBytes(paramArr)
 
-	cnsMsg := types.NewMessage(msg.From(), &addrProxy, 0, new(big.Int), 0x99999,  msg.GasPrice(), paramBytes, false, types.CnsTxType)
-	gp := new(GasPool).AddGas(math.MaxUint64/2)
+	cnsMsg := types.NewMessage(msg.From(), &addrProxy, 0, new(big.Int), 0x99999, msg.GasPrice(), paramBytes, false, types.CnsTxType)
+	gp := new(GasPool).AddGas(math.MaxUint64 / 2)
 	ret, _, _, err := NewStateTransition(evm, cnsMsg, gp).TransitionDb()
-	if err!= nil {
+	if err != nil {
 		fmt.Println("\n\n vm applyMessage failed", err)
 		return nil, nil
 	}
@@ -193,17 +195,17 @@ func GetCnsAddr(evm *vm.EVM, msg Message, cnsName string) (*common.Address, erro
 // state and would never be accepted within a block.
 func ApplyMessage(evm *vm.EVM, msg Message, gp *GasPool) ([]byte, uint64, bool, error) {
 
-	if msg.TxType() == types.CnsTxType{
+	if msg.TxType() == types.CnsTxType {
 
 		cnsRawData := msg.Data()
 		var cnsData [][]byte
 
-		if err:=rlp.DecodeBytes(cnsRawData, &cnsData); err!= nil {
+		if err := rlp.DecodeBytes(cnsRawData, &cnsData); err != nil {
 			return nil, 0, false, err
 		}
 
-		toAddr, err := GetCnsAddr(evm, msg,string(cnsData[1]))
-		if err != nil{
+		toAddr, err := GetCnsAddr(evm, msg, string(cnsData[1]))
+		if err != nil {
 			return nil, 0, false, err
 		}
 		msg.SetTo(*toAddr)
@@ -215,7 +217,7 @@ func ApplyMessage(evm *vm.EVM, msg Message, gp *GasPool) ([]byte, uint64, bool, 
 		msg.SetTxType(types.NormalTxType)
 
 		nonce := evm.StateDB.GetNonce(msg.From())
-		fmt.Println("Mid nonce is ",nonce)
+		fmt.Println("Mid nonce is ", nonce)
 
 		msg.SetNonce(nonce)
 	}
@@ -268,6 +270,103 @@ func (st *StateTransition) preCheck() error {
 	return st.buyGas()
 }
 
+func fwCheck(stateDb vm.StateDB, contractAddr common.Address, caller common.Address) bool{
+	var fwStatus state.FwStatus
+	fwStatus = stateDb.GetFwStatus(contractAddr)
+	if fwStatus.FwActive == false {
+		return true
+	}
+
+	if fwStatus.ContractAddress != contractAddr {
+		return false
+	}
+
+	for _, d := range fwStatus.DeniedList {
+		if d == caller {
+			return false
+		}
+	}
+
+	for _, a := range fwStatus.AcceptedList {
+		if a == caller {
+			return true
+		}
+	}
+
+	return false
+}
+
+func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Address, input []byte) ([]byte, uint64, error){
+
+	var fwStatus state.FwStatus
+	var err error
+    if stateDb.GetContractCreator(contractAddr) != caller {
+        return nil, 0, err
+	}
+
+	var fwData [][]byte
+	if err = rlp.DecodeBytes(input, &fwData); err != nil {
+		return nil, 0, err
+	}
+
+	funcName := string(fwData[1])
+	listName := string(fwData[2])
+	var act state.Action
+	if listName == "Accepted List" {
+		act = state.ACCEPTED
+	} else {
+		act = state.DENIED
+	}
+
+	var list []common.Address
+	var address common.Address
+	l := strings.Split(string(fwData[3]), "|")
+	for _, addr := range l {
+		address = common.BytesToAddress([]byte(addr))
+		list = append(list, address)
+	}
+
+	switch funcName {
+	case "__sys_FwOpen":
+		stateDb.OpenFirewall(contractAddr)
+	case "__sys_FwClose":
+		stateDb.CloseFirewall(contractAddr)
+	case "__sys_FwAdd":
+		stateDb.FwAdd(contractAddr, act, list)
+	case "__sys_FwClear":
+		stateDb.FwClear(contractAddr, act)
+	case "__sys_FwDel":
+		stateDb.FwDel(contractAddr, act, list)
+	case "__sys_FwSet":
+		stateDb.FwSet(contractAddr, act, list)
+	default:
+		// "__sys_FwStatus"
+		fwStatus = stateDb.GetFwStatus(contractAddr)
+	}
+
+	var returnBytes []byte
+	returnBytes, err = json.Marshal(fwStatus)
+	if err != nil {
+		fmt.Println("fwStatus Marshal error:", err)
+	}
+
+	strHash := common.BytesToHash(common.Int32ToBytes(32))
+	sizeHash := common.BytesToHash(common.Int64ToBytes(int64((len(returnBytes)))))
+	var dataRealSize = len(returnBytes)
+	if (dataRealSize % 32) != 0 {
+		dataRealSize = dataRealSize + (32 - (dataRealSize % 32))
+	}
+	dataByt := make([]byte, dataRealSize)
+	copy(dataByt[0:], returnBytes)
+
+	finalData := make([]byte, 0)
+	finalData = append(finalData, strHash.Bytes()...)
+	finalData = append(finalData, sizeHash.Bytes()...)
+	finalData = append(finalData, dataByt...)	
+
+	return finalData, 0, err
+}
+
 // TransitionDb will transition the state by applying the current message and
 // returning the result including the used gas. It returns an error if failed.
 // An error indicates a consensus issue.
@@ -300,13 +399,20 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 	if contractCreation {
 		ret, _, st.gas, vmerr = evm.Create(sender, st.data, st.gas, st.value)
 	} else {
-		// Increment the nonce for the next transaction
-		// If the transaction is cns-type, do not increment the nonce
-		if msg.TxType() != types.CnsTxType{
-			st.state.SetNonce(msg.From(), st.state.GetNonce(sender.Address())+1)
+		if !fwCheck(evm.StateDB, st.to(), msg.From()) {
+			log.Debug("Calling contract was refused by firewall", "err", vmerr)
+		} else {
+			// Increment the nonce for the next transaction
+			// If the transaction is cns-type, do not increment the nonce
+			if msg.TxType() != types.CnsTxType {
+				st.state.SetNonce(msg.From(), st.state.GetNonce(sender.Address())+1)
+			}
+			if msg.TxType() == types.FwTxType {
+				ret, st.gas, vmerr = fwProcess(evm.StateDB, st.to(), msg.From(), msg.Data())
+			} else {
+				ret, st.gas, vmerr = evm.Call(sender, st.to(), st.data, st.gas, st.value)
+			}
 		}
-
-		ret, st.gas, vmerr = evm.Call(sender, st.to(), st.data, st.gas, st.value)
 	}
 	if vmerr != nil {
 		log.Debug("VM returned with error", "err", vmerr)

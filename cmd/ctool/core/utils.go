@@ -3,12 +3,13 @@ package core
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/PlatONnetwork/PlatON-Go/common/hexutil"
-	"github.com/PlatONnetwork/PlatON-Go/rlp"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/PlatONnetwork/PlatON-Go/common/hexutil"
+	"github.com/PlatONnetwork/PlatON-Go/rlp"
 )
 
 const (
@@ -18,6 +19,7 @@ const (
 	vote
 	permission
 	cnsTxType = 0x11
+	fwTxType  = 0x12
 
 	DefaultConfigFilePath = "/config.json"
 )
@@ -40,7 +42,7 @@ type TxParams struct {
 	GasPrice string `json:"gasPrice"`
 	Value    string `json:"value"`
 	Data     string `json:"data"`
-	TxType   int 	`json:"txType"`
+	TxType   int    `json:"txType"`
 }
 
 type RawTxParams struct {

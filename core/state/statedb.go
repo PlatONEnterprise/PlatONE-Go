@@ -752,31 +752,37 @@ func (s *StateDB) SetAbi(addr common.Address, abi []byte) {
 	}
 }
 
-func (s *StateDB) FwAdd(account common.Address, action Action, list []common.Address) error {
-	return nil
+func (s *StateDB) FwAdd(contractAddr common.Address, action Action, list []common.Address) {
+	return
 }
-func (s *StateDB) FwClear(account common.Address, action Action) error {
-	return nil
+func (s *StateDB) FwClear(contractAddr common.Address, action Action) {
+	return
 }
-func (s *StateDB) FwDel(account common.Address, action Action, list []common.Address) error {
-	return nil
+func (s *StateDB) FwDel(contractAddr common.Address, action Action, list []common.Address) {
+	return
 }
-func (s *StateDB) FwSet(account common.Address, action Action, list []common.Address) error {
-	return nil
+func (s *StateDB) FwSet(contractAddr common.Address, action Action, list []common.Address) {
+	return
 }
-func (s *StateDB) GetFwData() FwData {
-	return FwData{}
+func (s *StateDB) SetFwStatus(contractAddr common.Address, status FwStatus) {
+	return
 }
-func (s *StateDB) SetFwStatus(status FwStatus) error {
-	return nil
+func (s *StateDB) GetFwStatus(contractAddr common.Address) FwStatus {
+	return FwStatus{}
 }
-func (s *StateDB) GetFwStatus() (FwStatus, error) {
-	return FwStatus{}, nil
+func (s *StateDB) SetContractCreator(contractAddr common.Address, creator common.Address) {
+	return
 }
-func (s *StateDB) SetContractCreator(addr common.Address) error {
-	return nil
-}
-func (s *StateDB) GetContractCreator() (common.Address, error) {
+func (s *StateDB) GetContractCreator(contractAddr common.Address) common.Address {
 	addr := common.Address{}
-	return addr, nil
+	return addr
+}
+func (s *StateDB) OpenFirewall(contractAddr common.Address) {
+	return
+}
+func (s *StateDB) CloseFirewall(contractAddr common.Address) {
+	return
+}
+func (s *StateDB) IsFwOpened(contractAddr common.Address) bool {
+	return true
 }
