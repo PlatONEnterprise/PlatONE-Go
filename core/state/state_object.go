@@ -611,6 +611,7 @@ func (self *stateObject) FwData() FwData{
 	rawData := self.db.GetState(self.Address(), self.FwDataHash())
 	FwUnMarshal(rawData, &fwData)
 	self.fwData = fwData
+	self.rawFwData = rawData
 
 	return self.fwData
 }
