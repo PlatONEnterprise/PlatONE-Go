@@ -138,7 +138,43 @@ type (
 		prev      bool
 		prevDirty bool
 	}
+	creatorChange struct{
+		account  *common.Address
+		prevCreator common.Address
+	}
+	fwDataChange struct {
+		account *common.Address
+		prevFwData FwData
+	}
+	fwActiveChange struct {
+		account *common.Address
+		prevActive bool
+	}
 )
+
+func (ch creatorChange) revert(s *StateDB) {
+	s.getStateObject(*ch.account).setContractCreator(ch.prevCreator)
+}
+
+func (ch creatorChange) dirtied() *common.Address {
+	return ch.account
+}
+
+func (ch fwDataChange) revert(s *StateDB) {
+	s.getStateObject(*ch.account).setFwData(ch.prevFwData)
+}
+
+func (ch fwDataChange) dirtied() *common.Address {
+	return ch.account
+}
+
+func (ch fwActiveChange) revert(s *StateDB) {
+	s.getStateObject(*ch.account).setFwActive(ch.prevActive)
+}
+
+func (ch fwActiveChange) dirtied() *common.Address {
+	return ch.account
+}
 
 func (ch createObjectChange) revert(s *StateDB) {
 	delete(s.stateObjects, *ch.account)
