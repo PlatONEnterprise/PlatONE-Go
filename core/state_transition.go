@@ -271,6 +271,7 @@ func (st *StateTransition) preCheck() error {
 }
 
 func fwCheck(stateDb vm.StateDB, contractAddr common.Address, caller common.Address) bool{
+	return true
 	var fwStatus state.FwStatus
 	fwStatus = stateDb.GetFwStatus(contractAddr)
 	if fwStatus.FwActive == false {
@@ -300,7 +301,7 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 	var fwStatus state.FwStatus
 	var err error
     if stateDb.GetContractCreator(contractAddr) != caller {
-        return nil, 0, errors.New("Only contract creator can set the firewall data")
+      return nil, 0, vm.ErrFirewallPermissionNotAllowed
 	}
 	var fwData [][]byte
 	if err = rlp.DecodeBytes(input, &fwData); err != nil {
@@ -308,16 +309,16 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 	}
 
 	var funcName,listName, params string
-	if len(fwData) <2 {
-		return nil, 0, errors.New("No firewall function name!")
+	if len(fwData) < 2 {
+		return nil, 0, vm.ErrFirewallInputInvalid
 	}
 	funcName = string(fwData[1])
 
-	if len(fwData) > 2{
+	if len(fwData) > 2 {
 		listName = string(fwData[2])
 	}
 
-	if len(fwData) > 3{
+	if len(fwData) > 3 {
 		params = string(fwData[3])
 	}
 
@@ -429,9 +430,9 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 		// The only possible consensus-error would be if there wasn't
 		// sufficient balance to make the transfer happen. The first
 		// balance transfer may never fail.
-		if vmerr == vm.ErrInsufficientBalance {
+		// if (vmerr == vm.ErrInsufficientBalance || vmerr == vm.ErrFirewallPermissionNotAllowed || vmerr == vm.ErrFirewallInputInvalid) {
 			return nil, 0, false, vmerr
-		}
+		// }
 	}
 	st.refundGas()
 	st.state.AddBalance(st.evm.Coinbase, new(big.Int).Mul(new(big.Int).SetUint64(st.gasUsed()), st.gasPrice))
