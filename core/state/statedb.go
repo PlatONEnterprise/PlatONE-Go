@@ -844,8 +844,8 @@ func (s *StateDB) GetFwStatus(addr common.Address) (FwStatus) {
 		return FwStatus{
 			ContractAddress: addr,
 			FwActive:false,
-			DeniedList:make([]common.Address,0),
-			AcceptedList:make([]common.Address,0),
+			DeniedList:nil,
+			AcceptedList:nil,
 		}
 	}
 	fwData := stateObject.FwData()
@@ -886,11 +886,11 @@ func (s *StateDB) GetContractCreator(addr common.Address) (common.Address) {
 
 func (s *StateDB)OpenFirewall(addr common.Address){
 	stateObject := s.GetOrNewStateObject(addr)
-	stateObject.setFwActive(true)
+	stateObject.SetFwActive(true)
 }
 func (s *StateDB)CloseFirewall(addr common.Address){
 	stateObject := s.GetOrNewStateObject(addr)
-	stateObject.setFwActive(false)
+	stateObject.SetFwActive(false)
 }
 func (s *StateDB)IsFwOpened(addr common.Address) bool{
 	stateObject := s.GetOrNewStateObject(addr)

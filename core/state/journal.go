@@ -148,7 +148,7 @@ type (
 	}
 	fwActiveChange struct {
 		account *common.Address
-		prevActive bool
+		prevActive uint64
 	}
 )
 
