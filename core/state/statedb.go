@@ -791,7 +791,7 @@ func (s *StateDB) FwDel(addr common.Address, action Action, list []common.Addres
 	case DENIED:
 		for _, addr := range list{
 			fwData.DeniedList[addr] = false
-			delete(fwData.AcceptedList, addr)
+			delete(fwData.DeniedList, addr)
 		}
 		break
 	case ACCEPTED:
@@ -828,7 +828,7 @@ func (s *StateDB) SetFwStatus(addr common.Address, status FwStatus) {
 	accept := status.AcceptedList
 	s.FwSet(addr, ACCEPTED, accept)
 
-	denied := status.AcceptedList
+	denied := status.DeniedList
 	s.FwSet(addr, DENIED, denied)
 }
 func (s *StateDB) GetFwActive(addr common.Address) bool {
