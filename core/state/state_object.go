@@ -606,7 +606,6 @@ func (self *stateObject) FwData() FwData{
 	if self.rawFwData != nil{
 		return self.fwData
 	}
-
 	fwData := NewFwData()
 	if self.FwDataHash() == nil{
 		return fwData

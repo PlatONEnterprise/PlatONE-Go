@@ -322,7 +322,7 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 	var address common.Address
 	l := strings.Split(string(fwData[3]), "|")
 	for _, addr := range l {
-		address = common.BytesToAddress([]byte(addr))
+		address = common.HexToAddress(addr)
 		list = append(list, address)
 	}
 
