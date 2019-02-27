@@ -297,20 +297,30 @@ func fwCheck(stateDb vm.StateDB, contractAddr common.Address, caller common.Addr
 }
 
 func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Address, input []byte) ([]byte, uint64, error){
-
 	var fwStatus state.FwStatus
 	var err error
     if stateDb.GetContractCreator(contractAddr) != caller {
-        return nil, 0, err
+        return nil, 0, errors.New("Only contract creator can set the firewall data")
 	}
-
 	var fwData [][]byte
 	if err = rlp.DecodeBytes(input, &fwData); err != nil {
 		return nil, 0, err
 	}
 
-	funcName := string(fwData[1])
-	listName := string(fwData[2])
+	var funcName,listName, params string
+	if len(fwData) <2 {
+		return nil, 0, errors.New("No firewall function name!")
+	}
+	funcName = string(fwData[1])
+
+	if len(fwData) > 2{
+		listName = string(fwData[2])
+	}
+
+	if len(fwData) > 3{
+		params = string(fwData[3])
+	}
+
 	var act state.Action
 	if listName == "Accepted List" {
 		act = state.ACCEPTED
@@ -320,7 +330,7 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 
 	var list []common.Address
 	var address common.Address
-	l := strings.Split(string(fwData[3]), "|")
+	l := strings.Split(params, "|")
 	for _, addr := range l {
 		address = common.HexToAddress(addr)
 		list = append(list, address)
