@@ -17,21 +17,21 @@
 package core
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
 	"math/big"
 	"strings"
-	"encoding/json"
 
 	"github.com/PlatONnetwork/PlatON-Go/core/types"
 
 	"github.com/PlatONnetwork/PlatON-Go/common"
+	"github.com/PlatONnetwork/PlatON-Go/core/state"
 	"github.com/PlatONnetwork/PlatON-Go/core/vm"
 	"github.com/PlatONnetwork/PlatON-Go/log"
 	"github.com/PlatONnetwork/PlatON-Go/params"
 	"github.com/PlatONnetwork/PlatON-Go/rlp"
-	"github.com/PlatONnetwork/PlatON-Go/core/state"
 )
 
 var (
@@ -270,10 +270,10 @@ func (st *StateTransition) preCheck() error {
 	return st.buyGas()
 }
 
-func fwCheck(stateDb vm.StateDB, contractAddr common.Address, caller common.Address) bool{
+func fwCheck(stateDb vm.StateDB, contractAddr common.Address, caller common.Address) bool {
 	var fwStatus state.FwStatus
-  if stateDb.GetContractCreator(contractAddr) == caller {
-    return true
+	if stateDb.GetContractCreator(contractAddr) == caller {
+		return true
 	}
 
 	fwStatus = stateDb.GetFwStatus(contractAddr)
@@ -300,37 +300,51 @@ func fwCheck(stateDb vm.StateDB, contractAddr common.Address, caller common.Addr
 	return false
 }
 
-func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Address, input []byte) ([]byte, uint64, error){
+func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Address, input []byte) ([]byte, uint64, error) {
 	var fwStatus state.FwStatus
 	var err error
-  if stateDb.GetContractCreator(contractAddr) != caller {
-    return nil, 0, vm.ErrFirewallPermissionNotAllowed
-	}
+	var act state.Action
 	var fwData [][]byte
+	var funcName, listName, params string
+
+	if stateDb.GetContractCreator(contractAddr) != caller {
+		return nil, 0, vm.ErrFirewallPermissionNotAllowed
+	}
+
 	if err = rlp.DecodeBytes(input, &fwData); err != nil {
 		return nil, 0, err
 	}
 
-	var funcName,listName, params string
+	// check parameters
 	if len(fwData) < 2 {
+		fmt.Println("fw error: require function name")
 		return nil, 0, vm.ErrFirewallInputInvalid
 	}
 	funcName = string(fwData[1])
+	if funcName == "__sys_FwAdd" || funcName == "__sys_FwClear" || funcName == "__sys_FwDel" || funcName == "__sys_FwSet" {
+		if len(fwData) != 4 {
+			fmt.Println("fw error: wrong function parameters")
+			return nil, 0, vm.ErrFirewallInputInvalid
+		}
 
-	if len(fwData) > 2 {
 		listName = string(fwData[2])
-	}
-
-	if len(fwData) > 3 {
 		params = string(fwData[3])
-	}
+		if listName == "Accept" {
+			act = state.ACCEPT
+		} else if listName == "Reject" {
+			act = state.REJECT
+		} else {
+			fmt.Println("fw error: action is invalid")
+			return nil, 0, vm.ErrOutOfGas
+		}
 
-	var act state.Action
-	if listName == "Accept" {
-		act = state.ACCEPT
-	} else if listName == "Reject" {
-		act = state.REJECT
+	} else if funcName == "__sys_FwOpen" || funcName == "__sys_FwClose" || funcName == "__sys_FwStatus" {
+		if len(fwData) != 2 {
+			fmt.Println("fw error: wrong function parameters")
+			return nil, 0, vm.ErrFirewallInputInvalid
+		}
 	} else {
+		fmt.Println("fw error: wrong function name")
 		return nil, 0, vm.ErrFirewallInputInvalid
 	}
 
@@ -378,7 +392,7 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 	finalData := make([]byte, 0)
 	finalData = append(finalData, strHash.Bytes()...)
 	finalData = append(finalData, sizeHash.Bytes()...)
-	finalData = append(finalData, dataByt...)	
+	finalData = append(finalData, dataByt...)
 
 	return finalData, 0, err
 }
@@ -436,7 +450,7 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 		// The only possible consensus-error would be if there wasn't
 		// sufficient balance to make the transfer happen. The first
 		// balance transfer may never fail.
-		if (vmerr == vm.ErrInsufficientBalance || vmerr == vm.ErrFirewallPermissionNotAllowed || vmerr == vm.ErrFirewallInputInvalid) {
+		if vmerr == vm.ErrInsufficientBalance || vmerr == vm.ErrFirewallPermissionNotAllowed || vmerr == vm.ErrFirewallInputInvalid {
 			return nil, 0, false, vmerr
 		}
 	}
