@@ -167,12 +167,12 @@ func (s *stateObject) empty() bool {
 // These objects are stored in the main account trie.
 type Account struct {
 	Nonce    uint64
+	FwActive  uint64
 	Balance  *big.Int
 	Root     common.Hash // merkle root of the storage trie
 	CodeHash []byte
 	AbiHash  []byte
 	Creator   common.Address
-	FwActive  bool
 	FwDataHash []byte
 }
 
@@ -452,6 +452,8 @@ func (self *stateObject) deepCopy(db *StateDB) *stateObject {
 	if self.trie != nil {
 		stateObject.trie = db.db.CopyTrie(self.trie)
 	}
+	stateObject.rawFwData = self.rawFwData
+	stateObject.fwData = self.fwData
 	stateObject.code = self.code
 	stateObject.dirtyStorage = self.dirtyStorage.Copy()
 	stateObject.dirtyValueStorage = self.dirtyValueStorage.Copy()
@@ -623,7 +625,11 @@ func (self *stateObject) FwDataHash() []byte{
 }
 
 func (self *stateObject) FwActive() bool{
-	return self.data.FwActive
+	if self.data.FwActive != uint64(0){
+		return true
+	}else{
+		return false
+	}
 }
 
 func (self *stateObject) SetFwData(data FwData) {
@@ -651,16 +657,18 @@ func (self *stateObject) setFwData(data FwData) {
 }
 
 func (self *stateObject) SetFwActive(active bool) {
-	prevFwActive := self.FwActive()
 
 	self.db.journal.append(fwActiveChange{
 		account:&self.address,
-		prevActive:prevFwActive,
+		prevActive:self.data.FwActive,
 	})
-
-	self.setFwActive(active)
+	if active{
+		self.setFwActive(uint64(1))
+	} else {
+		self.setFwActive(uint64(0))
+	}
 }
 
-func (self *stateObject) setFwActive(active bool) {
+func (self *stateObject) setFwActive(active uint64) {
 	self.data.FwActive = active
 }
