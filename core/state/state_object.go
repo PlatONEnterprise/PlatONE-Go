@@ -607,7 +607,10 @@ func (self *stateObject) FwData() FwData{
 		return self.fwData
 	}
 
-	var fwData FwData
+	fwData := NewFwData()
+	if self.FwDataHash() == nil{
+		return fwData
+	}
 	rawData := self.db.GetState(self.Address(), self.FwDataHash())
 	FwUnMarshal(rawData, &fwData)
 	self.fwData = fwData

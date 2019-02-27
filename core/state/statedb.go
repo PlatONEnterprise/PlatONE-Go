@@ -754,8 +754,8 @@ func (s *StateDB) SetAbi(addr common.Address, abi []byte) {
 
 func (s *StateDB) FwAdd(addr common.Address, action Action, list []common.Address)  {
 	stateObject := s.getStateObject(addr)
-
 	fwData := stateObject.FwData()
+
 	switch action{
 	case DENIED:
 		for _, addr := range list{
