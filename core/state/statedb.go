@@ -753,7 +753,7 @@ func (s *StateDB) SetAbi(addr common.Address, abi []byte) {
 }
 
 func (s *StateDB) FwAdd(addr common.Address, action Action, list []common.Address)  {
-	stateObject := s.getStateObject(addr)
+	stateObject := s.GetOrNewStateObject(addr)
 	fwData := stateObject.FwData()
 
 	switch action{
@@ -771,7 +771,7 @@ func (s *StateDB) FwAdd(addr common.Address, action Action, list []common.Addres
 	stateObject.SetFwData(fwData)
 }
 func (s *StateDB) FwClear(addr common.Address, action Action)  {
-	stateObject := s.getStateObject(addr)
+	stateObject := s.GetOrNewStateObject(addr)
 
 	fwData := stateObject.FwData()
 	switch action{
@@ -784,7 +784,7 @@ func (s *StateDB) FwClear(addr common.Address, action Action)  {
 	stateObject.SetFwData(fwData)
 }
 func (s *StateDB) FwDel(addr common.Address, action Action, list []common.Address)  {
-	stateObject := s.getStateObject(addr)
+	stateObject := s.GetOrNewStateObject(addr)
 
 	fwData := stateObject.FwData()
 	switch action{
@@ -803,7 +803,7 @@ func (s *StateDB) FwDel(addr common.Address, action Action, list []common.Addres
 	}
 }
 func (s *StateDB) FwSet(addr common.Address, action Action, list []common.Address)  {
-	stateObject := s.getStateObject(addr)
+	stateObject := s.GetOrNewStateObject(addr)
 
 	fwData := NewFwData()
 	switch action{
@@ -821,7 +821,7 @@ func (s *StateDB) FwSet(addr common.Address, action Action, list []common.Addres
 	stateObject.SetFwData(fwData)
 }
 func (s *StateDB) SetFwStatus(addr common.Address, status FwStatus) {
-	stateObject := s.getStateObject(addr)
+	stateObject := s.GetOrNewStateObject(addr)
 	fwActive := status.FwActive
 	stateObject.SetFwActive(fwActive)
 
@@ -833,10 +833,21 @@ func (s *StateDB) SetFwStatus(addr common.Address, status FwStatus) {
 }
 func (s *StateDB) GetFwActive(addr common.Address) bool {
 	stateObject := s.getStateObject(addr)
+	if stateObject == nil{
+		return false
+	}
 	return stateObject.FwActive()
 }
 func (s *StateDB) GetFwStatus(addr common.Address) (FwStatus) {
 	stateObject := s.getStateObject(addr)
+	if stateObject == nil{
+		return FwStatus{
+			ContractAddress: addr,
+			FwActive:false,
+			DeniedList:make([]common.Address,0),
+			AcceptedList:make([]common.Address,0),
+		}
+	}
 	fwData := stateObject.FwData()
 	fwActive := stateObject.FwActive()
 
@@ -861,25 +872,28 @@ func (s *StateDB) GetFwStatus(addr common.Address) (FwStatus) {
 	}
 }
 func (s *StateDB) SetContractCreator(addr, creator common.Address)  {
-	stateObject := s.getStateObject(addr)
+	stateObject := s.GetOrNewStateObject(addr)
 	stateObject.SetContractCreator(creator)
 }
 func (s *StateDB) GetContractCreator(addr common.Address) (common.Address) {
 	stateObject := s.getStateObject(addr)
+	if stateObject == nil{
+		return common.Address{}
+	}
 	creator:= stateObject.ContractCreator()
 	return creator
 }
 
 func (s *StateDB)OpenFirewall(addr common.Address){
-	stateObject := s.getStateObject(addr)
+	stateObject := s.GetOrNewStateObject(addr)
 	stateObject.setFwActive(true)
 }
 func (s *StateDB)CloseFirewall(addr common.Address){
-	stateObject := s.getStateObject(addr)
+	stateObject := s.GetOrNewStateObject(addr)
 	stateObject.setFwActive(false)
 }
 func (s *StateDB)IsFwOpened(addr common.Address) bool{
-	stateObject := s.getStateObject(addr)
+	stateObject := s.GetOrNewStateObject(addr)
 	return stateObject.FwActive()
 }
 
