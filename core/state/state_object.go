@@ -39,8 +39,8 @@ type Abi []byte
 type Action uint64
 
 const (
-	ACCEPTED Action = 0
-	DENIED   Action = 1
+	ACCEPT Action = 0
+	REJECT Action = 1
 )
 
 type FwStatus struct {

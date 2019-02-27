@@ -326,10 +326,12 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 	}
 
 	var act state.Action
-	if listName == "Accepted List" {
-		act = state.ACCEPTED
+	if listName == "Accept" {
+		act = state.ACCEPT
+	} else if listName == "Reject" {
+		act = state.REJECT
 	} else {
-		act = state.DENIED
+		return nil, 0, vm.ErrFirewallInputInvalid
 	}
 
 	var list []common.Address

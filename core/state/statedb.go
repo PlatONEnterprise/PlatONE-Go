@@ -757,12 +757,12 @@ func (s *StateDB) FwAdd(addr common.Address, action Action, list []common.Addres
 	fwData := stateObject.FwData()
 
 	switch action{
-	case DENIED:
+	case REJECT:
 		for _, addr := range list{
 			fwData.DeniedList[addr] = true
 		}
 		break
-	case ACCEPTED:
+	case ACCEPT:
 		for _, addr := range list{
 			fwData.AcceptedList[addr] = true
 		}
@@ -775,10 +775,10 @@ func (s *StateDB) FwClear(addr common.Address, action Action)  {
 
 	fwData := stateObject.FwData()
 	switch action{
-	case DENIED:
+	case REJECT:
 		fwData.DeniedList =  make(map[common.Address]bool)
 		break
-	case ACCEPTED:
+	case ACCEPT:
 		fwData.AcceptedList = make(map[common.Address]bool)
 	}
 	stateObject.SetFwData(fwData)
@@ -788,13 +788,13 @@ func (s *StateDB) FwDel(addr common.Address, action Action, list []common.Addres
 
 	fwData := stateObject.FwData()
 	switch action{
-	case DENIED:
+	case REJECT:
 		for _, addr := range list{
 			fwData.DeniedList[addr] = false
 			delete(fwData.DeniedList, addr)
 		}
 		break
-	case ACCEPTED:
+	case ACCEPT:
 		for _, addr := range list{
 			fwData.AcceptedList[addr] = false
 			delete(fwData.AcceptedList, addr)
@@ -807,12 +807,12 @@ func (s *StateDB) FwSet(addr common.Address, action Action, list []common.Addres
 
 	fwData := NewFwData()
 	switch action{
-	case DENIED:
+	case REJECT:
 		for _, addr := range list{
 			fwData.DeniedList[addr] = true
 		}
 		break
-	case ACCEPTED:
+	case ACCEPT:
 		for _, addr := range list{
 			fwData.AcceptedList[addr] = true
 		}
@@ -826,10 +826,10 @@ func (s *StateDB) SetFwStatus(addr common.Address, status FwStatus) {
 	stateObject.SetFwActive(fwActive)
 
 	accept := status.AcceptedList
-	s.FwSet(addr, ACCEPTED, accept)
+	s.FwSet(addr, ACCEPT, accept)
 
 	denied := status.DeniedList
-	s.FwSet(addr, DENIED, denied)
+	s.FwSet(addr, REJECT, denied)
 }
 func (s *StateDB) GetFwActive(addr common.Address) bool {
 	stateObject := s.getStateObject(addr)
