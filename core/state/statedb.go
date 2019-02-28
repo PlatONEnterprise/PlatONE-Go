@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"math/big"
 	"sort"
+	"strings"
 	"sync"
 
 	"github.com/PlatONnetwork/PlatON-Go/crypto/sha3"
@@ -755,18 +756,15 @@ func (s *StateDB) SetAbi(addr common.Address, abi []byte) {
 func (s *StateDB) FwAdd(addr common.Address, action Action, list []FwElem)  {
 	stateObject := s.GetOrNewStateObject(addr)
 	fwData := stateObject.FwData()
-
 	switch action{
 	case REJECT:
 		for _, addr := range list{
-			fwData.DeniedList[addr] = true
+			fwData.DeniedList[addr.FuncName+":"+addr.Addr.String()] = true
 		}
-		break
 	case ACCEPT:
 		for _, addr := range list{
-			fwData.AcceptedList[addr] = true
+			fwData.AcceptedList[addr.FuncName+":"+addr.Addr.String()] = true
 		}
-		break
 	}
 	stateObject.SetFwData(fwData)
 }
@@ -776,9 +774,9 @@ func (s *StateDB) FwClear(addr common.Address, action Action)  {
 	fwData := stateObject.FwData()
 	switch action{
 	case REJECT:
-		fwData.DeniedList =  make(map[FwElem]bool)
+		fwData.DeniedList =  make(map[string]bool)
 	case ACCEPT:
-		fwData.AcceptedList = make(map[FwElem]bool)
+		fwData.AcceptedList = make(map[string]bool)
 	}
 	stateObject.SetFwData(fwData)
 }
@@ -789,13 +787,13 @@ func (s *StateDB) FwDel(addr common.Address, action Action, list []FwElem)  {
 	switch action{
 	case REJECT:
 		for _, addr := range list{
-			fwData.DeniedList[addr] = false
-			delete(fwData.DeniedList, addr)
+			fwData.DeniedList[addr.FuncName+":"+addr.Addr.String()] = false
+			delete(fwData.DeniedList, (addr.FuncName+":"+addr.Addr.String()))
 		}
 	case ACCEPT:
 		for _, addr := range list{
-			fwData.AcceptedList[addr] = false
-			delete(fwData.AcceptedList, addr)
+			fwData.AcceptedList[addr.FuncName+":"+addr.Addr.String()] = false
+			delete(fwData.AcceptedList, (addr.FuncName+":"+addr.Addr.String()))
 		}
 	}
 }
@@ -806,11 +804,11 @@ func (s *StateDB) FwSet(addr common.Address, action Action, list []FwElem)  {
 	switch action{
 	case REJECT:
 		for _, addr := range list{
-			fwData.DeniedList[addr] = true
+			fwData.DeniedList[addr.FuncName+":"+addr.Addr.String()] = true
 		}
 	case ACCEPT:
 		for _, addr := range list{
-			fwData.AcceptedList[addr] = true
+			fwData.AcceptedList[addr.FuncName+":"+addr.Addr.String()] = true
 		}
 	}
 	stateObject.SetFwData(fwData)
@@ -843,13 +841,35 @@ func (s *StateDB) GetFwStatus(addr common.Address) (FwStatus) {
 	var deniedList, acceptedList []FwElem
 
 	for elem, b := range fwData.DeniedList{
+		tmp := strings.Split(elem, ":")
+		if(len(tmp) <2){
+			return FwStatus{
+				ContractAddress: addr,
+				FwActive:false,
+				DeniedList:nil,
+				AcceptedList:nil,
+			}
+		}
+		api := tmp[0]
+		addr := tmp[1]
 		if b {
-			deniedList = append(deniedList, elem)
+			deniedList = append(deniedList, FwElem{Addr: common.HexToAddress(addr), FuncName: api})
 		}
 	}
 	for elem, b := range fwData.AcceptedList{
+		tmp := strings.Split(elem, ":")
+		if len(tmp) != 2 {
+			return FwStatus{
+				ContractAddress: addr,
+				FwActive:false,
+				DeniedList:nil,
+				AcceptedList:nil,
+			}
+		}
+		api := tmp[0]
+		addr := tmp[1]
 		if b {
-			acceptedList = append(acceptedList, elem)
+			acceptedList = append(acceptedList, FwElem{Addr: common.HexToAddress(addr), FuncName: api})
 		}
 	}
 
