@@ -80,7 +80,7 @@ func BytesConverter(source []byte, t string) interface{} {
 	case "float64":
 		return BytesToFloat64(source)
 	case "string":
-		return string(source[:])
+		return string(source[64:])
 	case "bool":
 		return bytes.Equal(source, []byte{1})
 	default:

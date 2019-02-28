@@ -7,7 +7,10 @@ package resolver
 // #cgo CXXFLAGS: -std=c++14
 // #include "printqf.h"
 // #include "print128.h"
+// #cgo LDFLAGS: -L ./nizkpail/ -lnizkpail -lmiracl
+// #include "./nizkpail/nizkpail.h"
 import "C"
+import "unsafe"
 import (
 	"bytes"
 	"encoding/binary"
@@ -68,10 +71,11 @@ func (r *CResolver) ResolveGlobal(module, field string) int64 {
 func newCfcSet() map[string]map[string]*exec.FunctionImport {
 	return map[string]map[string]*exec.FunctionImport{
 		"env": {
-			"malloc":  &exec.FunctionImport{Execute: envMalloc, GasCost: envMallocGasCost},
-			"free":    &exec.FunctionImport{Execute: envFree, GasCost: envFreeGasCost},
-			"calloc":  &exec.FunctionImport{Execute: envCalloc, GasCost: envCallocGasCost},
-			"realloc": &exec.FunctionImport{Execute: envRealloc, GasCost: envReallocGasCost},
+			"malloc":       &exec.FunctionImport{Execute: envMalloc, GasCost: envMallocGasCost},
+			"free":         &exec.FunctionImport{Execute: envFree, GasCost: envFreeGasCost},
+			"calloc":       &exec.FunctionImport{Execute: envCalloc, GasCost: envCallocGasCost},
+			"realloc":      &exec.FunctionImport{Execute: envRealloc, GasCost: envReallocGasCost},
+			"disable_free": &exec.FunctionImport{Execute: envDisableFree, GasCost: envDisableFreeGasCost},
 
 			"memcpy":  &exec.FunctionImport{Execute: envMemcpy, GasCost: envMemcpyGasCost},
 			"memmove": &exec.FunctionImport{Execute: envMemmove, GasCost: envMemmoveGasCost},
@@ -163,7 +167,7 @@ func newCfcSet() map[string]map[string]*exec.FunctionImport {
 			"vc_CreatePBVar":            &exec.FunctionImport{Execute: envCreatePBVarEnv, GasCost: envCreatePBVarGasCost},
 			"vc_CreateGadget":           &exec.FunctionImport{Execute: envCreateGadgetEnv, GasCost: envCreateGadgetGasCost},
 			"vc_SetVar":                 &exec.FunctionImport{Execute: envSetVarEnv, GasCost: envSetVarGasCost},
-			"vc_SetRetIndex":			 &exec.FunctionImport{Execute: envSetRetIndexEnv, GasCost: envSetRetIndexGasCost},
+			"vc_SetRetIndex":            &exec.FunctionImport{Execute: envSetRetIndexEnv, GasCost: envSetRetIndexGasCost},
 			"vc_GenerateWitness":        &exec.FunctionImport{Execute: envGenWitnessEnv, GasCost: envGenWitnessGasCost},
 			"vc_GenerateProofAndResult": &exec.FunctionImport{Execute: envGenProofAndResultEnv, GasCost: envGenProofAndResultGasCost},
 			"vc_Verify":                 &exec.FunctionImport{Execute: envVerifyEnv, GasCost: envVerifyGasCost},
@@ -178,6 +182,12 @@ func newCfcSet() map[string]map[string]*exec.FunctionImport {
 			"platonDelegateCall":       &exec.FunctionImport{Execute: envPlatonDelegateCall, GasCost: envPlatonCallStringGasCost},
 			"platonDelegateCallInt64":  &exec.FunctionImport{Execute: envPlatonDelegateCallInt64, GasCost: envPlatonCallStringGasCost},
 			"platonDelegateCallString": &exec.FunctionImport{Execute: envPlatonDelegateCallString, GasCost: envPlatonCallStringGasCost},
+
+			//nizkpail
+			"pailEncrypt": &exec.FunctionImport{Execute: envPailEncrypt, GasCost: constGasFunc(compiler.GasPailEncrypt)},
+			"pailHomAdd": &exec.FunctionImport{Execute: envPailHomAdd, GasCost: constGasFunc(compiler.GasPailHomAdd)},
+			"pailHomSub": &exec.FunctionImport{Execute: envPailHomSub, GasCost: constGasFunc(compiler.GasPailHomSub)},
+			"nizkVerifyProof": &exec.FunctionImport{Execute: envNizkVerifyProof, GasCost: constGasFunc(compiler.GasNizkVerifyProof)},
 		},
 	}
 }
@@ -419,6 +429,10 @@ func envMallocGasCost(vm *exec.VirtualMachine) (uint64, error) {
 
 //libc free()
 func envFree(vm *exec.VirtualMachine) int64 {
+	if vm.Context.Config.DisableFree {
+		return 0
+	}
+
 	mem := vm.Memory
 	offset := int(uint32(vm.GetCurrentFrame().Locals[0]))
 
@@ -455,14 +469,14 @@ func envCallocGasCost(vm *exec.VirtualMachine) (uint64, error) {
 
 func envRealloc(vm *exec.VirtualMachine) int64 {
 	mem := vm.Memory
-	//ptr := int(int32(vm.GetCurrentFrame().Locals[0]))
+	ptr := int(int32(vm.GetCurrentFrame().Locals[0]))
 	size := int(int32(vm.GetCurrentFrame().Locals[1]))
 
 	if size == 0 {
 		return 0
 	}
 
-	pos := mem.Malloc(size)
+	pos := mem.Realloc(ptr, size)
 
 	return int64(pos)
 }
@@ -470,6 +484,15 @@ func envRealloc(vm *exec.VirtualMachine) int64 {
 func envReallocGasCost(vm *exec.VirtualMachine) (uint64, error) {
 	size := int(int32(vm.GetCurrentFrame().Locals[1]))
 	return uint64(size), nil
+}
+
+func envDisableFree(vm *exec.VirtualMachine) int64 {
+	vm.Context.Config.DisableFree = true
+	return 0
+}
+
+func envDisableFreeGasCost(vm *exec.VirtualMachine) (uint64, error) {
+	return 1, nil
 }
 
 func envAbort(vm *exec.VirtualMachine) int64 {
@@ -596,6 +619,164 @@ func envSha3(vm *exec.VirtualMachine) int64 {
 	}
 	//fmt.Printf("Sha3:%v, 0:%v, 1:%v, (-2):%v, (-1):%v. \n", common.Bytes2Hex(hash), hash[0], fmt.Sprintf("%b", hash[1]), hash[len(hash)-2], hash[len(hash)-1])
 	copy(vm.Memory.Memory[destOffset:], hash)
+	return 0
+}
+
+func envPailEncrypt(vm *exec.VirtualMachine) int64 {
+	numberOffset := int(int32(vm.GetCurrentFrame().Locals[0]))
+	numberSize := int(int32(vm.GetCurrentFrame().Locals[1]))
+	pubkeyOffset := int(int32(vm.GetCurrentFrame().Locals[2]))
+	pubkeySize := int(int32(vm.GetCurrentFrame().Locals[3]))
+	resultOffset := int(int32(vm.GetCurrentFrame().Locals[4]))
+	resultSize := int(int32(vm.GetCurrentFrame().Locals[5]))
+	
+	number := vm.Memory.Memory[numberOffset : numberOffset + numberSize]
+	pubkey := vm.Memory.Memory[pubkeyOffset : pubkeyOffset + pubkeySize]
+	number = append(number, 0)
+	pubkey = append(pubkey, 0)
+	
+    numberPtr := (*C.char)(unsafe.Pointer(&number[0]))
+    pubkeyPtr := (*C.char)(unsafe.Pointer(&pubkey[0]))
+    
+    resultPtr := C.pailEncrypt(numberPtr, pubkeyPtr);
+    resultStr := C.GoString(resultPtr);
+    C.free(unsafe.Pointer(resultPtr))
+
+    resultBts := []byte(resultStr)
+    resultBts = append(resultBts, 0)
+	
+	if resultSize < len(resultBts) {
+		return 0
+	}
+	
+	copy(vm.Memory.Memory[resultOffset:], resultBts)
+	
+	return 0
+}
+
+func envPailHomAdd(vm *exec.VirtualMachine) int64 {
+	cipher1Offset := int(int32(vm.GetCurrentFrame().Locals[0]))
+	cipher1Size := int(int32(vm.GetCurrentFrame().Locals[1]))
+	cipher2Offset := int(int32(vm.GetCurrentFrame().Locals[2]))
+	cipher2Size := int(int32(vm.GetCurrentFrame().Locals[3]))
+	pubkeyOffset := int(int32(vm.GetCurrentFrame().Locals[4]))
+	pubkeySize := int(int32(vm.GetCurrentFrame().Locals[5]))
+	resultOffset := int(int32(vm.GetCurrentFrame().Locals[6]))
+	resultSize := int(int32(vm.GetCurrentFrame().Locals[7]))
+	
+	cipher1 := vm.Memory.Memory[cipher1Offset : cipher1Offset + cipher1Size]
+	cipher2 := vm.Memory.Memory[cipher2Offset : cipher2Offset + cipher2Size]
+	pubkey := vm.Memory.Memory[pubkeyOffset : pubkeyOffset + pubkeySize]
+	cipher1 = append(cipher1, 0)
+	cipher2 = append(cipher2, 0)
+	pubkey = append(pubkey, 0)
+	
+    cipher1Ptr := (*C.char)(unsafe.Pointer(&cipher1[0]))
+    cipher2Ptr := (*C.char)(unsafe.Pointer(&cipher2[0]))
+    pubkeyPtr := (*C.char)(unsafe.Pointer(&pubkey[0]))
+    
+    resultPtr := C.pailHomAdd(cipher1Ptr, cipher2Ptr, pubkeyPtr);
+    resultStr := C.GoString(resultPtr);
+    C.free(unsafe.Pointer(resultPtr))
+
+    resultBts := []byte(resultStr)
+    resultBts = append(resultBts, 0)
+	
+	if resultSize < len(resultBts) {
+		return 0
+	}
+	
+	copy(vm.Memory.Memory[resultOffset:], resultBts)
+	
+	return 0
+}
+
+func envPailHomSub(vm *exec.VirtualMachine) int64 {
+	cipher1Offset := int(int32(vm.GetCurrentFrame().Locals[0]))
+	cipher1Size := int(int32(vm.GetCurrentFrame().Locals[1]))
+	cipher2Offset := int(int32(vm.GetCurrentFrame().Locals[2]))
+	cipher2Size := int(int32(vm.GetCurrentFrame().Locals[3]))
+	pubkeyOffset := int(int32(vm.GetCurrentFrame().Locals[4]))
+	pubkeySize := int(int32(vm.GetCurrentFrame().Locals[5]))
+	resultOffset := int(int32(vm.GetCurrentFrame().Locals[6]))
+	resultSize := int(int32(vm.GetCurrentFrame().Locals[7]))
+	
+	cipher1 := vm.Memory.Memory[cipher1Offset : cipher1Offset + cipher1Size]
+	cipher2 := vm.Memory.Memory[cipher2Offset : cipher2Offset + cipher2Size]
+	pubkey := vm.Memory.Memory[pubkeyOffset : pubkeyOffset + pubkeySize]
+	cipher1 = append(cipher1, 0)
+	cipher2 = append(cipher2, 0)
+	pubkey = append(pubkey, 0)
+	
+    cipher1Ptr := (*C.char)(unsafe.Pointer(&cipher1[0]))
+    cipher2Ptr := (*C.char)(unsafe.Pointer(&cipher2[0]))
+    pubkeyPtr := (*C.char)(unsafe.Pointer(&pubkey[0]))
+    
+    resultPtr := C.pailHomSub(cipher1Ptr, cipher2Ptr, pubkeyPtr);
+    resultStr := C.GoString(resultPtr);
+    C.free(unsafe.Pointer(resultPtr))
+
+    resultBts := []byte(resultStr)
+    resultBts = append(resultBts, 0)
+	
+	if resultSize < len(resultBts) {
+		return 0
+	}
+	
+	copy(vm.Memory.Memory[resultOffset:], resultBts)
+	
+	return 0
+}
+
+func envNizkVerifyProof(vm *exec.VirtualMachine) int64 {
+	paiOffset := int(int32(vm.GetCurrentFrame().Locals[0]))
+	paiSize := int(int32(vm.GetCurrentFrame().Locals[1]))
+	fromBalCipherOffset := int(int32(vm.GetCurrentFrame().Locals[2]))
+	fromBalCipherSize := int(int32(vm.GetCurrentFrame().Locals[3]))
+	fromAmountCipherOffset := int(int32(vm.GetCurrentFrame().Locals[4]))
+	fromAmountCipherSize := int(int32(vm.GetCurrentFrame().Locals[5]))
+	toAmountCipherOffset := int(int32(vm.GetCurrentFrame().Locals[6]))
+	toAmountCipherSize := int(int32(vm.GetCurrentFrame().Locals[7]))
+	fromPubkeyOffset := int(int32(vm.GetCurrentFrame().Locals[8]))
+	fromPubkeySize := int(int32(vm.GetCurrentFrame().Locals[9]))
+	toPubkeyOffset := int(int32(vm.GetCurrentFrame().Locals[10]))
+	toPubkeySize := int(int32(vm.GetCurrentFrame().Locals[11]))
+	resultOffset := int(int32(vm.GetCurrentFrame().Locals[12]))
+	resultSize := int(int32(vm.GetCurrentFrame().Locals[13]))
+	
+	pai := vm.Memory.Memory[paiOffset : paiOffset + paiSize]
+	fromBalCipher := vm.Memory.Memory[fromBalCipherOffset : fromBalCipherOffset + fromBalCipherSize]
+	fromAmountCipher := vm.Memory.Memory[fromAmountCipherOffset : fromAmountCipherOffset + fromAmountCipherSize]
+	toAmountCipher := vm.Memory.Memory[toAmountCipherOffset : toAmountCipherOffset + toAmountCipherSize]
+	fromPubkey := vm.Memory.Memory[fromPubkeyOffset : fromPubkeyOffset + fromPubkeySize]
+	toPubkey := vm.Memory.Memory[toPubkeyOffset : toPubkeyOffset + toPubkeySize]
+	pai = append(pai, 0)
+	fromBalCipher = append(fromBalCipher, 0)
+	fromAmountCipher = append(fromAmountCipher, 0)
+	toAmountCipher = append(toAmountCipher, 0)
+	fromPubkey = append(fromPubkey, 0)
+	toPubkey = append(toPubkey, 0)
+	
+    paiPtr := (*C.char)(unsafe.Pointer(&pai[0]))
+    fromBalCipherPtr := (*C.char)(unsafe.Pointer(&fromBalCipher[0]))
+    fromAmountCipherPtr := (*C.char)(unsafe.Pointer(&fromAmountCipher[0]))
+    toAmountCipherPtr := (*C.char)(unsafe.Pointer(&toAmountCipher[0]))
+    fromPubkeyPtr := (*C.char)(unsafe.Pointer(&fromPubkey[0]))
+    toPubkeyPtr := (*C.char)(unsafe.Pointer(&toPubkey[0]))
+    
+    resultPtr := C.nizkVerifyProof(paiPtr, fromBalCipherPtr, fromAmountCipherPtr, toAmountCipherPtr, fromPubkeyPtr, toPubkeyPtr);
+    resultStr := C.GoString(resultPtr);
+    C.free(unsafe.Pointer(resultPtr))
+
+    resultBts := []byte(resultStr)
+    resultBts = append(resultBts, 0)
+	
+	if resultSize < len(resultBts) {
+		return 0
+	}
+	
+	copy(vm.Memory.Memory[resultOffset:], resultBts)
+	
 	return 0
 }
 
