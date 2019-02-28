@@ -79,9 +79,9 @@ type StateDB interface {
 	FwDel(contractAddr common.Address, action state.Action, list []common.Address)
 	FwSet(contractAddr common.Address, action state.Action, list []common.Address)
 
-	SetFwStatus(contractAddr common.Address, status state.FwStatus) //?
+	SetFwStatus(contractAddr common.Address, status state.FwStatus)
 	GetFwStatus(contractAddr common.Address) state.FwStatus
-	SetContractCreator(contractAddr common.Address, creator common.Address) //?
+	SetContractCreator(contractAddr common.Address, creator common.Address)
 	GetContractCreator(contractAddr common.Address) common.Address
 
 	OpenFirewall(contractAddr common.Address)

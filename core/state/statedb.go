@@ -777,7 +777,6 @@ func (s *StateDB) FwClear(addr common.Address, action Action)  {
 	switch action{
 	case REJECT:
 		fwData.DeniedList =  make(map[common.Address]bool)
-		break
 	case ACCEPT:
 		fwData.AcceptedList = make(map[common.Address]bool)
 	}
@@ -793,13 +792,11 @@ func (s *StateDB) FwDel(addr common.Address, action Action, list []common.Addres
 			fwData.DeniedList[addr] = false
 			delete(fwData.DeniedList, addr)
 		}
-		break
 	case ACCEPT:
 		for _, addr := range list{
 			fwData.AcceptedList[addr] = false
 			delete(fwData.AcceptedList, addr)
 		}
-		break
 	}
 }
 func (s *StateDB) FwSet(addr common.Address, action Action, list []common.Address)  {
@@ -811,12 +808,10 @@ func (s *StateDB) FwSet(addr common.Address, action Action, list []common.Addres
 		for _, addr := range list{
 			fwData.DeniedList[addr] = true
 		}
-		break
 	case ACCEPT:
 		for _, addr := range list{
 			fwData.AcceptedList[addr] = true
 		}
-		break
 	}
 	stateObject.SetFwData(fwData)
 }
@@ -831,13 +826,7 @@ func (s *StateDB) SetFwStatus(addr common.Address, status FwStatus) {
 	denied := status.DeniedList
 	s.FwSet(addr, REJECT, denied)
 }
-func (s *StateDB) GetFwActive(addr common.Address) bool {
-	stateObject := s.getStateObject(addr)
-	if stateObject == nil{
-		return false
-	}
-	return stateObject.FwActive()
-}
+
 func (s *StateDB) GetFwStatus(addr common.Address) (FwStatus) {
 	stateObject := s.getStateObject(addr)
 	if stateObject == nil{
