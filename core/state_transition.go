@@ -40,6 +40,9 @@ var (
 
 var CnsManagerAddr string = "0x0000000000000000000000000000000000000011"
 
+const FwPermissionNotAllowed = "Only contract creator can set the firewall data"
+const FwInputInvalid = "Invalid input for firewall setting!"
+
 /*
 A state transition is a change made when a transaction is applied to the current world state
 The state transitioning model does all the necessary work to work out a valid new state root.
@@ -373,28 +376,28 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 	var list []state.FwElem
 
 	if !addressCompare(stateDb.GetContractCreator(contractAddr), caller) {
-		return nil, 0, vm.ErrFirewallPermissionNotAllowed
+		return []byte(FwPermissionNotAllowed), 0, nil
 	}
 
 	if err = rlp.DecodeBytes(input, &fwData); err != nil {
-		return nil, 0, err
+		return []byte(FwInputInvalid), 0, nil
 	}
 
 	// check parameters
 	if len(fwData) < 2 {
 		fmt.Println("fw error: require function name")
-		return nil, 0, vm.ErrFirewallInputInvalid
+		return []byte(FwInputInvalid), 0, nil
 	}
 	funcName = string(fwData[1])
 	if funcName == "__sys_FwOpen" || funcName == "__sys_FwClose" || funcName == "__sys_FwStatus" {
 		if len(fwData) != 2 {
 			fmt.Println("fw error: wrong function parameters")
-			return nil, 0, vm.ErrFirewallInputInvalid
+			return []byte(FwInputInvalid), 0, nil
 		}
 	} else if funcName == "__sys_FwClear" {
 		if len(fwData) != 3 {
 			fmt.Println("fw error: wrong function parameters")
-			return nil, 0, vm.ErrFirewallInputInvalid
+			return []byte(FwInputInvalid), 0, nil
 		}
 
 		listName = string(fwData[2])
@@ -404,13 +407,13 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 			act = state.REJECT
 		} else {
 			fmt.Println("fw error: action is invalid")
-			return nil, 0, vm.ErrFirewallInputInvalid
+			return []byte(FwInputInvalid), 0, nil
 		}
 
 	} else if funcName == "__sys_FwAdd" || funcName == "__sys_FwDel" || funcName == "__sys_FwSet" {
 		if len(fwData) != 4 {
 			fmt.Println("fw error: wrong function parameters")
-			return nil, 0, vm.ErrFirewallInputInvalid
+			return []byte(FwInputInvalid), 0, nil
 		}
 
 		listName = string(fwData[2])
@@ -421,14 +424,14 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 			act = state.REJECT
 		} else {
 			fmt.Println("fw error: action is invalid")
-			return nil, 0, vm.ErrFirewallInputInvalid
+			return []byte(FwInputInvalid), 0, nil
 		}
 
 		elements := strings.Split(params, "|")
 		for _, e := range elements {
 			tmp := strings.Split(e, ":")
 			if len(tmp) != 2 {
-				return nil, 0, vm.ErrFirewallInputInvalid
+				return []byte(FwInputInvalid), 0, nil
 			}
 
 			addr := tmp[0]
@@ -442,7 +445,7 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 
 	} else {
 		fmt.Println("fw error: wrong function name")
-		return nil, 0, vm.ErrFirewallInputInvalid
+		return []byte(FwInputInvalid), 0, nil
 	}
 
 	switch funcName {
@@ -467,6 +470,7 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 	returnBytes, err = json.Marshal(fwStatus)
 	if err != nil {
 		fmt.Println("fwStatus Marshal error:", err)
+		return []byte(FwInputInvalid), 0, nil
 	}
 
 	strHash := common.BytesToHash(common.Int32ToBytes(32))
@@ -483,7 +487,7 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 	finalData = append(finalData, sizeHash.Bytes()...)
 	finalData = append(finalData, dataByt...)
 
-	return finalData, 0, err
+	return finalData, 0, nil
 }
 
 // TransitionDb will transition the state by applying the current message and
@@ -538,7 +542,7 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 		// The only possible consensus-error would be if there wasn't
 		// sufficient balance to make the transfer happen. The first
 		// balance transfer may never fail.
-		if vmerr == vm.ErrInsufficientBalance || vmerr == vm.ErrFirewallPermissionNotAllowed || vmerr == vm.ErrFirewallInputInvalid {
+		if vmerr == vm.ErrInsufficientBalance {
 			return nil, 0, false, vmerr
 		}
 	}
