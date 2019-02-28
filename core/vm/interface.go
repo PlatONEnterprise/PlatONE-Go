@@ -74,10 +74,10 @@ type StateDB interface {
 
 	ForEachStorage(common.Address, func(common.Hash, common.Hash) bool)
 
-	FwAdd(contractAddr common.Address, action state.Action, list []common.Address)
+	FwAdd(contractAddr common.Address, action state.Action, list []state.FwElem)
 	FwClear(contractAddr common.Address, action state.Action)
-	FwDel(contractAddr common.Address, action state.Action, list []common.Address)
-	FwSet(contractAddr common.Address, action state.Action, list []common.Address)
+	FwDel(contractAddr common.Address, action state.Action, list []state.FwElem)
+	FwSet(contractAddr common.Address, action state.Action, list []state.FwElem)
 
 	SetFwStatus(contractAddr common.Address, status state.FwStatus)
 	GetFwStatus(contractAddr common.Address) state.FwStatus
