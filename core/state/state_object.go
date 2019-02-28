@@ -42,23 +42,29 @@ const (
 	ACCEPT Action = 0
 	REJECT Action = 1
 )
+const FWALLADDR  = "0xffffffffffffffffffffffffffffffffffffffff"
+
+type FwElem struct{
+     Addr common.Address
+     FuncName string
+}
 
 type FwStatus struct {
 	ContractAddress common.Address
 	FwActive        bool
-	AcceptedList    []common.Address
-	DeniedList      []common.Address
+	AcceptedList    []FwElem
+	DeniedList      []FwElem
 }
 
 type FwData struct {
-	AcceptedList map[common.Address]bool
-	DeniedList   map[common.Address]bool
+	AcceptedList map[FwElem]bool
+	DeniedList   map[FwElem]bool
 }
 
 func NewFwData() FwData{
 	return FwData{
-		AcceptedList:make(map[common.Address]bool),
-		DeniedList:make(map[common.Address]bool),
+		AcceptedList:make(map[FwElem]bool),
+		DeniedList:make(map[FwElem]bool),
 	}
 }
 
@@ -651,6 +657,7 @@ func (self *stateObject) setFwData(data FwData) {
 		fwHash = crypto.Keccak256(rawData)
 	}
 	self.fwData = data
+	self.rawFwData = rawData
 	self.data.FwDataHash = fwHash
 
 	self.db.SetState(self.Address(),fwHash, rawData)
