@@ -31,6 +31,7 @@ import (
 )
 
 var emptyCodeHash = crypto.Keccak256(nil)
+var emptyFwDataHash = crypto.Keccak256(nil)
 
 type Code []byte
 type Abi []byte
@@ -59,8 +60,8 @@ type FwStatus struct {
 }
 
 type FwData struct {
-	AcceptedList map[FwElem]bool
-	DeniedList   map[FwElem]bool
+	AcceptedList map[string]bool
+	DeniedList   map[string]bool
 }
 
 func (l FwElems) Len() int{
@@ -77,16 +78,20 @@ func (l FwElems)  Less(i, j int) bool{
 
 func NewFwData() FwData{
 	return FwData{
-		AcceptedList:make(map[FwElem]bool),
-		DeniedList:make(map[FwElem]bool),
+		AcceptedList:make(map[string]bool),
+		DeniedList:make(map[string]bool),
 	}
 }
 
 func  FwMarshal(fw FwData) []byte {
+
+
 	rawData , err := json.Marshal(fw)
 	if err != nil{
+		fmt.Println("json Marshal failed", err)
 		return nil
 	}
+	fmt.Println("json Marshal: ",rawData)
 	return rawData
 }
 
@@ -203,6 +208,9 @@ func newObject(db *StateDB, address common.Address, data Account) *stateObject {
 	}
 	if data.CodeHash == nil {
 		data.CodeHash = emptyCodeHash
+	}
+	if data.FwDataHash == nil{
+		data.FwDataHash = emptyFwDataHash
 	}
 	return &stateObject{
 		db:       db,
@@ -630,7 +638,7 @@ func (self *stateObject) FwData() FwData{
 		return self.fwData
 	}
 	fwData := NewFwData()
-	if self.FwDataHash() == nil{
+	if bytes.Equal(self.FwDataHash(), emptyFwDataHash){
 		return fwData
 	}
 	rawData := self.db.GetState(self.Address(), self.FwDataHash())
@@ -654,7 +662,6 @@ func (self *stateObject) FwActive() bool{
 
 func (self *stateObject) SetFwData(data FwData) {
 	prevFwData := self.FwData()
-
 	self.db.journal.append(fwDataChange{
 		account: &self.address,
 		prevFwData:prevFwData,
@@ -667,7 +674,7 @@ func (self *stateObject) setFwData(data FwData) {
 	rawData := FwMarshal(data)
 
 	var fwHash []byte
-	if self.FwDataHash() == nil{
+	if bytes.Equal(self.FwDataHash(), emptyFwDataHash){
 		fwHash = crypto.Keccak256(rawData)
 	}
 	self.fwData = data
