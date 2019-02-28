@@ -276,11 +276,11 @@ func fwCheck(stateDb vm.StateDB, contractAddr common.Address, caller common.Addr
 		return true
 	}
 
-	fwStatus = stateDb.GetFwStatus(contractAddr)
-	if fwStatus.FwActive == false {
+	if stateDb.IsFwOpened(contractAddr) == false {
 		return true
 	}
 
+	fwStatus = stateDb.GetFwStatus(contractAddr)
 	if fwStatus.ContractAddress != contractAddr {
 		return false
 	}
