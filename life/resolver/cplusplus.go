@@ -632,6 +632,8 @@ func envPailEncrypt(vm *exec.VirtualMachine) int64 {
 	
 	number := vm.Memory.Memory[numberOffset : numberOffset + numberSize]
 	pubkey := vm.Memory.Memory[pubkeyOffset : pubkeyOffset + pubkeySize]
+	number = append(number, 0)
+	pubkey = append(pubkey, 0)
 	
     numberPtr := (*C.char)(unsafe.Pointer(&number[0]))
     pubkeyPtr := (*C.char)(unsafe.Pointer(&pubkey[0]))
@@ -665,6 +667,9 @@ func envPailHomAdd(vm *exec.VirtualMachine) int64 {
 	cipher1 := vm.Memory.Memory[cipher1Offset : cipher1Offset + cipher1Size]
 	cipher2 := vm.Memory.Memory[cipher2Offset : cipher2Offset + cipher2Size]
 	pubkey := vm.Memory.Memory[pubkeyOffset : pubkeyOffset + pubkeySize]
+	cipher1 = append(cipher1, 0)
+	cipher2 = append(cipher2, 0)
+	pubkey = append(pubkey, 0)
 	
     cipher1Ptr := (*C.char)(unsafe.Pointer(&cipher1[0]))
     cipher2Ptr := (*C.char)(unsafe.Pointer(&cipher2[0]))
@@ -699,6 +704,9 @@ func envPailHomSub(vm *exec.VirtualMachine) int64 {
 	cipher1 := vm.Memory.Memory[cipher1Offset : cipher1Offset + cipher1Size]
 	cipher2 := vm.Memory.Memory[cipher2Offset : cipher2Offset + cipher2Size]
 	pubkey := vm.Memory.Memory[pubkeyOffset : pubkeyOffset + pubkeySize]
+	cipher1 = append(cipher1, 0)
+	cipher2 = append(cipher2, 0)
+	pubkey = append(pubkey, 0)
 	
     cipher1Ptr := (*C.char)(unsafe.Pointer(&cipher1[0]))
     cipher2Ptr := (*C.char)(unsafe.Pointer(&cipher2[0]))
@@ -742,6 +750,12 @@ func envNizkVerifyProof(vm *exec.VirtualMachine) int64 {
 	toAmountCipher := vm.Memory.Memory[toAmountCipherOffset : toAmountCipherOffset + toAmountCipherSize]
 	fromPubkey := vm.Memory.Memory[fromPubkeyOffset : fromPubkeyOffset + fromPubkeySize]
 	toPubkey := vm.Memory.Memory[toPubkeyOffset : toPubkeyOffset + toPubkeySize]
+	pai = append(pai, 0)
+	fromBalCipher = append(fromBalCipher, 0)
+	fromAmountCipher = append(fromAmountCipher, 0)
+	toAmountCipher = append(toAmountCipher, 0)
+	fromPubkey = append(fromPubkey, 0)
+	toPubkey = append(toPubkey, 0)
 	
     paiPtr := (*C.char)(unsafe.Pointer(&pai[0]))
     fromBalCipherPtr := (*C.char)(unsafe.Pointer(&fromBalCipher[0]))
