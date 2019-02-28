@@ -270,9 +270,23 @@ func (st *StateTransition) preCheck() error {
 	return st.buyGas()
 }
 
-func fwCheck(stateDb vm.StateDB, contractAddr common.Address, caller common.Address) bool {
+func addressCompare(addr1, addr2 common.Address) bool {
+	return addr1.String() == addr2.String()
+}
+
+func fwCheck(stateDb vm.StateDB, contractAddr common.Address, caller common.Address, input []byte) bool {
+	var data [][]byte
+	if err := rlp.DecodeBytes(input, &data); err != nil {
+		return false
+	}
+	if len(data) < 2 {
+		fmt.Println("fw error: require function name")
+		return false
+	}
+	funcName := string(data[1])
+
 	var fwStatus state.FwStatus
-	if stateDb.GetContractCreator(contractAddr) == caller {
+	if addressCompare(stateDb.GetContractCreator(contractAddr), caller) {
 		return true
 	}
 
@@ -281,19 +295,69 @@ func fwCheck(stateDb vm.StateDB, contractAddr common.Address, caller common.Addr
 	}
 
 	fwStatus = stateDb.GetFwStatus(contractAddr)
-	if fwStatus.ContractAddress != contractAddr {
+	if !addressCompare(fwStatus.ContractAddress, contractAddr) {
 		return false
 	}
 
-	for _, d := range fwStatus.DeniedList {
-		if d == caller {
-			return false
+	/*
+	* Reject List!
+	 */
+	for _, fwElem := range fwStatus.DeniedList {
+		if fwElem.Addr.String() == state.FWALLADDR {
+			if fwElem.FuncName == "*" {
+				// 1. [*:*] and reject any address and any function access!
+				return false
+			} else if fwElem.FuncName == funcName {
+				// 2. [*:funcName] and funcname matched!
+				return false
+			} else {
+				// 3. [*:funcName] and funcname didn't match!
+				continue
+			}
+		} else {
+			if addressCompare(fwElem.Addr, caller) {
+				if fwElem.FuncName == "*" {
+					// 4. [address:*] and address matched!
+					return false
+				} else if fwElem.FuncName == funcName {
+					// 5. [address:funcName] and both address&funcName matched!
+					return false
+				} else {
+					// 6. [address:funcName] and address matched but funcname didn't match!
+					continue
+				}
+			}
 		}
 	}
 
-	for _, a := range fwStatus.AcceptedList {
-		if a == caller {
-			return true
+	/*
+	* Accept List!
+	 */
+	for _, fwElem := range fwStatus.AcceptedList {
+		if fwElem.Addr.String() == state.FWALLADDR {
+			if fwElem.FuncName == "*" {
+				// 1. [*:*] and allow any address and any function access!
+				return true
+			} else if fwElem.FuncName == funcName {
+				// 2. [*:funcName] and funcname matched!
+				return true
+			} else {
+				// 3. [*:funcName] and funcname didn't match!
+				continue
+			}
+		} else {
+			if addressCompare(fwElem.Addr, caller) {
+				if fwElem.FuncName == "*" {
+					// 4. [address:*] and address matched!
+					return true
+				} else if fwElem.FuncName == funcName {
+					// 5. [address:funcName] and both address&funcName matched!
+					return true
+				} else {
+					// 6. [address:funcName] and address matched but funcname didn't match!
+					continue
+				}
+			}
 		}
 	}
 
@@ -307,7 +371,7 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 	var fwData [][]byte
 	var funcName, listName, params string
 
-	if stateDb.GetContractCreator(contractAddr) != caller {
+	if !addressCompare(stateDb.GetContractCreator(contractAddr), caller) {
 		return nil, 0, vm.ErrFirewallPermissionNotAllowed
 	}
 
@@ -321,7 +385,28 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 		return nil, 0, vm.ErrFirewallInputInvalid
 	}
 	funcName = string(fwData[1])
-	if funcName == "__sys_FwAdd" || funcName == "__sys_FwClear" || funcName == "__sys_FwDel" || funcName == "__sys_FwSet" {
+	if funcName == "__sys_FwOpen" || funcName == "__sys_FwClose" || funcName == "__sys_FwStatus" {
+		if len(fwData) != 2 {
+			fmt.Println("fw error: wrong function parameters")
+			return nil, 0, vm.ErrFirewallInputInvalid
+		}
+	} else if funcName == "__sys_FwClear" {
+		if len(fwData) != 3 {
+			fmt.Println("fw error: wrong function parameters")
+			return nil, 0, vm.ErrFirewallInputInvalid
+		}
+
+		listName = string(fwData[2])
+		if listName == "Accept" {
+			act = state.ACCEPT
+		} else if listName == "Reject" {
+			act = state.REJECT
+		} else {
+			fmt.Println("fw error: action is invalid")
+			return nil, 0, vm.ErrOutOfGas
+		}
+
+	} else if funcName == "__sys_FwAdd" || funcName == "__sys_FwDel" || funcName == "__sys_FwSet" {
 		if len(fwData) != 4 {
 			fmt.Println("fw error: wrong function parameters")
 			return nil, 0, vm.ErrFirewallInputInvalid
@@ -338,22 +423,24 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 			return nil, 0, vm.ErrOutOfGas
 		}
 
-	} else if funcName == "__sys_FwOpen" || funcName == "__sys_FwClose" || funcName == "__sys_FwStatus" {
-		if len(fwData) != 2 {
-			fmt.Println("fw error: wrong function parameters")
-			return nil, 0, vm.ErrFirewallInputInvalid
-		}
 	} else {
 		fmt.Println("fw error: wrong function name")
 		return nil, 0, vm.ErrFirewallInputInvalid
 	}
 
-	var list []common.Address
-	var address common.Address
-	l := strings.Split(params, "|")
-	for _, addr := range l {
-		address = common.HexToAddress(addr)
-		list = append(list, address)
+	var list []state.FwElem
+	var fwElem state.FwElem
+	// var address common.Address
+	elements := strings.Split(params, "|")
+	for _, e := range elements {
+		tmp := strings.Split(e, ":")
+		addr := tmp[0]
+		api := tmp[1]
+		if addr == "*" {
+			addr = state.FWALLADDR
+		}
+		fwElem = state.FwElem{Addr: common.HexToAddress(addr), FuncName: api}
+		list = append(list, fwElem)
 	}
 
 	switch funcName {
@@ -361,10 +448,10 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 		stateDb.OpenFirewall(contractAddr)
 	case "__sys_FwClose":
 		stateDb.CloseFirewall(contractAddr)
-	case "__sys_FwAdd":
-		stateDb.FwAdd(contractAddr, act, list)
 	case "__sys_FwClear":
 		stateDb.FwClear(contractAddr, act)
+	case "__sys_FwAdd":
+		stateDb.FwAdd(contractAddr, act, list)
 	case "__sys_FwDel":
 		stateDb.FwDel(contractAddr, act, list)
 	case "__sys_FwSet":
@@ -429,8 +516,7 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 	if contractCreation {
 		ret, _, st.gas, vmerr = evm.Create(sender, st.data, st.gas, st.value)
 	} else {
-
-		if !fwCheck(evm.StateDB, st.to(), msg.From()) {
+		if !fwCheck(evm.StateDB, st.to(), msg.From(), msg.Data()) {
 			log.Debug("Calling contract was refused by firewall", "err", vmerr)
 		} else {
 			// Increment the nonce for the next transaction
