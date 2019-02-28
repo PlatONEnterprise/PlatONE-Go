@@ -752,7 +752,7 @@ func (s *StateDB) SetAbi(addr common.Address, abi []byte) {
 	}
 }
 
-func (s *StateDB) FwAdd(addr common.Address, action Action, list []common.Address)  {
+func (s *StateDB) FwAdd(addr common.Address, action Action, list []FwElem)  {
 	stateObject := s.GetOrNewStateObject(addr)
 	fwData := stateObject.FwData()
 
@@ -776,13 +776,13 @@ func (s *StateDB) FwClear(addr common.Address, action Action)  {
 	fwData := stateObject.FwData()
 	switch action{
 	case REJECT:
-		fwData.DeniedList =  make(map[common.Address]bool)
+		fwData.DeniedList =  make(map[FwElem]bool)
 	case ACCEPT:
-		fwData.AcceptedList = make(map[common.Address]bool)
+		fwData.AcceptedList = make(map[FwElem]bool)
 	}
 	stateObject.SetFwData(fwData)
 }
-func (s *StateDB) FwDel(addr common.Address, action Action, list []common.Address)  {
+func (s *StateDB) FwDel(addr common.Address, action Action, list []FwElem)  {
 	stateObject := s.GetOrNewStateObject(addr)
 
 	fwData := stateObject.FwData()
@@ -799,7 +799,7 @@ func (s *StateDB) FwDel(addr common.Address, action Action, list []common.Addres
 		}
 	}
 }
-func (s *StateDB) FwSet(addr common.Address, action Action, list []common.Address)  {
+func (s *StateDB) FwSet(addr common.Address, action Action, list []FwElem)  {
 	stateObject := s.GetOrNewStateObject(addr)
 
 	fwData := NewFwData()
@@ -840,7 +840,7 @@ func (s *StateDB) GetFwStatus(addr common.Address) (FwStatus) {
 	fwData := stateObject.FwData()
 	fwActive := stateObject.FwActive()
 
-	var deniedList, acceptedList []common.Address
+	var deniedList, acceptedList []FwElem
 
 	for elem, b := range fwData.DeniedList{
 		if b {
@@ -852,6 +852,9 @@ func (s *StateDB) GetFwStatus(addr common.Address) (FwStatus) {
 			acceptedList = append(acceptedList, elem)
 		}
 	}
+
+	sort.Sort(FwElems(deniedList))
+	sort.Sort(FwElems(acceptedList))
 
 	return FwStatus{
 		ContractAddress: addr,
