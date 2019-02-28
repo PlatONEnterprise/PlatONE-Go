@@ -796,6 +796,7 @@ func (s *StateDB) FwDel(addr common.Address, action Action, list []FwElem)  {
 			delete(fwData.AcceptedList, (addr.FuncName+":"+addr.Addr.String()))
 		}
 	}
+	stateObject.SetFwData(fwData)
 }
 func (s *StateDB) FwSet(addr common.Address, action Action, list []FwElem)  {
 	stateObject := s.GetOrNewStateObject(addr)
