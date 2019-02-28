@@ -370,6 +370,7 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 	var act state.Action
 	var fwData [][]byte
 	var funcName, listName, params string
+	var list []state.FwElem
 
 	if !addressCompare(stateDb.GetContractCreator(contractAddr), caller) {
 		return nil, 0, vm.ErrFirewallPermissionNotAllowed
@@ -403,7 +404,7 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 			act = state.REJECT
 		} else {
 			fmt.Println("fw error: action is invalid")
-			return nil, 0, vm.ErrOutOfGas
+			return nil, 0, vm.ErrFirewallInputInvalid
 		}
 
 	} else if funcName == "__sys_FwAdd" || funcName == "__sys_FwDel" || funcName == "__sys_FwSet" {
@@ -420,27 +421,28 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 			act = state.REJECT
 		} else {
 			fmt.Println("fw error: action is invalid")
-			return nil, 0, vm.ErrOutOfGas
+			return nil, 0, vm.ErrFirewallInputInvalid
+		}
+
+		elements := strings.Split(params, "|")
+		for _, e := range elements {
+			tmp := strings.Split(e, ":")
+			if len(tmp) != 2 {
+				return nil, 0, vm.ErrFirewallInputInvalid
+			}
+
+			addr := tmp[0]
+			api := tmp[1]
+			if addr == "*" {
+				addr = state.FWALLADDR
+			}
+			fwElem := state.FwElem{Addr: common.HexToAddress(addr), FuncName: api}
+			list = append(list, fwElem)
 		}
 
 	} else {
 		fmt.Println("fw error: wrong function name")
 		return nil, 0, vm.ErrFirewallInputInvalid
-	}
-
-	var list []state.FwElem
-	var fwElem state.FwElem
-	// var address common.Address
-	elements := strings.Split(params, "|")
-	for _, e := range elements {
-		tmp := strings.Split(e, ":")
-		addr := tmp[0]
-		api := tmp[1]
-		if addr == "*" {
-			addr = state.FWALLADDR
-		}
-		fwElem = state.FwElem{Addr: common.HexToAddress(addr), FuncName: api}
-		list = append(list, fwElem)
 	}
 
 	switch funcName {
