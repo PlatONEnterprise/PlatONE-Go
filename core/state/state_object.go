@@ -676,10 +676,14 @@ func (self *stateObject) setFwData(data FwData) {
 	var fwHash []byte
 	if bytes.Equal(self.FwDataHash(), emptyFwDataHash){
 		fwHash = crypto.Keccak256(rawData)
+		self.data.FwDataHash = fwHash
+	}else{
+		fwHash= self.FwDataHash()
 	}
+
+
 	self.fwData = data
 	self.rawFwData = rawData
-	self.data.FwDataHash = fwHash
 
 	self.db.SetState(self.Address(),fwHash, rawData)
 }
