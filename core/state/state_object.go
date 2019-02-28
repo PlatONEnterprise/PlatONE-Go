@@ -49,6 +49,8 @@ type FwElem struct{
      FuncName string
 }
 
+type FwElems []FwElem
+
 type FwStatus struct {
 	ContractAddress common.Address
 	FwActive        bool
@@ -59,6 +61,18 @@ type FwStatus struct {
 type FwData struct {
 	AcceptedList map[FwElem]bool
 	DeniedList   map[FwElem]bool
+}
+
+func (l FwElems) Len() int{
+	return len(l)
+}
+
+func (l FwElems) Swap(i,j int) {
+	l[i],l[j] = l[j], l[i]
+}
+
+func (l FwElems)  Less(i, j int) bool{
+	return l[i].FuncName <  l[j].FuncName
 }
 
 func NewFwData() FwData{

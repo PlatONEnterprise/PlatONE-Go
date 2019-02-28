@@ -853,6 +853,9 @@ func (s *StateDB) GetFwStatus(addr common.Address) (FwStatus) {
 		}
 	}
 
+	sort.Sort(FwElems(deniedList))
+	sort.Sort(FwElems(acceptedList))
+
 	return FwStatus{
 		ContractAddress: addr,
 		FwActive:fwActive,
