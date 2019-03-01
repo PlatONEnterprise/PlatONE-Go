@@ -155,7 +155,10 @@ func parseFuncFromAbi(fileName string, funcName string) (*FuncDesc, error) {
 /**
   Find the method called by parsing abi
 */
-func GetFuncNameAndParams(f string) (string, []string) {
+func GetFuncNameAndParams(funcAndParams string) (string, []string) {
+	strNoSpace := strings.Split(funcAndParams," ")
+	f := strings.Join(strNoSpace,"")
+
 	funcName := string(f[0:strings.Index(f, "(")])
 
 	paramString := string(f[strings.Index(f, "(")+1 : strings.LastIndex(f, ")")])
