@@ -411,17 +411,6 @@ web3._extend({
 			inputFormatter: [web3._extend.formatters.inputAddressFormatter]
 		}),
 		new web3._extend.Method({
-			name: 'setCnsManager',
-			call: 'eth_setCnsManager',
-			params: 1,
-			inputFormatter: [web3._extend.formatters.inputAddressFormatter]
-		}),
-		new web3._extend.Method({
-			name: 'getCnsManager',
-			call: 'eth_getCnsManager',
-			params: 0,	
-		}),
-		new web3._extend.Method({
 			name: 'sign',
 			call: 'eth_sign',
 			params: 2,
