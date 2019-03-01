@@ -2,9 +2,12 @@ package compiler
 
 // Gas costs
 const (
-	GasQuickStep   uint64 = 2
-	GasFastestSetp uint64 = 3
-
+	GasQuickStep        uint64 = 2
+	GasFastestSetp      uint64 = 3
+	GasPailEncrypt      uint64 = 14000
+	GasPailHomAdd       uint64 = 1000
+	GasPailHomSub       uint64 = 1000
+	GasNizkVerifyProof  uint64 = 160000
 	// ...
 )
 
