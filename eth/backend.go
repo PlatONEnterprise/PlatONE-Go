@@ -25,7 +25,9 @@ import (
 	"github.com/PlatONnetwork/PlatON-Go/p2p/discover"
 	"math/big"
 	"runtime"
+	"math"
 	"sync"
+	"context"
 	"sync/atomic"
 
 	"github.com/PlatONnetwork/PlatON-Go/accounts"
@@ -51,6 +53,46 @@ import (
 	"github.com/PlatONnetwork/PlatON-Go/rlp"
 	"github.com/PlatONnetwork/PlatON-Go/rpc"
 )
+
+func InitInnerCallFunc(ethPtr *Ethereum)    {
+	innerCall := func(conAddr common.Address, data []byte) ([]byte) {
+		ctx := context.Background()
+
+		// Get the state
+		state, header, err := ethPtr.APIBackend.StateAndHeaderByNumber(ctx, -1)
+		if state == nil || err != nil {
+			return nil
+		}
+
+		from 	 := common.Address{}
+		to 		 := &conAddr
+		gas 	 := uint64(0x999999999)
+		gasPrice := (hexutil.Big)(*big.NewInt(0x333333))
+		nonce 	 := uint64(0)
+		value 	 := (hexutil.Big)(*big.NewInt(0))
+
+		// Create new call message
+		msg := types.NewMessage(from, to, nonce, value.ToInt(), gas, gasPrice.ToInt(), data, false, types.NormalTxType)
+		
+		// Get a new instance of the EVM.
+		evm, vmError, err := ethPtr.APIBackend.GetEVM(ctx, msg, state, header, vm.Config{})
+		if err != nil {
+			return nil
+		}
+
+		// Setup the gas pool (also for unmetered requests)
+		// and apply the message.
+		gp := new(core.GasPool).AddGas(math.MaxUint64)
+		res, _, _, err := core.ApplyMessage(evm, msg, gp)
+		if err := vmError(); err != nil {
+			return nil
+		}
+
+		return res
+	}
+
+	common.SetInnerCallFunc(innerCall)
+}
 
 type LesServer interface {
 	Start(srvr *p2p.Server)
