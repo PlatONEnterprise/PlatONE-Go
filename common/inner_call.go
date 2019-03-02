@@ -22,73 +22,50 @@ func InnerCall(conAddr Address, funcName string, params []interface{}) ([]byte) 
 
 func GenCallData(funcName string, params []interface{}) ([]byte) {
 	data := [][]byte{}
-	data = append(data, Int64ToBytes(2))
+	data = append(data, Int64ToBytes(2)) // tx type, 2 for normal
 	data = append(data, []byte(funcName))
 	
 	for _, p := range params {
-		var t int
-		var i int64
-		var u uint64
-		var s string
 		switch p.(type) {
+			// for intX
 			case int:
-				i = int64(p.(int))
-				t = 1
+				data = append(data, Int64ToBytes(int64(p.(int))))
 			case int8:
-				i = int64(p.(int8))
-				t = 1
+				data = append(data, Int64ToBytes(int64(p.(int8))))
 			case int16:
-				i = int64(p.(int16))
-				t = 1
+				data = append(data, Int64ToBytes(int64(p.(int16))))
 			case int32:
-				i = int64(p.(int32))
-				t = 1
+				data = append(data, Int64ToBytes(int64(p.(int32))))
 			case int64:
-				i = int64(p.(int64))
-				t = 1
+				data = append(data, Int64ToBytes(p.(int64)))
 
+			// for uintX
 			case uint:
-				u = uint64(p.(uint))
-				t = 2
+				data = append(data, Uint64ToBytes(uint64(p.(uint))))
 			case uint8:
-				u = uint64(p.(uint8))
-				t = 2
+				data = append(data, Uint64ToBytes(uint64(p.(uint8))))
 			case uint16:
-				u = uint64(p.(uint16))
-				t = 2
+				data = append(data, Uint64ToBytes(uint64(p.(uint16))))
 			case uint32:
-				u = uint64(p.(uint32))
-				t = 2
+				data = append(data, Uint64ToBytes(uint64(p.(uint32))))
 			case uint64:
-				u = uint64(p.(uint64))
-				t = 2
+				data = append(data, Uint64ToBytes(p.(uint64)))
 
+			// for bool
 			case bool:
 				if p.(bool) {
-					u = 1;
+					data = append(data, Uint64ToBytes(uint64(1)))
 				} else {
-					u = 0;
+					data = append(data, Uint64ToBytes(uint64(0)))
 				}
-				t = 3
 
+			// for stirng
 			case string:
-				s = string(p.(string))
-				t = 4
+				data = append(data, []byte(p.(string)))
 
+			// not support
 			default:
-				t = 0
-		}
-
-		if t == 1 {
-			data = append(data, Int64ToBytes(i))
-		} else if t == 2 {
-			data = append(data, Uint64ToBytes(u))
-		} else if t == 3 {
-			data = append(data, Uint64ToBytes(u))
-		} else if t == 4 {
-			data = append(data, []byte(s))
-		} else {
-			return nil
+				return nil
 		}
 	}
 
