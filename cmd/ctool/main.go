@@ -27,6 +27,7 @@ func init() {
 		core.GetTxReceiptCmd,
 		core.StabilityCmd,
 		core.StabPrepareCmd,
+		core.FwInvokeCmd,
 	}
 	sort.Sort(cli.CommandsByName(app.Commands))
 	app.After = func(ctx *cli.Context) error {
