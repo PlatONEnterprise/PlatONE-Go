@@ -17,16 +17,17 @@
 package types
 
 import (
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/common/hexutil"
-	"github.com/PlatONnetwork/PlatON-Go/crypto"
-	"github.com/PlatONnetwork/PlatON-Go/log"
-	"github.com/PlatONnetwork/PlatON-Go/rlp"
 	"container/heap"
 	"errors"
 	"io"
 	"math/big"
 	"sync/atomic"
+
+	"github.com/PlatONnetwork/PlatON-Go/common"
+	"github.com/PlatONnetwork/PlatON-Go/common/hexutil"
+	"github.com/PlatONnetwork/PlatON-Go/crypto"
+	"github.com/PlatONnetwork/PlatON-Go/log"
+	"github.com/PlatONnetwork/PlatON-Go/rlp"
 )
 
 //go:generate gencodec -type txdata -field-override txdataMarshaling -out gen_tx_json.go
@@ -41,6 +42,7 @@ const (
 	NormalTxType uint64 = 2
 
 	CnsTxType uint64 = 0x11
+	FwTxType  uint64 = 0x12
 )
 
 type Transaction struct {
@@ -59,7 +61,7 @@ type txdata struct {
 	Amount       *big.Int        `json:"value"    gencodec:"required"`
 	Payload      []byte          `json:"input"    gencodec:"required"`
 	//CnsData      []byte          `json:"cnsData"`
-	TxType       uint64 			 `json:"txType"`
+	TxType uint64 `json:"txType"`
 
 	// Signature values
 	V *big.Int `json:"v" gencodec:"required"`
@@ -77,18 +79,18 @@ type txdataMarshaling struct {
 	Amount       *hexutil.Big
 	Payload      hexutil.Bytes
 	//CnsData	     hexutil.Bytes
-	TxType 		 uint64
-	V            *hexutil.Big
-	R            *hexutil.Big
-	S            *hexutil.Big
+	TxType uint64
+	V      *hexutil.Big
+	R      *hexutil.Big
+	S      *hexutil.Big
 }
 
 func NewTransaction(nonce uint64, to common.Address, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte, txType uint64) *Transaction {
-	return newTransaction(nonce, &to, amount, gasLimit, gasPrice, data,  txType)
+	return newTransaction(nonce, &to, amount, gasLimit, gasPrice, data, txType)
 }
 
 func NewContractCreation(nonce uint64, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte) *Transaction {
-	return newTransaction(nonce, nil, amount, gasLimit, gasPrice, data,  CreateTxType)
+	return newTransaction(nonce, nil, amount, gasLimit, gasPrice, data, CreateTxType)
 }
 
 func newTransaction(nonce uint64, to *common.Address, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte, txType uint64) *Transaction {
@@ -99,7 +101,7 @@ func newTransaction(nonce uint64, to *common.Address, amount *big.Int, gasLimit 
 		AccountNonce: nonce,
 		Recipient:    to,
 		Payload:      data,
-		TxType: 	  txType,
+		TxType:       txType,
 		Amount:       new(big.Int),
 		GasLimit:     gasLimit,
 		Price:        new(big.Int),
@@ -180,7 +182,8 @@ func (tx *Transaction) UnmarshalJSON(input []byte) error {
 	return nil
 }
 
-func (tx *Transaction) Type()  uint64 	   {return tx.data.TxType}
+func (tx *Transaction) Type() uint64 { return tx.data.TxType }
+
 //func (tx *Transaction) Cns() []byte    { return common.CopyBytes(tx.data.CnsData) }
 func (tx *Transaction) Data() []byte       { return common.CopyBytes(tx.data.Payload) }
 func (tx *Transaction) Gas() uint64        { return tx.data.GasLimit }
@@ -236,7 +239,7 @@ func (tx *Transaction) AsMessage(s Signer) (*Message, error) {
 		amount:     tx.data.Amount,
 		data:       tx.data.Payload,
 		checkNonce: true,
-		txType: tx.data.TxType,
+		txType:     tx.data.TxType,
 	}
 
 	var err error
@@ -404,7 +407,7 @@ type Message struct {
 	gasPrice   *big.Int
 	data       []byte
 	checkNonce bool
-	txType 	   uint64
+	txType     uint64
 }
 
 func NewMessage(from common.Address, to *common.Address, nonce uint64, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte, checkNonce bool, txType uint64) *Message {
@@ -418,7 +421,7 @@ func NewMessage(from common.Address, to *common.Address, nonce uint64, amount *b
 		gasPrice:   gasPrice,
 		data:       data,
 		checkNonce: checkNonce,
-		txType:		txType,
+		txType:     txType,
 	}
 	return &msg
 }
@@ -431,10 +434,9 @@ func (m *Message) Gas() uint64          { return m.gasLimit }
 func (m *Message) Nonce() uint64        { return m.nonce }
 func (m *Message) Data() []byte         { return m.data }
 func (m *Message) CheckNonce() bool     { return m.checkNonce }
-func (m *Message) TxType() uint64 	   { return m.txType}
+func (m *Message) TxType() uint64       { return m.txType }
 
-func (m *Message) SetTo(to common.Address)  {m.to.SetBytes(to.Bytes())}
-func (m *Message) SetData(b []byte)  {m.data = b}
-func (m *Message) SetTxType(src uint64)  {m.txType = src}
-func (m *Message) SetNonce(n uint64)        {m.nonce = n}
-
+func (m *Message) SetTo(to common.Address) { m.to.SetBytes(to.Bytes()) }
+func (m *Message) SetData(b []byte)        { m.data = b }
+func (m *Message) SetTxType(src uint64)    { m.txType = src }
+func (m *Message) SetNonce(n uint64)       { m.nonce = n }

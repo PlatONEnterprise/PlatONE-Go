@@ -36,7 +36,7 @@ var (
 		Usage: "wasm file path",
 	}
 	ContractAddrFlag = cli.StringFlag{
-		Name: "addr",
+		Name:  "addr",
 		Usage: "the contract address",
 	}
 	ContractCnsNameFlag = cli.StringFlag{
@@ -47,9 +47,9 @@ var (
 		Name:  "func",
 		Usage: "function and param ,eg :set(1,\"a\")",
 	}
-	ContractParamFlag =  cli.StringSliceFlag {
-		Name:   "param",
-		Usage:  "params trans into contract function, eg: --param \"p1\" --param \"p2\"",
+	ContractParamFlag = cli.StringSliceFlag{
+		Name:  "param",
+		Usage: "params trans into contract function, eg: --param \"p1\" --param \"p2\"",
 	}
 	TransactionTypeFlag = cli.IntFlag{
 		Name:  "type",
@@ -99,6 +99,14 @@ var (
 		ConfigPathFlag,
 		TransactionTypeFlag,
 	}
+
+	fwInvokeCmdFlags = []cli.Flag{
+		ContractAddrFlag,
+		ContractFuncNameFlag,
+		TransactionTypeFlag,
+		ConfigPathFlag,
+	}
+
 	codeGenCmdFlags = []cli.Flag{
 		ContractWasmFilePathFlag,
 		ContractAbiFilePathFlag,

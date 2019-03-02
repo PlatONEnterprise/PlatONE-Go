@@ -20,6 +20,7 @@ import (
 	"math/big"
 
 	"github.com/PlatONnetwork/PlatON-Go/common"
+	"github.com/PlatONnetwork/PlatON-Go/core/state"
 	"github.com/PlatONnetwork/PlatON-Go/core/types"
 )
 
@@ -55,7 +56,6 @@ type StateDB interface {
 	GetState(common.Address, []byte) []byte
 	SetState(common.Address, []byte, []byte)
 
-
 	Suicide(common.Address) bool
 	HasSuicided(common.Address) bool
 
@@ -73,6 +73,20 @@ type StateDB interface {
 	AddPreimage(common.Hash, []byte)
 
 	ForEachStorage(common.Address, func(common.Hash, common.Hash) bool)
+
+	FwAdd(contractAddr common.Address, action state.Action, list []state.FwElem)
+	FwClear(contractAddr common.Address, action state.Action)
+	FwDel(contractAddr common.Address, action state.Action, list []state.FwElem)
+	FwSet(contractAddr common.Address, action state.Action, list []state.FwElem)
+
+	SetFwStatus(contractAddr common.Address, status state.FwStatus)
+	GetFwStatus(contractAddr common.Address) state.FwStatus
+	SetContractCreator(contractAddr common.Address, creator common.Address)
+	GetContractCreator(contractAddr common.Address) common.Address
+
+	OpenFirewall(contractAddr common.Address)
+	CloseFirewall(contractAddr common.Address)
+	IsFwOpened(contractAddr common.Address) bool
 }
 
 // CallContext provides a basic interface for the EVM calling conventions. The EVM
