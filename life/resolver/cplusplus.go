@@ -153,6 +153,7 @@ func newCfcSet() map[string]map[string]*exec.FunctionImport {
 			"balance":      &exec.FunctionImport{Execute: envBalance, GasCost: constGasFunc(compiler.GasQuickStep)},
 			"origin":       &exec.FunctionImport{Execute: envOrigin, GasCost: constGasFunc(compiler.GasQuickStep)},
 			"caller":       &exec.FunctionImport{Execute: envCaller, GasCost: constGasFunc(compiler.GasQuickStep)},
+			"owner":       &exec.FunctionImport{Execute: envOwner, GasCost: constGasFunc(compiler.GasQuickStep)},
 			"callValue":    &exec.FunctionImport{Execute: envCallValue, GasCost: constGasFunc(compiler.GasQuickStep)},
 			"address":      &exec.FunctionImport{Execute: envAddress, GasCost: constGasFunc(compiler.GasQuickStep)},
 			"sha3":         &exec.FunctionImport{Execute: envSha3, GasCost: envSha3GasCost},
@@ -577,6 +578,15 @@ func envCaller(vm *exec.VirtualMachine) int64 {
 	caller := vm.Context.StateDB.Caller()
 	//fmt.Println("Caller:", caller.Hex(), " -> ", caller[0], caller[1], caller[len(caller)-2], caller[len(caller)-1])
 	copy(vm.Memory.Memory[offset:], caller.Bytes())
+	return 0
+}
+
+// define: void owner(char addr[20]);
+func envOwner(vm *exec.VirtualMachine) int64 {
+	offset := int(int32(vm.GetCurrentFrame().Locals[0]))
+	owner := vm.Context.StateDB.Owner()
+	//fmt.Println("Owner:", owner.Hex(), " -> ", owner[0], owner[1], owner[len(owner)-2], owner[len(owner)-1])
+	copy(vm.Memory.Memory[offset:], owner.Bytes())
 	return 0
 }
 
