@@ -413,6 +413,7 @@ type testState struct {
 	Balance     int64             `json:"balance,omitempty"`
 	Origin      string            `json:"origin,omitempty"`
 	Caller      string            `json:"caller,omitempty"`
+	Owner      string            `json:"caller,omitempty"`
 	Value       int64             `json:"value,omitempty"`
 	Address     string            `json:"address,omitempty"`
 	CallerNonce int64             `json:"nonce,omitempty"`
@@ -460,6 +461,9 @@ func (s *stateDB) Origin() common.Address {
 }
 func (s *stateDB) Caller() common.Address {
 	return common.HexToAddress(s.state.Caller)
+}
+func (s *stateDB) Owner() common.Address {
+	return common.HexToAddress(s.state.Owner)
 }
 func (s *stateDB) Address() common.Address {
 	return common.HexToAddress(s.state.Address)
