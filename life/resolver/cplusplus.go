@@ -160,6 +160,7 @@ func newCfcSet() map[string]map[string]*exec.FunctionImport {
 			"setState":     &exec.FunctionImport{Execute: envSetState, GasCost: envSetStateGasCost},
 			"getState":     &exec.FunctionImport{Execute: envGetState, GasCost: envGetStateGasCost},
 			"getStateSize": &exec.FunctionImport{Execute: envGetStateSize, GasCost: envGetStateSizeGasCost},
+			"ecrecover": &exec.FunctionImport{Execute: envEcrecover, GasCost: envEcrecoverGasCost},
 
 			// support for vc
 			"vc_InitGadgetEnv":          &exec.FunctionImport{Execute: envInitGadgetEnv, GasCost: envInitGadgetEnvGasCost},
@@ -620,6 +621,26 @@ func envSha3(vm *exec.VirtualMachine) int64 {
 	//fmt.Printf("Sha3:%v, 0:%v, 1:%v, (-2):%v, (-1):%v. \n", common.Bytes2Hex(hash), hash[0], fmt.Sprintf("%b", hash[1]), hash[len(hash)-2], hash[len(hash)-1])
 	copy(vm.Memory.Memory[destOffset:], hash)
 	return 0
+}
+
+func envEcrecover(vm *exec.VirtualMachine)int64{
+	hashOffset := int(int32(vm.GetCurrentFrame().Locals[0]))
+	rsOffset := int(int32(vm.GetCurrentFrame().Locals[1]))
+	addrOffset := int(int32(vm.GetCurrentFrame().Locals[2]))
+
+	h:= vm.Memory.Memory[hashOffset : hashOffset+32]
+	rs := vm.Memory.Memory[rsOffset : rsOffset+65]
+
+	pubK , _:= crypto.SigToPub(h, rs)
+
+	addr:= crypto.PubkeyToAddress(*pubK)
+
+	copy(vm.Memory.Memory[addrOffset:], addr.Bytes())
+	return 0
+}
+
+func envEcrecoverGasCost(vm *exec.VirtualMachine)(uint64, error){
+	return 1, nil
 }
 
 func envPailEncrypt(vm *exec.VirtualMachine) int64 {
