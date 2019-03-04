@@ -17,6 +17,7 @@ type StateDB interface {
 	Caller() common.Address
 	Address() common.Address
 	CallValue() *big.Int
+	Owner() common.Address
 	AddLog(address common.Address, topics []common.Hash, data []byte, bn uint64)
 	SetState(key []byte, value []byte)
 	GetState(key []byte) []byte
