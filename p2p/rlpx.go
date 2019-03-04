@@ -28,6 +28,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/PlatONnetwork/PlatON-Go/common"
 	"hash"
 	"io"
 	"io/ioutil"
@@ -405,7 +406,21 @@ func receiverEncHandshake(conn io.ReadWriter, prv *ecdsa.PrivateKey) (s secrets,
 			return s, err
 		}
 		pubStr := hex.EncodeToString(recoveredPub[1:])
-		fmt.Println("receive len", msg, sig, pubStr)
+
+		cnsAddress := common.HexToAddress("0x0000000000000000000000000000000000000011")
+		nodeAddressRes := common.InnerCall(cnsAddress, "getContractAddress", []interface{}{ "__sys_nodeManager", "latest"})
+
+		nodeManagerAddress := common.HexToAddress(common.CallResAsString(nodeAddressRes))
+		validNodeRes := common.InnerCall(nodeManagerAddress, "validJoinNode", []interface{}{ "0x" + pubStr})
+
+		validNode := common.CallResAsBool(validNodeRes)
+
+		fmt.Println("receive len", msg, sig, pubStr, validNodeRes, validNode, nodeManagerAddress, common.CallResAsString(nodeAddressRes))
+
+		if(!validNode) {
+			fmt.Println("join node is a invalid node")
+			return s, errors.New("join node is a invalid node")
+		}
 	}
 
 	return h.secrets(authPacket, authRespPacket)
