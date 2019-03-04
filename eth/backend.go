@@ -226,7 +226,7 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 		config.TxPool.Journal = ctx.ResolvePath(config.TxPool.Journal)
 	}
 	//eth.txPool = core.NewTxPool(config.TxPool, eth.chainConfig, eth.blockchain)
-	eth.txPool = core.NewTxPool(config.TxPool, eth.chainConfig, blockChainCache)
+	eth.txPool = core.NewTxPool(config.TxPool, eth.chainConfig, blockChainCache, chainDb)
 
 	log.Debug("eth.txPool:::::", "txPool", eth.txPool)
 	// mpcPool deal with mpc transactions
