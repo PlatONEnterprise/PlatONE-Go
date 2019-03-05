@@ -430,7 +430,7 @@ type filterBackend struct {
 	db ethdb.Database
 	bc *core.BlockChain
 }
-
+func (fb *filterBackend) ExtendedDb() ethdb.Database  { return nil }
 func (fb *filterBackend) ChainDb() ethdb.Database  { return fb.db }
 func (fb *filterBackend) EventMux() *event.TypeMux { panic("not supported") }
 

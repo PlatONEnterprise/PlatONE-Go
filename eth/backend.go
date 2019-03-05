@@ -121,6 +121,9 @@ type Ethereum struct {
 	// DB interfaces
 	chainDb ethdb.Database // Block chain database
 
+	// ext db interfaces
+	extDb ethdb.Database
+
 	eventMux       *event.TypeMux
 	engine         consensus.Engine
 	accountManager *accounts.Manager
@@ -159,6 +162,10 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 		log.Warn("Sanitizing invalid miner gas price", "provided", config.MinerGasPrice, "updated", DefaultConfig.MinerGasPrice)
 		config.MinerGasPrice = new(big.Int).Set(DefaultConfig.MinerGasPrice)
 	}
+
+	// create extended database
+	extDb, err := CreateExtDB(ctx, config, "extdb")
+
 	// Assemble the Ethereum object
 	chainDb, err := CreateDB(ctx, config, "chaindata")
 	if err != nil {
@@ -177,6 +184,7 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	eth := &Ethereum{
 		config:         config,
 		chainDb:        chainDb,
+		extDb:          extDb,
 		chainConfig:    chainConfig,
 		eventMux:       ctx.EventMux,
 		accountManager: ctx.AccountManager,
@@ -226,7 +234,7 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 		config.TxPool.Journal = ctx.ResolvePath(config.TxPool.Journal)
 	}
 	//eth.txPool = core.NewTxPool(config.TxPool, eth.chainConfig, eth.blockchain)
-	eth.txPool = core.NewTxPool(config.TxPool, eth.chainConfig, blockChainCache, chainDb)
+	eth.txPool = core.NewTxPool(config.TxPool, eth.chainConfig, blockChainCache, chainDb, eth.extDb)
 
 	log.Debug("eth.txPool:::::", "txPool", eth.txPool)
 	// mpcPool deal with mpc transactions
@@ -296,6 +304,18 @@ func CreateDB(ctx *node.ServiceContext, config *Config, name string) (ethdb.Data
 	}
 	if db, ok := db.(*ethdb.LDBDatabase); ok {
 		db.Meter("eth/db/chaindata/")
+	}
+	return db, nil
+}
+
+// create extended database
+func CreateExtDB(ctx *node.ServiceContext, config *Config, name string) (ethdb.Database, error) {
+	db, err := ctx.OpenDatabase(name, config.DatabaseCache, config.DatabaseHandles)
+	if err != nil {
+		return nil, err
+	}
+	if db, ok := db.(*ethdb.LDBDatabase); ok {
+		db.Meter("eth/db/extdb/")
 	}
 	return db, nil
 }
@@ -520,7 +540,7 @@ func (s *Ethereum) StopMining() {
 
 func (s *Ethereum) IsMining() bool      { return s.miner.Mining() }
 func (s *Ethereum) Miner() *miner.Miner { return s.miner }
-
+func (s *Ethereum) ExtendedDb() ethdb.Database { return s.extDb }
 func (s *Ethereum) AccountManager() *accounts.Manager  { return s.accountManager }
 func (s *Ethereum) BlockChain() *core.BlockChain       { return s.blockchain }
 func (s *Ethereum) TxPool() *core.TxPool               { return s.txPool }
@@ -592,6 +612,7 @@ func (s *Ethereum) Stop() error {
 	s.eventMux.Stop()
 
 	s.chainDb.Close()
+	s.extDb.Close()
 	close(s.shutdownChan)
 	return nil
 }

@@ -56,6 +56,7 @@ type PublicFilterAPI struct {
 	mux       *event.TypeMux
 	quit      chan struct{}
 	chainDb   ethdb.Database
+	extDb   ethdb.Database
 	events    *EventSystem
 	filtersMu sync.Mutex
 	filters   map[rpc.ID]*filter
@@ -67,6 +68,7 @@ func NewPublicFilterAPI(backend Backend, lightMode bool) *PublicFilterAPI {
 		backend: backend,
 		mux:     backend.EventMux(),
 		chainDb: backend.ChainDb(),
+		extDb:	 backend.ExtendedDb(),
 		events:  NewEventSystem(backend.EventMux(), backend, lightMode),
 		filters: make(map[rpc.ID]*filter),
 	}
