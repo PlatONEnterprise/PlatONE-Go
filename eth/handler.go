@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/PlatONnetwork/PlatON-Go/miner"
 	"math"
 	"math/big"
 	"strconv"
@@ -699,6 +700,11 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 			if tx == nil {
 				return errResp(ErrDecode, "transaction %d is nil", i)
 			}
+
+			// This node is the node that receives the broadcast transaction
+			strTx := tx.Hash().String()
+			miner.MonitorWriteData(miner.TransactionReceiveTime, strTx, "", pm.txpool.ExtendedDb())
+			miner.MonitorWriteData(miner.TransactionReceiveNode, strTx, "false", pm.txpool.ExtendedDb())
 			p.MarkTransaction(tx.Hash())
 		}
 
