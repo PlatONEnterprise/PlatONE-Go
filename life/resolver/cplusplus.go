@@ -154,6 +154,7 @@ func newCfcSet() map[string]map[string]*exec.FunctionImport {
 			"origin":       &exec.FunctionImport{Execute: envOrigin, GasCost: constGasFunc(compiler.GasQuickStep)},
 			"caller":       &exec.FunctionImport{Execute: envCaller, GasCost: constGasFunc(compiler.GasQuickStep)},
 			"owner":       &exec.FunctionImport{Execute: envOwner, GasCost: constGasFunc(compiler.GasQuickStep)},
+			"isFromInit":   &exec.FunctionImport{Execute: envIsFromInit, GasCost: constGasFunc(compiler.GasQuickStep)},
 			"callValue":    &exec.FunctionImport{Execute: envCallValue, GasCost: constGasFunc(compiler.GasQuickStep)},
 			"address":      &exec.FunctionImport{Execute: envAddress, GasCost: constGasFunc(compiler.GasQuickStep)},
 			"sha3":         &exec.FunctionImport{Execute: envSha3, GasCost: envSha3GasCost},
@@ -588,6 +589,15 @@ func envOwner(vm *exec.VirtualMachine) int64 {
 	//fmt.Println("Owner:", owner.Hex(), " -> ", owner[0], owner[1], owner[len(owner)-2], owner[len(owner)-1])
 	copy(vm.Memory.Memory[offset:], owner.Bytes())
 	return 0
+}
+
+// define: int64_t isFromInit();
+func envIsFromInit(vm *exec.VirtualMachine) int64 {
+	if vm.InitEntryID != -1 {
+		return 0
+	} else {
+		return 1
+	}
 }
 
 // define: int64_t callValue();
