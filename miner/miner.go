@@ -91,6 +91,16 @@ func MonitorWriteData(monitorType int, key string, value string, db ethdb.Databa
 	return err
 }
 
+func MonitorReadData(monitorType int, key string, db ethdb.Database) string {
+	key = key + strconv.FormatInt(int64(monitorType),10)
+
+	data, err := db.Get([]byte(key))
+	if err != nil {
+		return ""
+	}
+	return string(data)
+}
+
 func New(eth Backend, config *params.ChainConfig, mux *event.TypeMux, engine consensus.Engine, recommit time.Duration, gasFloor, gasCeil uint64, isLocalBlock func(block *types.Block) bool,
 	blockSignatureCh chan *cbfttypes.BlockSignature, cbftResultCh chan *cbfttypes.CbftResult, highestLogicalBlockCh chan *types.Block, blockChainCache *core.BlockChainCache) *Miner {
 	miner := &Miner{
