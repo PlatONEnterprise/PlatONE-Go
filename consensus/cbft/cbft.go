@@ -565,6 +565,23 @@ func (cbft *Cbft) SetPrivateKey(privateKey *ecdsa.PrivateKey) {
 	cbft.config.NodeID = discover.PubkeyID(&privateKey.PublicKey)
 }
 
+func (cbft *Cbft) IsPrimaryNode() bool {
+	// Determine whether the current node is a consensus node
+	if len(cbft.dpos.primaryNodeList) == 1 {
+		return true
+	}
+
+	for _, node := range cbft.dpos.primaryNodeList {
+		pub, err := node.Pubkey()
+		if err != nil || pub == nil {
+			log.Error("nodeID.ID.Pubkey error!")
+		}
+		nodeId := discover.PubkeyID(pub)
+		return bytes.Equal(nodeId[:], cbft.config.NodeID[:])
+	}
+	return false
+}
+
 func SetBlockChainCache(blockChainCache *core.BlockChainCache) {
 	cbft.blockChainCache = blockChainCache
 }
@@ -1338,7 +1355,7 @@ func (cbft *Cbft) Finalize(chain consensus.ChainReader, header *types.Header, st
 }
 
 //to sign the block, and store the sign to header.Extra[32:], send the sign to chanel to broadcast to other consensus nodes
-func (cbft *Cbft) Seal(chain consensus.ChainReader, block *types.Block, sealResultCh chan<- *types.Block, stopCh <-chan struct{}) error {
+func (cbft *Cbft) Seal(chain consensus.ChainReader, block *types.Block, sealResultCh chan<- *types.Block, stopCh <-chan struct{}) (*types.Block, error) {
 	cbft.log.Debug("call Seal()", "number", block.NumberU64(), "parentHash", block.ParentHash())
 	/*cbft.lock.Lock()
 	defer cbft.lock.Unlock()*/
@@ -1347,18 +1364,18 @@ func (cbft *Cbft) Seal(chain consensus.ChainReader, block *types.Block, sealResu
 	number := block.NumberU64()
 
 	if number == 0 {
-		return errUnknownBlock
+		return nil, errUnknownBlock
 	}
 
 	if !cbft.getHighestLogical().isParent(block) {
 		cbft.log.Warn("Futile block cause highest logical block changed", "number", block.Number(), "parentHash", block.ParentHash(), "highestLogical.Number", cbft.getHighestLogical().number, "highestLogical.Hash", cbft.getHighestLogical().block.Hash())
-		return errFutileBlock
+		return nil, errFutileBlock
 	}
 
 	// sign the seal hash
 	sign, err := cbft.signFn(header.SealHash().Bytes())
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	//store the sign in  header.Extra[32:]
@@ -1395,7 +1412,7 @@ func (cbft *Cbft) Seal(chain consensus.ChainReader, block *types.Block, sealResu
 		cbft.setHighestLogical(current, false)
 		cbft.highestConfirmed.Store(current)
 		cbft.flushReadyBlock()
-		return nil
+		return sealedBlock, nil
 	}
 
 	//reset cbft.highestLogicalBlockExt cause this block is produced by myself
@@ -1410,7 +1427,7 @@ func (cbft *Cbft) Seal(chain consensus.ChainReader, block *types.Block, sealResu
 			cbft.log.Warn("Sealing result is not ready by miner", "sealHash", header.SealHash())
 		}
 	}()
-	return nil
+	return sealedBlock, nil
 }
 
 // SealHash returns the hash of a block prior to it being sealed.

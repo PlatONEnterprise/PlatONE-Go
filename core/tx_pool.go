@@ -19,6 +19,7 @@ package core
 import (
 	"errors"
 	"fmt"
+
 	"math"
 	"math/big"
 	"sort"
@@ -30,6 +31,8 @@ import (
 	"github.com/PlatONnetwork/PlatON-Go/common/prque"
 	"github.com/PlatONnetwork/PlatON-Go/core/state"
 	"github.com/PlatONnetwork/PlatON-Go/core/types"
+	"github.com/PlatONnetwork/PlatON-Go/core/rawdb"
+	"github.com/PlatONnetwork/PlatON-Go/ethdb"
 	"github.com/PlatONnetwork/PlatON-Go/event"
 	"github.com/PlatONnetwork/PlatON-Go/log"
 	"github.com/PlatONnetwork/PlatON-Go/metrics"
@@ -57,6 +60,7 @@ var (
 	// one present in the local chain.
 	ErrNonceTooLow = errors.New("nonce too low")
 
+	ErrTransactionRepeat = errors.New("transaction repeat")
 	// ErrUnderpriced is returned if a transaction's gas price is below the minimum
 	// configured for the transaction pool.
 	ErrUnderpriced = errors.New("transaction underpriced")
@@ -195,6 +199,7 @@ func (config *TxPoolConfig) sanitize() TxPoolConfig {
 type TxPool struct {
 	config      TxPoolConfig
 	chainconfig *params.ChainConfig
+	extDb ethdb.Database
 	//chain        blockChain
 	chain    txPoolBlockChain
 	gasPrice *big.Int
@@ -209,6 +214,7 @@ type TxPool struct {
 
 	currentState  *state.StateDB      // Current state in the blockchain head
 	pendingState  *state.ManagedState // Pending state tracking virtual nonces
+	db ethdb.Database
 	currentMaxGas uint64              // Current gas limit for transaction caps
 
 	locals  *accountSet // Set of local transaction to exempt from eviction rules
@@ -239,12 +245,13 @@ type txExt struct {
 // NewTxPool creates a new transaction pool to gather, sort and filter inbound
 // transactions from the network.
 //func NewTxPool(config TxPoolConfig, chainconfig *params.ChainConfig, chain blockChain) *TxPool {
-func NewTxPool(config TxPoolConfig, chainconfig *params.ChainConfig, chain txPoolBlockChain) *TxPool {
+func NewTxPool(config TxPoolConfig, chainconfig *params.ChainConfig, chain txPoolBlockChain, db ethdb.Database, extDb ethdb.Database) *TxPool {
 	// Sanitize the input to ensure no vulnerable gas prices are set
 	config = (&config).sanitize()
 
 	// Create the transaction pool with its initial settings
 	pool := &TxPool{
+		extDb:       extDb,
 		config:      config,
 		chainconfig: chainconfig,
 		chain:       chain,
@@ -253,6 +260,7 @@ func NewTxPool(config TxPoolConfig, chainconfig *params.ChainConfig, chain txPoo
 		queue:       make(map[common.Address]*txList),
 		beats:       make(map[common.Address]time.Time),
 		all:         newTxLookup(),
+		db: db,
 		// modified by PlatON
 		// chainHeadCh: make(chan ChainHeadEvent, chainHeadChanSize),
 		chainHeadCh: make(chan *types.Block, chainHeadChanSize),
@@ -783,14 +791,20 @@ func (pool *TxPool) validateTx(tx *types.Transaction, local bool) error {
 	if !local && pool.gasPrice.Cmp(tx.GasPrice()) > 0 {
 		return ErrUnderpriced
 	}
-	// Ensure the transaction adheres to nonce ordering
-	if pool.currentState.GetNonce(from) > tx.Nonce() {
-		/*from, _ := types.Sender(pool.signer, tx)
-		if local && from.String() == "0x493301712671Ada506ba6Ca7891F436D29185821" {
-			log.Debug("Nonce tracking, validate tx", "from", "0x493301712671Ada506ba6Ca7891F436D29185821", "nonce", pool.currentState.GetNonce(from), "tx.Nonce()", tx.Nonce())
-		}*/
-		return ErrNonceTooLow
+
+	if tx, _, _, _ := rawdb.ReadTransaction(pool.db, tx.Hash()); tx != nil {
+		fmt.Println("Transaction Repeat.....................")
+		return ErrTransactionRepeat
 	}
+
+	// Ensure the transaction adheres to nonce ordering
+	//if pool.currentState.GetNonce(from) > tx.Nonce() {
+	//	/*from, _ := types.Sender(pool.signer, tx)
+	//	if local && from.String() == "0x493301712671Ada506ba6Ca7891F436D29185821" {
+	//		log.Debug("Nonce tracking, validate tx", "from", "0x493301712671Ada506ba6Ca7891F436D29185821", "nonce", pool.currentState.GetNonce(from), "tx.Nonce()", tx.Nonce())
+	//	}*/
+	//	return ErrNonceTooLow
+	//}
 	// Transactor should have enough funds to cover the costs
 	// cost == V + GP * GL
 	if pool.currentState.GetBalance(from).Cmp(tx.Cost()) < 0 {
@@ -1016,6 +1030,11 @@ func (pool *TxPool) AddLocals(txs []*types.Transaction) []error {
 	} else {
 		return nil
 	}
+}
+
+// get ext db
+func (pool *TxPool) ExtendedDb() ethdb.Database {
+	return pool.extDb
 }
 
 // AddRemotes enqueues a batch of transactions into the pool if they are valid.

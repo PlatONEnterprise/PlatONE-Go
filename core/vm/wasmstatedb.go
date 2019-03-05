@@ -73,6 +73,11 @@ func (self *WasmStateDB) CallValue() *big.Int {
 	return self.contract.Value()
 }
 
+func (self *WasmStateDB) Owner() common.Address {
+	contractAddress := self.contract.Address()
+	return self.evm.StateDB.GetContractCreator(contractAddress)
+}
+
 /*func (self *WasmStateDB) AddLog(log *types.Log)  {
 	self.evm.StateDB.AddLog(log)
 }*/

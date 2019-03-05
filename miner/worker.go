@@ -19,6 +19,7 @@ package miner
 import (
 	"bytes"
 	"github.com/PlatONnetwork/PlatON-Go/consensus/cbft"
+	"github.com/PlatONnetwork/PlatON-Go/ethdb"
 	"math/big"
 	"sync"
 	"sync/atomic"
@@ -137,6 +138,7 @@ func (e *commitWorkEnv) getHighestLogicalBlock() *types.Block {
 // worker is the main object which takes care of submitting new work to consensus engine
 // and gathering the sealing result.
 type worker struct {
+	extdb  ethdb.Database
 	EmptyBlock string
 	config *params.ChainConfig
 	engine consensus.Engine
@@ -204,6 +206,7 @@ type worker struct {
 func newWorker(config *params.ChainConfig, engine consensus.Engine, eth Backend, mux *event.TypeMux, recommit time.Duration, gasFloor, gasCeil uint64, isLocalBlock func(*types.Block) bool,
 	blockSignatureCh chan *cbfttypes.BlockSignature, cbftResultCh chan *cbfttypes.CbftResult, highestLogicalBlockCh chan *types.Block, blockChainCache *core.BlockChainCache) *worker {
 	worker := &worker{
+		extdb:				   eth.ExtendedDb(),
 		config:                config,
 		engine:                engine,
 		eth:                   eth,
@@ -628,13 +631,17 @@ func (w *worker) taskLoop() {
 				w.blockChainCache.WriteStateDB(sealHash, task.state, task.block.NumberU64())
 				w.blockChainCache.WriteReceipts(sealHash, task.receipts, task.block.NumberU64())
 
-				if err := cbftEngine.Seal(w.chain, task.block, w.prepareResultCh, stopCh); err != nil {
+				if sealedBlock, err := cbftEngine.Seal(w.chain, task.block, w.prepareResultCh, stopCh); err != nil {
 					log.Warn("【Bft engine】Block sealing failed", "err", err)
+
+				} else {
+					MonitorWriteData(BlockConsensusStartTime, sealedBlock.Hash().String(),"", w.extdb)
+					log.Info("sealedBlock.hash", "seal():", sealedBlock.Hash())
 				}
 				continue
 			}
 
-			if err := w.engine.Seal(w.chain, task.block, w.resultCh, stopCh); err != nil {
+			if _, err := w.engine.Seal(w.chain, task.block, w.resultCh, stopCh); err != nil {
 				log.Warn("Block sealing failed", "err", err)
 			}
 
@@ -761,6 +768,7 @@ func (w *worker) resultLoop() {
 				log.Warn("handle cbft result error, block has transactions but receipts is nil, maybe block is synced from other peer", "hash", hash, "number", number)
 				continue
 			}
+			MonitorWriteData(BlockConsensusEndTime, hash.String(), "", w.extdb)
 
 			log.Debug("cbft consensus successful", "hash", hash, "number", number, "timestamp", time.Now().UnixNano()/1e6)
 
@@ -786,6 +794,15 @@ func (w *worker) resultLoop() {
 				log.Error("Failed writing block to chain", "hash", block.Hash(), "number", block.NumberU64(), "err", err)
 				continue
 			}
+
+			if cbftEngine, ok := w.engine.(consensus.Bft); ok {
+				bIsPrimaryNode := "false"
+				if cbftEngine.IsPrimaryNode() {
+					bIsPrimaryNode = "true"
+				}
+				MonitorWriteData(BlockPrimay, block.Hash().String(), bIsPrimaryNode, w.extdb)
+			}
+			MonitorWriteData(BlockCommitTime, block.Hash().String(),"", w.extdb)
 			log.Info("Successfully write new block", "hash", block.Hash(), "number", block.NumberU64())
 
 			// Broadcast the block and announce chain insertion event
@@ -927,37 +944,39 @@ func (w *worker) commitTransactionsWithHeader(header *types.Header, txs *types.T
 			continue
 		}
 		// Start executing the transaction
+		MonitorWriteData(TransactionExecuteStartTime, tx.Hash().String(),"", w.extdb)
 		w.current.state.Prepare(tx.Hash(), common.Hash{}, w.current.tcount)
 
 		logs, err := w.commitTransaction(tx, coinbase)
-
+		MonitorWriteData(TransactionExecuteEndTime, tx.Hash().String(),"", w.extdb)
 		switch err {
 		case core.ErrGasLimitReached:
 			// Pop the current out-of-gas transaction without shifting in the next from the account
 			log.Warn("Gas limit exceeded for current block", "blockNumber", header.Number, "blockParentHash", header.ParentHash, "tx.hash", tx.Hash(), "sender", from, w.current.state)
 			txs.Pop()
-
+			MonitorWriteData(TransactionExecuteStatus, tx.Hash().String(),"false", w.extdb)
 		case core.ErrNonceTooLow:
 			// New head notification data race between the transaction pool and miner, shift
 			log.Warn("Skipping transaction with low nonce", "blockNumber", header.Number, "blockParentHash", header.ParentHash, "tx.hash", tx.Hash(), "sender", from, "senderCurNonce", w.current.state.GetNonce(from), "tx.nonce", tx.Nonce())
 			txs.Shift()
-
+			MonitorWriteData(TransactionExecuteStatus, tx.Hash().String(),"false", w.extdb)
 		case core.ErrNonceTooHigh:
 			// Reorg notification data race between the transaction pool and miner, skip account =
 			log.Warn("Skipping account with hight nonce", "blockNumber", header.Number, "blockParentHash", header.ParentHash, "tx.hash", tx.Hash(), "sender", from, "senderCurNonce", w.current.state.GetNonce(from), "tx.nonce", tx.Nonce())
 			txs.Pop()
-
+			MonitorWriteData(TransactionExecuteStatus, tx.Hash().String(),"false", w.extdb)
 		case nil:
 			// Everything ok, collect the logs and shift in the next transaction from the same account
 			coalescedLogs = append(coalescedLogs, logs...)
 			w.current.tcount++
 			txs.Shift()
-
+			MonitorWriteData(TransactionExecuteStatus, tx.Hash().String(),"true", w.extdb)
 		default:
 			// Strange error, discard the transaction and get the next in line (note, the
 			// nonce-too-high clause will prevent us from executing in vain).
 			log.Warn("Transaction failed, account skipped", "blockNumber", header.Number, "blockParentHash", header.ParentHash, "hash", tx.Hash(), "hash", tx.Hash(), "err", err)
 			txs.Shift()
+			MonitorWriteData(TransactionExecuteStatus, tx.Hash().String(),"false", w.extdb)
 		}
 	}
 

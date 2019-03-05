@@ -34,6 +34,7 @@ type lesCommons struct {
 	config                       *eth.Config
 	iConfig                      *light.IndexerConfig
 	chainDb                      ethdb.Database
+	extDb                        ethdb.Database
 	protocolManager              *ProtocolManager
 	chtIndexer, bloomTrieIndexer *core.ChainIndexer
 }

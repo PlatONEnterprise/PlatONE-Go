@@ -25,7 +25,9 @@ import (
 	"github.com/PlatONnetwork/PlatON-Go/p2p/discover"
 	"math/big"
 	"runtime"
+	"math"
 	"sync"
+	"context"
 	"sync/atomic"
 
 	"github.com/PlatONnetwork/PlatON-Go/accounts"
@@ -51,6 +53,46 @@ import (
 	"github.com/PlatONnetwork/PlatON-Go/rlp"
 	"github.com/PlatONnetwork/PlatON-Go/rpc"
 )
+
+func InitInnerCallFunc(ethPtr *Ethereum)    {
+	innerCall := func(conAddr common.Address, data []byte) ([]byte) {
+		ctx := context.Background()
+
+		// Get the state
+		state, header, err := ethPtr.APIBackend.StateAndHeaderByNumber(ctx, -1)
+		if state == nil || err != nil {
+			return nil
+		}
+
+		from 	 := common.Address{}
+		to 		 := &conAddr
+		gas 	 := uint64(0x999999999)
+		gasPrice := (hexutil.Big)(*big.NewInt(0x333333))
+		nonce 	 := uint64(0)
+		value 	 := (hexutil.Big)(*big.NewInt(0))
+
+		// Create new call message
+		msg := types.NewMessage(from, to, nonce, value.ToInt(), gas, gasPrice.ToInt(), data, false, types.NormalTxType)
+		
+		// Get a new instance of the EVM.
+		evm, vmError, err := ethPtr.APIBackend.GetEVM(ctx, msg, state, header, vm.Config{})
+		if err != nil {
+			return nil
+		}
+
+		// Setup the gas pool (also for unmetered requests)
+		// and apply the message.
+		gp := new(core.GasPool).AddGas(math.MaxUint64)
+		res, _, _, err := core.ApplyMessage(evm, msg, gp)
+		if err := vmError(); err != nil {
+			return nil
+		}
+
+		return res
+	}
+
+	common.SetInnerCallFunc(innerCall)
+}
 
 type LesServer interface {
 	Start(srvr *p2p.Server)
@@ -78,6 +120,9 @@ type Ethereum struct {
 
 	// DB interfaces
 	chainDb ethdb.Database // Block chain database
+
+	// ext db interfaces
+	extDb ethdb.Database
 
 	eventMux       *event.TypeMux
 	engine         consensus.Engine
@@ -117,6 +162,10 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 		log.Warn("Sanitizing invalid miner gas price", "provided", config.MinerGasPrice, "updated", DefaultConfig.MinerGasPrice)
 		config.MinerGasPrice = new(big.Int).Set(DefaultConfig.MinerGasPrice)
 	}
+
+	// create extended database
+	extDb, err := CreateExtDB(ctx, config, "extdb")
+
 	// Assemble the Ethereum object
 	chainDb, err := CreateDB(ctx, config, "chaindata")
 	if err != nil {
@@ -135,6 +184,7 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	eth := &Ethereum{
 		config:         config,
 		chainDb:        chainDb,
+		extDb:          extDb,
 		chainConfig:    chainConfig,
 		eventMux:       ctx.EventMux,
 		accountManager: ctx.AccountManager,
@@ -184,7 +234,7 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 		config.TxPool.Journal = ctx.ResolvePath(config.TxPool.Journal)
 	}
 	//eth.txPool = core.NewTxPool(config.TxPool, eth.chainConfig, eth.blockchain)
-	eth.txPool = core.NewTxPool(config.TxPool, eth.chainConfig, blockChainCache)
+	eth.txPool = core.NewTxPool(config.TxPool, eth.chainConfig, blockChainCache, chainDb, eth.extDb)
 
 	log.Debug("eth.txPool:::::", "txPool", eth.txPool)
 	// mpcPool deal with mpc transactions
@@ -254,6 +304,18 @@ func CreateDB(ctx *node.ServiceContext, config *Config, name string) (ethdb.Data
 	}
 	if db, ok := db.(*ethdb.LDBDatabase); ok {
 		db.Meter("eth/db/chaindata/")
+	}
+	return db, nil
+}
+
+// create extended database
+func CreateExtDB(ctx *node.ServiceContext, config *Config, name string) (ethdb.Database, error) {
+	db, err := ctx.OpenDatabase(name, config.DatabaseCache, config.DatabaseHandles)
+	if err != nil {
+		return nil, err
+	}
+	if db, ok := db.(*ethdb.LDBDatabase); ok {
+		db.Meter("eth/db/extdb/")
 	}
 	return db, nil
 }
@@ -478,7 +540,7 @@ func (s *Ethereum) StopMining() {
 
 func (s *Ethereum) IsMining() bool      { return s.miner.Mining() }
 func (s *Ethereum) Miner() *miner.Miner { return s.miner }
-
+func (s *Ethereum) ExtendedDb() ethdb.Database { return s.extDb }
 func (s *Ethereum) AccountManager() *accounts.Manager  { return s.accountManager }
 func (s *Ethereum) BlockChain() *core.BlockChain       { return s.blockchain }
 func (s *Ethereum) TxPool() *core.TxPool               { return s.txPool }
@@ -550,6 +612,7 @@ func (s *Ethereum) Stop() error {
 	s.eventMux.Stop()
 
 	s.chainDb.Close()
+	s.extDb.Close()
 	close(s.shutdownChan)
 	return nil
 }
