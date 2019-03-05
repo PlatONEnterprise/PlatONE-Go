@@ -32,6 +32,7 @@ import (
 
 type Backend interface {
 	ChainDb() ethdb.Database
+	ExtendedDb() ethdb.Database
 	EventMux() *event.TypeMux
 	HeaderByNumber(ctx context.Context, blockNr rpc.BlockNumber) (*types.Header, error)
 	HeaderByHash(ctx context.Context, blockHash common.Hash) (*types.Header, error)

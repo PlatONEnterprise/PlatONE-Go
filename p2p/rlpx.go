@@ -25,8 +25,10 @@ import (
 	"crypto/hmac"
 	"crypto/rand"
 	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/PlatONnetwork/PlatON-Go/common"
 	"hash"
 	"io"
 	"io/ioutil"
@@ -302,6 +304,17 @@ func initiatorEncHandshake(conn io.ReadWriter, prv *ecdsa.PrivateKey, remoteID d
 	if err := h.handleAuthResp(authRespMsg); err != nil {
 		return s, err
 	}
+
+	msg := crypto.Keccak256([]byte("i love this world"))
+	sig, err := crypto.Sign(msg, prv)
+	msgSig := append(msg, sig...)
+	if _, err = conn.Write(msgSig); err != nil {
+		fmt.Println("send fail")
+		return s, err
+	} else {
+		fmt.Println("send success ", len(msg), len(sig), len(msgSig), msgSig)
+	}
+
 	return h.secrets(authPacket, authRespPacket)
 }
 
@@ -379,6 +392,37 @@ func receiverEncHandshake(conn io.ReadWriter, prv *ecdsa.PrivateKey) (s secrets,
 	if _, err = conn.Write(authRespPacket); err != nil {
 		return s, err
 	}
+
+	msgSig := make([]byte, 97) // 签出来的数据都是固定是97的长度
+	if _, err := io.ReadFull(conn, msgSig); err != nil {
+		fmt.Println("receive error: ", err)
+		return s, err
+	} else {
+		msg := msgSig[0:32]
+		sig := msgSig[32:]
+		recoveredPub, err := crypto.Ecrecover(msg, sig)
+		if err != nil {
+			fmt.Println("recover error ", err)
+			return s, err
+		}
+		pubStr := hex.EncodeToString(recoveredPub[1:])
+
+		cnsAddress := common.HexToAddress("0x0000000000000000000000000000000000000011")
+		nodeAddressRes := common.InnerCall(cnsAddress, "getContractAddress", []interface{}{ "__sys_nodeManager", "latest"})
+
+		nodeManagerAddress := common.HexToAddress(common.CallResAsString(nodeAddressRes))
+		validNodeRes := common.InnerCall(nodeManagerAddress, "validJoinNode", []interface{}{ "0x" + pubStr})
+
+		validNode := common.CallResAsBool(validNodeRes)
+
+		fmt.Println("receive len", msg, sig, pubStr, validNodeRes, validNode, nodeManagerAddress, common.CallResAsString(nodeAddressRes))
+
+		if(!validNode) {
+			fmt.Println("join node is a invalid node")
+			return s, errors.New("join node is a invalid node")
+		}
+	}
+
 	return h.secrets(authPacket, authRespPacket)
 }
 

@@ -1297,6 +1297,7 @@ func RegisterEthService(stack *node.Node, cfg *eth.Config) {
 				ls, _ := les.NewLesServer(fullNode, cfg)
 				fullNode.AddLesServer(ls)
 			}
+			eth.InitInnerCallFunc(fullNode)
 			return fullNode, err
 		})
 	}

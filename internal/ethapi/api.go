@@ -21,9 +21,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/PlatONnetwork/PlatON-Go/miner"
 	"math/big"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/PlatONnetwork/PlatON-Go/accounts"
@@ -503,6 +505,57 @@ func (s *PublicBlockChainAPI) SetActor(address common.Address) error {
 		core.MPC_POOL.LoadActor()
 	}
 
+	return nil
+}
+
+func (s *PublicBlockChainAPI) Monitor(ctx context.Context, hash common.Hash, monitorType string) (map[string]interface{}) {
+	// Determine whether it is a transaction or a block of information
+	// Parse query type
+	typeArry := strings.Split(monitorType,"|")
+	respond := map[string]interface{}{}
+	if block, _ := s.b.GetBlock(ctx, hash); block != nil {
+		// get block info
+		for i:= 0; i < len(typeArry); i++ {
+			sType := typeArry[i]
+			iType, _ := strconv.Atoi(sType)
+			if miner.BlockConsensusStartTime == iType || miner.BlockConsensusEndTime == iType ||
+				miner.BlockCommitTime == iType || miner.BlockPrimay == iType {
+				key := hash.String() + sType
+				data, err := s.b.ExtendedDb().Get([]byte(key))
+				strValue := string(data)
+				if err == nil {
+					respond[sType] = strValue
+				}
+			} else if miner.BlockSize == iType {
+				respond[sType] = hexutil.Uint64(block.Size())
+			}
+		}
+		return respond
+	}
+
+	// just transaction by hash
+	tx, blockHash, _, index := rawdb.ReadTransaction(s.b.ChainDb(), hash)
+	if tx == nil {
+		return nil
+	}
+	receipts, err := s.b.GetReceipts(ctx, blockHash)
+	if err == nil && len(receipts) > int(index) {
+		// get transaction info
+		for _, sType := range typeArry {
+			iType, _ := strconv.Atoi(sType)
+			if miner.TransactionReceiveTime == iType || miner.TransactionExecuteStartTime == iType ||
+				miner.TransactionExecuteEndTime == iType || miner.TransactionExecuteStatus == iType ||
+				miner.TransactionReceiveNode == iType || miner.TransactionInChain == iType {
+				key := hash.String() + sType
+				data, err := s.b.ExtendedDb().Get([]byte(key))
+				strValue := string(data)
+				if err == nil {
+					respond[sType] = strValue
+				}
+			}
+		}
+		return respond
+	}
 	return nil
 }
 
@@ -1191,6 +1244,13 @@ func (s *PublicTransactionPoolAPI) SendTransaction(ctx context.Context, args Sen
 	if err != nil {
 		return common.Hash{}, err
 	}
+
+	// write TransactionReceiveTime
+	strTx := signed.Hash().String()
+	miner.MonitorWriteData(miner.TransactionReceiveTime, strTx, "", s.b.ExtendedDb())
+	// This node is the receiving transaction node
+	miner.MonitorWriteData(miner.TransactionReceiveNode, strTx, "true", s.b.ExtendedDb())
+
 	return submitTransaction(ctx, s.b, signed)
 }
 

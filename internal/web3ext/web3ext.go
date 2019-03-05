@@ -411,6 +411,11 @@ web3._extend({
 			inputFormatter: [web3._extend.formatters.inputAddressFormatter]
 		}),
 		new web3._extend.Method({
+			name: 'monitor',
+			call: 'eth_monitor',
+			params: 2
+		}),
+		new web3._extend.Method({
 			name: 'sign',
 			call: 'eth_sign',
 			params: 2,
