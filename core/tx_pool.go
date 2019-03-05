@@ -19,6 +19,7 @@ package core
 import (
 	"errors"
 	"fmt"
+
 	"math"
 	"math/big"
 	"sort"
@@ -198,6 +199,7 @@ func (config *TxPoolConfig) sanitize() TxPoolConfig {
 type TxPool struct {
 	config      TxPoolConfig
 	chainconfig *params.ChainConfig
+	extDb ethdb.Database
 	//chain        blockChain
 	chain    txPoolBlockChain
 	gasPrice *big.Int
@@ -243,12 +245,13 @@ type txExt struct {
 // NewTxPool creates a new transaction pool to gather, sort and filter inbound
 // transactions from the network.
 //func NewTxPool(config TxPoolConfig, chainconfig *params.ChainConfig, chain blockChain) *TxPool {
-func NewTxPool(config TxPoolConfig, chainconfig *params.ChainConfig, chain txPoolBlockChain, db ethdb.Database) *TxPool {
+func NewTxPool(config TxPoolConfig, chainconfig *params.ChainConfig, chain txPoolBlockChain, db ethdb.Database, extDb ethdb.Database) *TxPool {
 	// Sanitize the input to ensure no vulnerable gas prices are set
 	config = (&config).sanitize()
 
 	// Create the transaction pool with its initial settings
 	pool := &TxPool{
+		extDb:       extDb,
 		config:      config,
 		chainconfig: chainconfig,
 		chain:       chain,
@@ -1027,6 +1030,11 @@ func (pool *TxPool) AddLocals(txs []*types.Transaction) []error {
 	} else {
 		return nil
 	}
+}
+
+// get ext db
+func (pool *TxPool) ExtendedDb() ethdb.Database {
+	return pool.extDb
 }
 
 // AddRemotes enqueues a batch of transactions into the pool if they are valid.
