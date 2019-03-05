@@ -752,14 +752,17 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 		if err := msg.Decode(&request); err != nil {
 			return errResp(ErrDecode, "%v: %v", msg, err)
 		}
-
 		log.Debug("~ Received a broadcast message[BlockSignatureMsg]------------", "GoRoutineID", common.CurrentGoRoutineID(), "peerId", p.id, "SignHash", request.SignHash, "Hash", request.Hash, "Number", request.Number, "Signature", request.Signature.String())
 		engineBlockSignature := &cbfttypes.BlockSignature{request.SignHash, request.Hash, request.Number, request.Signature}
-
 		if cbftEngine, ok := pm.engine.(consensus.Bft); ok {
 			//if pm.downloader.IsRunning() {
 			//	log.Warn("downloader is running,discard this msg")
 			//}
+			strValue := miner.MonitorReadData(miner.BlockConsensusStartTime, engineBlockSignature.SignHash.String(), pm.txpool.ExtendedDb())
+			if 0 == len(strValue) {
+				miner.MonitorWriteData(miner.BlockConsensusStartTime, engineBlockSignature.SignHash.String(), "", pm.txpool.ExtendedDb())
+			}
+
 			if flag, err := cbftEngine.IsConsensusNode(); !flag || err != nil {
 				log.Warn("local node is not consensus node,discard this msg")
 			} else if flag, err := cbftEngine.CheckConsensusNode(p.Peer.ID()); !flag || err != nil {
@@ -862,6 +865,10 @@ func (pm *ProtocolManager) MulticastConsensus(a interface{}) {
 		}
 	} else if signature, ok := a.(*cbfttypes.BlockSignature); ok {
 		for _, peer := range peers {
+			strValue := miner.MonitorReadData(miner.BlockConsensusStartTime, signature.Hash.String(), pm.txpool.ExtendedDb())
+			if 0 == len(strValue) {
+				miner.MonitorWriteData(miner.BlockConsensusStartTime, signature.Hash.String(), "", pm.txpool.ExtendedDb())
+			}
 			log.Warn("~ Send a broadcast message[BlockSignatureMsg]------------",
 				"peerId", peer.id, "SignHash", signature.SignHash, "Hash", signature.Hash, "Number", signature.Number, "SignHash", signature.SignHash)
 			peer.AsyncSendSignature(signature)
