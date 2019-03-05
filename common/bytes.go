@@ -21,7 +21,10 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
+	"fmt"
 	"math"
+	"errors"
+	"math/big"
 )
 
 // ToHex returns the hex representation of b, prefixed with '0x'.
@@ -203,4 +206,39 @@ func reverse(s []byte) []byte {
 		s[i], s[j] = s[j], s[i]
 	}
 	return s
+}
+
+func BoolToBytes(b bool) []byte {
+	buf := bytes.NewBuffer([]byte{})
+	binary.Write(buf, binary.BigEndian, b)
+	return buf.Bytes()
+}
+
+func ToBytes(source interface{}) ([]byte, error) {
+	switch dest := source.(type) {
+	case string:
+		return []byte(dest), nil
+	case int32:
+		return Int32ToBytes(dest), nil
+	case uint32:
+		return Int32ToBytes(int32(dest)), nil
+	case uint:
+		return Int32ToBytes(int32(dest)), nil
+	case int:
+		return Int32ToBytes(int32(dest)), nil
+	case uint64:
+		return Int64ToBytes(int64(dest)), nil
+	case int64:
+		return Int64ToBytes(dest), nil
+	case float32:
+		return Float32ToBytes(dest), nil
+	case float64:
+		return Float64ToBytes(dest), nil
+	case bool:
+		return BoolToBytes(dest), nil
+	case *big.Int:
+		return dest.Bytes(), nil
+	}
+
+	return nil, errors.New(fmt.Sprintf("ToBytes function not support %v", source))
 }
