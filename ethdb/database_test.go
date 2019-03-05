@@ -46,10 +46,41 @@ func newTestLDB() (*ethdb.LDBDatabase, func()) {
 
 var test_values = []string{"", "a", "1251", "\x00123\x00"}
 
+
+func OpenTestLDB() (*ethdb.LDBDatabase, func()) {
+
+//	dirname := "D:/data/platon/chaindata"
+//	dirname := "D:/platon-node/data/platon/extdb"
+	dirname := "D:/platon-node/data/platon/extdb"
+	db, err := ethdb.NewLDBDatabase(dirname, 0, 0)
+	if err != nil {
+		panic("failed to create test database: " + err.Error())
+	}
+
+	return db, func() {
+		db.Close()
+	}
+}
+
+func testGetValue(db ethdb.Database, t *testing.T) {
+	t.Parallel()
+	fmt.Println("get ldb begin")
+	data, err := db.Get([]byte("hello"))
+	if err != nil {
+		t.Fatalf("put failed: %v", err)
+	}
+	fmt.Println("get data:", string(data))
+}
+
 func TestLDB_PutGet(t *testing.T) {
+	/*
 	db, remove := newTestLDB()
 	defer remove()
-	testPutGet(db, t)
+	testPutGet(db, t)*/
+
+	db, remove := OpenTestLDB()
+	defer remove()
+	testGetValue(db, t)
 }
 
 func TestMemoryDB_PutGet(t *testing.T) {
