@@ -20,9 +20,9 @@ import (
 )
 
 var (
-	errReturnInvalidRlpFormat = errors.New("interpreter_life: invalid rlp format.")
+	errReturnInvalidRlpFormat   = errors.New("interpreter_life: invalid rlp format.")
 	errReturnInsufficientParams = errors.New("interpreter_life: invalid input. ele must greater than 2")
-	errReturnInvalidAbi = errors.New("interpreter_life: invalid abi, encoded fail.")
+	errReturnInvalidAbi         = errors.New("interpreter_life: invalid abi, encoded fail.")
 )
 
 const (
@@ -149,6 +149,11 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 	if !ok {
 		return nil, fmt.Errorf("entryId not found.")
 	}
+	if funcName == "init" {
+		in.evm.InitEntryID = entryID
+	}
+	lvm.InitEntryID = in.evm.InitEntryID
+
 	res, err := lvm.RunWithGasLimit(entryID, int(context.GasLimit), params...)
 	if err != nil {
 		fmt.Println("throw exception:", err.Error())
