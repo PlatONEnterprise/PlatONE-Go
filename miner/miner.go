@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"github.com/PlatONnetwork/PlatON-Go/core/cbfttypes"
 	"github.com/PlatONnetwork/PlatON-Go/ethdb"
-	"strconv"
 	"sync/atomic"
 	"time"
 
@@ -54,51 +53,6 @@ type Miner struct {
 
 	canStart    int32 // can start indicates whether we can start the mining operation
 	shouldStart int32 // should start indicates whether we should start after sync
-}
-
-const (
-	TransactionReceiveTime = 0        
-	TransactionExecuteStartTime = 1    
-	TransactionExecuteEndTime = 2    
-	TransactionExecuteStatus = 3       
-	TransactionReceiveNode = 4         
-	TransactionInChain = 5             
-	BlockConsensusStartTime = 100  
-	BlockConsensusEndTime = 101          
-	BlockCommitTime = 102                
-	BlockSize = 103                      
-	BlockPrimay = 104                  
-)
-
-func MonitorWriteData(monitorType int, key string, value string, db ethdb.Database) error {
-
-	key = key + strconv.FormatInt(int64(monitorType),10)
-	if len(value) == 0 {
-		if monitorType == TransactionReceiveTime || monitorType == TransactionExecuteStartTime ||
-			monitorType == TransactionExecuteEndTime || monitorType == BlockConsensusStartTime ||
-			monitorType == BlockConsensusEndTime || monitorType == BlockCommitTime {
-
-			timeTmp := time.Now().UnixNano()
-			timeTmp = timeTmp / 1e6
-			value = strconv.FormatInt(timeTmp,10)
-		}
-	}
-
-	err := db.Put([]byte(key), []byte(value))
-	if err != nil {
-		// err
-	}
-	return err
-}
-
-func MonitorReadData(monitorType int, key string, db ethdb.Database) string {
-	key = key + strconv.FormatInt(int64(monitorType),10)
-
-	data, err := db.Get([]byte(key))
-	if err != nil {
-		return ""
-	}
-	return string(data)
 }
 
 func New(eth Backend, config *params.ChainConfig, mux *event.TypeMux, engine consensus.Engine, recommit time.Duration, gasFloor, gasCeil uint64, isLocalBlock func(block *types.Block) bool,

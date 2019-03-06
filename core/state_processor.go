@@ -25,6 +25,7 @@ import (
 	"github.com/PlatONnetwork/PlatON-Go/core/vm"
 	"github.com/PlatONnetwork/PlatON-Go/crypto"
 	"github.com/PlatONnetwork/PlatON-Go/params"
+	"github.com/PlatONnetwork/PlatON-Go/rpc"
 )
 
 // StateProcessor is a basic Processor, which takes care of transitioning
@@ -65,13 +66,17 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 	if p.config.DAOForkSupport && p.config.DAOForkBlock != nil && p.config.DAOForkBlock.Cmp(block.Number()) == 0 {
 		misc.ApplyDAOHardFork(statedb)
 	}
-	// Iterate over and process the individual transactions
+	// Iterate over and process the individual transactios
 	for i, tx := range block.Transactions() {
+		rpc.MonitorWriteData(rpc.TransactionExecuteStartTime, tx.Hash().String(), "", p.bc.extdb)
 		statedb.Prepare(tx.Hash(), block.Hash(), i)
 		receipt, _, err := ApplyTransaction(p.config, p.bc, nil, gp, statedb, header, tx, usedGas, cfg)
+		rpc.MonitorWriteData(rpc.TransactionExecuteEndTime, tx.Hash().String(), "", p.bc.extdb)
 		if err != nil {
+			rpc.MonitorWriteData(rpc.TransactionExecuteStatus, tx.Hash().String(), "false", p.bc.extdb)
 			return nil, nil, 0, err
 		}
+		rpc.MonitorWriteData(rpc.TransactionExecuteStatus, tx.Hash().String(), "true", p.bc.extdb)
 		receipts = append(receipts, receipt)
 		allLogs = append(allLogs, receipt.Logs...)
 	}

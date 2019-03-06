@@ -24,17 +24,67 @@ import (
 	"encoding/hex"
 	"math/rand"
 	"reflect"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 	"unicode"
 	"unicode/utf8"
+	"github.com/PlatONnetwork/PlatON-Go/ethdb"
 )
 
 var (
 	subscriptionIDGenMu sync.Mutex
 	subscriptionIDGen   = idGenerator()
 )
+
+const (
+	TransactionReceiveTime = 0
+	TransactionExecuteStartTime = 1
+	TransactionExecuteEndTime = 2
+	TransactionExecuteStatus = 3
+	TransactionReceiveNode = 4
+	TransactionInChain = 5
+	BlockConsensusStartTime = 100
+	BlockConsensusEndTime = 101
+	BlockCommitTime = 102
+	BlockSize = 103
+	BlockPrimay = 104
+)
+
+
+func MonitorWriteData(monitorType int, key string, value string, db ethdb.Database) error {
+
+	key = key + strconv.FormatInt(int64(monitorType),10)
+	if len(value) == 0 {
+		if monitorType == TransactionReceiveTime || monitorType == TransactionExecuteStartTime ||
+			monitorType == TransactionExecuteEndTime || monitorType == BlockConsensusStartTime ||
+			monitorType == BlockConsensusEndTime || monitorType == BlockCommitTime {
+
+			timeTmp := time.Now().UnixNano()
+			timeTmp = timeTmp / 1e6
+			value = strconv.FormatInt(timeTmp,10)
+		}
+	}
+	if db != nil {
+		err := db.Put([]byte(key), []byte(value))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func MonitorReadData(monitorType int, key string, db ethdb.Database) string {
+	key = key + strconv.FormatInt(int64(monitorType),10)
+
+	data, err := db.Get([]byte(key))
+	if err != nil {
+		return ""
+	}
+	return string(data)
+}
 
 // Is this an exported - upper case - name?
 func isExported(name string) bool {
