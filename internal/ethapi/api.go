@@ -21,7 +21,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/PlatONnetwork/PlatON-Go/miner"
 	"math/big"
 	"os"
 	"path/filepath"
@@ -518,15 +517,15 @@ func (s *PublicBlockChainAPI) Monitor(ctx context.Context, hash common.Hash, mon
 		for i:= 0; i < len(typeArry); i++ {
 			sType := typeArry[i]
 			iType, _ := strconv.Atoi(sType)
-			if miner.BlockConsensusStartTime == iType || miner.BlockConsensusEndTime == iType ||
-				miner.BlockCommitTime == iType || miner.BlockPrimay == iType {
+			if rpc.BlockConsensusStartTime == iType || rpc.BlockConsensusEndTime == iType ||
+				rpc.BlockCommitTime == iType || rpc.BlockPrimay == iType {
 				key := hash.String() + sType
 				data, err := s.b.ExtendedDb().Get([]byte(key))
 				strValue := string(data)
 				if err == nil {
 					respond[sType] = strValue
 				}
-			} else if miner.BlockSize == iType {
+			} else if rpc.BlockSize == iType {
 				respond[sType] = hexutil.Uint64(block.Size())
 			}
 		}
@@ -543,9 +542,9 @@ func (s *PublicBlockChainAPI) Monitor(ctx context.Context, hash common.Hash, mon
 		// get transaction info
 		for _, sType := range typeArry {
 			iType, _ := strconv.Atoi(sType)
-			if miner.TransactionReceiveTime == iType || miner.TransactionExecuteStartTime == iType ||
-				miner.TransactionExecuteEndTime == iType || miner.TransactionExecuteStatus == iType ||
-				miner.TransactionReceiveNode == iType || miner.TransactionInChain == iType {
+			if rpc.TransactionReceiveTime == iType || rpc.TransactionExecuteStartTime == iType ||
+				rpc.TransactionExecuteEndTime == iType || rpc.TransactionExecuteStatus == iType ||
+				rpc.TransactionReceiveNode == iType || rpc.TransactionInChain == iType {
 				key := hash.String() + sType
 				data, err := s.b.ExtendedDb().Get([]byte(key))
 				strValue := string(data)
@@ -1247,9 +1246,9 @@ func (s *PublicTransactionPoolAPI) SendTransaction(ctx context.Context, args Sen
 
 	// write TransactionReceiveTime
 	strTx := signed.Hash().String()
-	miner.MonitorWriteData(miner.TransactionReceiveTime, strTx, "", s.b.ExtendedDb())
+	rpc.MonitorWriteData(rpc.TransactionReceiveTime, strTx, "", s.b.ExtendedDb())
 	// This node is the receiving transaction node
-	miner.MonitorWriteData(miner.TransactionReceiveNode, strTx, "true", s.b.ExtendedDb())
+	rpc.MonitorWriteData(rpc.TransactionReceiveNode, strTx, "true", s.b.ExtendedDb())
 
 	return submitTransaction(ctx, s.b, signed)
 }
