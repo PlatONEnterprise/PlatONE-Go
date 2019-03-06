@@ -73,6 +73,7 @@ type VirtualMachine struct {
 	ReturnValue    int64
 	Gas            uint64
 	ExternalParams []int64
+	InitEntryID    int
 }
 
 // VMConfig denotes a set of options passed to a single VirtualMachine insta.ce
@@ -278,6 +279,7 @@ func NewVirtualMachineWithModule(m *compiler.Module, functionCode []compiler.Int
 		Memory:          memory,
 		Exited:          true,
 		ExternalParams:  make([]int64, 0),
+		InitEntryID:     -1,
 	}, nil
 }
 
