@@ -108,6 +108,8 @@ type EVM struct {
 	StateDB StateDB
 	// Depth is the current call stack
 	depth int
+	// InitEntryID is init function's entry id in call stack
+	InitEntryID int
 
 	// chainConfig contains information about the current chain
 	chainConfig *params.ChainConfig
@@ -139,6 +141,7 @@ func NewEVM(ctx Context, statedb StateDB, chainConfig *params.ChainConfig, vmCon
 		chainConfig:  chainConfig,
 		chainRules:   chainConfig.Rules(ctx.BlockNumber),
 		interpreters: make([]Interpreter, 0, 1),
+		InitEntryID:  -1,
 	}
 
 	// vmConfig.EVMInterpreter will be used by EVM-C, it won't be checked here
