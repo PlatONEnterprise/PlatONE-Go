@@ -300,9 +300,11 @@ func (st *StateTransition) preCheck() (string,bool,error) {
 	if isUseContractToken{
 		contractAddr,err := st.getContractAddr(contractName)
 		if nil != err {
-			return "", false, err
+			//return "", false, err
+			fmt.Println("getContractAddr failed,",err)//TODO format
+		}else {
+			return contractAddr, isUseContractToken, st.buyContractGas(contractAddr)
 		}
-		return contractAddr, isUseContractToken,st.buyContractGas(contractAddr)
 	}
 
 	return "", false,st.buyGas()
@@ -574,12 +576,12 @@ func (st *StateTransition) getContractAddr(contractName string) (feeContractAddr
 		fmt.Println(err)
 		return
 	}
-
 	feeContractAddr = utils.Bytes2string(binFeeContractAddr)
-	fmt.Println(feeContractAddr)
 
 	if "0x0000000000000000000000000000000000000000" == feeContractAddr {
-		return "", errors.New("fee contract address not found")
+		err := errors.New("fee contract address not found")
+		fmt.Println(err)
+		return "",err
 	}
 
 	return
