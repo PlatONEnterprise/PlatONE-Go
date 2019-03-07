@@ -300,7 +300,7 @@ func (st *StateTransition) preCheck() (string,bool,error) {
 	if isUseContractToken{
 		contractAddr,err := st.getContractAddr(contractName)
 		if nil != err {
-			return "", isUseContractToken, err
+			return "", false, err
 		}
 		return contractAddr, isUseContractToken,st.buyContractGas(contractAddr)
 	}
@@ -539,17 +539,17 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 
 func (st *StateTransition)ifUseContractTokenAsFee()(string,  bool, error){
 	params := []interface{}{"__sys_paramManager", "latest"}
-	binParamMangerAddr, _, err := st.doCallContract(CnsManagerAddr, "getContractAddress", params)
+		binParamMangerAddr, _, err := st.doCallContract(CnsManagerAddr, "getContractAddress", params)
 	if nil != err {
 		fmt.Println(err)
 		return "",false, err
 	}
 	paramMangerAddr := utils.Bytes2string(binParamMangerAddr)
-	fmt.Println("paramMangerAddr:",paramMangerAddr)
+	fmt.Println("paramManagerAddr:",paramMangerAddr)
 
 	if "0x0000000000000000000000000000000000000000" == paramMangerAddr {
-		fmt.Println(ErrParamaManagerContractAddressNotFound)
-		return "", false, ErrParamaManagerContractAddressNotFound
+		fmt.Println("paramManager contract address not found")//TODO
+		return "", false, nil
 	}
 
 	params = []interface{}{}
@@ -594,10 +594,7 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 
 	// init initialGas value = txMsg.gas
 	if feeContractAddr,isUseContractToken,err = st.preCheck(); err != nil {
-		//if ErrParamaManagerContractAddressNotFound == err{
-		//	failed = true
-		//}
-		return nil,0,true,err
+		return nil,0,false,err
 	}
 
 	msg := st.msg
@@ -651,7 +648,7 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 	}
 
 	if isUseContractToken {
-		vmerr = st.refundContractGas(feeContractAddr)
+		err = st.refundContractGas(feeContractAddr)
 	} else {
 		st.refundGas()
 		st.state.AddBalance(st.evm.Coinbase, new(big.Int).Mul(new(big.Int).SetUint64(st.gasUsed()), st.gasPrice))
@@ -705,11 +702,11 @@ func (st *StateTransition) refundContractGas(contractAddr string) error {
 	// Return ETH for remaining gas, exchanged at the original rate.
 	remaining := new(big.Int).Mul(new(big.Int).SetUint64(st.gas), st.gasPrice)
 	//st.state.AddBalance(st.msg.From(), remaining)
-	addr := st.msg.From()
+	addr := st.msg.From().String()
 	params := []interface{}{addr,remaining.Uint64()}
 	_, _, err := st.doCallContract(contractAddr, "addBalance", params)
 	if nil != err {
-		fmt.Println(err)
+		fmt.Println(err)//TODO format
 		return err
 	}
 

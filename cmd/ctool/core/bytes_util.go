@@ -40,6 +40,10 @@ func BytesToInt64(b []byte) int64 {
 	return int64(tmp)
 }
 
+func BytesToUint64(b []byte) uint64 {
+	return  binary.BigEndian.Uint64(b)
+}
+
 func Float32ToBytes(float float32) []byte {
 	bits := math.Float32bits(float)
 	bytes := make([]byte, 4)
@@ -83,6 +87,8 @@ func BytesConverter(source []byte, t string) interface{} {
 		return string(source[64:])
 	case "bool":
 		return bytes.Equal(source, []byte{1})
+	case "uint64":
+		return BytesToUint64(source)
 	default:
 		return source
 	}
