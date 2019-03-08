@@ -1,11 +1,11 @@
 package vm
 
 import (
+	"encoding/hex"
+	"fmt"
 	"github.com/PlatONnetwork/PlatON-Go/common"
 	"github.com/PlatONnetwork/PlatON-Go/core/types"
 	"github.com/PlatONnetwork/PlatON-Go/params"
-	"encoding/hex"
-	"fmt"
 	"math/big"
 )
 
@@ -19,15 +19,14 @@ type WasmStateDB struct {
 func NewWasmStateDB(db *WasmStateDB, contract ContractRef) *WasmStateDB {
 	stateDb := &WasmStateDB{
 		StateDB: db.StateDB,
-		evm: db.evm,
-		cfg : db.cfg,
+		evm:     db.evm,
+		cfg:     db.cfg,
 	}
 	if c, ok := contract.(*Contract); ok {
 		stateDb.contract = c
 	}
 	return stateDb
 }
-
 
 func (self *WasmStateDB) GasPrice() int64 {
 	return self.evm.Context.GasPrice.Int64()
@@ -73,27 +72,29 @@ func (self *WasmStateDB) CallValue() *big.Int {
 	return self.contract.Value()
 }
 
-func (self *WasmStateDB) Owner() common.Address {
-	contractAddress := self.contract.Address()
-	return self.evm.StateDB.GetContractCreator(contractAddress)
+func (self *WasmStateDB) IsOwner(contractAddress common.Address, accountAddress common.Address) int64 {
+	if self.evm.StateDB.GetContractCreator(contractAddress).Hex() == accountAddress.Hex() {
+		return 0
+	} else {
+		return 1
+	}
 }
 
 /*func (self *WasmStateDB) AddLog(log *types.Log)  {
 	self.evm.StateDB.AddLog(log)
 }*/
 
-func (self *WasmStateDB) AddLog(address common.Address, topics []common.Hash, data []byte, bn uint64)  {
-	log := &types.Log {
-		Address: address,
-		Topics: topics,
-		Data: data,
+func (self *WasmStateDB) AddLog(address common.Address, topics []common.Hash, data []byte, bn uint64) {
+	log := &types.Log{
+		Address:     address,
+		Topics:      topics,
+		Data:        data,
 		BlockNumber: bn,
 	}
 	self.evm.StateDB.AddLog(log)
 }
 
-
-func (self *WasmStateDB) SetState(key []byte, value []byte)  {
+func (self *WasmStateDB) SetState(key []byte, value []byte) {
 	self.evm.StateDB.SetState(self.Address(), key, value)
 }
 
@@ -108,7 +109,7 @@ func (self *WasmStateDB) GetCallerNonce() int64 {
 
 func (self *WasmStateDB) Transfer(toAddr common.Address, value *big.Int) (ret []byte, leftOverGas uint64, err error) {
 	caller := self.contract
-	
+
 	gas := self.evm.callGasTemp
 	if value.Sign() != 0 {
 		gas += params.CallStipend
@@ -120,15 +121,13 @@ func (self *WasmStateDB) Transfer(toAddr common.Address, value *big.Int) (ret []
 }
 
 func (self *WasmStateDB) Call(addr, param []byte) ([]byte, error) {
-	
+
 	ret, _, err := self.evm.Call(self.contract, common.HexToAddress(hex.EncodeToString(addr)), param, self.contract.Gas, self.contract.value)
 	return ret, err
 }
 
 func (self *WasmStateDB) DelegateCall(addr, param []byte) ([]byte, error) {
-	
+
 	ret, _, err := self.evm.DelegateCall(self.contract, common.HexToAddress(hex.EncodeToString(addr)), param, self.contract.Gas)
 	return ret, err
 }
-
-
