@@ -118,7 +118,7 @@ func CallResAsString(bts []byte) (string) {
 		return ""
 	}
 
-	slen := int(bts[63])
+	slen := int(bts[61])*256*256 + int(bts[62])*256 + int(bts[63])
 	if slen > len(bts) - 64 {
 		return ""
 	}
