@@ -153,7 +153,7 @@ func newCfcSet() map[string]map[string]*exec.FunctionImport {
 			"balance":      &exec.FunctionImport{Execute: envBalance, GasCost: constGasFunc(compiler.GasQuickStep)},
 			"origin":       &exec.FunctionImport{Execute: envOrigin, GasCost: constGasFunc(compiler.GasQuickStep)},
 			"caller":       &exec.FunctionImport{Execute: envCaller, GasCost: constGasFunc(compiler.GasQuickStep)},
-			"owner":       &exec.FunctionImport{Execute: envOwner, GasCost: constGasFunc(compiler.GasQuickStep)},
+			"isOwner":       &exec.FunctionImport{Execute: envIsOwner, GasCost: constGasFunc(compiler.GasQuickStep)},
 			"isFromInit":   &exec.FunctionImport{Execute: envIsFromInit, GasCost: constGasFunc(compiler.GasQuickStep)},
 			"callValue":    &exec.FunctionImport{Execute: envCallValue, GasCost: constGasFunc(compiler.GasQuickStep)},
 			"address":      &exec.FunctionImport{Execute: envAddress, GasCost: constGasFunc(compiler.GasQuickStep)},
@@ -583,12 +583,16 @@ func envCaller(vm *exec.VirtualMachine) int64 {
 }
 
 // define: void owner(char addr[20]);
-func envOwner(vm *exec.VirtualMachine) int64 {
-	offset := int(int32(vm.GetCurrentFrame().Locals[0]))
-	owner := vm.Context.StateDB.Owner()
-	//fmt.Println("Owner:", owner.Hex(), " -> ", owner[0], owner[1], owner[len(owner)-2], owner[len(owner)-1])
-	copy(vm.Memory.Memory[offset:], owner.Bytes())
-	return 0
+func envIsOwner(vm *exec.VirtualMachine) int64 {
+	contract := int(int32(vm.GetCurrentFrame().Locals[0]))
+	contractLen := int(int32(vm.GetCurrentFrame().Locals[1]))
+	account := int(int32(vm.GetCurrentFrame().Locals[2]))
+	accountLen := int(int32(vm.GetCurrentFrame().Locals[3]))
+
+	contractAddress := common.BytesToAddress(vm.Memory.Memory[contract : contract+contractLen])
+	accountAddress := common.BytesToAddress(vm.Memory.Memory[account : account+accountLen])
+
+	return vm.Context.StateDB.IsOwner(contractAddress, accountAddress)
 }
 
 // define: int64_t isFromInit();

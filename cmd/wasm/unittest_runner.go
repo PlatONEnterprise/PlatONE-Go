@@ -462,8 +462,8 @@ func (s *stateDB) Origin() common.Address {
 func (s *stateDB) Caller() common.Address {
 	return common.HexToAddress(s.state.Caller)
 }
-func (s *stateDB) Owner() common.Address {
-	return common.HexToAddress(s.state.Owner)
+func (s *stateDB) IsOwner(contractAddress common.Address, accountAddress common.Address) int64 {
+	return 0
 }
 func (s *stateDB) Address() common.Address {
 	return common.HexToAddress(s.state.Address)
