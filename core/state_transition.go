@@ -19,14 +19,15 @@ package core
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"github.com/PlatONnetwork/PlatON-Go/life/utils"
 	"math"
 	"math/big"
 	"strings"
 
-	"github.com/PlatONnetwork/PlatON-Go/core/types"
-
 	"github.com/PlatONnetwork/PlatON-Go/common"
 	"github.com/PlatONnetwork/PlatON-Go/core/state"
+	"github.com/PlatONnetwork/PlatON-Go/core/types"
 	"github.com/PlatONnetwork/PlatON-Go/core/vm"
 	"github.com/PlatONnetwork/PlatON-Go/log"
 	"github.com/PlatONnetwork/PlatON-Go/params"
@@ -249,17 +250,64 @@ func (st *StateTransition) buyGas() error {
 	return nil
 }
 
-func (st *StateTransition) preCheck() error {
+func (st *StateTransition) buyContractGas(contractAddr string) error {
+	mgval := new(big.Int).Mul(new(big.Int).SetUint64(st.msg.Gas()), st.gasPrice)
+
+	addr := st.msg.From().String()
+	params := []interface{}{addr}
+	ret, _, err := st.doCallContract(contractAddr, "getBalance", params)
+	if nil != err {
+		fmt.Println(err)
+		return err
+	}
+
+	balance := new(big.Int).SetBytes(ret)
+	if balance.Cmp(mgval) < 0 {
+		return errInsufficientBalanceForGas
+	}
+	if err := st.gp.SubGas(st.msg.Gas()); err != nil {
+		return err
+	}
+	st.gas += st.msg.Gas()
+
+	st.initialGas = st.msg.Gas()
+	params = []interface{}{addr,mgval.Uint64()}
+	_, _, err = st.doCallContract(contractAddr, "subBalance", params)
+	if nil != err {
+		fmt.Println(err)
+		return err
+	}
+
+	return nil
+}
+
+func (st *StateTransition) preCheck() (string,bool,error) {
 	// Make sure this transaction's nonce is correct.
 	if st.msg.CheckNonce() {
 		nonce := st.state.GetNonce(st.msg.From())
 		if nonce < st.msg.Nonce() {
-			return ErrNonceTooHigh
+			return "",false, ErrNonceTooHigh
 		} else if nonce > st.msg.Nonce() {
-			return ErrNonceTooLow
+			return "", false, ErrNonceTooLow
 		}
 	}
-	return st.buyGas()
+
+	contractName,isUseContractToken,err := 	st.ifUseContractTokenAsFee()
+	if nil != err{
+		return "", false, err
+	}
+
+	if isUseContractToken{
+		contractAddr,err := st.getContractAddr(contractName)
+		if nil != err {
+			//return "", false, err
+			fmt.Println("getContractAddr failed,",err)//TODO format
+		}else {
+			return contractAddr, isUseContractToken, st.buyContractGas(contractAddr)
+		}
+	}
+
+	return "", false,st.buyGas()
 }
 
 func addressCompare(addr1, addr2 common.Address) bool {
@@ -491,14 +539,66 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 	return finalData, 0, nil
 }
 
+func (st *StateTransition)ifUseContractTokenAsFee()(string,  bool, error){
+	params := []interface{}{"__sys_paramManager", "latest"}
+		binParamMangerAddr, _, err := st.doCallContract(CnsManagerAddr, "getContractAddress", params)
+	if nil != err {
+		fmt.Println(err)
+		return "",false, err
+	}
+	paramMangerAddr := utils.Bytes2string(binParamMangerAddr)
+	fmt.Println("paramManagerAddr:",paramMangerAddr)
+
+	if "0x0000000000000000000000000000000000000000" == paramMangerAddr {
+		fmt.Println("paramManager contract address not found")//TODO
+		return "", false, nil
+	}
+
+	params = []interface{}{}
+	binContractName, _, err := st.doCallContract(paramMangerAddr, "getGasContractName", params)
+	if nil != err {
+		fmt.Println(err)
+		return "",false, err
+	}
+	contractName := utils.Bytes2string(binContractName)
+	fmt.Println("contractName: ",contractName)
+
+	var isUseContractToken bool  = ("" != contractName)
+
+	return contractName, isUseContractToken,nil
+}
+
+func (st *StateTransition) getContractAddr(contractName string) (feeContractAddr string, err error) {
+	params := []interface{}{contractName, "latest"}
+	var binFeeContractAddr []byte
+	binFeeContractAddr, _, err = st.doCallContract(CnsManagerAddr, "getContractAddress", params)
+	if nil != err {
+		fmt.Println(err)
+		return
+	}
+	feeContractAddr = utils.Bytes2string(binFeeContractAddr)
+
+	if "0x0000000000000000000000000000000000000000" == feeContractAddr {
+		err := errors.New("fee contract address not found")
+		fmt.Println(err)
+		return "",err
+	}
+
+	return
+}
+
 // TransitionDb will transition the state by applying the current message and
 // returning the result including the used gas. It returns an error if failed.
 // An error indicates a consensus issue.
 func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bool, err error) {
+	isUseContractToken := false
+	feeContractAddr := ""
+
 	// init initialGas value = txMsg.gas
-	if err = st.preCheck(); err != nil {
-		return
+	if feeContractAddr,isUseContractToken,err = st.preCheck(); err != nil {
+		return nil,0,false,err
 	}
+
 	msg := st.msg
 	sender := vm.AccountRef(msg.From())
 	homestead := st.evm.ChainConfig().IsHomestead(st.evm.BlockNumber)
@@ -548,10 +648,74 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 			return nil, 0, false, vmerr
 		}
 	}
-	st.refundGas()
-	st.state.AddBalance(st.evm.Coinbase, new(big.Int).Mul(new(big.Int).SetUint64(st.gasUsed()), st.gasPrice))
+
+	if isUseContractToken {
+		err = st.refundContractGas(feeContractAddr)
+	} else {
+		st.refundGas()
+		st.state.AddBalance(st.evm.Coinbase, new(big.Int).Mul(new(big.Int).SetUint64(st.gasUsed()), st.gasPrice))
+	}
 
 	return ret, st.gasUsed(), vmerr != nil, err
+}
+
+func (st *StateTransition)doCallContract(address, funcName string, funcParams []interface{}) (ret []byte, leftOverGas uint64, err error) {
+	evm := st.evm
+	msg := st.msg
+	caller := vm.AccountRef(msg.From())
+	gas := uint64(0x999999999)
+
+	var txType int64 = vm.CALL_CANTRACT_FLAG // donot encode result in rlp
+	paramArr := [][]byte{
+		common.Int64ToBytes(txType),
+		[]byte(funcName),
+	}
+
+	for _, v := range funcParams {
+		p, e := common.ToBytes(v)
+		if e != nil {
+			err := fmt.Errorf("convert %v to string failed", v)
+			fmt.Println(err) //TODO modify log format
+			return nil, gas, err
+		}
+		paramArr = append(paramArr, p)
+	}
+
+	paramBytes, e := rlp.EncodeToBytes(paramArr)
+	if e != nil {
+		err := fmt.Errorf("rpl encode error,%s", e.Error())
+		fmt.Println(err) //TODO modify log format
+		return nil, gas, err
+	}
+
+	value := big.NewInt(0)
+	//evm.StateDB.SetNonce(msg.From(), st.state.GetNonce(msg.From())+1)
+	return evm.Call(caller, common.HexToAddress(address), paramBytes, gas, value)
+}
+
+func (st *StateTransition) refundContractGas(contractAddr string) error {
+	// Apply refund counter, capped to half of the used gas.
+	refund := st.gasUsed() / 2
+	if refund > st.state.GetRefund() {
+		refund = st.state.GetRefund()
+	}
+	st.gas += refund
+
+	// Return ETH for remaining gas, exchanged at the original rate.
+	remaining := new(big.Int).Mul(new(big.Int).SetUint64(st.gas), st.gasPrice)
+	//st.state.AddBalance(st.msg.From(), remaining)
+	addr := st.msg.From().String()
+	params := []interface{}{addr,remaining.Uint64()}
+	_, _, err := st.doCallContract(contractAddr, "addBalance", params)
+	if nil != err {
+		fmt.Println(err)//TODO format
+		return err
+	}
+
+	// Also return remaining gas to the block gas counter so it is
+	// available for the next transaction.
+	st.gp.AddGas(st.gas)
+	return nil
 }
 
 func (st *StateTransition) refundGas() {
