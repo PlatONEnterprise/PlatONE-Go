@@ -111,11 +111,26 @@ var cbft *Cbft
 
 // New creates a concurrent BFT consensus engine
 func New(config *params.CbftConfig, blockSignatureCh chan *cbfttypes.BlockSignature, cbftResultCh chan *cbfttypes.CbftResult, highestLogicalBlockCh chan *types.Block) *Cbft {
-	initialNodesID := make([]discover.NodeID, 0, len(config.InitialNodes))
-	for _, n := range config.InitialNodes {
-		initialNodesID = append(initialNodesID, n.ID)
+
+	log.Debug("================")
+	InitialNodeIds, err := getInitialNodesList()
+	if err != nil || len(InitialNodeIds) == 0 {
+		log.Error("get initial node list failed", "error", err.Error())
+
+		tmpNode := "1f3a8672348ff6b789e416762ad53e69063138b8eb4d8780101658f24b2369f1a8e09499226b467d8bc0c4e03e1dc903df857eeb3c67733d21b6aaee2840e429"
+		if nodeID, error := discover.HexID(tmpNode); error == nil {
+			InitialNodeIds = append(InitialNodeIds, nodeID)
+		}
 	}
-	_dpos := newDpos(initialNodesID)
+
+	for _, id := range InitialNodeIds {
+		log.Debug("111111", "info", id.String() )
+	}
+	log.Debug("================")
+
+
+	_dpos := newDpos(InitialNodeIds)
+
 	cbft = &Cbft{
 		config:                config,
 		dpos:                  _dpos,
@@ -154,6 +169,25 @@ func New(config *params.CbftConfig, blockSignatureCh chan *cbfttypes.BlockSignat
 	go cbft.dataReceiverLoop()
 
 	return cbft
+}
+
+// reloadCBFTParams reload params
+func (self *Cbft) reloadCBFTParams() {
+	NodeListID, err := getInitialNodesList()
+	if err != nil || len(NodeListID) == 0 {
+		log.Error("reload primaryNodeList failed", "errmsg", err)
+
+		tmpNode := "1f3a8672348ff6b789e416762ad53e69063138b8eb4d8780101658f24b2369f1a8e09499226b467d8bc0c4e03e1dc903df857eeb3c67733d21b6aaee2840e429"
+		if nodeID, error := discover.HexID(tmpNode); error == nil {
+			NodeListID = append(NodeListID, nodeID)
+		}
+	}
+	self.dpos.primaryNodeList = NodeListID
+
+	if err = getCBFTConfigParams(self.config); err != nil {
+		self.config.Duration = 2
+		self.config.Period = 10
+	}
 }
 
 // BlockExt is an extension from Block
@@ -910,6 +944,10 @@ func (cbft *Cbft) blockReceiver(tmp *BlockExt) error {
 		return err
 	}
 
+	// reloadDposElements used for reload elememts in dpos before check if block legal.
+	// It is also used in ShouldSeal
+	cbft.reloadCBFTParams()
+
 	isLegal := cbft.isLegal(rcvTime, producerID)
 	cbft.log.Debug("check if block is legal",
 		"result", isLegal,
@@ -1235,7 +1273,11 @@ func (cbft *Cbft) cleanByNumber(upperLimit uint64) {
 
 // ShouldSeal checks if it's local's turn to package new block at current time.
 func (cbft *Cbft) ShouldSeal() (bool, error) {
-	cbft.log.Trace("call ShouldSeal()")
+	cbft.log.Debug("call ShouldSeal()")
+
+	// reloadCBFTParams used for reload elements in dpos before check if turn seal
+	cbft.reloadCBFTParams()
+
 	if len(cbft.dpos.primaryNodeList) == 1 {
 		return true, nil
 	}
@@ -1357,8 +1399,10 @@ func (cbft *Cbft) Finalize(chain consensus.ChainReader, header *types.Header, st
 //to sign the block, and store the sign to header.Extra[32:], send the sign to chanel to broadcast to other consensus nodes
 func (cbft *Cbft) Seal(chain consensus.ChainReader, block *types.Block, sealResultCh chan<- *types.Block, stopCh <-chan struct{}) (*types.Block, error) {
 	cbft.log.Debug("call Seal()", "number", block.NumberU64(), "parentHash", block.ParentHash())
-	/*cbft.lock.Lock()
-	defer cbft.lock.Unlock()*/
+	/*
+	cbft.lock.Lock()
+	defer cbft.lock.Unlock()
+	*/
 
 	header := block.Header()
 	number := block.NumberU64()

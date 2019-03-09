@@ -19,7 +19,6 @@ package core
 import (
 	"errors"
 	"fmt"
-
 	"math"
 	"math/big"
 	"sort"
@@ -80,6 +79,10 @@ var (
 	// ErrGasLimit is returned if a transaction's requested gas limit exceeds the
 	// maximum allowance of the current block.
 	ErrGasLimit = errors.New("exceeds block gas limit")
+
+	// ErrTxGasLimit is returned if a transaction's requested gas limit exceeds the
+	// global maximum allowance of the transaction.
+	ErrTransactionGasLimit = errors.New("exceeds transaction gas limit")
 
 	// ErrNegativeValue is a sanity error to ensure noone is able to specify a
 	// transaction with a negative value.
@@ -777,10 +780,36 @@ func (pool *TxPool) validateTx(tx *types.Transaction, local bool) error {
 	if tx.Value().Sign() < 0 {
 		return ErrNegativeValue
 	}
+/*
 	// Ensure the transaction doesn't exceed the current block limit gas.
 	if pool.currentMaxGas < tx.Gas() {
 		return ErrGasLimit
 	}
+*/
+	// Ensure the transaction doesn't exceed the current txansaction limit gas
+	// which stored in the system contract
+	log.Debug("-- -- -- -- -- ")
+	callParams := []interface{} {"__sys_paramManager", "latest"}
+	cnsContractAddr := common.HexToAddress("0x0000000000000000000000000000000000000011")
+	btsRes := common.InnerCall(cnsContractAddr, "getContractAddress", callParams)
+	strRes := common.CallResAsString(btsRes)
+	log.Debug("<Contract Call Result >", "strRes", strRes)
+
+	if common.IsHexZeroAddress(strRes) {
+		log.Info("system contract not found", "name", "__sys_paramManager")
+		panic("system contract not found")
+	}
+
+	paramContractAddr := common.HexToAddress(strRes)
+	btsRes = common.InnerCall(paramContractAddr, "getTxGasLimit", []interface{}{})
+	txGasLimit := common.CallResAsInt64(btsRes)
+	log.Debug("test", "txslimit", txGasLimit)
+
+	if uint64(txGasLimit) < tx.Gas() {
+		return ErrTransactionGasLimit
+	}
+	log.Debug("-- -- -- -- -- ")
+
 	// Make sure the transaction is signed properly
 	from, err := types.Sender(pool.signer, tx)
 	if err != nil {

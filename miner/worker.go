@@ -19,7 +19,6 @@ package miner
 import (
 	"bytes"
 	"github.com/PlatONnetwork/PlatON-Go/consensus/cbft"
-	"github.com/PlatONnetwork/PlatON-Go/ethdb"
 	"math/big"
 	"sync"
 	"sync/atomic"
@@ -33,6 +32,7 @@ import (
 	"github.com/PlatONnetwork/PlatON-Go/core/state"
 	"github.com/PlatONnetwork/PlatON-Go/core/types"
 	"github.com/PlatONnetwork/PlatON-Go/core/vm"
+	"github.com/PlatONnetwork/PlatON-Go/ethdb"
 	"github.com/PlatONnetwork/PlatON-Go/event"
 	"github.com/PlatONnetwork/PlatON-Go/log"
 	"github.com/PlatONnetwork/PlatON-Go/params"
@@ -546,10 +546,10 @@ func (w *worker) mainLoop() {
 		case <-w.exitCh:
 			return
 
-			/*
-				case <-w.txsSub.Err():
-					return
-			*/
+		/*
+		case <-w.txsSub.Err():
+			return
+		*/
 
 		case <-w.chainHeadSub.Err():
 			return
@@ -1158,11 +1158,13 @@ func (w *worker) commitNewWork(interrupt *int32, noempty bool, timestamp int64, 
 		Time:       big.NewInt(timestamp),
 	}
 	// Only set the coinbase if our consensus engine is running (avoid spurious block rewards)
-	if w.isRunning() {/*
+	if w.isRunning() {
+		/*
 		if w.coinbase == (common.Address{}) {
 			log.Error("Refusing to mine without etherbase")
 			return
-		}*/
+		}
+		*/
 		header.Coinbase = w.coinbase
 	}
 

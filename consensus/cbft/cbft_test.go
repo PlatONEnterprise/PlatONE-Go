@@ -258,7 +258,6 @@ func buildMain(cbft *Cbft) {
 }
 
 func initNodes() []discover.Node {
-	var nodes [3]discover.Node
 
 	initialNodes := [3]string{
 		"1f3a8672348ff6b789e416762ad53e69063138b8eb4d8780101658f24b2369f1a8e09499226b467d8bc0c4e03e1dc903df857eeb3c67733d21b6aaee2840e429",
@@ -267,11 +266,12 @@ func initNodes() []discover.Node {
 	}
 	nodeIDs := convert(initialNodes[:])
 
-	for i, node := range nodes {
-		node.ID = nodeIDs[i]
+	nodes := make([]discover.Node, 0, len(nodeIDs))
+	for _, id := range nodeIDs {
+		nodes = append(nodes, discover.Node{ID: id})
 	}
 
-	return nodes[:]
+	return nodes
 }
 func convert(initialNodes []string) []discover.NodeID {
 	NodeIDList := make([]discover.NodeID, 0, len(initialNodes))

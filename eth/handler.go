@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/PlatONnetwork/PlatON-Go/rpc"
 	"math"
 	"math/big"
 	"strconv"
@@ -44,6 +43,7 @@ import (
 	"github.com/PlatONnetwork/PlatON-Go/p2p/discover"
 	"github.com/PlatONnetwork/PlatON-Go/params"
 	"github.com/PlatONnetwork/PlatON-Go/rlp"
+	"github.com/PlatONnetwork/PlatON-Go/rpc"
 )
 
 const (

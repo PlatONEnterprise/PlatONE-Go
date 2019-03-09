@@ -20,7 +20,6 @@ package miner
 import (
 	"fmt"
 	"github.com/PlatONnetwork/PlatON-Go/core/cbfttypes"
-	"github.com/PlatONnetwork/PlatON-Go/ethdb"
 	"sync/atomic"
 	"time"
 
@@ -30,6 +29,7 @@ import (
 	"github.com/PlatONnetwork/PlatON-Go/core/state"
 	"github.com/PlatONnetwork/PlatON-Go/core/types"
 	"github.com/PlatONnetwork/PlatON-Go/eth/downloader"
+	"github.com/PlatONnetwork/PlatON-Go/ethdb"
 	"github.com/PlatONnetwork/PlatON-Go/event"
 	"github.com/PlatONnetwork/PlatON-Go/log"
 	"github.com/PlatONnetwork/PlatON-Go/params"

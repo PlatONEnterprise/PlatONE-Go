@@ -1,12 +1,13 @@
 package cbft
 
 import (
+	"errors"
+	"bytes"
 	"github.com/PlatONnetwork/PlatON-Go/common"
 	"github.com/PlatONnetwork/PlatON-Go/core"
 	"github.com/PlatONnetwork/PlatON-Go/crypto"
 	"github.com/PlatONnetwork/PlatON-Go/log"
 	"github.com/PlatONnetwork/PlatON-Go/p2p/discover"
-	"bytes"
 )
 
 type dpos struct {
@@ -18,6 +19,20 @@ type dpos struct {
 
 }
 
+var (
+	errGetInitialNodesListFailed = errors.New("get initial node list failed")
+)
+
+func convert(initialNodes []string) []discover.NodeID {
+	NodeIDList := make([]discover.NodeID, 0, len(initialNodes))
+	for _, value := range initialNodes {
+		if nodeID, error := discover.HexID(value); error == nil {
+			NodeIDList = append(NodeIDList, nodeID)
+		}
+	}
+	return NodeIDList
+}
+
 func newDpos(initialNodes []discover.NodeID) *dpos {
 	dpos := &dpos{
 		primaryNodeList:   initialNodes,
@@ -26,8 +41,9 @@ func newDpos(initialNodes []discover.NodeID) *dpos {
 	return dpos
 }
 
+
+// Determine whether the current node is a consensus node
 func (d *dpos) IsPrimary(addr common.Address) bool {
-	// Determine whether the current node is a consensus node
 	for _, node := range d.primaryNodeList {
 		pub, err := node.Pubkey()
 		if err != nil || pub == nil {
