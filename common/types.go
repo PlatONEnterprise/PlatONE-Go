@@ -192,6 +192,18 @@ func IsHexAddress(s string) bool {
 	return len(s) == 2*AddressLength && isHex(s)
 }
 
+// IsZeroAddress compare
+func IsHexZeroAddress(s string) bool {
+	if !IsHexAddress(s) {
+		return false
+	}
+	if hasHexPrefix(s) {
+		s = s[2:]
+	}
+	return 0 == strings.Compare(s, "0000000000000000000000000000000000000000")
+}
+
+
 // Bytes gets the string representation of the underlying address.
 func (a Address) Bytes() []byte { return a[:] }
 
