@@ -29,35 +29,27 @@ func GenCallData(funcName string, params []interface{}) ([]byte) {
 		switch p.(type) {
 			// for intX
 			case int:
-				data = append(data, Int64ToBytes(int64(p.(int))))
+				data = append(data, IntToBytes(p.(int)))
 			case int8:
-				data = append(data, Int64ToBytes(int64(p.(int8))))
+				data = append(data, Int8ToBytes(p.(int8)))
 			case int16:
-				data = append(data, Int64ToBytes(int64(p.(int16))))
+				data = append(data, Int16ToBytes(p.(int16)))
 			case int32:
-				data = append(data, Int64ToBytes(int64(p.(int32))))
+				data = append(data, Int32ToBytes(p.(int32)))
 			case int64:
 				data = append(data, Int64ToBytes(p.(int64)))
 
 			// for uintX
 			case uint:
-				data = append(data, Uint64ToBytes(uint64(p.(uint))))
+				data = append(data, UintToBytes(p.(uint)))
 			case uint8:
-				data = append(data, Uint64ToBytes(uint64(p.(uint8))))
+				data = append(data, Uint8ToBytes(p.(uint8)))
 			case uint16:
-				data = append(data, Uint64ToBytes(uint64(p.(uint16))))
+				data = append(data, Uint16ToBytes(p.(uint16)))
 			case uint32:
-				data = append(data, Uint64ToBytes(uint64(p.(uint32))))
+				data = append(data, Uint32ToBytes(p.(uint32)))
 			case uint64:
 				data = append(data, Uint64ToBytes(p.(uint64)))
-
-			// for bool
-			case bool:
-				if p.(bool) {
-					data = append(data, Uint64ToBytes(uint64(1)))
-				} else {
-					data = append(data, Uint64ToBytes(uint64(0)))
-				}
 
 			// for stirng
 			case string:

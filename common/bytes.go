@@ -140,8 +140,71 @@ func BytesCombine(pBytes ...[]byte) []byte {
 	return bytes.Join(pBytes, []byte(""))
 }
 
+func IntToBytes(n int) []byte {
+	tmp := int(n)
+	bytesBuffer := bytes.NewBuffer([]byte{})
+	binary.Write(bytesBuffer, binary.BigEndian, tmp)
+	return bytesBuffer.Bytes()
+}
+
+func Int8ToBytes(n int8) []byte {
+	tmp := int8(n)
+	bytesBuffer := bytes.NewBuffer([]byte{})
+	binary.Write(bytesBuffer, binary.BigEndian, tmp)
+	return bytesBuffer.Bytes()
+}
+
+func Int16ToBytes(n int16) []byte {
+	tmp := int16(n)
+	bytesBuffer := bytes.NewBuffer([]byte{})
+	binary.Write(bytesBuffer, binary.BigEndian, tmp)
+	return bytesBuffer.Bytes()
+}
+
 func Int32ToBytes(n int32) []byte {
 	tmp := int32(n)
+	bytesBuffer := bytes.NewBuffer([]byte{})
+	binary.Write(bytesBuffer, binary.BigEndian, tmp)
+	return bytesBuffer.Bytes()
+}
+
+func Int64ToBytes(n int64) []byte {
+	tmp := int64(n)
+	bytesBuffer := bytes.NewBuffer([]byte{})
+	binary.Write(bytesBuffer, binary.BigEndian, tmp)
+	return bytesBuffer.Bytes()
+}
+
+func UintToBytes(n uint) []byte {
+	tmp := uint(n)
+	bytesBuffer := bytes.NewBuffer([]byte{})
+	binary.Write(bytesBuffer, binary.BigEndian, tmp)
+	return bytesBuffer.Bytes()
+}
+
+func Uint8ToBytes(n uint8) []byte {
+	tmp := uint8(n)
+	bytesBuffer := bytes.NewBuffer([]byte{})
+	binary.Write(bytesBuffer, binary.BigEndian, tmp)
+	return bytesBuffer.Bytes()
+}
+
+func Uint16ToBytes(n uint16) []byte {
+	tmp := uint16(n)
+	bytesBuffer := bytes.NewBuffer([]byte{})
+	binary.Write(bytesBuffer, binary.BigEndian, tmp)
+	return bytesBuffer.Bytes()
+}
+
+func Uint32ToBytes(n uint32) []byte {
+	tmp := uint32(n)
+	bytesBuffer := bytes.NewBuffer([]byte{})
+	binary.Write(bytesBuffer, binary.BigEndian, tmp)
+	return bytesBuffer.Bytes()
+}
+
+func Uint64ToBytes(n uint64) []byte {
+	tmp := uint64(n)
 	bytesBuffer := bytes.NewBuffer([]byte{})
 	binary.Write(bytesBuffer, binary.BigEndian, tmp)
 	return bytesBuffer.Bytes()
@@ -152,19 +215,6 @@ func BytesToInt32(b []byte) int32 {
 	var tmp int32
 	binary.Read(bytesBuffer, binary.BigEndian, &tmp)
 	return int32(tmp)
-}
-
-func Int64ToBytes(n int64) []byte {
-	tmp := int64(n)
-	bytesBuffer := bytes.NewBuffer([]byte{})
-	binary.Write(bytesBuffer, binary.BigEndian, tmp)
-	return bytesBuffer.Bytes()
-}
-
-func Uint64ToBytes(n uint64) []byte {
-	buf := make([]byte, 8)
-	binary.BigEndian.PutUint64(buf, n)
-	return buf
 }
 
 func BytesToInt64(b []byte) int64 {
