@@ -226,6 +226,8 @@ func (n *Node) Start() error {
 	n.server = running
 	n.stop = make(chan struct{})
 
+	running.UpdatePeer()
+
 	return nil
 }
 

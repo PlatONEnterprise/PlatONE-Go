@@ -309,10 +309,10 @@ func initiatorEncHandshake(conn io.ReadWriter, prv *ecdsa.PrivateKey, remoteID d
 	sig, err := crypto.Sign(msg, prv)
 	msgSig := append(msg, sig...)
 	if _, err = conn.Write(msgSig); err != nil {
-		fmt.Println("send fail")
+		fmt.Println("send sign data fail")
 		return s, err
 	} else {
-		fmt.Println("send success ", len(msg), len(sig), len(msgSig), msgSig)
+		fmt.Println("send sign data success ")
 	}
 
 	return h.secrets(authPacket, authRespPacket)
@@ -411,11 +411,11 @@ func receiverEncHandshake(conn io.ReadWriter, prv *ecdsa.PrivateKey) (s secrets,
 		nodeAddressRes := common.InnerCall(cnsAddress, "getContractAddress", []interface{}{ "__sys_nodeManager", "latest"})
 
 		nodeManagerAddress := common.HexToAddress(common.CallResAsString(nodeAddressRes))
-		validNodeRes := common.InnerCall(nodeManagerAddress, "validJoinNode", []interface{}{ "0x" + pubStr})
+		validNodeRes := common.InnerCall(nodeManagerAddress, "validJoinNode", []interface{}{ pubStr})
 
 		validNode := common.CallResAsBool(validNodeRes)
 
-		fmt.Println("receive len", msg, sig, pubStr, validNodeRes, validNode, nodeManagerAddress, common.CallResAsString(nodeAddressRes))
+		fmt.Println("pubStr = ", pubStr, "validNode = ", validNode, "nodeManagerAddress = ", common.CallResAsString(nodeAddressRes))
 
 		if(!validNode) {
 			fmt.Println("join node is a invalid node")
