@@ -789,14 +789,14 @@ func (pool *TxPool) validateTx(tx *types.Transaction, local bool) error {
 	// Ensure the transaction doesn't exceed the current txansaction limit gas
 	// which stored in the system contract
 	log.Debug("-- -- -- -- -- ")
-	callParams := []interface{} {"__sys_paramManager", "latest"}
+	callParams := []interface{} {"__sys_ParamManager", "latest"}
 	cnsContractAddr := common.HexToAddress("0x0000000000000000000000000000000000000011")
 	btsRes := common.InnerCall(cnsContractAddr, "getContractAddress", callParams)
 	strRes := common.CallResAsString(btsRes)
 	log.Debug("<Contract Call Result >", "strRes", strRes)
 
 	if common.IsHexZeroAddress(strRes) {
-		log.Info("system contract not found", "name", "__sys_paramManager")
+		log.Info("system contract not found", "name", "__sys_ParamManager")
 		panic("system contract not found")
 	}
 

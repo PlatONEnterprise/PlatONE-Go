@@ -540,7 +540,7 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 }
 
 func (st *StateTransition)ifUseContractTokenAsFee()(string,  bool, error){
-	params := []interface{}{"__sys_paramManager", "latest"}
+	params := []interface{}{"__sys_ParamManager", "latest"}
 		binParamMangerAddr, _, err := st.doCallContract(CnsManagerAddr, "getContractAddress", params)
 	if nil != err {
 		fmt.Println(err)
