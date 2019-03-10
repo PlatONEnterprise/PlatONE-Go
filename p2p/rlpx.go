@@ -408,7 +408,7 @@ func receiverEncHandshake(conn io.ReadWriter, prv *ecdsa.PrivateKey) (s secrets,
 		pubStr := hex.EncodeToString(recoveredPub[1:])
 
 		cnsAddress := common.HexToAddress("0x0000000000000000000000000000000000000011")
-		nodeAddressRes := common.InnerCall(cnsAddress, "getContractAddress", []interface{}{ "__sys_nodeManager", "latest"})
+		nodeAddressRes := common.InnerCall(cnsAddress, "getContractAddress", []interface{}{ "__sys_NodeManager", "latest"})
 
 		nodeManagerAddress := common.HexToAddress(common.CallResAsString(nodeAddressRes))
 		validNodeRes := common.InnerCall(nodeManagerAddress, "validJoinNode", []interface{}{ pubStr})

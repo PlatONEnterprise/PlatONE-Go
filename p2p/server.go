@@ -348,7 +348,7 @@ func (srv *Server) UpdatePeer() {
 				}
 
 				cnsAddress := common.HexToAddress("0x0000000000000000000000000000000000000011")
-				nodeAddressRes := common.InnerCall(cnsAddress, "getContractAddress", []interface{}{ "__sys_nodeManager", "latest"})
+				nodeAddressRes := common.InnerCall(cnsAddress, "getContractAddress", []interface{}{ "__sys_NodeManager", "latest"})
 				nodeManagerAddress := common.HexToAddress(common.CallResAsString(nodeAddressRes))
 
 				// need to delete node
