@@ -10,7 +10,7 @@ fi
 #mkdir -p ../logs
 
 datadir="--datadir ../data"
-nodekey="--nodekey ../data/node.pubkey"
+nodekey="--nodekey ../data/node.prikey"
 rpc="--rpcaddr 0.0.0.0 --rpcport 6789 --rpcapi db,eth,net,web3,admin,personal --rpc"
 #logs="--verbosity 4 --wasmlog ../logs/wasm.log >>../logs/platon.log" #redirection not work in scrypt, why?
 logs="--verbosity 4 --wasmlog ./wasm.log"
