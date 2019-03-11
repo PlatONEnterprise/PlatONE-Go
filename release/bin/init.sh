@@ -31,6 +31,11 @@ function create_node_key() {
     prikey=${keyinfo:62:64}
     pubkey=${keyinfo:137:128}
 
+    if [ ${#prikey} -ne 64 ]; then
+        echo "Error: create node key failed."
+        exit
+    fi
+
     ts=`date '+%Y%m%d%H%M%S'`
     if [ -f ../data/node.address ]; then
         mv ../data/node.address ../data/node.address.bak.$ts
@@ -51,15 +56,20 @@ function create_node_key() {
 }
 
 function create_account() {
+    echo "Input account passphrase."
+    ./ethkey generate
+
+    if [ ! -f ./keyfile.json ]; then
+        echo "Error: create account failed"
+        exit
+    fi
+
+    mkdir -p ../data/keystore
     if [ -f ../data/keystore/keyfile.json ]; then
         mv ../data/keystore/keyfile.json ../data/keystore/keyfile.json.bak.`date '+%Y%m%d%H%M%S'`
     fi
+    mv ./keyfile.json ../data/keystore/keyfile.json
 
-    echo "Input account passphrase."
-    mkdir -p ../data/keystore
-    cd ../data/keystore
-    ../../bin/ethkey generate
-    cd ../../bin
     echo "Create account succ. File: data/keystore/keyfile.json"
 }
 
