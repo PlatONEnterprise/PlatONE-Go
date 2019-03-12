@@ -13,13 +13,14 @@ import (
 )
 
 const (
-	transfer = iota
-	deployContract
-	invokeContract
-	vote
-	permission
-	cnsTxType = 0x11
-	fwTxType  = 0x12
+	transfer = 0
+	deployContract = 1
+	invokeContract = 2
+	vote = 3
+	permission = 4
+
+	cnsTxType  = 0x11	// Used for sending transactions without address
+	fwTxType   = 0x12 // Used fot sending transactions  about firewall
 
 	DefaultConfigFilePath = "/config.json"
 )
