@@ -198,12 +198,6 @@ func cnsInvoke(c *cli.Context) error {
 		fmt.Printf("cnsName can't be empty!")
 		return nil
 	}
-	/*
-		if addr == "" {
-			fmt.Printf("addr can't be empty!")
-			return nil
-		}
-	*/
 
 	if funcParams == "" {
 		fmt.Printf("func can't be empty!")
@@ -323,6 +317,7 @@ func FwInvokeContract(contractAddr string, funcParams string, txType int) error 
 
 // CnsInvokeContract function
 // invoke a contract with contract name
+// TODO: cnsInvoke相关方法合并到invoke相关方法中
 func CnsInvokeContract(contractName string, abiPath string, funcParams string, txType int) error {
 
 	//parse the function and param
@@ -336,10 +331,6 @@ func CnsInvokeContract(contractName string, abiPath string, funcParams string, t
 
 	if len(abiFunc.Inputs) != len(inputParams) {
 		return fmt.Errorf("incorrect number of parameters ,request=%d,get=%d\n", len(abiFunc.Inputs), len(inputParams))
-	}
-
-	if txType == 0 {
-		txType = invokeContract
 	}
 
 	paramArr := [][]byte{
@@ -359,7 +350,7 @@ func CnsInvokeContract(contractName string, abiPath string, funcParams string, t
 
 	paramBytes, e := rlp.EncodeToBytes(paramArr)
 	if e != nil {
-		return fmt.Errorf("rpl encode error,%s", e.Error())
+		return fmt.Errorf("rlp encode error,%s", e.Error())
 	}
 
 	txParams := TxParams{
