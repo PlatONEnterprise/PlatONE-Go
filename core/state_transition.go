@@ -188,8 +188,8 @@ func ApplyMessage(evm *vm.EVM, msg Message, gp *GasPool) ([]byte, uint64, bool, 
 			return nil,0,true,nil
 		}
 
-		if len(cnsData) >= 3{
-			log.Debug("cnsData >= 3 ")
+		if len(cnsData) < 3{
+			log.Debug("cnsData < 3 ")
 			evm.StateDB.SetNonce(msg.From(), evm.StateDB.GetNonce(msg.From())+1)
 			return nil,0,true,nil
 		}
