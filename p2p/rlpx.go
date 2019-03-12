@@ -28,7 +28,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/PlatONnetwork/PlatON-Go/common"
+
 	"hash"
 	"io"
 	"io/ioutil"
@@ -37,6 +37,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/PlatONnetwork/PlatON-Go/common"
 	"github.com/PlatONnetwork/PlatON-Go/crypto"
 	"github.com/PlatONnetwork/PlatON-Go/crypto/ecies"
 	"github.com/PlatONnetwork/PlatON-Go/crypto/secp256k1"
