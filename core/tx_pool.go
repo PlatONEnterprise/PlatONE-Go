@@ -795,14 +795,13 @@ func (pool *TxPool) validateTx(tx *types.Transaction, local bool) error {
 	strRes := common.CallResAsString(btsRes)
 	log.Debug("<Contract Call Result >", "strRes", strRes)
 
-	if common.IsHexZeroAddress(strRes) {
-		log.Info("system contract not found", "name", "__sys_ParamManager")
-		panic("system contract not found")
+	txGasLimit := int64(10000000000000)
+	if !common.IsHexZeroAddress(strRes) {
+		paramContractAddr := common.HexToAddress(strRes)
+		btsRes = common.InnerCall(paramContractAddr, "getTxGasLimit", []interface{}{})
+		txGasLimit = common.CallResAsInt64(btsRes)
 	}
-
-	paramContractAddr := common.HexToAddress(strRes)
-	btsRes = common.InnerCall(paramContractAddr, "getTxGasLimit", []interface{}{})
-	txGasLimit := common.CallResAsInt64(btsRes)
+	
 	log.Debug("test", "txslimit", txGasLimit)
 
 	if uint64(txGasLimit) < tx.Gas() {
