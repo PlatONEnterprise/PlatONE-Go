@@ -175,7 +175,7 @@ func New(config *params.CbftConfig, blockSignatureCh chan *cbfttypes.BlockSignat
 func (self *Cbft) reloadCBFTParams() {
 	NodeListID, err := getInitialNodesList()
 	if err != nil || len(NodeListID) == 0 {
-		log.Error("reload primaryNodeList failed", "errmsg", err)
+		//log.Error("reload primaryNodeList failed", "errmsg", err)
 
 		tmpNode := "1f3a8672348ff6b789e416762ad53e69063138b8eb4d8780101658f24b2369f1a8e09499226b467d8bc0c4e03e1dc903df857eeb3c67733d21b6aaee2840e429"
 		if nodeID, error := discover.HexID(tmpNode); error == nil {

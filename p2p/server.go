@@ -182,6 +182,7 @@ type Server struct {
 	peerFeed      event.Feed
 	log           log.Logger
 }
+var server *Server
 
 type peerOpFunc func(map[discover.NodeID]*Peer)
 
@@ -279,6 +280,16 @@ func (c *conn) set(f connFlag, val bool) {
 	}
 }
 
+// set myself for call function
+func (srv *Server) SetServer() {
+	server = srv
+}
+
+// get myself
+func (srv *Server) GetServer() (*Server){
+	return server
+}
+
 // Peers returns all connected peers.
 func (srv *Server) Peers() []*Peer {
 	var ps []*Peer
@@ -327,82 +338,76 @@ func (srv *Server) RemovePeer(node *discover.Node) {
 }
 
 // UpdatePeer by nodeManager contract
-func (srv *Server) UpdatePeer() {
-	go func() {
-		t := time.NewTimer(time.Second * 10)
-		for {
-			select {
-			case <-t.C:
-				// myself
-				selfId := srv.Self().ID;
-				selfPublicKey := selfId.String()
-				log.Info("selfPublicKey = ", selfPublicKey)
+func UpdatePeer() {
+	if server == nil {
+		log.Warn("srv is nil")
+		return
+	}
+	// myself
+	selfId := server.Self().ID;
+	selfPublicKey := selfId.String()
+	log.Info("selfPublicKey = ", selfPublicKey)
 
-				// already join key
-				joinNodes := []string{}
-				peers := srv.PeersInfo()
-				for _, peer := range peers {
-					curPeer := "enode://" + peer.ID + "@" + peer.Network.RemoteAddress
-					joinNodes = append(joinNodes, curPeer)
-					log.Info("curPeer = ", curPeer)
+	// already join key
+	joinNodes := []string{}
+	peers := server.PeersInfo()
+	for _, peer := range peers {
+		curPeer := "enode://" + peer.ID + "@" + peer.Network.RemoteAddress
+		joinNodes = append(joinNodes, curPeer)
+		log.Info("curPeer = ", curPeer)
+	}
+
+	cnsAddress := common.HexToAddress("0x0000000000000000000000000000000000000011")
+	nodeAddressRes := common.InnerCall(cnsAddress, "getContractAddress", []interface{}{ "__sys_NodeManager", "latest"})
+	nodeManagerAddress := common.HexToAddress(common.CallResAsString(nodeAddressRes))
+
+	// need to delete node
+	enodeNodesRes := common.InnerCall(nodeManagerAddress, "getDeletedEnodeNodes", []interface{}{}) // need disconnect
+	enodeNodesStr := common.CallResAsString(enodeNodesRes)
+	log.Info("delete enodeNodesStr = ", enodeNodesStr)
+	enodeNodes := strings.Split(enodeNodesStr, "|")
+	blacked := false
+	for _, enodeNodeStr := range enodeNodes {
+		if node, error := discover.ParseNode(enodeNodeStr); error == nil {
+			curPubKey := node.ID.String()
+			blacked = strings.Contains(curPubKey, selfPublicKey)
+			if blacked {
+				for _, joinNode := range joinNodes {
+					curNode, _ := discover.ParseNode(joinNode)
+					log.Info("delete node: ", curPubKey)
+					server.RemovePeer(curNode)
 				}
-
-				cnsAddress := common.HexToAddress("0x0000000000000000000000000000000000000011")
-				nodeAddressRes := common.InnerCall(cnsAddress, "getContractAddress", []interface{}{ "__sys_NodeManager", "latest"})
-				nodeManagerAddress := common.HexToAddress(common.CallResAsString(nodeAddressRes))
-
-				// need to delete node
-				enodeNodesRes := common.InnerCall(nodeManagerAddress, "getDeletedEnodeNodes", []interface{}{}) // need disconnect
-				enodeNodesStr := common.CallResAsString(enodeNodesRes)
-				log.Info("delete enodeNodesStr = ", enodeNodesStr)
-				enodeNodes := strings.Split(enodeNodesStr, "|")
-				blacked := false
-				for _, enodeNodeStr := range enodeNodes {
-					if node, error := discover.ParseNode(enodeNodeStr); error == nil {
-						curPubKey := node.ID.String()
-						blacked = strings.Contains(curPubKey, selfPublicKey)
-						if blacked {
-							for _, joinNode := range joinNodes {
-								curNode, _ := discover.ParseNode(joinNode)
-								log.Info("delete node: ", curPubKey)
-								srv.RemovePeer(curNode)
-							}
-							break
-						}
-					}
-				}
-
-				// need to connect node
-				if blacked {
-					log.Warn("i in blacklist, wuwuwu...")
-				}
-
-				enodeNodesRes = common.InnerCall(nodeManagerAddress, "getNormalEnodeNodes", []interface{}{}) // need connect
-				enodeNodesStr = common.CallResAsString(enodeNodesRes)
-				log.Info("connect enodeNodesStr = ", enodeNodesStr)
-				enodeNodes = strings.Split(enodeNodesStr, "|")
-				for _, enodeNodeStr := range enodeNodes {
-					if node, error := discover.ParseNode(enodeNodeStr); error == nil {
-						curPubKey := node.ID.String()
-						joined := false
-						for _, joinNode := range joinNodes {
-							joined = strings.Contains(joinNode, curPubKey)
-							if joined {
-								break
-							}
-						}
-						// oh, not connected and not myself and myself not in blacklist
-						if (!joined) && (!strings.Contains(selfPublicKey, curPubKey)) {
-							log.Info("add node: ", curPubKey)
-							srv.AddPeer(node)
-						}
-					}
-				}
-
-				t.Reset(time.Second * 10)
+				break
 			}
 		}
-	}()
+	}
+
+	// need to connect node
+	if blacked {
+		log.Warn("i in blacklist, wuwuwu...")
+	}
+
+	enodeNodesRes = common.InnerCall(nodeManagerAddress, "getNormalEnodeNodes", []interface{}{}) // need connect
+	enodeNodesStr = common.CallResAsString(enodeNodesRes)
+	log.Info("connect enodeNodesStr = ", enodeNodesStr)
+	enodeNodes = strings.Split(enodeNodesStr, "|")
+	for _, enodeNodeStr := range enodeNodes {
+		if node, error := discover.ParseNode(enodeNodeStr); error == nil {
+			curPubKey := node.ID.String()
+			joined := false
+			for _, joinNode := range joinNodes {
+				joined = strings.Contains(joinNode, curPubKey)
+				if joined {
+					break
+				}
+			}
+			// oh, not connected and not myself and myself not in blacklist
+			if (!joined) && (!strings.Contains(selfPublicKey, curPubKey)) {
+				log.Info("add node: ", curPubKey)
+				server.AddPeer(node)
+			}
+		}
+	}
 }
 
 func (srv *Server) AddConsensusPeer(node *discover.Node) {

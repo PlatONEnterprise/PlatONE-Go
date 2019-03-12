@@ -1,14 +1,13 @@
 package cbft
 
 import (
-	"errors"
 	"encoding/json"
+	"errors"
 	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/p2p/discover"
-	"github.com/PlatONnetwork/PlatON-Go/log"
-	"github.com/PlatONnetwork/PlatON-Go/params"
 	"github.com/PlatONnetwork/PlatON-Go/life/utils"
-	"strings"
+	"github.com/PlatONnetwork/PlatON-Go/log"
+	"github.com/PlatONnetwork/PlatON-Go/p2p/discover"
+	"github.com/PlatONnetwork/PlatON-Go/params"
 )
 
 var (
@@ -31,12 +30,12 @@ type CommonResult struct {
 // new a dpos and miner a new block
 func getInitialNodesList() ([]discover.NodeID, error) {
 	// get paramMgr contract address first
-	callParams := []interface{}{"__sys_paramManager", "latest"}
+	callParams := []interface{}{"__sys_ParamManager", "latest"}
 	cnsContractAddr := common.HexToAddress("0x0000000000000000000000000000000000000011")
 	btsRes := common.InnerCall(cnsContractAddr, "getContractAddress", callParams)
 	strRes := common.CallResAsString(btsRes)
 	if common.IsHexZeroAddress(strRes) {
-		log.Trace("system contract not found", "name", "__sys_paramManager")
+		log.Trace("system contract not found", "name", "__sys_ParamManager")
 		return nil ,ErrContractNotFound
 	}
 
@@ -47,11 +46,11 @@ func getInitialNodesList() ([]discover.NodeID, error) {
 
 	var tmp *CommonResult
 	if err := json.Unmarshal(utils.String2bytes(strRes), tmp); err != nil {
-		log.Error("", "result", strRes, "err", err.Error())
+		//log.Error("", "result", strRes, "err", err.Error())
 		return nil, err
 	}
 
-	if tmp.retCode != 0 && 0 != strings.Compare(tmp.retMsg, "success") {
+	if tmp.retCode != 0 {
 		log.Debug("contract inner error", "code", tmp.retCode, "msg", tmp.retMsg)
 		return nil, errors.New(tmp.retMsg)
 	}
@@ -73,12 +72,12 @@ func getInitialNodesList() ([]discover.NodeID, error) {
 // getCBFTParams catch cbft params config when miner a new block
 func getCBFTConfigParams(cfg *params.CbftConfig) error {
 	// get paramMgr contract address first
-	callParams := []interface{}{"__sys_paramManager", "latest"}
+	callParams := []interface{}{"__sys_ParamManager", "latest"}
 	cnsAddr := common.HexToAddress("0x0000000000000000000000000000000000000011")
 	btsRes := common.InnerCall(cnsAddr, "getContractAddress", callParams)
 	strRes := common.CallResAsString(btsRes)
 	if common.IsHexZeroAddress(strRes) {
-		log.Info("system contract not found", "name", "__sys_paramManager")
+		log.Trace("system contract not found", "name", "__sys_ParamManager")
 		return ErrContractNotFound
 	}
 
@@ -89,7 +88,7 @@ func getCBFTConfigParams(cfg *params.CbftConfig) error {
 
 	var tmp *CBFTProduceBlockCfg
 	if err := json.Unmarshal(utils.String2bytes(strRes), tmp); err != nil {
-		log.Error("", "result", strRes, "err", err.Error())
+		//log.Error("", "result", strRes, "err", err.Error())
 		return err
 	}
 
