@@ -315,6 +315,11 @@ func addressCompare(addr1, addr2 common.Address) bool {
 
 func fwCheck(stateDb vm.StateDB, contractAddr common.Address, caller common.Address, input []byte) bool {
 	var data [][]byte
+	// if this is a value transfer tx, just let it go!
+	if len(input) == 0 && len(stateDb.GetCode(contractAddr)) == 0 {
+		return true;
+	}
+
 	if err := rlp.DecodeBytes(input, &data); err != nil {
 		return false
 	}
