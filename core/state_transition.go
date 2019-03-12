@@ -135,46 +135,35 @@ func NewStateTransition(evm *vm.EVM, msg Message, gp *GasPool) *StateTransition 
 }
 
 func GetCnsAddr(evm *vm.EVM, msg Message, cnsName string) (*common.Address, error) {
-	// TODO: 合约管理合约地址，后面设置为全局变量
 	addrProxy := common.HexToAddress(CnsManagerAddr)
-
-	if cnsName == "cnsManager" {
-		return &addrProxy, nil
-	}
 
 	var contractName, contractVer string
 
-	i := strings.Index(cnsName, ":")
-	if i == -1 {
+	posOfColon := strings.Index(cnsName, ":")
+
+	// The cnsName must be the format "Name:Version"
+	if posOfColon == -1 {
 		contractName = cnsName
-		contractVer = ""
+		contractVer = "latest"
 	} else {
-		contractName = cnsName[:i]
-		contractVer = cnsName[i+1:]
+		contractName = cnsName[:posOfColon]
+		contractVer = cnsName[posOfColon+1:]
+	}
+	if contractName == "" || contractVer == ""{
+		return nil, errors.New("cns name do not has the right format")
 	}
 
-	paramArr := [][]byte{
-		common.Int64ToBytes(int64(vm.CALL_CANTRACT_FLAG)),
-		[]byte("getContractAddress"),
-		[]byte(contractName),
-		[]byte(contractVer),
+	if contractName == "cnsManager" {
+		return &addrProxy, nil
 	}
-	paramBytes, _ := rlp.EncodeToBytes(paramArr)
 
-	cnsMsg := types.NewMessage(msg.From(), &addrProxy, 0, new(big.Int), 0x99999, msg.GasPrice(), paramBytes, false, types.CnsTxType)
-	gp := new(GasPool).AddGas(math.MaxUint64 / 2)
+	params := []interface{}{contractName, contractVer}
 
 	snapshot := evm.StateDB.Snapshot()
-	ret, _, _, err := NewStateTransition(evm, cnsMsg, gp).TransitionDb()
+	ret := common.InnerCall(addrProxy, "getContractAddress", params)
 	evm.StateDB.RevertToSnapshot(snapshot)
 
-	if err != nil {
-		log.Error("vm applyMessage failed", err)
-		return nil, errors.New("CNS error, getContractAddress failed")
-	}
-
-	retStr := string(ret)
-	toAddrStr := string(retStr[strings.Index(retStr, "0x"):])
+	toAddrStr := common.CallResAsString(ret)
 	ToAddr := common.HexToAddress(toAddrStr)
 
 	return &ToAddr, nil
@@ -190,30 +179,40 @@ func GetCnsAddr(evm *vm.EVM, msg Message, cnsName string) (*common.Address, erro
 func ApplyMessage(evm *vm.EVM, msg Message, gp *GasPool) ([]byte, uint64, bool, error) {
 
 	if msg.TxType() == types.CnsTxType {
-
 		cnsRawData := msg.Data()
 		var cnsData [][]byte
 
 		if err := rlp.DecodeBytes(cnsRawData, &cnsData); err != nil {
 			log.Debug("Decode cnsRawData failed, ", err)
-			return nil, 0, true, nil
+			evm.StateDB.SetNonce(msg.From(), evm.StateDB.GetNonce(msg.From())+1)
+			return nil,0,true,nil
 		}
 
-		toAddr, err := GetCnsAddr(evm, msg, string(cnsData[1]))
+		if len(cnsData) >= 3{
+			log.Debug("cnsData >= 3 ")
+			evm.StateDB.SetNonce(msg.From(), evm.StateDB.GetNonce(msg.From())+1)
+			return nil,0,true,nil
+		}
+
+		addr, err := GetCnsAddr(evm, msg, string(cnsData[1]))
 		if err != nil {
 			log.Debug("GetCnsAddr failed, ", err)
-			return nil, 0, true, nil
+			evm.StateDB.SetNonce(msg.From(), evm.StateDB.GetNonce(msg.From())+1)
+			return nil,0,true,nil
 		}
-		msg.SetTo(*toAddr)
+
+		msg.SetTo(*addr)
 
 		cnsData = append(cnsData[:1], cnsData[2:]...)
-		cnsRawData, _ = rlp.EncodeToBytes(cnsData)
+		cnsRawData, err = rlp.EncodeToBytes(cnsData)
+		if err!= nil{
+			log.Debug("Encode Cns Data failed, ", err)
+			evm.StateDB.SetNonce(msg.From(), evm.StateDB.GetNonce(msg.From())+1)
+			return nil,0,true,nil
+		}
 
 		msg.SetData(cnsRawData)
 		msg.SetTxType(types.NormalTxType)
-
-		nonce := evm.StateDB.GetNonce(msg.From())
-		msg.SetNonce(nonce)
 	}
 	return NewStateTransition(evm, msg, gp).TransitionDb()
 }

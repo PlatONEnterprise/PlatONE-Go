@@ -41,8 +41,8 @@ const (
 	CreateTxType uint64 = 1
 	NormalTxType uint64 = 2
 
-	CnsTxType uint64 = 0x11
-	FwTxType  uint64 = 0x12
+	CnsTxType uint64 = 0x11	// Used for sending transactions without address
+	FwTxType  uint64 = 0x12 // Used fot sending transactions about firewall
 )
 
 type Transaction struct {
