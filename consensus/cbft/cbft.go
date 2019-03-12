@@ -112,24 +112,22 @@ var cbft *Cbft
 // New creates a concurrent BFT consensus engine
 func New(config *params.CbftConfig, blockSignatureCh chan *cbfttypes.BlockSignature, cbftResultCh chan *cbfttypes.CbftResult, highestLogicalBlockCh chan *types.Block) *Cbft {
 
-	log.Debug("================")
-	InitialNodeIds, err := getInitialNodesList()
-	if err != nil || len(InitialNodeIds) == 0 {
-		log.Error("get initial node list failed", "error", err.Error())
+	// ensure root node is only one. Note that if `config.InitialNodes` in `chainConfig.Cbft` while not been modify,
+	// rootNodeId will not need any more
+	if len(config.InitialNodes) != 1 {
+		log.Error("root node is not only one")
+	}
+	rootNodeID := config.InitialNodes[0].ID
 
-		tmpNode := "1f3a8672348ff6b789e416762ad53e69063138b8eb4d8780101658f24b2369f1a8e09499226b467d8bc0c4e03e1dc903df857eeb3c67733d21b6aaee2840e429"
-		if nodeID, error := discover.HexID(tmpNode); error == nil {
-			InitialNodeIds = append(InitialNodeIds, nodeID)
-		}
+	var cbftNodeIds []discover.NodeID
+	cbftNodeIds = append(cbftNodeIds, rootNodeID)
+
+	initConsensusNodeIds, err := getConsensusNodesList()
+	if err == nil && len(initConsensusNodeIds) > 0 {
+		cbftNodeIds = append(cbftNodeIds, initConsensusNodeIds...)
 	}
 
-	for _, id := range InitialNodeIds {
-		log.Debug("111111", "info", id.String() )
-	}
-	log.Debug("================")
-
-
-	_dpos := newDpos(InitialNodeIds)
+	_dpos := newDpos(rootNodeID, cbftNodeIds)
 
 	cbft = &Cbft{
 		config:                config,
@@ -173,19 +171,21 @@ func New(config *params.CbftConfig, blockSignatureCh chan *cbfttypes.BlockSignat
 
 // reloadCBFTParams reload params
 func (self *Cbft) reloadCBFTParams() {
-	NodeListID, err := getInitialNodesList()
-	if err != nil || len(NodeListID) == 0 {
-		//log.Error("reload primaryNodeList failed", "errmsg", err)
+	rootID := self.dpos.rootNodeID
 
-		tmpNode := "1f3a8672348ff6b789e416762ad53e69063138b8eb4d8780101658f24b2369f1a8e09499226b467d8bc0c4e03e1dc903df857eeb3c67733d21b6aaee2840e429"
-		if nodeID, error := discover.HexID(tmpNode); error == nil {
-			NodeListID = append(NodeListID, nodeID)
-		}
+	var cbftNodeIDs []discover.NodeID
+	cbftNodeIDs = append(cbftNodeIDs, rootID)
+
+	consensusNodeIDs, err := getConsensusNodesList()
+	if err == nil && len(consensusNodeIDs) > 0 {
+		cbftNodeIDs = append(cbftNodeIDs, consensusNodeIDs...)
 	}
-	self.dpos.primaryNodeList = NodeListID
+
+	// need test
+	self.dpos.primaryNodeList = cbftNodeIDs
 
 	if err = getCBFTConfigParams(self.config); err != nil {
-		self.config.Duration = 2
+		self.config.Duration = 1
 		self.config.Period = 10
 	}
 }
@@ -944,7 +944,7 @@ func (cbft *Cbft) blockReceiver(tmp *BlockExt) error {
 		return err
 	}
 
-	// reloadDposElements used for reload elememts in dpos before check if block legal.
+	// reloadCBFTParams used for reload elements in dpos before check if block legal.
 	// It is also used in ShouldSeal
 	cbft.reloadCBFTParams()
 

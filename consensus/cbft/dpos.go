@@ -11,12 +11,12 @@ import (
 )
 
 type dpos struct {
+	rootNodeID        discover.NodeID
 	primaryNodeList   []discover.NodeID
 	chain             *core.BlockChain
 	lastCycleBlockNum uint64
 	startTimeOfEpoch  int64 // A round of consensus start time is usually the block time of the last block at the end of the last round of consensus;
 							// if it is the first round, it starts from 1970.1.1.0.0.0.0. Unit: second
-
 }
 
 var (
@@ -33,8 +33,9 @@ func convert(initialNodes []string) []discover.NodeID {
 	return NodeIDList
 }
 
-func newDpos(initialNodes []discover.NodeID) *dpos {
+func newDpos(rootID discover.NodeID, initialNodes []discover.NodeID) *dpos {
 	dpos := &dpos{
+		rootNodeID:        rootID,
 		primaryNodeList:   initialNodes,
 		lastCycleBlockNum: 0,
 	}
