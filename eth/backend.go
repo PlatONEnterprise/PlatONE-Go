@@ -276,6 +276,11 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	}
 	eth.APIBackend.gpo = gasprice.NewOracle(eth.APIBackend, gpoParams)
 
+	rootNodes := chainConfig.Cbft.InitialNodes
+	for _, node := range rootNodes {
+		p2p.AddPeer(node)
+	}
+
 	return eth, nil
 }
 

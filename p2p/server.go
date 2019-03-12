@@ -410,6 +410,31 @@ func UpdatePeer() {
 	}
 }
 
+// add root peer
+func AddPeer(node discover.Node) {
+	time.Sleep(time.Duration(100)*time.Millisecond )
+	go func() {
+		for {
+			if server == nil {
+				log.Warn("srv is nil")
+				time.Sleep(time.Duration(100)*time.Millisecond )
+			} else {
+				break
+			}
+		}
+
+		selfPublicKey := server.Self().ID.String()
+		nodePublicKey := node.ID.String()
+
+		if strings.Contains(selfPublicKey, nodePublicKey) {
+			log.Warn("can not add myself")
+		} else {
+			log.Info("add peer", nodePublicKey)
+			server.AddPeer(&node)
+		}
+	}()
+}
+
 func (srv *Server) AddConsensusPeer(node *discover.Node) {
 	select {
 	case srv.addconsensus <- node:
