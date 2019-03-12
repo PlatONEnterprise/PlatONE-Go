@@ -17,7 +17,6 @@
 package eth
 
 import (
-	"github.com/PlatONnetwork/PlatON-Go/node"
 	"fmt"
 	"math/big"
 	"os"
@@ -32,6 +31,7 @@ import (
 	"github.com/PlatONnetwork/PlatON-Go/eth/downloader"
 	"github.com/PlatONnetwork/PlatON-Go/eth/gasprice"
 	"github.com/PlatONnetwork/PlatON-Go/log"
+	"github.com/PlatONnetwork/PlatON-Go/node"
 	"github.com/PlatONnetwork/PlatON-Go/params"
 )
 
