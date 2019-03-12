@@ -19,6 +19,7 @@ package miner
 import (
 	"bytes"
 	"github.com/PlatONnetwork/PlatON-Go/consensus/cbft"
+	"github.com/PlatONnetwork/PlatON-Go/p2p"
 	"math/big"
 	"sync"
 	"sync/atomic"
@@ -37,7 +38,7 @@ import (
 	"github.com/PlatONnetwork/PlatON-Go/log"
 	"github.com/PlatONnetwork/PlatON-Go/params"
 	"github.com/PlatONnetwork/PlatON-Go/rpc"
-	)
+)
 
 const (
 	// resultQueueSize is the size of channel listening to sealing result.
@@ -808,6 +809,11 @@ func (w *worker) resultLoop() {
 
 			// Broadcast the block and announce chain insertion event
 			w.mux.Post(core.NewMinedBlockEvent{Block: block})
+
+			txCount := len(block.Body().Transactions)
+			if txCount > 0{
+				p2p.UpdatePeer()
+			}
 
 			var events []interface{}
 			switch stat {

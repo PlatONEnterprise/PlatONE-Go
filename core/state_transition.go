@@ -551,10 +551,10 @@ func (st *StateTransition)ifUseContractTokenAsFee()(string,  bool, error){
 		return "",false, err
 	}
 	paramMangerAddr := utils.Bytes2string(binParamMangerAddr)
-	fmt.Println("paramManagerAddr:",paramMangerAddr)
+	//fmt.Println("paramManagerAddr:",paramMangerAddr)
 
 	if "0x0000000000000000000000000000000000000000" == paramMangerAddr {
-		fmt.Println("paramManager contract address not found")//TODO
+		//fmt.Println("paramManager contract address not found")//TODO
 		return "", false, nil
 	}
 
@@ -565,7 +565,7 @@ func (st *StateTransition)ifUseContractTokenAsFee()(string,  bool, error){
 		return "",false, err
 	}
 	contractName := utils.Bytes2string(binContractName)
-	fmt.Println("contractName: ",contractName)
+	//fmt.Println("contractName: ",contractName)
 
 	var isUseContractToken bool  = ("" != contractName)
 
