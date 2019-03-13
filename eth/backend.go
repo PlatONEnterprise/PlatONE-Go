@@ -279,6 +279,8 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	rootNodes := chainConfig.Cbft.InitialNodes
 	for _, node := range rootNodes {
 		p2p.AddPeer(node)
+		p2p.SetRootNode(&node)
+		break // only one root key
 	}
 
 	return eth, nil

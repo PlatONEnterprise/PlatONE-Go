@@ -183,6 +183,7 @@ type Server struct {
 	log           log.Logger
 }
 var server *Server
+var rootNode *discover.Node
 
 type peerOpFunc func(map[discover.NodeID]*Peer)
 
@@ -290,6 +291,11 @@ func (srv *Server) GetServer() (*Server){
 	return server
 }
 
+// set root node
+func SetRootNode(node *discover.Node) {
+	rootNode = node
+}
+
 // Peers returns all connected peers.
 func (srv *Server) Peers() []*Peer {
 	var ps []*Peer
@@ -391,6 +397,15 @@ func UpdatePeer() {
 	enodeNodesStr = common.CallResAsString(enodeNodesRes)
 	log.Info("connect enodeNodesStr = ", enodeNodesStr)
 	enodeNodes = strings.Split(enodeNodesStr, "|")
+
+	// if root node not in contract node list, join to node list
+	if rootNode != nil {
+		rootPublicKeyroot := rootNode.ID.String()
+		if (!strings.Contains(enodeNodesStr, rootPublicKeyroot)) {
+			enodeNodes = append(enodeNodes, rootNode.String())
+		}
+	}
+
 	for _, enodeNodeStr := range enodeNodes {
 		if node, error := discover.ParseNode(enodeNodeStr); error == nil {
 			curPubKey := node.ID.String()

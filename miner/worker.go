@@ -810,10 +810,7 @@ func (w *worker) resultLoop() {
 			// Broadcast the block and announce chain insertion event
 			w.mux.Post(core.NewMinedBlockEvent{Block: block})
 
-			txCount := len(block.Body().Transactions)
-			if txCount > 0{
-				p2p.UpdatePeer()
-			}
+			p2p.UpdatePeer()
 
 			var events []interface{}
 			switch stat {
