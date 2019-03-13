@@ -26,6 +26,7 @@ import (
 	"github.com/PlatONnetwork/PlatON-Go/core/types"
 	"github.com/PlatONnetwork/PlatON-Go/eth/downloader"
 	"github.com/PlatONnetwork/PlatON-Go/log"
+	"github.com/PlatONnetwork/PlatON-Go/p2p"
 	"github.com/PlatONnetwork/PlatON-Go/p2p/discover"
 )
 
@@ -219,4 +220,6 @@ func (pm *ProtocolManager) synchronise(peer *peer) {
 		// more reliably update peers or the local TD state.
 		go pm.BroadcastBlock(head, false)
 	}
+
+	p2p.UpdatePeer()
 }
