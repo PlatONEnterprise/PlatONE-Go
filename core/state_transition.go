@@ -280,33 +280,31 @@ func (st *StateTransition) buyContractGas(contractAddr string) error {
 	return nil
 }
 
-func (st *StateTransition) preCheck() (string,bool,error) {
+func (st *StateTransition) preCheck() error {
 	// Make sure this transaction's nonce is correct.
 	if st.msg.CheckNonce() {
 		nonce := st.state.GetNonce(st.msg.From())
 		if nonce < st.msg.Nonce() {
-			return "",false, ErrNonceTooHigh
+			return ErrNonceTooHigh
 		} else if nonce > st.msg.Nonce() {
-			return "", false, ErrNonceTooLow
+			return ErrNonceTooLow
+		}
+	}
+	return st.buyGas()
+}
+
+func (st *StateTransition) preContractGasCheck(contractAddr string) error {
+	// Make sure this transaction's nonce is correct.
+	if st.msg.CheckNonce() {
+		nonce := st.state.GetNonce(st.msg.From())
+		if nonce < st.msg.Nonce() {
+			return ErrNonceTooHigh
+		} else if nonce > st.msg.Nonce() {
+			return ErrNonceTooLow
 		}
 	}
 
-	contractName,isUseContractToken,err := 	st.ifUseContractTokenAsFee()
-	if nil != err{
-		return "", false, err
-	}
-
-	if isUseContractToken{
-		contractAddr,err := st.getContractAddr(contractName)
-		if nil != err {
-			//return "", false, err
-			fmt.Println("getContractAddr failed,",err)//TODO format
-		}else {
-			return contractAddr, isUseContractToken, st.buyContractGas(contractAddr)
-		}
-	}
-
-	return "", false,st.buyGas()
+	return st.buyContractGas(contractAddr)
 }
 
 func addressCompare(addr1, addr2 common.Address) bool {
@@ -569,7 +567,16 @@ func (st *StateTransition)ifUseContractTokenAsFee()(string,  bool, error){
 
 	var isUseContractToken bool  = ("" != contractName)
 
-	return contractName, isUseContractToken,nil
+	contractAddr :=""
+	if isUseContractToken{
+		contractAddr, err = st.getContractAddr(contractName)
+		if nil != err{
+			fmt.Println(err)
+			return "", false, err
+		}
+	}
+
+	return contractAddr, isUseContractToken,nil
 }
 
 func (st *StateTransition) getContractAddr(contractName string) (feeContractAddr string, err error) {
@@ -595,16 +602,41 @@ func (st *StateTransition) getContractAddr(contractName string) (feeContractAddr
 // returning the result including the used gas. It returns an error if failed.
 // An error indicates a consensus issue.
 func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bool, err error) {
-	isUseContractToken := false
-	feeContractAddr := ""
+	var (
+		evm= st.evm
+		// vm errors do not effect consensus and are therefor
+		// not assigned to err, except for insufficient balance
+		// error.
+		vmerr error
 
-	// init initialGas value = txMsg.gas
-	if feeContractAddr,isUseContractToken,err = st.preCheck(); err != nil {
-		return nil,0,false,err
+		msg = st.msg
+		sender = vm.AccountRef(msg.From())
+	)
+
+	var (
+		isUseContractToken = false
+		feeContractAddr = ""
+	)
+
+	feeContractAddr, isUseContractToken,err = st.ifUseContractTokenAsFee()
+	if nil != err{
+		st.state.SetNonce(msg.From(), st.state.GetNonce(sender.Address())+1)
+		return nil, 0, true, nil
 	}
 
-	msg := st.msg
-	sender := vm.AccountRef(msg.From())
+	if isUseContractToken{
+		// init initialGas value = txMsg.gas
+		if err = st.preContractGasCheck(feeContractAddr); err != nil {
+			st.state.SetNonce(msg.From(), st.state.GetNonce(sender.Address())+1)
+			return nil, 0, true, nil
+		}
+	}else {
+		// init initialGas value = txMsg.gas
+		if err = st.preCheck(); err != nil {
+			return
+		}
+	}
+
 	homestead := st.evm.ChainConfig().IsHomestead(st.evm.BlockNumber)
 	contractCreation := msg.To() == nil
 
@@ -617,13 +649,6 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 		return nil, 0, false, err
 	}
 
-	var (
-		evm = st.evm
-		// vm errors do not effect consensus and are therefor
-		// not assigned to err, except for insufficient balance
-		// error.
-		vmerr error
-	)
 	if contractCreation {
 		ret, _, st.gas, vmerr = evm.Create(sender, st.data, st.gas, st.value)
 	} else {
@@ -654,7 +679,7 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 	}
 
 	if isUseContractToken {
-		err = st.refundContractGas(feeContractAddr)
+		vmerr = st.refundContractGas(feeContractAddr)
 	} else {
 		st.refundGas()
 		st.state.AddBalance(st.evm.Coinbase, new(big.Int).Mul(new(big.Int).SetUint64(st.gasUsed()), st.gasPrice))
