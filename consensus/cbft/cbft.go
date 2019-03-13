@@ -1277,22 +1277,11 @@ func (cbft *Cbft) ShouldSeal() (bool, error) {
 
 	// reloadCBFTParams used for reload elements in dpos before check if turn seal
 	cbft.reloadCBFTParams()
-
-	if len(cbft.dpos.primaryNodeList) == 1 {
-		// Determine if it is the root node
-		node := cbft.dpos.primaryNodeList[0]
-		pub, err := node.Pubkey()
-		if err != nil || pub == nil {
-			log.Error("nodeID.ID.Pubkey error!")
-			return false, nil
-		}
-		nodeId := discover.PubkeyID(pub)
-		if bytes.Equal(nodeId[:], cbft.config.NodeID[:]) {
-			return true, nil
-		} else {
-			return false, nil
-		}
+	// Non-consensus nodes cannot block
+	if flag, _ := cbft.IsConsensusNode(); !flag {
+		return false, nil
 	}
+
 	inturn := cbft.inTurn()
 	if inturn {
 		cbft.netLatencyLock.RLock()
