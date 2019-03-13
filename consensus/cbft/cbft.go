@@ -26,7 +26,7 @@ import (
 	"github.com/PlatONnetwork/PlatON-Go/p2p/discover"
 	"github.com/PlatONnetwork/PlatON-Go/params"
 	"github.com/PlatONnetwork/PlatON-Go/rpc"
-	lru "github.com/hashicorp/golang-lru"
+	"github.com/hashicorp/golang-lru"
 )
 
 var (
@@ -120,9 +120,18 @@ func New(config *params.CbftConfig, blockSignatureCh chan *cbfttypes.BlockSignat
 	rootNodeID := config.InitialNodes[0].ID
 
 	var cbftNodeIds []discover.NodeID
-	cbftNodeIds = append(cbftNodeIds, rootNodeID)
-
 	initConsensusNodeIds, err := getConsensusNodesList()
+	bIsFind := false
+	for _, node := range initConsensusNodeIds {
+		if node == rootNodeID {
+			bIsFind = true
+			break
+		}
+	}
+	if false == bIsFind {
+		cbftNodeIds = append(cbftNodeIds, rootNodeID)
+	}
+
 	if err == nil && len(initConsensusNodeIds) > 0 {
 		cbftNodeIds = append(cbftNodeIds, initConsensusNodeIds...)
 	}
@@ -174,9 +183,19 @@ func (self *Cbft) reloadCBFTParams() {
 	rootID := self.dpos.rootNodeID
 
 	var cbftNodeIDs []discover.NodeID
-	cbftNodeIDs = append(cbftNodeIDs, rootID)
-
+//	cbftNodeIDs = append(cbftNodeIDs, rootID)
 	consensusNodeIDs, err := getConsensusNodesList()
+	bIsFind := false
+	for _, node := range consensusNodeIDs {
+		if node == rootID {
+			bIsFind = true
+			break
+		}
+	}
+	if false == bIsFind {
+		cbftNodeIDs = append(cbftNodeIDs, rootID)
+	}
+
 	if err == nil && len(consensusNodeIDs) > 0 {
 		cbftNodeIDs = append(cbftNodeIDs, consensusNodeIDs...)
 	}
@@ -597,6 +616,7 @@ func reverse(s []*BlockExt) {
 func (cbft *Cbft) SetPrivateKey(privateKey *ecdsa.PrivateKey) {
 	cbft.config.PrivateKey = privateKey
 	cbft.config.NodeID = discover.PubkeyID(&privateKey.PublicKey)
+	log.Info("nodeid", "nodeid:", hex.EncodeToString(cbft.config.NodeID.Bytes()) )
 }
 
 func (cbft *Cbft) IsPrimaryNode() bool {
@@ -1277,22 +1297,11 @@ func (cbft *Cbft) ShouldSeal() (bool, error) {
 
 	// reloadCBFTParams used for reload elements in dpos before check if turn seal
 	cbft.reloadCBFTParams()
-
-	if len(cbft.dpos.primaryNodeList) == 1 {
-		// Determine if it is the root node
-		node := cbft.dpos.primaryNodeList[0]
-		pub, err := node.Pubkey()
-		if err != nil || pub == nil {
-			log.Error("nodeID.ID.Pubkey error!")
-			return false, nil
-		}
-		nodeId := discover.PubkeyID(pub)
-		if bytes.Equal(nodeId[:], cbft.config.NodeID[:]) {
-			return true, nil
-		} else {
-			return false, nil
-		}
+	// Non-consensus nodes cannot block
+	if flag, _ := cbft.IsConsensusNode(); !flag {
+		return false, nil
 	}
+
 	inturn := cbft.inTurn()
 	if inturn {
 		cbft.netLatencyLock.RLock()
