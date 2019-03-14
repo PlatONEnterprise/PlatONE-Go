@@ -307,7 +307,7 @@ func FwInvokeContract(contractAddr string, funcParams string, txType int) error 
 	//parse the return type through adi
 	if funcName == "__sys_FwStatus" {
 		bytes, _ := hexutil.Decode(resp.Result)
-		fmt.Printf("\nresult: %v\n", string(bytes[64:]))
+		fmt.Printf("\nresult: %v\n", BytesConverter(bytes, "string"))
 		return nil
 	} else {
 		fmt.Printf("\n trasaction hash: %s\n", resp.Result)
