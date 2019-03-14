@@ -152,6 +152,15 @@ type CbftConfig struct {
 	//PrivateKey   *ecdsa.PrivateKey `json:"PrivateKey,omitempty"`
 }
 
+type IstanbulConfig struct {
+	Period           uint64  `json:"period"` // Number of seconds between blocks to enforce
+	Epoch            uint64  `json:"epoch"`  // Epoch length to reset votes and checkpoint
+	//mock
+	//InitialNodes []discover.Node   `json:"initialNodes"`
+	//NodeID       discover.NodeID   `json:"nodeID,omitempty"`
+	//PrivateKey   *ecdsa.PrivateKey `json:"PrivateKey,omitempty"`
+}
+
 type configMarshaling struct {
 	MinerExtraData hexutil.Bytes
 }
@@ -159,6 +168,11 @@ type configMarshaling struct {
 // StaticNodes returns a list of node enode URLs configured as static nodes.
 func (c *Config) LoadCbftConfig(nodeConfig node.Config) *CbftConfig {
 	return c.parsePersistentCbftConfig(filepath.Join(nodeConfig.DataDir, datadirCbftConfig))
+}
+
+// StaticNodes returns a list of node enode URLs configured as static nodes.
+func (c *Config) LoadIstanbulConfig(nodeConfig node.Config) *IstanbulConfig {
+	return c.parsePersistentIstanbulConfig(filepath.Join(nodeConfig.DataDir, datadirCbftConfig))
 }
 
 // parsePersistentNodes parses a list of discovery node URLs loaded from a .json
@@ -169,6 +183,21 @@ func (c *Config) parsePersistentCbftConfig(path string) *CbftConfig {
 	}
 	// Load the nodes from the config file.
 	config := CbftConfig{}
+	if err := common.LoadJSON(path, &config); err != nil {
+		log.Error(fmt.Sprintf("Can't load cbft config file %s: %v", path, err))
+		return nil
+	}
+	return &config
+}
+
+// parsePersistentNodes parses a list of discovery node URLs loaded from a .json
+// file from within the data directory.
+func (c *Config) parsePersistentIstanbulConfig(path string) *IstanbulConfig {
+	if _, err := os.Stat(path); err != nil {
+		return nil
+	}
+	// Load the nodes from the config file.
+	config := IstanbulConfig{}
 	if err := common.LoadJSON(path, &config); err != nil {
 		log.Error(fmt.Sprintf("Can't load cbft config file %s: %v", path, err))
 		return nil

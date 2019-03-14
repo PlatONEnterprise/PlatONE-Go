@@ -137,7 +137,6 @@ func (n *Node) Register(constructor ServiceConstructor) error {
 func (n *Node) Start() error {
 	n.lock.Lock()
 	defer n.lock.Unlock()
-
 	// Short circuit if the node's already running
 	if n.server != nil {
 		return ErrNodeRunning
@@ -145,7 +144,6 @@ func (n *Node) Start() error {
 	if err := n.openDataDir(); err != nil {
 		return err
 	}
-
 	// Initialize the p2p server. This creates the node key and
 	// discovery databases.
 	n.serverConfig = n.config.P2P
@@ -169,6 +167,7 @@ func (n *Node) Start() error {
 	services := make(map[reflect.Type]Service)
 
 	for _, constructor := range n.serviceFuncs {
+		log.Info("Node Start....  172")
 		// Create a new context for the particular service
 		ctx := &ServiceContext{
 			config:         n.config,
@@ -183,10 +182,12 @@ func (n *Node) Start() error {
 		// Construct and save the service
 		service, err := constructor(ctx)
 		if err != nil {
+			log.Info("Node Start....  constructorError")
 			return err
 		}
 		kind := reflect.TypeOf(service)
 		if _, exists := services[kind]; exists {
+			log.Info("Node Start....  DuplicateServiceError")
 			return &DuplicateServiceError{Kind: kind}
 		}
 		services[kind] = service
@@ -213,6 +214,7 @@ func (n *Node) Start() error {
 		// Mark the service started for potential cleanup
 		started = append(started, kind)
 	}
+	log.Info("Node Start....  216")
 	// Lastly start the configured RPC interfaces
 	if err := n.startRPC(services); err != nil {
 		for _, service := range services {
@@ -225,7 +227,6 @@ func (n *Node) Start() error {
 	n.services = services
 	n.server = running
 	n.stop = make(chan struct{})
-
 	running.SetServer()
 	p2p.UpdatePeer() // when start, update one time
 
