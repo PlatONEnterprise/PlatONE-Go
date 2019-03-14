@@ -311,36 +311,54 @@ func addressCompare(addr1, addr2 common.Address) bool {
 	return addr1.String() == addr2.String()
 }
 
-func fwCheck(stateDb vm.StateDB, contractAddr common.Address, caller common.Address, input []byte) bool {
+func makeReturnBytes(ret []byte) []byte {
+
+	strHash := common.BytesToHash(common.Int32ToBytes(32))
+	sizeHash := common.BytesToHash(common.Int64ToBytes(int64((len(ret)))))
+	var dataRealSize = len(ret)
+	if (dataRealSize % 32) != 0 {
+		dataRealSize = dataRealSize + (32 - (dataRealSize % 32))
+	}
+	dataByt := make([]byte, dataRealSize)
+	copy(dataByt[0:], ret)
+
+	finalData := make([]byte, 0)
+	finalData = append(finalData, strHash.Bytes()...)
+	finalData = append(finalData, sizeHash.Bytes()...)
+	finalData = append(finalData, dataByt...)
+
+	return finalData
+}
+
+func fwCheck(stateDb vm.StateDB, contractAddr common.Address, caller common.Address, input []byte) ([]byte, bool) {
 	var data [][]byte
 	// if this is a value transfer tx, just let it go!
 	if len(input) == 0 && len(stateDb.GetCode(contractAddr)) == 0 {
-		return true;
+		return nil, true;
 	}
 
 	if err := rlp.DecodeBytes(input, &data); err != nil {
-		return false
+		log.Debug("FW : Input decode error")
+		return makeReturnBytes([]byte("FW : Input decode error")), false
 	}
 	if len(data) < 2 {
 		log.Debug("FW : Missing function name")
-		return false
+		return makeReturnBytes([]byte("FW : Missing function name")), false
 	}
 	funcName := string(data[1])
 
 	var fwStatus state.FwStatus
 	if addressCompare(stateDb.GetContractCreator(contractAddr), caller) {
-		return true
+		return nil, true
 	}
 
 	if stateDb.IsFwOpened(contractAddr) == false {
-		return true
+		return nil, true
 	}
 
 	fwStatus = stateDb.GetFwStatus(contractAddr)
-	if !addressCompare(fwStatus.ContractAddress, contractAddr) {
-		return false
-	}
 
+	var fwLog string = "FW : Access to contract:" + contractAddr.String() + " by " + funcName + "is refused by firewall."
 	/*
 	* Reject List!
 	 */
@@ -349,11 +367,11 @@ func fwCheck(stateDb vm.StateDB, contractAddr common.Address, caller common.Addr
 			if fwElem.FuncName == "*" {
 				// 1. [*:*] and reject any address and any function access!
 				log.Debug("FW : 1. Reject, pattern [*:*], reject any address and any function access!")
-				return false
+				return makeReturnBytes([]byte(fwLog)), false
 			} else if fwElem.FuncName == funcName {
 				// 2. [*:funcName] and funcname matched!
 				log.Debug("FW : 2. Reject, pattern [*:funcName], funcname matched!")
-				return false
+				return makeReturnBytes([]byte(fwLog)), false
 			} else {
 				// 3. [*:funcName] and funcname didn't match!
 				log.Debug("FW : 3. Reject pattern [*:funcName], funcname didn't match!")
@@ -364,11 +382,11 @@ func fwCheck(stateDb vm.StateDB, contractAddr common.Address, caller common.Addr
 				if fwElem.FuncName == "*" {
 					// 4. [address:*] and address matched!
 					log.Debug("FW : 4. Reject, pattern [address:*], address matched!")
-					return false
+					return makeReturnBytes([]byte(fwLog)), false
 				} else if fwElem.FuncName == funcName {
 					// 5. [address:funcName] and both address&funcName matched!
 					log.Debug("FW : 5. Reject, pattern [address:funcName], both address&funcName matched!")
-					return false
+					return makeReturnBytes([]byte(fwLog)), false
 				} else {
 					// 6. [address:funcName] and address matched but funcname didn't match!
 					log.Debug("FW : 6. Reject, pattern [address:funcName], address matched but funcname didn't match!")
@@ -386,11 +404,11 @@ func fwCheck(stateDb vm.StateDB, contractAddr common.Address, caller common.Addr
 			if fwElem.FuncName == "*" {
 				// 1. [*:*] and allow any address and any function access!
 				log.Debug("FW : 1. Accept, pattern [*:*], allow any address and any function access!")
-				return true
+				return nil, true
 			} else if fwElem.FuncName == funcName {
 				// 2. [*:funcName] and funcname matched!
 				log.Debug("FW : 2. Accept, pattern [*:funcName], funcname matched!")
-				return true
+				return nil, true
 			} else {
 				// 3. [*:funcName] and funcname didn't match!
 				log.Debug("FW : 3. Accept, pattern [*:funcName], funcname didn't match!")
@@ -401,11 +419,11 @@ func fwCheck(stateDb vm.StateDB, contractAddr common.Address, caller common.Addr
 				if fwElem.FuncName == "*" {
 					// 4. [address:*] and address matched!
 					log.Debug("FW : 4. Accept, pattern [address:*], address matched!")
-					return true
+					return nil, true
 				} else if fwElem.FuncName == funcName {
 					// 5. [address:funcName] and both address&funcName matched!
 					log.Debug("FW : 5. Accept, pattern [address:funcName], both address&funcName matched!")
-					return true
+					return nil, true
 				} else {
 					// 6. [address:funcName] and address matched but funcname didn't match!
 					log.Debug("FW : 6. Accept, pattern [address:funcName], address matched but funcname didn't match!")
@@ -415,7 +433,7 @@ func fwCheck(stateDb vm.StateDB, contractAddr common.Address, caller common.Addr
 		}
 	}
 
-	return false
+	return makeReturnBytes([]byte(fwLog)), false
 }
 
 func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Address, input []byte) ([]byte, uint64, error) {
@@ -523,22 +541,7 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 		log.Debug("FW : fwStatus Marshal error:", err)
 		return nil, 0, fwErr
 	}
-
-	strHash := common.BytesToHash(common.Int32ToBytes(32))
-	sizeHash := common.BytesToHash(common.Int64ToBytes(int64((len(returnBytes)))))
-	var dataRealSize = len(returnBytes)
-	if (dataRealSize % 32) != 0 {
-		dataRealSize = dataRealSize + (32 - (dataRealSize % 32))
-	}
-	dataByt := make([]byte, dataRealSize)
-	copy(dataByt[0:], returnBytes)
-
-	finalData := make([]byte, 0)
-	finalData = append(finalData, strHash.Bytes()...)
-	finalData = append(finalData, sizeHash.Bytes()...)
-	finalData = append(finalData, dataByt...)
-
-	return finalData, 0, nil
+	return makeReturnBytes(returnBytes), 0, nil
 }
 
 func (st *StateTransition)ifUseContractTokenAsFee()(string,  bool, error){
@@ -655,7 +658,8 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 		if msg.TxType() != types.CnsTxType {
 			st.state.SetNonce(msg.From(), st.state.GetNonce(sender.Address())+1)
 		}
-		if !fwCheck(evm.StateDB, st.to(), msg.From(), msg.Data()) {
+		var pass bool
+		if ret, pass = fwCheck(evm.StateDB, st.to(), msg.From(), msg.Data()); !pass {
 			vmerr = fwErr
 			log.Debug("Calling contract was refused by firewall", "err", vmerr)
 		} else {
