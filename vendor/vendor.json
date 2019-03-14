@@ -960,6 +960,114 @@
 			"revisionTime": "2016-12-08T18:13:25Z"
 		},
 		{
+			"checksumSHA1": "sA9MiixueVPU1mVUaSyl4uez6Ng=",
+			"path": "gopkg.in/karalabe/cookiejar.v2/ai/utility",
+			"revision": "8dcd6a7f4951f6ff3ee9cbb919a06d8925822e57",
+			"revisionTime": "2015-07-24T13:16:13Z"
+		},
+		{
+			"checksumSHA1": "xc5+Dgn/NudGYR41Y5wpIies3SY=",
+			"path": "gopkg.in/karalabe/cookiejar.v2/ai/utility/curves",
+			"revision": "8dcd6a7f4951f6ff3ee9cbb919a06d8925822e57",
+			"revisionTime": "2015-07-24T13:16:13Z"
+		},
+		{
+			"checksumSHA1": "QPp6S9pAWGOgXBUcdFo7tcl3ZKk=",
+			"path": "gopkg.in/karalabe/cookiejar.v2/collections/bag",
+			"revision": "8dcd6a7f4951f6ff3ee9cbb919a06d8925822e57",
+			"revisionTime": "2015-07-24T13:16:13Z"
+		},
+		{
+			"checksumSHA1": "0LkdrMKeYLr78/WVytDMAXWmer4=",
+			"path": "gopkg.in/karalabe/cookiejar.v2/collections/deque",
+			"revision": "8dcd6a7f4951f6ff3ee9cbb919a06d8925822e57",
+			"revisionTime": "2015-07-24T13:16:13Z"
+		},
+		{
+			"checksumSHA1": "DQXNV0EivoHm4q+bkdahYXrjjfE=",
+			"path": "gopkg.in/karalabe/cookiejar.v2/collections/prque",
+			"revision": "8dcd6a7f4951f6ff3ee9cbb919a06d8925822e57",
+			"revisionTime": "2015-07-24T13:16:13Z"
+		},
+		{
+			"checksumSHA1": "d4ZSkJrLTSGosty5a/28YOX9vWw=",
+			"path": "gopkg.in/karalabe/cookiejar.v2/collections/queue",
+			"revision": "8dcd6a7f4951f6ff3ee9cbb919a06d8925822e57",
+			"revisionTime": "2015-07-24T13:16:13Z"
+		},
+		{
+			"checksumSHA1": "GOpWf6OreYnb9vOsBqQ1vtYCTYA=",
+			"path": "gopkg.in/karalabe/cookiejar.v2/collections/set",
+			"revision": "8dcd6a7f4951f6ff3ee9cbb919a06d8925822e57",
+			"revisionTime": "2015-07-24T13:16:13Z"
+		},
+		{
+			"checksumSHA1": "DkvYh68B7rjRin/9NX28EhdUvDk=",
+			"path": "gopkg.in/karalabe/cookiejar.v2/collections/stack",
+			"revision": "8dcd6a7f4951f6ff3ee9cbb919a06d8925822e57",
+			"revisionTime": "2015-07-24T13:16:13Z"
+		},
+		{
+			"checksumSHA1": "it67k+MGJy3BLYhPELwJQTL0sYE=",
+			"path": "gopkg.in/karalabe/cookiejar.v2/exts/fmtext",
+			"revision": "8dcd6a7f4951f6ff3ee9cbb919a06d8925822e57",
+			"revisionTime": "2015-07-24T13:16:13Z"
+		},
+		{
+			"checksumSHA1": "vOiR6KioxeNeAw9JDUSs3u6ropk=",
+			"path": "gopkg.in/karalabe/cookiejar.v2/exts/mathext",
+			"revision": "8dcd6a7f4951f6ff3ee9cbb919a06d8925822e57",
+			"revisionTime": "2015-07-24T13:16:13Z"
+		},
+		{
+			"checksumSHA1": "/kJDzLKeEOoaKrHDytawmLMkyV4=",
+			"path": "gopkg.in/karalabe/cookiejar.v2/exts/osext",
+			"revision": "8dcd6a7f4951f6ff3ee9cbb919a06d8925822e57",
+			"revisionTime": "2015-07-24T13:16:13Z"
+		},
+		{
+			"checksumSHA1": "QZF4m6ZiDe13HJB3K4PKfhdLU2w=",
+			"path": "gopkg.in/karalabe/cookiejar.v2/exts/sortext",
+			"revision": "8dcd6a7f4951f6ff3ee9cbb919a06d8925822e57",
+			"revisionTime": "2015-07-24T13:16:13Z"
+		},
+		{
+			"checksumSHA1": "LBhFlgGiKfrcm7ZLqn1WKtJJEI0=",
+			"path": "gopkg.in/karalabe/cookiejar.v2/geometry",
+			"revision": "8dcd6a7f4951f6ff3ee9cbb919a06d8925822e57",
+			"revisionTime": "2015-07-24T13:16:13Z"
+		},
+		{
+			"checksumSHA1": "KmNH61ElbuDparUx9jIJ/PCAFFk=",
+			"path": "gopkg.in/karalabe/cookiejar.v2/graph",
+			"revision": "8dcd6a7f4951f6ff3ee9cbb919a06d8925822e57",
+			"revisionTime": "2015-07-24T13:16:13Z"
+		},
+		{
+			"checksumSHA1": "6QFGoVd00Fe4p3nipN9KZ+XZZAE=",
+			"path": "gopkg.in/karalabe/cookiejar.v2/graph/bfs",
+			"revision": "8dcd6a7f4951f6ff3ee9cbb919a06d8925822e57",
+			"revisionTime": "2015-07-24T13:16:13Z"
+		},
+		{
+			"checksumSHA1": "rMPM6hNJ3wg0OdAvcshHiwhAcow=",
+			"path": "gopkg.in/karalabe/cookiejar.v2/graph/dfs",
+			"revision": "8dcd6a7f4951f6ff3ee9cbb919a06d8925822e57",
+			"revisionTime": "2015-07-24T13:16:13Z"
+		},
+		{
+			"checksumSHA1": "YHQL1VHptshrExU2w+trM5FxbuA=",
+			"path": "gopkg.in/karalabe/cookiejar.v2/tools/arenas/codingame",
+			"revision": "8dcd6a7f4951f6ff3ee9cbb919a06d8925822e57",
+			"revisionTime": "2015-07-24T13:16:13Z"
+		},
+		{
+			"checksumSHA1": "NCCXpaNceqZlrvUpOJp5qP+5Wig=",
+			"path": "gopkg.in/karalabe/cookiejar.v2/tools/deps",
+			"revision": "8dcd6a7f4951f6ff3ee9cbb919a06d8925822e57",
+			"revisionTime": "2015-07-24T13:16:13Z"
+		},
+		{
 			"checksumSHA1": "0xgs8lwcWLUffemlj+SsgKlxvDU=",
 			"path": "gopkg.in/natefinch/npipe.v2",
 			"revision": "c1b8fa8bdccecb0b8db834ee0b92fdbcfa606dd6",

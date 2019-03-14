@@ -29,7 +29,7 @@ import (
 	"github.com/PlatONnetwork/PlatON-Go/core/types"
 	"github.com/PlatONnetwork/PlatON-Go/p2p"
 	"github.com/PlatONnetwork/PlatON-Go/rlp"
-	mapset "github.com/deckarep/golang-set"
+	"github.com/deckarep/golang-set"
 )
 
 var (
@@ -225,6 +225,12 @@ func (p *peer) MarkTransaction(hash common.Hash) {
 		p.knownTxs.Pop()
 	}
 	p.knownTxs.Add(hash)
+}
+
+// Send writes an RLP-encoded message with the given code.
+// data should encode as an RLP list.
+func (p *peer) Send(msgcode uint64, data interface{}) error {
+	return p2p.Send(p.rw, msgcode, data)
 }
 
 // SendTransactions sends transactions to the peer and includes the hashes
@@ -478,6 +484,18 @@ func (ps *peerSet) Unregister(id string) error {
 	p.close()
 
 	return nil
+}
+
+// Peers returns all registered peers
+func (ps *peerSet) Peers() map[string]*peer {
+	ps.lock.RLock()
+	defer ps.lock.RUnlock()
+
+	set := make(map[string]*peer)
+	for id, p := range ps.peers {
+		set[id] = p
+	}
+	return set
 }
 
 // Peer retrieves the registered peer with the given id.

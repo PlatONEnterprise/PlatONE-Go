@@ -19,6 +19,7 @@ package types
 
 import (
 	"encoding/binary"
+	"fmt"
 	"io"
 	"math/big"
 	"sort"
@@ -98,6 +99,14 @@ type headerMarshaling struct {
 // Hash returns the block hash of the header, which is simply the keccak256 hash of its
 // RLP encoding.
 func (h *Header) Hash() common.Hash {
+	// If the mix digest is equivalent to the predefined Istanbul digest, use Istanbul
+	// specific hash calculation.
+	if h.MixDigest == IstanbulDigest {
+		// Seal is reserved in extra-data. To prove block is signed by the proposer.
+		if istanbulHeader := IstanbulFilteredHeader(h, true); istanbulHeader != nil {
+			return rlpHash(istanbulHeader)
+		}
+	}
 	return rlpHash(h)
 }
 
@@ -306,6 +315,7 @@ func (b *Block) ReceiptHash() common.Hash { return b.header.ReceiptHash }
 func (b *Block) Extra() []byte            { return common.CopyBytes(b.header.Extra) }
 
 func (b *Block) Header() *Header { return CopyHeader(b.header) }
+func (b *Block) String() string {return fmt.Sprintf("{BlockHeader: %v", b.header)}
 
 // Body returns the non-header content of the block.
 func (b *Block) Body() *Body { return &Body{b.transactions} }
@@ -353,6 +363,10 @@ func (b *Block) WithBody(transactions []*Transaction) *Block {
 // Hash returns the keccak256 hash of b's header.
 // The hash is computed on the first call and cached thereafter.
 func (b *Block) Hash() common.Hash {
+	if b == nil{
+		return common.Hash{}
+	}
+
 	if hash := b.hash.Load(); hash != nil {
 		return hash.(common.Hash)
 	}
