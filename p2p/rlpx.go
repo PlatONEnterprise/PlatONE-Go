@@ -28,7 +28,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-
+	"github.com/PlatONnetwork/PlatON-Go/common"
 	"hash"
 	"io"
 	"io/ioutil"
@@ -37,11 +37,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/PlatONnetwork/PlatON-Go/common"
 	"github.com/PlatONnetwork/PlatON-Go/crypto"
 	"github.com/PlatONnetwork/PlatON-Go/crypto/ecies"
 	"github.com/PlatONnetwork/PlatON-Go/crypto/secp256k1"
 	"github.com/PlatONnetwork/PlatON-Go/crypto/sha3"
+	"github.com/PlatONnetwork/PlatON-Go/log"
 	"github.com/PlatONnetwork/PlatON-Go/p2p/discover"
 	"github.com/PlatONnetwork/PlatON-Go/rlp"
 	"github.com/golang/snappy"
@@ -306,14 +306,37 @@ func initiatorEncHandshake(conn io.ReadWriter, prv *ecdsa.PrivateKey, remoteID d
 		return s, err
 	}
 
-	msg := crypto.Keccak256([]byte("i love this world"))
-	sig, err := crypto.Sign(msg, prv)
-	msgSig := append(msg, sig...)
-	if _, err = conn.Write(msgSig); err != nil {
-		fmt.Println("send sign data fail")
+	// verification remote id
+	// send rand 32 bytes to remote id
+	msgHash := make([]byte, 32)
+	rand.Read(msgHash)
+	if _, err = conn.Write(msgHash); err != nil {
+		log.Warn("initiatorEncHandshake send msgHash fail")
 		return s, err
-	} else {
-		fmt.Println("send sign data success ")
+	}
+	// receive sign(rand 32 bytes) by remote private key
+	signature := make([]byte, 65)
+	if _, err := io.ReadFull(conn, signature); err != nil {
+		log.Warn("initiatorEncHandshake receive msgSig error: ", err)
+		return s, err
+	}
+	// checkout
+	recoveredPub, _ := crypto.Ecrecover(msgHash, signature)
+	remotePubStr := hex.EncodeToString(recoveredPub[1:])
+	if remoteID.String() != remotePubStr {
+		log.Warn("initiatorEncHandshake signature fail, cur remoteId: ", remoteID.String(), ". recove remoteId: ", remotePubStr)
+		return s, err
+	}
+
+	// prove myself
+	if _, err := io.ReadFull(conn, msgHash); err != nil {
+		log.Warn("receiverEncHandshake receive msgHash error: ", err)
+		return s, err
+	}
+	signature, _ = crypto.Sign(msgHash, prv)
+	if _, err = conn.Write(signature); err != nil {
+		log.Warn("receiverEncHandshake send sign data fail")
+		return s, err
 	}
 
 	return h.secrets(authPacket, authRespPacket)
@@ -394,34 +417,53 @@ func receiverEncHandshake(conn io.ReadWriter, prv *ecdsa.PrivateKey) (s secrets,
 		return s, err
 	}
 
-	msgSig := make([]byte, 97) // 签出来的数据都是固定是97的长度
-	if _, err := io.ReadFull(conn, msgSig); err != nil {
-		fmt.Println("receive error: ", err)
+	// prove myself
+	msgHash := make([]byte, 32)
+	if _, err := io.ReadFull(conn, msgHash); err != nil {
+		log.Warn("receiverEncHandshake receive msgHash error: ", err)
 		return s, err
-	} else {
-		msg := msgSig[0:32]
-		sig := msgSig[32:]
-		recoveredPub, err := crypto.Ecrecover(msg, sig)
-		if err != nil {
-			fmt.Println("recover error ", err)
-			return s, err
-		}
-		pubStr := hex.EncodeToString(recoveredPub[1:])
+	}
+	signature, _ := crypto.Sign(msgHash, prv)
+	if _, err = conn.Write(signature); err != nil {
+		log.Warn("receiverEncHandshake send sign data fail")
+		return s, err
+	}
 
+	// verification remote public key is in node list
+	rand.Read(msgHash)
+	if _, err = conn.Write(msgHash); err != nil {
+		log.Warn("receiverEncHandshake send msgHash fail")
+		return s, err
+	}
+	signature = make([]byte, 65)
+	if _, err := io.ReadFull(conn, signature); err != nil {
+		log.Warn("receiverEncHandshake receive msgSig error: ", err)
+		return s, err
+	}
+
+	recoveredPub, err := crypto.Ecrecover(msgHash, signature)
+	if err != nil {
+		log.Warn("receiverEncHandshake ecrecover publickey error ", err)
+		return s, err
+	}
+	pubStr := hex.EncodeToString(recoveredPub[1:])
+
+	validNode := (pubStr == GetRootNode().ID.String()) // root node is forbid delete!
+	if !validNode {
 		cnsAddress := common.HexToAddress("0x0000000000000000000000000000000000000011")
 		nodeAddressRes := common.InnerCall(cnsAddress, "getContractAddress", []interface{}{ "__sys_NodeManager", "latest"})
 
 		nodeManagerAddress := common.HexToAddress(common.CallResAsString(nodeAddressRes))
 		validNodeRes := common.InnerCall(nodeManagerAddress, "validJoinNode", []interface{}{ pubStr})
 
-		validNode := common.CallResAsBool(validNodeRes)
+		validNode = common.CallResAsBool(validNodeRes)
+	}
 
-		fmt.Println("pubStr = ", pubStr, "validNode = ", validNode, "nodeManagerAddress = ", common.CallResAsString(nodeAddressRes))
+	log.Info("pubStr = ", pubStr, "validNode = ", validNode)
 
-		if(!validNode) {
-			fmt.Println("join node is a invalid node")
-			return s, errors.New("join node is a invalid node")
-		}
+	if(!validNode) {
+		log.Warn("joined node is a deleted node ", pubStr)
+		return s, errors.New("join node is a invalid node")
 	}
 
 	return h.secrets(authPacket, authRespPacket)
