@@ -330,11 +330,20 @@ func makeReturnBytes(ret []byte) []byte {
 	return finalData
 }
 
+// 合约防火墙的检查：
+//  1. 如果账户结构体code字段为空，pass
+//  2. 如果账户data字段为空，pass
+// 	3. 黑名单优先于白名单，后续只有不在黑名单列表，同时在白名单列表里的账户才能pass
 func fwCheck(stateDb vm.StateDB, contractAddr common.Address, caller common.Address, input []byte) ([]byte, bool) {
 	var data [][]byte
-	// if this is a value transfer tx, just let it go!
-	if len(input) == 0 && len(stateDb.GetCode(contractAddr)) == 0 {
-		return nil, true;
+	// 如果账户结构体code字段为空，pass
+	if len(stateDb.GetCode(contractAddr)) == 0 {
+		return nil, true
+	}
+
+	// 如果账户data字段为空，pass
+	if len(input) == 0 {
+		return nil, true
 	}
 
 	if err := rlp.DecodeBytes(input, &data); err != nil {
@@ -436,6 +445,7 @@ func fwCheck(stateDb vm.StateDB, contractAddr common.Address, caller common.Addr
 	return makeReturnBytes([]byte(fwLog)), false
 }
 
+// 只允许合约创建者设置合约的防火墙规则
 func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Address, input []byte) ([]byte, uint64, error) {
 	var fwStatus state.FwStatus
 	var err error
@@ -445,27 +455,29 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 	var list []state.FwElem
 
 	if !addressCompare(stateDb.GetContractCreator(contractAddr), caller) {
+		log.Error("FW : error, only contract owner can set firewall setting!")
 		return nil, 0, fwErr
 	}
 
 	if err = rlp.DecodeBytes(input, &fwData); err != nil {
+		log.Debug("FW : error, fwData decoded failure!")
 		return nil, 0, fwErr
 	}
 
 	// check parameters
 	if len(fwData) < 2 {
-		log.Debug("FW : error, require function name")
+		log.Debug("FW : error, require function name!")
 		return nil, 0, fwErr
 	}
 	funcName = string(fwData[1])
 	if funcName == "__sys_FwOpen" || funcName == "__sys_FwClose" || funcName == "__sys_FwStatus" {
 		if len(fwData) != 2 {
-			log.Debug("FW : error, wrong function parameters")
+			log.Debug("FW : error, wrong function parameters!")
 			return nil, 0, fwErr
 		}
 	} else if funcName == "__sys_FwClear" {
 		if len(fwData) != 3 {
-			log.Debug("FW : error, wrong function parameters")
+			log.Debug("FW : error, wrong function parameters!")
 			return nil, 0, fwErr
 		}
 
@@ -475,13 +487,13 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 		} else if listName == "Reject" {
 			act = state.REJECT
 		} else {
-			log.Debug("FW : error, action is invalid")
+			log.Debug("FW : error, action is invalid!")
 			return nil, 0, fwErr
 		}
 
 	} else if funcName == "__sys_FwAdd" || funcName == "__sys_FwDel" || funcName == "__sys_FwSet" {
 		if len(fwData) != 4 {
-			log.Debug("FW : error, wrong function parameters")
+			log.Debug("FW : error, wrong function parameters!")
 			return nil, 0, fwErr
 		}
 
@@ -492,7 +504,7 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 		} else if listName == "Reject" {
 			act = state.REJECT
 		} else {
-			log.Debug("FW : error, action is invalid")
+			log.Debug("FW : error, action is invalid!")
 			return nil, 0, fwErr
 		}
 
@@ -500,6 +512,7 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 		for _, e := range elements {
 			tmp := strings.Split(e, ":")
 			if len(tmp) != 2 {
+				log.Debug("FW : error, wrong function parameters!")
 				return nil, 0, fwErr
 			}
 
@@ -513,7 +526,7 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 		}
 
 	} else {
-		log.Debug("FW : error, wrong function name")
+		log.Debug("FW : error, wrong function name!")
 		return nil, 0, fwErr
 	}
 
