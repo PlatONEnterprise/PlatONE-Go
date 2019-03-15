@@ -251,10 +251,6 @@ func FwInvokeContract(contractAddr string, funcParams string, txType int) error 
 	//parse the function and param
 	funcName, inputParams := GetFuncNameAndParams(funcParams)
 
-	// if txType == 0 {
-	// 	txType = invokeContract
-	// }
-
 	paramArr := [][]byte{
 		Int64ToBytes(int64(txType)),
 		[]byte(funcName),
@@ -266,7 +262,7 @@ func FwInvokeContract(contractAddr string, funcParams string, txType int) error 
 
 	paramBytes, e := rlp.EncodeToBytes(paramArr)
 	if e != nil {
-		return fmt.Errorf("rpl encode error,%s", e.Error())
+		return fmt.Errorf("rlp encode error,%s", e.Error())
 	}
 
 	txParams := TxParams{
