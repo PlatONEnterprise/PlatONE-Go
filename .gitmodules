@@ -3,4 +3,4 @@
 	url = https://github.com/ethereum/tests
 [submodule "life/resolver/softfloat"]
 	path = life/resolver/softfloat
-	url = https://github.com/ucb-bar/berkeley-softfloat-3.git
+	url = https://180.167.100.189:20443/ucb-bar/berkeley-softfloat-3.git
