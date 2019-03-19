@@ -52,6 +52,11 @@ var (
 		Name:  "outdir",
 		Usage: "unittest output directory",
 	}
+
+	showLogFlag = cli.StringFlag{
+		Name:  "showLog",
+		Usage: "unittest shouw log flag",
+	}
 )
 
 var unittestCommand = cli.Command{
@@ -62,18 +67,20 @@ var unittestCommand = cli.Command{
 	Flags: []cli.Flag{
 		testDirFlag,
 		outDirFlag,
+		showLogFlag,
 	},
 }
 
 func unittestCmd(ctx *cli.Context) error {
 	testDir := ctx.String(testDirFlag.Name)
 	outDir := ctx.String(outDirFlag.Name)
+	showLog := ctx.String(showLogFlag.Name)
 
 	dbPath := outDir + testDBName
 
 	logStream := bytes.NewBuffer(make([]byte, 65535))
 
-	err := runTestDir(testDir, dbPath, logStream)
+	err := runTestDir(testDir, dbPath, logStream, showLog)
 
 	if err != nil {
 		return err
@@ -84,7 +91,7 @@ func unittestCmd(ctx *cli.Context) error {
 	return nil
 }
 
-func runTestDir(testDir, dbPath string, logStream *bytes.Buffer) (retErr error) {
+func runTestDir(testDir, dbPath string, logStream *bytes.Buffer, showLog string) (retErr error) {
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -102,7 +109,7 @@ func runTestDir(testDir, dbPath string, logStream *bytes.Buffer) (retErr error) 
 		logStream.Reset()
 
 		if fi.IsDir() {
-			runTestDir(testDir+"/"+fi.Name(), dbPath, logStream)
+			runTestDir(testDir+"/"+fi.Name(), dbPath, logStream, showLog)
 		} else if path.Ext(fi.Name()) == ".wasm" {
 			fmt.Println("exec unittest file:" + fi.Name())
 			os.RemoveAll(dbPath)
@@ -118,7 +125,6 @@ func runTestDir(testDir, dbPath string, logStream *bytes.Buffer) (retErr error) 
 			}
 
 			runTest(code, db, logStream)
-
 			states := resultReg.FindStringSubmatch(logStream.String())
 			//fmt.Println("[",logStream.String(), "]")
 			if len(states) != 4 {
@@ -128,6 +134,13 @@ func runTestDir(testDir, dbPath string, logStream *bytes.Buffer) (retErr error) 
 
 			if states[3] != "0" {
 				return errors.New(fmt.Sprintf("unittest :%s error \n, %s", fi.Name(), logStream.String()))
+			}
+
+			if "1" == showLog {
+				log := logStream.String()
+				fmt.Println("==============log start============")
+				fmt.Println("unittest file:", fi.Name(), "\nlog:\n", log)
+				fmt.Println("==============log end==============")
 			}
 
 			db.Close()
@@ -200,7 +213,8 @@ func runTest(code []byte, db *leveldb.DB, logStream *bytes.Buffer) error {
 
 
 	wasm, err := exec.NewVirtualMachine(code, context, newUnitTestResolver(db, logStream), nil)
-
+	str := logStream.String()
+	fmt.Print(str)
 	if err != nil {
 		return err
 	}
