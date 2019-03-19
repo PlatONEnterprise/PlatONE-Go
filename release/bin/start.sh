@@ -15,7 +15,7 @@ rpc="--rpcaddr 0.0.0.0 --rpcport 6789 --rpcapi db,eth,net,web3,admin,personal --
 #logs="--verbosity 4 --wasmlog ../logs/wasm.log >>../logs/platon.log" #redirection not work in scrypt, why?
 logs="--verbosity 4 --wasmlog ./wasm.log"
 
-nohup ./platon --identity platon --nodiscover $datadir $nodekey $rpc $logs 2>&1 &
+nohup ./platon --identity platon --nodiscover --rpccorsdomain "*" $datadir $nodekey $rpc $logs 2>&1 &
 
 sleep 1
 

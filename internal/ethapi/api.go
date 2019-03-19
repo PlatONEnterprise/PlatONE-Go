@@ -38,14 +38,14 @@ import (
 	"github.com/PlatONnetwork/PlatON-Go/core/vm"
 	"github.com/PlatONnetwork/PlatON-Go/crypto"
 	"github.com/PlatONnetwork/PlatON-Go/log"
+	"github.com/PlatONnetwork/PlatON-Go/p2p"
 	"github.com/PlatONnetwork/PlatON-Go/params"
 	"github.com/PlatONnetwork/PlatON-Go/rlp"
 	"github.com/PlatONnetwork/PlatON-Go/rpc"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/syndtr/goleveldb/leveldb"
-	"strings"
 	"github.com/syndtr/goleveldb/leveldb/util"
-	"github.com/PlatONnetwork/PlatON-Go/p2p"
+	"strings"
 )
 
 const (
@@ -1224,6 +1224,11 @@ func (s *PublicTransactionPoolAPI) SendTransaction(ctx context.Context, args Sen
 	if args.Nonce == nil {
 		// Hold the addresse's mutex around signing to prevent concurrent assignment of
 		// the same nonce to multiple accounts.
+
+		//r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		//randNonce := hexutil.Uint64(r.Uint64())
+		//args.Nonce = &randNonce
+
 		s.nonceLock.LockAddr(args.From)
 		defer s.nonceLock.UnlockAddr(args.From)
 	}

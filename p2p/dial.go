@@ -315,6 +315,14 @@ func (s *dialstate) taskDone(t task, now time.Time) {
 }
 
 func (t *dialTask) Do(srv *Server) {
+	UpdatePeer()
+
+	selfPublicKey := srv.Self().ID.String()
+	destPublicKey := t.dest.ID.String()
+	if selfPublicKey == destPublicKey {
+		return
+	}
+
 	if t.dest.Incomplete() {
 		if !t.resolve(srv) {
 			return
