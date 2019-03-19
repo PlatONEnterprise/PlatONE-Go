@@ -296,6 +296,10 @@ func SetRootNode(node *discover.Node) {
 	rootNode = node
 }
 
+func GetRootNode() (node *discover.Node) {
+	return rootNode
+}
+
 // Peers returns all connected peers.
 func (srv *Server) Peers() []*Peer {
 	var ps []*Peer
@@ -352,7 +356,6 @@ func UpdatePeer() {
 	// myself
 	selfId := server.Self().ID;
 	selfPublicKey := selfId.String()
-	log.Info("selfPublicKey = ", selfPublicKey)
 
 	// already join key
 	joinNodes := []string{}
@@ -360,14 +363,14 @@ func UpdatePeer() {
 	for _, peer := range peers {
 		curPeer := "enode://" + peer.ID + "@" + peer.Network.RemoteAddress
 		joinNodes = append(joinNodes, curPeer)
-		log.Info("curPeer = ", curPeer)
+		log.Info("joined peer = ", curPeer)
 	}
 
 	cnsAddress := common.HexToAddress("0x0000000000000000000000000000000000000011")
 	nodeAddressRes := common.InnerCall(cnsAddress, "getContractAddress", []interface{}{ "__sys_NodeManager", "latest"})
 	nodeManagerAddress := common.HexToAddress(common.CallResAsString(nodeAddressRes))
 
-	// need to delete node
+	// if I am in blockList, disconnect all connected peers.
 	enodeNodesRes := common.InnerCall(nodeManagerAddress, "getDeletedEnodeNodes", []interface{}{}) // need disconnect
 	enodeNodesStr := common.CallResAsString(enodeNodesRes)
 	log.Info("delete enodeNodesStr = ", enodeNodesStr)
@@ -376,7 +379,7 @@ func UpdatePeer() {
 	for _, enodeNodeStr := range enodeNodes {
 		if node, error := discover.ParseNode(enodeNodeStr); error == nil {
 			curPubKey := node.ID.String()
-			blacked = strings.Contains(curPubKey, selfPublicKey)
+			blacked = curPubKey == selfPublicKey
 			if blacked {
 				for _, joinNode := range joinNodes {
 					curNode, _ := discover.ParseNode(joinNode)
@@ -390,7 +393,8 @@ func UpdatePeer() {
 
 	// need to connect node
 	if blacked {
-		log.Warn("i in blacklist, wuwuwu...")
+		log.Warn("I am in blacklist, wuwuwu...")
+		return
 	}
 
 	enodeNodesRes = common.InnerCall(nodeManagerAddress, "getNormalEnodeNodes", []interface{}{}) // need connect
@@ -416,8 +420,8 @@ func UpdatePeer() {
 					break
 				}
 			}
-			// oh, not connected and not myself and myself not in blacklist
-			if (!joined) && (!strings.Contains(selfPublicKey, curPubKey)) {
+			// oh, not connected and not myself
+			if (!joined) && (selfPublicKey != curPubKey) {
 				log.Info("add node: ", curPubKey)
 				server.AddPeer(node)
 			}
@@ -1014,6 +1018,19 @@ func (srv *Server) SetupConn(fd net.Conn, flags connFlag, dialDest *discover.Nod
 	if self == nil {
 		return errors.New("shutdown")
 	}
+
+	// if I am in blockList, forbid to connect
+	cnsAddress := common.HexToAddress("0x0000000000000000000000000000000000000011")
+	nodeAddressRes := common.InnerCall(cnsAddress, "getContractAddress", []interface{}{ "__sys_NodeManager", "latest"})
+	nodeManagerAddress := common.HexToAddress(common.CallResAsString(nodeAddressRes))
+	selfPublicKey := srv.Self().ID.String()
+	enodeNodesRes := common.InnerCall(nodeManagerAddress, "getDeletedEnodeNodes", []interface{}{}) // need disconnect
+	enodeNodesStr := common.CallResAsString(enodeNodesRes)
+	if strings.Contains(enodeNodesStr, selfPublicKey) {
+		srv.log.Warn("I am in block list: ", selfPublicKey)
+		return errors.New("shutdown")
+	}
+
 	c := &conn{fd: fd, transport: srv.newTransport(fd), flags: flags, cont: make(chan error)}
 	err := srv.setupConn(c, flags, dialDest)
 	if err != nil {
