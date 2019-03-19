@@ -177,9 +177,11 @@ func (m *txSortedMap) Remove(nonce uint64) bool {
 // happen but better to be self correcting than failing!
 func (m *txSortedMap) Ready(start uint64) types.Transactions {
 	// Short circuit if no transactions are available
+	/* deleted by bcos used for set any nonce
 	if m.index.Len() == 0 || (*m.index)[0] > start {
 		return nil
 	}
+	*/
 	// Otherwise start accumulating incremental transactions
 	var ready types.Transactions
 	for next := (*m.index)[0]; m.index.Len() > 0 && (*m.index)[0] == next; next++ {
