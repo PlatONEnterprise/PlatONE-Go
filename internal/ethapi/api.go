@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -1225,12 +1226,12 @@ func (s *PublicTransactionPoolAPI) SendTransaction(ctx context.Context, args Sen
 		// Hold the addresse's mutex around signing to prevent concurrent assignment of
 		// the same nonce to multiple accounts.
 
-		//r := rand.New(rand.NewSource(time.Now().UnixNano()))
-		//randNonce := hexutil.Uint64(r.Uint64())
-		//args.Nonce = &randNonce
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		randNonce := hexutil.Uint64(r.Uint64())
+		args.Nonce = &randNonce
 
-		s.nonceLock.LockAddr(args.From)
-		defer s.nonceLock.UnlockAddr(args.From)
+		//s.nonceLock.LockAddr(args.From)
+		//defer s.nonceLock.UnlockAddr(args.From)
 	}
 
 	// Set some sanity defaults and terminate on failure
