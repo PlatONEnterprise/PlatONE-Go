@@ -6,6 +6,7 @@ import (
 	"errors"
 	"math"
 	"strconv"
+	"github.com/PlatONnetwork/PlatON-Go/common"
 )
 
 func BytesCombine(pBytes ...[]byte) []byte {
@@ -76,9 +77,9 @@ func BoolToBytes(b bool) []byte {
 func BytesConverter(source []byte, t string) interface{} {
 	switch t {
 	case "int32":
-		return BytesToInt32(source)
+		return common.CallResAsInt64(source)
 	case "int64":
-		return BytesToInt64(source)
+		return common.CallResAsInt64(source)
 	case "float32":
 		return BytesToFloat32(source)
 	case "float64":
@@ -89,10 +90,8 @@ func BytesConverter(source []byte, t string) interface{} {
 		}else{
 			return string(source[64:])
 		}
-	case "bool":
-		return bytes.Equal(source, []byte{1})
 	case "uint64":
-		return BytesToUint64(source)
+		return common.CallResAsUint64(source)
 	default:
 		return source
 	}
