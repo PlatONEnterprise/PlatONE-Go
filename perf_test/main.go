@@ -5,12 +5,12 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"sync"
+	// "sync"
 	"time"
 
-	"github.com/shirou/gopsutil/cpu"
-	"github.com/shirou/gopsutil/mem"
-	"github.com/shirou/gopsutil/net"
+	// "github.com/shirou/gopsutil/cpu"
+	// "github.com/shirou/gopsutil/mem"
+	// "github.com/shirou/gopsutil/net"
 
 	types "github.com/PlatONnetwork/PlatON-Go/core/types"
 	cli "github.com/PlatONnetwork/PlatON-Go/ethclient"
@@ -31,7 +31,7 @@ var (
 )
 
 func main() {
-	var wg sync.WaitGroup
+	
 
 	flag.Parse()
 
@@ -51,12 +51,16 @@ func main() {
 	var count int = 0
 	var start time.Time
 	var elapsed time.Duration
+	cur := time.Now()
 
 perf:
 	for {
 		select {
-		case head := <-heads:
-			fmt.Println("new tx root hash", head.TxHash.Hex())
+		case <-heads:
+			curElapsed := time.Since(cur)
+			fmt.Printf("当前区块共识时间 %4.3f 秒\n", curElapsed.Seconds())
+			cur = time.Now()
+			// fmt.Println("new tx root hash", head.TxHash.Hex())
 			count++
 			if count == 1 {
 				start = time.Now()
@@ -67,8 +71,9 @@ perf:
 		}
 	}
 
-	fmt.Printf("平均共识时间 %4.3f 秒", elapsed.Seconds()/float64(*blockDuration))
+	fmt.Printf("平均共识时间 %4.3f 秒\n", elapsed.Seconds()/float64(*blockDuration))
 
+	/*
 	inChan := make(chan int, *chanValue)
 	defer close(inChan)
 	closeChan := make(chan int)
@@ -84,7 +89,10 @@ perf:
 			inChan <- 1
 		}
 	}()
+	*/
 
+	/*
+	var wg sync.WaitGroup
 	wg.Add(1)
 	// GetSendSpeed 获取发送速度
 	go func() {
@@ -168,4 +176,5 @@ perf:
 	go Trap(closeChan)
 
 	wg.Wait()
+	*/
 }
