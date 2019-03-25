@@ -788,26 +788,26 @@ func (pool *TxPool) validateTx(tx *types.Transaction, local bool) error {
 */
 	// Ensure the transaction doesn't exceed the current txansaction limit gas
 	// which stored in the system contract
-	log.Debug("-- -- -- -- -- ")
 	callParams := []interface{} {"__sys_ParamManager", "latest"}
 	cnsContractAddr := common.HexToAddress("0x0000000000000000000000000000000000000011")
 	btsRes := common.InnerCall(cnsContractAddr, "getContractAddress", callParams)
 	strRes := common.CallResAsString(btsRes)
-	log.Debug("<Contract Call Result >", "strRes", strRes)
 
 	txGasLimit := int64(10000000000000)
-	if !common.IsHexZeroAddress(strRes) {
-		paramContractAddr := common.HexToAddress(strRes)
-		btsRes = common.InnerCall(paramContractAddr, "getTxGasLimit", []interface{}{})
-		txGasLimit = common.CallResAsInt64(btsRes)
+	if len(strRes) == 0 {
+		log.Trace("contract not exist", "name", "__sys_ParamManager")
+	} else {
+		if !common.IsHexZeroAddress(strRes) {
+			paramContractAddr := common.HexToAddress(strRes)
+			btsRes = common.InnerCall(paramContractAddr, "getTxGasLimit", []interface{}{})
+			txGasLimit = common.CallResAsInt64(btsRes)
+		}
 	}
-	
-	log.Debug("test", "txslimit", txGasLimit)
 
+	log.Trace("test", "txslimit", txGasLimit)
 	if uint64(txGasLimit) < tx.Gas() {
 		return ErrTransactionGasLimit
 	}
-	log.Debug("-- -- -- -- -- ")
 
 	// Make sure the transaction is signed properly
 	from, err := types.Sender(pool.signer, tx)
@@ -869,6 +869,7 @@ func (pool *TxPool) add(tx *types.Transaction, local bool) (bool, error) {
 		invalidTxCounter.Inc(1)
 		return false, err
 	}
+
 	// If the transaction pool is full, discard underpriced transactions
 	if uint64(pool.all.Count()) >= pool.config.GlobalSlots+pool.config.GlobalQueue {
 		// If the new transaction is underpriced, don't accept it
