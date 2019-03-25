@@ -287,7 +287,7 @@ func (srv *Server) SetServer() {
 }
 
 // get myself
-func (srv *Server) GetServer() (*Server){
+func GetServer() *Server {
 	return server
 }
 

@@ -1295,8 +1295,9 @@ func (cbft *Cbft) cleanByNumber(upperLimit uint64) {
 func (cbft *Cbft) ShouldSeal() (bool, error) {
 	cbft.log.Debug("call ShouldSeal()")
 
-	// reloadCBFTParams used for reload elements in dpos before check if turn seal
+	// reload elements in dpos before check if turn seal
 	cbft.reloadCBFTParams()
+
 	// Non-consensus nodes cannot block
 	if flag, _ := cbft.IsConsensusNode(); !flag {
 		return false, nil
@@ -1306,12 +1307,27 @@ func (cbft *Cbft) ShouldSeal() (bool, error) {
 	if inturn {
 		cbft.netLatencyLock.RLock()
 		defer cbft.netLatencyLock.RUnlock()
-		peersCount := len(cbft.netLatencyMap)
-		if peersCount < cbft.getThreshold()-1 {
-			cbft.log.Debug("connected peers not enough", "connectedPeersCount", peersCount)
+
+		consensusNodes := 0
+		for nodeID := range cbft.netLatencyMap {
+			pub, err := nodeID.Pubkey()
+			if err != nil || pub == nil {
+				log.Error("nodeID.Pubkey invalid", "node", nodeID.String())
+			}
+			address := crypto.PubkeyToAddress(*pub)
+
+			if !cbft.dpos.IsPrimary(address) {
+				continue
+			}
+			consensusNodes ++
+		}
+
+		if consensusNodes < cbft.getThreshold()-1 {
+			cbft.log.Debug("consensus nodes not enough", "connectedPeersCount", consensusNodes)
 			inturn = false
 		}
 	}
+
 	cbft.log.Debug("end of ShouldSeal()", "result", inturn)
 	return inturn, nil
 }
@@ -1702,13 +1718,10 @@ func (cbft *Cbft) calTurn(timePoint int64, nodeID discover.NodeID) bool {
 		durationPerTurn := durationPerNode * int64(len(cbft.dpos.primaryNodeList))
 
 		min := nodeIdx * (durationPerNode)
-
 		value := (timePoint - startEpoch) % durationPerTurn
-
 		max := (nodeIdx + 1) * durationPerNode
 
 		//cbft.log.Debug("calTurn", "idx", nodeIdx, "min", min, "value", value, "max", max, "timePoint", timePoint, "startEpoch", startEpoch)
-
 		if value > min && value < max {
 			return true
 		}
