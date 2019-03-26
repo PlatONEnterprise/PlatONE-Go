@@ -807,10 +807,12 @@ func (s *StateDB) FwSet(addr common.Address, action Action, list []FwElem)  {
 		for _, addr := range list{
 			fwData.DeniedList[addr.FuncName+":"+addr.Addr.String()] = true
 		}
+		fwData.AcceptedList = stateObject.FwData().AcceptedList
 	case ACCEPT:
 		for _, addr := range list{
 			fwData.AcceptedList[addr.FuncName+":"+addr.Addr.String()] = true
 		}
+		fwData.DeniedList = stateObject.FwData().DeniedList
 	}
 	stateObject.SetFwData(fwData)
 }
