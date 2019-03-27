@@ -308,7 +308,7 @@ func (st *StateTransition) preContractGasCheck(contractAddr string) error {
 }
 
 func addressCompare(addr1, addr2 common.Address) bool {
-	return addr1.String() == addr2.String()
+	return strings.ToLower(addr1.String()) == strings.ToLower(addr2.String())
 }
 
 func makeReturnBytes(ret []byte) []byte {
@@ -372,7 +372,7 @@ func fwCheck(stateDb vm.StateDB, contractAddr common.Address, caller common.Addr
 	* Reject List!
 	 */
 	for _, fwElem := range fwStatus.DeniedList {
-		if fwElem.Addr.String() == state.FWALLADDR {
+		if addressCompare(fwElem.Addr, common.HexToAddress(state.FWALLADDR)) {
 			if fwElem.FuncName == "*" {
 				// 1. [*:*] and reject any address and any function access!
 				log.Debug("FW : 1. Reject, pattern [*:*], reject any address and any function access!")
@@ -409,7 +409,7 @@ func fwCheck(stateDb vm.StateDB, contractAddr common.Address, caller common.Addr
 	* Accept List!
 	 */
 	for _, fwElem := range fwStatus.AcceptedList {
-		if fwElem.Addr.String() == state.FWALLADDR {
+		if addressCompare(fwElem.Addr, common.HexToAddress(state.FWALLADDR)) {
 			if fwElem.FuncName == "*" {
 				// 1. [*:*] and allow any address and any function access!
 				log.Debug("FW : 1. Accept, pattern [*:*], allow any address and any function access!")
