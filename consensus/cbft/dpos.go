@@ -51,6 +51,7 @@ func (d *dpos) IsPrimary(addr common.Address) bool {
 			log.Error("nodeID.ID.Pubkey error!")
 		}
 		address := crypto.PubkeyToAddress(*pub)
+
 		return bytes.Equal(address[:], addr[:])
 	}
 	return false

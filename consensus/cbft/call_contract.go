@@ -46,24 +46,23 @@ func getConsensusNodesList() ([]discover.NodeID, error) {
 	cnsContractAddr := common.HexToAddress("0x0000000000000000000000000000000000000011")
 	btsRes := common.InnerCall(cnsContractAddr, "getContractAddress", callParams)
 	strRes := common.CallResAsString(btsRes)
-	if common.IsHexZeroAddress(strRes) {
+	if len(strRes) == 0 || common.IsHexZeroAddress(strRes) {
 		// log.Debug("system contract not found", "name", "__sys_NodeManager")
 		return nil ,ErrContractNotFound
 	}
 
-	// get node list
-	nodeMgrContractAddr := common. HexToAddress(strRes)
-	callParams = []interface{}{"{\"type\":1,\"status\":1}"}   // getAllUsefulConsensusNodeList
+	// get consensus node list
+	nodeMgrContractAddr := common.HexToAddress(strRes)
+	callParams = []interface{}{"{\"type\":1,\"status\":1}"}
 	btsRes = common.InnerCall(nodeMgrContractAddr, "getNodes", callParams)
 	strRes = common.CallResAsString(btsRes)
 	log.Debug("get nodes info", "node", strRes)
 
 	var tmp commonResult
 	if err := json.Unmarshal(utils.String2bytes(strRes), &tmp); err != nil {
-		log.Error("get all useful consensus node list failed", "result", strRes, "err", err.Error())
+		log.Warn("unmarshal consensus node list failed", "result", strRes, "err", err.Error())
 		return nil, err
 	}
-
 	if tmp.RetCode != 0 {
 		log.Debug("contract inner error", "code", tmp.RetCode, "msg", tmp.RetMsg)
 		return nil, errors.New(tmp.RetMsg)

@@ -23,6 +23,7 @@ import (
 	"github.com/PlatONnetwork/PlatON-Go/core/types"
 	"github.com/PlatONnetwork/PlatON-Go/crypto"
 	"github.com/PlatONnetwork/PlatON-Go/log"
+	"github.com/PlatONnetwork/PlatON-Go/p2p"
 	"github.com/PlatONnetwork/PlatON-Go/p2p/discover"
 	"github.com/PlatONnetwork/PlatON-Go/params"
 	"github.com/PlatONnetwork/PlatON-Go/rpc"
@@ -876,6 +877,18 @@ func (cbft *Cbft) signReceiver(sig *cbfttypes.BlockSignature) error {
 		return nil
 	}
 
+	// discard the signature directly if current num is higher than the highestConfirmed ten blocks
+	currentBlockNum := sig.Number.Uint64()
+	highestConfirmedNum := cbft.getHighestConfirmed().number
+
+	if currentBlockNum - highestConfirmedNum > 10 {
+		log.Debug("discard too high signature",
+					"root", cbft.getRootIrreversible().number,
+					"highestConfirmed", highestConfirmedNum,
+					"current", currentBlockNum)
+		return nil
+	}
+
 	current := cbft.findBlockExt(sig.Hash)
 	if current == nil {
 		cbft.log.Warn("have not received the corresponding block")
@@ -899,7 +912,6 @@ func (cbft *Cbft) signReceiver(sig *cbfttypes.BlockSignature) error {
 	}
 
 	cbft.log.Debug("count signatures",
-
 		"hash", hashLog,
 		"number", current.number,
 		"signCount", len(current.signs),
@@ -950,36 +962,38 @@ func (cbft *Cbft) blockReceiver(tmp *BlockExt) error {
 		"highestConfirmedNumber", cbft.getHighestConfirmed().number,
 		"rootIrreversibleHash", cbft.getRootIrreversible().block.Hash(),
 		"rootIrreversibleNumber", cbft.getRootIrreversible().number)
-	if block.NumberU64() <= 0 {
+
+	currentBlockNum := block.NumberU64()
+	highestConfirmedNum := cbft.getHighestConfirmed().number
+	rootIrreversibleNum := cbft.getRootIrreversible().number
+
+	if currentBlockNum <= 0 {
 		return errGenesisBlock
 	}
-
-	if block.NumberU64() <= cbft.getRootIrreversible().number {
+	if currentBlockNum <= rootIrreversibleNum {
 		return lateBlock
 	}
+	if currentBlockNum > highestConfirmedNum && currentBlockNum - highestConfirmedNum > 10 {
+		log.Debug("discard too high block", "root", rootIrreversibleNum, "highestConfirmed", highestConfirmedNum,
+			"current", currentBlockNum)
+		return nil
+	}
+
+	// reload elements in dpos before check if block legal. It is also used in ShouldSeal
+	cbft.reloadCBFTParams()
 
 	//recover the producer's NodeID
 	producerID, sign, err := ecrecover(block.Header())
 	if err != nil {
 		return err
 	}
+	if isLegal := cbft.isLegal(rcvTime, producerID); !isLegal {
+		cbft.log.Debug("illegal block", "result", isLegal, "hash", block.Hash(), "number", block.NumberU64(),
+			"parentHash", block.ParentHash(), "rcvTime", rcvTime, "producerID", producerID)
 
-	// reloadCBFTParams used for reload elements in dpos before check if block legal.
-	// It is also used in ShouldSeal
-	cbft.reloadCBFTParams()
-
-	isLegal := cbft.isLegal(rcvTime, producerID)
-	cbft.log.Debug("check if block is legal",
-		"result", isLegal,
-		"hash", block.Hash(),
-		"number", block.NumberU64(),
-		"parentHash", block.ParentHash(),
-		"rcvTime", rcvTime,
-		"producerID", producerID)
-
-	if !isLegal {
 		return errIllegalBlock
 	}
+
 	//to check if there's a existing blockExt for received block
 	//sometime we'll receive the block's sign before the block self.
 	blockExt := cbft.findBlockExt(block.Hash())
@@ -994,24 +1008,19 @@ func (cbft *Cbft) blockReceiver(tmp *BlockExt) error {
 		return errDuplicatedBlock
 	}
 
-	//make tree node
-	cbft.buildIntoTree(blockExt)
-
-	//collect the block's sign of producer
-	cbft.collectSign(blockExt, common.NewBlockConfirmSign(sign))
-
+	cbft.buildIntoTree(blockExt) 	//make tree node
+	cbft.collectSign(blockExt, common.NewBlockConfirmSign(sign))   	//collect the block's sign of producer
 	cbft.log.Debug("count signatures",
-
 		"hash", blockExt.block.Hash(),
 		"number", blockExt.number,
+		"isSigned", blockExt.isSigned,
 		"signCount", len(blockExt.signs),
 		"inTree", blockExt.inTree,
-		"isExecuted", blockExt.isExecuted,
-		"isConfirmed", blockExt.isConfirmed,
-		"isSigned", blockExt.isSigned)
+		"isConfirmed", blockExt.isConfirmed)
 
 	if blockExt.inTree {
 		if err := cbft.executeBlockAndDescendant(blockExt, blockExt.parent); err != nil {
+			log.Debug("executed block error", "err", err)
 			return err
 		}
 
@@ -1021,34 +1030,38 @@ func (cbft *Cbft) blockReceiver(tmp *BlockExt) error {
 		//flowControl := flowControl.control(producerID, curTime)
 		flowControl := true
 		highestConfirmedIsAncestor := cbft.getHighestConfirmed().isAncestor(blockExt)
-
 		isLogical := inTurn && flowControl && highestConfirmedIsAncestor
-
-		cbft.log.Debug("check if block is logical", "result", isLogical, "hash", blockExt.block.Hash(), "number", blockExt.number, "inTurn", inTurn, "flowControl", flowControl, "highestConfirmedIsAncestor", highestConfirmedIsAncestor)
-
-		/*
-			if isLogical {
-				cbft.signLogicalAndDescendant(ext)
-			}
-			//rearrange logical path from cbft.rootIrreversible each time
-			newHighestLogical := cbft.findHighestLogical(cbft.rootIrreversible)
-			if newHighestLogical != nil {
-				cbft.setHighestLogical(newHighestLogical)
-			}
-
-			newHighestConfirmed := cbft.findLastClosestConfirmedIncludingSelf(cbft.rootIrreversible)
-			if newHighestConfirmed != nil && newHighestConfirmed.block.Hash() != cbft.highestConfirmed.block.Hash() {
-				//fork
-				if newHighestConfirmed.number < cbft.highestConfirmed.number  ||  (newHighestConfirmed.number > cbft.highestConfirmed.number && !cbft.highestConfirmed.isAncestor(newHighestConfirmed)) {
-					//only this case may cause a new fork
-					cbft.checkFork(closestConfirmed)
-				}
-
-				cbft.highestConfirmed = newHighestConfirmed
-			}
-		*/
+		cbft.log.Debug("check if block is logical",
+			"result", isLogical,
+			"hash", blockExt.block.Hash(),
+			"number", blockExt.number,
+			"inTurn", inTurn,
+			"flowControl", flowControl,
+			"highestConfirmedIsAncestor", highestConfirmedIsAncestor)
 
 		if isLogical {
+			newHighestConfirmed := cbft.findLastClosestConfirmedIncludingSelf(cbft.getHighestConfirmed())
+
+			if currentBlockNum > newHighestConfirmed.number && currentBlockNum - newHighestConfirmed.number == 10 {
+				f := func(k, v interface{}) bool {
+					hash := k.(common.Hash)
+					ext := v.(*BlockExt)
+
+					if ext.number >= highestConfirmedNum && ext.number <= currentBlockNum &&
+						hash != cbft.getHighestConfirmed().block.Hash() {
+						cbft.blockExtMap.Delete(hash)
+					}
+					return true
+				}
+				cbft.blockExtMap.Range(f)
+
+				for number, _ := range cbft.signedSet {
+					if number > newHighestConfirmed.number {
+						delete(cbft.signedSet, number)
+					}
+				}
+			}
+
 			newHighestLogical := cbft.findHighestLogical(cbft.getHighestConfirmed())
 			//rearrange new logical path, and sign block if necessary
 			logicals := cbft.backTrackBlocks(blockExt, newHighestLogical, true)
@@ -1058,7 +1071,6 @@ func (cbft *Cbft) blockReceiver(tmp *BlockExt) error {
 				cbft.setHighestLogical(newHighestLogical, false)
 			}
 
-			newHighestConfirmed := cbft.findLastClosestConfirmedIncludingSelf(cbft.getHighestConfirmed())
 			if newHighestConfirmed != nil {
 				cbft.highestConfirmed.Store(newHighestConfirmed)
 			}
@@ -1168,18 +1180,16 @@ func (cbft *Cbft) flushReadyBlock() bool {
 	if newRoot != nil {
 		// blocks[0] == cbft.rootIrreversible
 		oldRoot := cbft.getRootIrreversible()
-		cbft.log.Debug("blockExt tree reorged, root info", "origHash", oldRoot.block.Hash(), "origNumber", oldRoot.number, "newHash", newRoot.block.Hash(), "newNumber", newRoot.number)
-		//cut off old tree from new root,
-		tailorTree(newRoot)
+		cbft.log.Debug("blockExt tree reorged, root info",
+			"origHash", oldRoot.block.Hash(),
+			"origNumber", oldRoot.number,
+			"newHash", newRoot.block.Hash(),
+			"newNumber", newRoot.number)
 
-		//set the new root as cbft.rootIrreversible
-		cbft.rootIrreversible.Store(newRoot)
-
-		//remove all blocks referenced in old tree after being cut off
-		cbft.cleanByTailoredTree(oldRoot)
-
-		//remove all other blocks those their numbers are too low
-		cbft.cleanByNumber(cbft.getRootIrreversible().number)
+		tailorTree(newRoot)                    // cut off old tree from new root,
+		cbft.rootIrreversible.Store(newRoot)   // set the new root as cbft.rootIrreversible
+		cbft.cleanByTailoredTree(oldRoot)      // remove all blocks referenced in old tree after being cut off
+		cbft.cleanByNumber(cbft.getRootIrreversible().number)   // remove all other blocks those their numbers are too low
 		return true
 	}
 	return false
@@ -1305,22 +1315,33 @@ func (cbft *Cbft) ShouldSeal() (bool, error) {
 
 	inturn := cbft.inTurn()
 	if inturn {
-		cbft.netLatencyLock.RLock()
-		defer cbft.netLatencyLock.RUnlock()
-
 		consensusNodes := 0
-		for nodeID := range cbft.netLatencyMap {
-			pub, err := nodeID.Pubkey()
-			if err != nil || pub == nil {
-				log.Error("nodeID.Pubkey invalid", "node", nodeID.String())
-			}
-			address := crypto.PubkeyToAddress(*pub)
 
-			if !cbft.dpos.IsPrimary(address) {
+		server := p2p.GetServer()
+		Peers := server.PeersInfo()
+		for _, peer := range Peers {
+			nodeID, err := discover.HexID(peer.ID)
+			if err != nil {
+				log.Debug("string is invalid NodeID", "orig", peer.ID)
+				continue
+			}
+			if cbft.dpos.NodeIndex(nodeID) < 0 {
 				continue
 			}
 			consensusNodes ++
 		}
+
+		/* use netLatencyMap to get peers is better
+		cbft.netLatencyLock.RLock()
+		cbft.log.Debug("show netLatencyMap count", "len", len(cbft.netLatencyMap))
+		for nodeID := range cbft.netLatencyMap {
+			if cbft.dpos.NodeIndex(nodeID) < 0 {
+				continue
+			}
+			consensusNodes ++
+		}
+		cbft.netLatencyLock.RUnlock()
+		*/
 
 		if consensusNodes < cbft.getThreshold()-1 {
 			cbft.log.Debug("consensus nodes not enough", "connectedPeersCount", consensusNodes)
