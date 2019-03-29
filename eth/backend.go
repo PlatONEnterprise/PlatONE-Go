@@ -18,27 +18,22 @@
 package eth
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"github.com/PlatONnetwork/PlatON-Go/consensus/cbft"
-	"github.com/PlatONnetwork/PlatON-Go/core/cbfttypes"
-	"github.com/PlatONnetwork/PlatON-Go/p2p/discover"
-	"math/big"
-	"runtime"
-	"math"
-	"sync"
-	"context"
-	"sync/atomic"
-
 	"github.com/PlatONnetwork/PlatON-Go/accounts"
 	"github.com/PlatONnetwork/PlatON-Go/common"
 	"github.com/PlatONnetwork/PlatON-Go/common/hexutil"
 	"github.com/PlatONnetwork/PlatON-Go/consensus"
+	"github.com/PlatONnetwork/PlatON-Go/consensus/cbft"
+	istanbulBackend "github.com/PlatONnetwork/PlatON-Go/consensus/istanbul/backend"
 	"github.com/PlatONnetwork/PlatON-Go/core"
 	"github.com/PlatONnetwork/PlatON-Go/core/bloombits"
+	"github.com/PlatONnetwork/PlatON-Go/core/cbfttypes"
 	"github.com/PlatONnetwork/PlatON-Go/core/rawdb"
 	"github.com/PlatONnetwork/PlatON-Go/core/types"
 	"github.com/PlatONnetwork/PlatON-Go/core/vm"
+	"github.com/PlatONnetwork/PlatON-Go/crypto"
 	"github.com/PlatONnetwork/PlatON-Go/eth/downloader"
 	"github.com/PlatONnetwork/PlatON-Go/eth/filters"
 	"github.com/PlatONnetwork/PlatON-Go/eth/gasprice"
@@ -49,9 +44,15 @@ import (
 	"github.com/PlatONnetwork/PlatON-Go/miner"
 	"github.com/PlatONnetwork/PlatON-Go/node"
 	"github.com/PlatONnetwork/PlatON-Go/p2p"
+	"github.com/PlatONnetwork/PlatON-Go/p2p/discover"
 	"github.com/PlatONnetwork/PlatON-Go/params"
 	"github.com/PlatONnetwork/PlatON-Go/rlp"
 	"github.com/PlatONnetwork/PlatON-Go/rpc"
+	"math"
+	"math/big"
+	"runtime"
+	"sync"
+	"sync/atomic"
 )
 
 func InitInnerCallFunc(ethPtr *Ethereum)    {
@@ -192,7 +193,7 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 		shutdownChan:   make(chan bool),
 		networkID:      config.NetworkId,
 		gasPrice:       config.MinerGasPrice,
-		etherbase:      config.Etherbase,
+		etherbase:      crypto.PubkeyToAddress(ctx.NodeKey().PublicKey),//config.Etherbase,
 		bloomRequests:  make(chan chan *bloombits.Retrieval),
 		bloomIndexer:   NewBloomIndexer(chainDb, params.BloomBitsBlocks, params.BloomConfirms),
 	}
@@ -256,10 +257,10 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	// modify by platon remove consensusCache
 	//var consensusCache *cbft.Cache = cbft.NewCache(eth.blockchain)
 	eth.miner = miner.New(eth, eth.chainConfig, eth.EventMux(), eth.engine, config.MinerRecommit, config.MinerGasFloor, config.MinerGasCeil, eth.isLocalBlock, blockSignatureCh, cbftResultCh, highestLogicalBlockCh, blockChainCache)
+	eth.miner.SetEtherbase(crypto.PubkeyToAddress(ctx.NodeKey().PublicKey))
 	eth.miner.SetExtra(makeExtraData(config.MinerExtraData))
 
 	if _, ok := eth.engine.(consensus.Bft); ok {
-
 		log.Debug("cbft.SetBackend:::::", "SetBackend", eth.txPool)
 		cbft.SetBlockChainCache(blockChainCache)
 		cbft.SetBackend(eth.blockchain, eth.txPool)
@@ -276,12 +277,23 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	}
 	eth.APIBackend.gpo = gasprice.NewOracle(eth.APIBackend, gpoParams)
 
-	rootNodes := chainConfig.Cbft.InitialNodes
-	for _, node := range rootNodes {
-		p2p.AddPeer(node)
-		p2p.SetRootNode(&node)
-		break // only one root key
+	if _, ok := eth.engine.(consensus.Istanbul); ok{
+		rootNodes := chainConfig.Istanbul.InitialNodes
+		for _, node := range rootNodes {
+			p2p.AddPeer(node)
+			p2p.SetRootNode(&node)
+			break // only one root key
+		}
+	} else {
+		rootNodes := chainConfig.Cbft.InitialNodes
+		for _, node := range rootNodes {
+			p2p.AddPeer(node)
+			p2p.SetRootNode(&node)
+			break // only one root key
+		}
 	}
+
+
 
 	return eth, nil
 }
@@ -342,6 +354,12 @@ func CreateConsensusEngine(ctx *node.ServiceContext, chainConfig *params.ChainCo
 		chainConfig.Cbft.LegalCoefficient = cbftConfig.LegalCoefficient
 		chainConfig.Cbft.Duration = cbftConfig.Duration
 		return cbft.New(chainConfig.Cbft, blockSignatureCh, cbftResultCh, highestLogicalBlockCh)
+	}else if chainConfig.Istanbul != nil{
+		//if chainConfig.Istanbul.Epoch != 0 {
+		//	config.Istanbul.Epoch = chainConfig.Istanbul.Epoch
+		//}
+		//config.Istanbul.ProposerPolicy = istanbul.ProposerPolicy(chainConfig.Istanbul.ProposerPolicy)
+		return istanbulBackend.New(chainConfig.Istanbul ,ctx.NodeKey() , db)
 	}
 	return nil
 }
@@ -411,6 +429,8 @@ func (s *Ethereum) Etherbase() (eb common.Address, err error) {
 	s.lock.RLock()
 	etherbase := s.etherbase
 	s.lock.RUnlock()
+
+
 
 	if etherbase != (common.Address{}) {
 		return etherbase, nil
@@ -507,6 +527,7 @@ func (s *Ethereum) StartMining(threads int) error {
 	}
 	// If the miner was not running, initialize it
 	if !s.IsMining() {
+		log.Info("the miner was not running, initialize it")
 		// Propagate the initial price point to the transaction pool
 		s.lock.RLock()
 		price := s.gasPrice
@@ -525,7 +546,6 @@ func (s *Ethereum) StartMining(threads int) error {
 		// If mining is started, we can disable the transaction rejection mechanism
 		// introduced to speed sync times.
 		atomic.StoreUint32(&s.protocolManager.acceptTxs, 1)
-
 		go s.miner.Start(eb)
 	}
 	return nil
@@ -571,6 +591,7 @@ func (s *Ethereum) Protocols() []p2p.Protocol {
 // Start implements node.Service, starting all internal goroutines needed by the
 // Ethereum protocol implementation.
 func (s *Ethereum) Start(srvr *p2p.Server) error {
+
 	// Start the bloom bits servicing goroutines
 	s.startBloomHandlers(params.BloomBitsBlocks)
 
@@ -588,16 +609,23 @@ func (s *Ethereum) Start(srvr *p2p.Server) error {
 	// Start the networking layer and the light server if requested
 	s.protocolManager.Start(maxPeers)
 
-	if cbftEngine, ok := s.engine.(consensus.Bft); ok {
-		cbftEngine.SetPrivateKey(srvr.Config.PrivateKey)
-		if flag, err := cbftEngine.IsConsensusNode(); flag && err == nil {
+	if engine, ok := s.engine.(consensus.Istanbul); ok {
+		_ = engine
+
+		if true{
+			for _, n := range s.chainConfig.Istanbul.InitialNodes {
+				srvr.AddConsensusPeer(discover.NewNode(n.ID, n.IP, n.UDP, n.TCP))
+			}
+		}
+	}else if engine, ok := s.engine.(consensus.Bft); ok{
+		engine.SetPrivateKey(srvr.Config.PrivateKey)
+		if flag, err := engine.IsConsensusNode(); flag && err == nil {
 			for _, n := range s.chainConfig.Cbft.InitialNodes {
 				srvr.AddConsensusPeer(discover.NewNode(n.ID, n.IP, n.UDP, n.TCP))
 			}
 		}
-		s.StartMining(1)
 	}
-
+	s.StartMining(1)
 	if s.lesServer != nil {
 		s.lesServer.Start(srvr)
 	}
