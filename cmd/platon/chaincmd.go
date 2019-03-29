@@ -175,6 +175,7 @@ Use "ethereum dump 0" to dump the genesis block.`,
 func initGenesis(ctx *cli.Context) error {
 	// Make sure we have a valid genesis JSON
 	genesisPath := ctx.Args().First()
+	log.Debug("initGenesis","genesisPath", genesisPath)
 	if len(genesisPath) == 0 {
 		utils.Fatalf("Must supply path to genesis JSON file")
 	}

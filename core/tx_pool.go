@@ -134,6 +134,7 @@ type txPoolBlockChain interface {
 	GetBlock(hash common.Hash, number uint64) *types.Block
 	//StateAt(root common.Hash) (*state.StateDB, error)
 	GetState(header *types.Header) (*state.StateDB, error)
+	SubscribeChainHeadEvent(ch chan<- ChainHeadEvent) event.Subscription
 }
 
 // TxPoolConfig are the configuration parameters of the transaction pool.
@@ -203,14 +204,14 @@ type TxPool struct {
 	config      TxPoolConfig
 	chainconfig *params.ChainConfig
 	extDb ethdb.Database
-	//chain        blockChain
 	chain    txPoolBlockChain
 	gasPrice *big.Int
 	txFeed   event.Feed
 	scope    event.SubscriptionScope
 	// modified by PlatON
 	chainHeadCh chan *types.Block
-	//chainHeadCh  chan ChainHeadEvent
+	chainHeadEventCh  chan ChainHeadEvent
+	chainHeadSub event.Subscription
 	exitCh chan struct{}
 	signer types.Signer
 	mu     sync.RWMutex
@@ -265,7 +266,7 @@ func NewTxPool(config TxPoolConfig, chainconfig *params.ChainConfig, chain txPoo
 		all:         newTxLookup(),
 		db: db,
 		// modified by PlatON
-		// chainHeadCh: make(chan ChainHeadEvent, chainHeadChanSize),
+		chainHeadEventCh: make(chan ChainHeadEvent, chainHeadChanSize),
 		chainHeadCh: make(chan *types.Block, chainHeadChanSize),
 		exitCh:      make(chan struct{}),
 		gasPrice:    new(big.Int).SetUint64(config.PriceLimit),
@@ -296,7 +297,9 @@ func NewTxPool(config TxPoolConfig, chainconfig *params.ChainConfig, chain txPoo
 	}
 	// Subscribe events from blockchain
 	// modified by PlatON
-	//pool.chainHeadSub = pool.chain.SubscribeChainHeadEvent(pool.chainHeadCh)
+	if pool.chainconfig.Istanbul != nil{
+		pool.chainHeadSub = pool.chain.SubscribeChainHeadEvent(pool.chainHeadEventCh)
+	}
 
 	// Start the event loop and return
 	pool.wg.Add(1)
@@ -384,6 +387,18 @@ func (pool *TxPool) loop() {
 				}
 				pool.reset(head.Header(), block.Header())
 				head = block
+
+				pool.mu.Unlock()
+			}
+			// Handle ChainHeadEvent
+		case ev := <-pool.chainHeadEventCh:
+			if ev.Block != nil {
+				pool.mu.Lock()
+				if pool.chainconfig.IsHomestead(ev.Block.Number()) {
+					pool.homestead = true
+				}
+				pool.reset(head.Header(), ev.Block.Header())
+				head = ev.Block
 
 				pool.mu.Unlock()
 			}
@@ -620,6 +635,8 @@ func (pool *TxPool) Stop() {
 	// Unsubscribe all subscriptions registered from txpool
 	pool.scope.Close()
 
+	pool.chainHeadSub.Unsubscribe()
+
 	close(pool.exitCh)
 
 	pool.wg.Wait()
@@ -816,9 +833,9 @@ func (pool *TxPool) validateTx(tx *types.Transaction, local bool) error {
 	}
 	// Drop non-local transactions under our own minimal accepted gas price
 	local = local || pool.locals.contains(from) // account may be local even if the transaction arrived from the network
-	if !local && pool.gasPrice.Cmp(tx.GasPrice()) > 0 {
+/*	if !local && pool.gasPrice.Cmp(tx.GasPrice()) > 0 {
 		return ErrUnderpriced
-	}
+	}*/
 
 	if tx, _, _, _ := rawdb.ReadTransaction(pool.db, tx.Hash()); tx != nil {
 		fmt.Println("Transaction Repeat.....................")

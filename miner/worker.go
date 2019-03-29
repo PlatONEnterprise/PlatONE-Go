@@ -207,6 +207,7 @@ type worker struct {
 
 func newWorker(config *params.ChainConfig, engine consensus.Engine, eth Backend, mux *event.TypeMux, recommit time.Duration, gasFloor, gasCeil uint64, isLocalBlock func(*types.Block) bool,
 	blockSignatureCh chan *cbfttypes.BlockSignature, cbftResultCh chan *cbfttypes.CbftResult, highestLogicalBlockCh chan *types.Block, blockChainCache *core.BlockChainCache) *worker {
+
 	worker := &worker{
 		extdb:				   eth.ExtendedDb(),
 		config:                config,
@@ -317,13 +318,21 @@ func (w *worker) pendingBlock() *types.Block {
 
 // start sets the running status as 1 and triggers new work submitting.
 func (w *worker) start() {
+
 	atomic.StoreInt32(&w.running, 1)
 	w.startCh <- struct{}{}
+	if eng, ok := w.engine.(consensus.Istanbul); ok{
+		eng.Start(w.chain, w.chain.CurrentBlock, nil)
+	}
 }
 
 // stop sets the running status as 0.
 func (w *worker) stop() {
 	atomic.StoreInt32(&w.running, 0)
+
+	if eng, ok := w.engine.(consensus.Istanbul); ok{
+		eng.Stop()
+	}
 }
 
 // isRunning returns an indicator whether worker is running or not.
@@ -407,8 +416,14 @@ func (w *worker) newWorkLoop(recommit time.Duration) {
 			timestamp = time.Now().UnixNano() / 1e6
 			//commit(false, commitInterruptNewHead)
 			// clear consensus cache
-			log.Debug("received a event of ChainHeadEvent", "hash", head.Block.Hash(), "number", head.Block.NumberU64(), "parentHash", head.Block.ParentHash())
+			log.Info("received a event of ChainHeadEvent", "hash", head.Block.Hash(), "number", head.Block.NumberU64(), "parentHash", head.Block.ParentHash())
 			w.blockChainCache.ClearCache(head.Block)
+
+			// todo: 处理
+			//get chainHeadEvent, commit new work
+			/*if _,ok := w.engine.(consensus.Istanbul); ok {
+				commit(false, commitInterruptNewHead, nil)
+			}*/
 
 			if cbft, ok := w.engine.(consensus.Bft); ok {
 				cbft.OnBlockSynced()
@@ -423,7 +438,7 @@ func (w *worker) newWorkLoop(recommit time.Duration) {
 			if w.isRunning() {
 				if shouldSeal, error := w.engine.(consensus.Bft).ShouldSeal(); shouldSeal && error == nil {
 					if shouldCommit, commitBlock := w.shouldCommit(time.Now().UnixNano() / 1e6); shouldCommit {
-						log.Debug("begin to package new block in time after resetting a new highest logical block")
+						log.Info("begin to package new block in time after resetting a new highest logical block")
 						timestamp = time.Now().UnixNano() / 1e6
 						commit(false, commitInterruptResubmit, commitBlock)
 					}
@@ -438,7 +453,7 @@ func (w *worker) newWorkLoop(recommit time.Duration) {
 					if shouldSeal, error := cbftEngine.ShouldSeal(); error == nil {
 						if shouldSeal {
 							if shouldCommit, commitBlock := w.shouldCommit(time.Now().UnixNano() / 1e6); shouldCommit {
-								log.Debug("begin to package new block regularly ")
+								log.Info("begin to package new block regularly ")
 								timestamp = time.Now().UnixNano() / 1e6
 								commit(false, commitInterruptResubmit, commitBlock)
 								continue
@@ -449,7 +464,18 @@ func (w *worker) newWorkLoop(recommit time.Duration) {
 						}
 					}
 
-				} else if w.config.Clique == nil || w.config.Clique.Period > 0 {
+				} else if eng, ok := w.engine.(consensus.Istanbul); ok{
+					// todo: shouldSeal()
+					if eng.ShouldSeal() {
+						log.Info("+++++++++++++++++++++++++++++++++++ShouldSeal() -> true")
+						commit(false, commitInterruptResubmit, nil)
+					} else{
+						//log.Info("...")
+					}
+
+					// timer.Reset(recommit)
+					timer.Reset(100 * time.Millisecond)
+				}else if w.config.Clique == nil || w.config.Clique.Period > 0 {
 					// Short circuit if no new transaction arrives.
 					if atomic.LoadInt32(&w.newTxs) == 0 {
 						timer.Reset(recommit)
@@ -514,14 +540,15 @@ func (w *worker) mainLoop() {
 			// If our mining block contains less than 2 uncle blocks,
 			// add the new uncle block if valid and regenerate a mining block.
 		// removed by PlatON
-		/*
-			case  <-w.txsCh:
 
-				// Apply transactions to the pending state if we're not mining.
-				// Note all transactions received may not be continuous with transactions
-				// already included in the current mining block. These transactions will
-				// be automatically eliminated.
+		case  ev := <-w.txsCh:
+			// Apply transactions to the pending state if we're not mining.
+			// Note all transactions received may not be continuous with transactions
+			// already included in the current mining block. These transactions will
+			// be automatically eliminated.
+			if _, ok := w.engine.(consensus.Istanbul); ok {
 				if !w.isRunning() && w.current != nil {
+					log.Info("<-w.txsCh","<-w.txsCh")
 					w.mu.RLock()
 					coinbase := w.coinbase
 					w.mu.RUnlock()
@@ -541,7 +568,8 @@ func (w *worker) mainLoop() {
 					}
 				}
 				atomic.AddInt32(&w.newTxs, int32(len(ev.Txs)))
-		*/
+			}
+
 
 		// System stopped
 		case <-w.exitCh:
@@ -613,6 +641,7 @@ func (w *worker) taskLoop() {
 				w.newTaskHook(task)
 			}
 			// Reject duplicate sealing work due to resubmitting.
+			//todo: SealHash()做了神码
 			sealHash := w.engine.SealHash(task.block.Header())
 			if sealHash == prev {
 				continue
@@ -643,6 +672,16 @@ func (w *worker) taskLoop() {
 				continue
 			}
 
+			if _, ok := w.engine.(consensus.Istanbul); ok {
+				// todo: shouldSeal()
+				if true {
+					if _, err := w.engine.Seal(w.chain, task.block, w.resultCh, stopCh); err != nil {
+						log.Warn("Block sealing failed", "err", err)
+					}
+				}
+				continue
+			}
+
 			if _, err := w.engine.Seal(w.chain, task.block, w.resultCh, stopCh); err != nil {
 				log.Warn("Block sealing failed", "err", err)
 			}
@@ -661,6 +700,7 @@ func (w *worker) resultLoop() {
 		select {
 		case block := <-w.resultCh:
 			// Short circuit when receiving empty result.
+			log.Info("^********************resultCh blockNumber is ", "number", block.Number())
 			if block == nil {
 				continue
 			}
@@ -702,7 +742,6 @@ func (w *worker) resultLoop() {
 			}
 			log.Info("Successfully sealed new block", "number", block.Number(), "sealhash", sealhash, "hash", hash,
 				"elapsed", common.PrettyDuration(time.Since(task.createdAt)))
-
 			// Broadcast the block and announce chain insertion event
 			w.mux.Post(core.NewMinedBlockEvent{Block: block})
 
@@ -1141,6 +1180,10 @@ func (w *worker) commitNewWork(interrupt *int32, noempty bool, timestamp int64, 
 	if _, ok := w.engine.(consensus.Bft); ok {
 		parent = commitBlock
 		//timestamp = time.Now().UnixNano() / 1e6
+	} else if _, ok := w.engine.(consensus.Istanbul); ok{
+		//TODO: 父区块如何选择, 目前按照Istanbul协议，选取当前最高区块
+		parent = w.chain.CurrentBlock()
+		log.Info("parentBlock Number: " + parent.Number().String())
 	} else {
 		parent = w.chain.CurrentBlock()
 		if parent.Time().Cmp(new(big.Int).SetInt64(timestamp)) >= 0 {
@@ -1178,6 +1221,9 @@ func (w *worker) commitNewWork(interrupt *int32, noempty bool, timestamp int64, 
 		log.Error("Failed to prepare header for mining", "err", err)
 		return
 	}
+
+	header.Coinbase = w.coinbase
+
 	// If we are care about TheDAO hard-fork check whether to override the extra-data or not
 	if daoBlock := w.config.DAOForkBlock; daoBlock != nil {
 		// Check whether the block is among the fork extra-override range
@@ -1220,17 +1266,19 @@ func (w *worker) commitNewWork(interrupt *int32, noempty bool, timestamp int64, 
 		return
 	}
 
-	log.Debug("Fetch pending transactions success", "pendingLength", len(pending), "time", common.PrettyDuration(time.Since(startTime)))
+	log.Info("Fetch pending transactions success", "pendingLength", len(pending), "time", common.PrettyDuration(time.Since(startTime)))
 
 	// Short circuit if there is no available pending transactions
 	if len(pending) == 0 {
-		// No empty block
+		// todo No empty block 是否出空块开关.目前默认出空块
 		if "off" == w.EmptyBlock {
-			return
+			//return
 		}
 		if _, ok := w.engine.(consensus.Bft); ok {
 			w.commit(nil, true, tstart)
-		} else {
+		} else if _, ok := w.engine.(consensus.Istanbul); ok{
+			w.commit(nil, true, tstart)
+		}else {
 			w.updateSnapshot()
 		}
 		return
@@ -1248,7 +1296,7 @@ func (w *worker) commitNewWork(interrupt *int32, noempty bool, timestamp int64, 
 			localTxs[account] = txs
 		}
 	}
-	log.Debug("execute pending transactions", "hash", commitBlock.Hash(), "number", commitBlock.NumberU64(), "localTxCount", len(localTxs), "remoteTxCount", len(remoteTxs), "txsCount", txsCount)
+	//log.Debug("execute pending transactions", "hash", commitBlock.Hash(), "number", commitBlock.NumberU64(), "localTxCount", len(localTxs), "remoteTxCount", len(remoteTxs), "txsCount", txsCount)
 
 	startTime = time.Now()
 	var localTimeout = false
@@ -1261,8 +1309,8 @@ func (w *worker) commitNewWork(interrupt *int32, noempty bool, timestamp int64, 
 		}
 	}
 
-	commitLocalTxCount := w.current.tcount
-	log.Debug("local transactions executing stat", "hash", commitBlock.Hash(), "number", commitBlock.NumberU64(), "involvedTxCount", commitLocalTxCount, "time", common.PrettyDuration(time.Since(startTime)))
+	//commitLocalTxCount := w.current.tcount
+	//log.Debug("local transactions executing stat", "hash", commitBlock.Hash(), "number", commitBlock.NumberU64(), "involvedTxCount", commitLocalTxCount, "time", common.PrettyDuration(time.Since(startTime)))
 
 	startTime = time.Now()
 	if !localTimeout && len(remoteTxs) > 0 {
@@ -1271,8 +1319,8 @@ func (w *worker) commitNewWork(interrupt *int32, noempty bool, timestamp int64, 
 			return
 		}
 	}
-	commitRemoteTxCount := w.current.tcount - commitLocalTxCount
-	log.Debug("remote transactions executing stat", "hash", commitBlock.Hash(), "number", commitBlock.NumberU64(), "involvedTxCount", commitRemoteTxCount, "time", common.PrettyDuration(time.Since(startTime)))
+	//commitRemoteTxCount := w.current.tcount - commitLocalTxCount
+	//log.Debug("remote transactions executing stat", "hash", commitBlock.Hash(), "number", commitBlock.NumberU64(), "involvedTxCount", commitRemoteTxCount, "time", common.PrettyDuration(time.Since(startTime)))
 
 	w.commit(w.fullTaskHook, true, tstart)
 }
@@ -1308,7 +1356,7 @@ func (w *worker) commit(interval func(), update bool, start time.Time) error {
 			}
 			feesEth := new(big.Float).Quo(new(big.Float).SetInt(feesWei), new(big.Float).SetInt(big.NewInt(params.Ether)))
 
-			log.Debug("Commit new mining work", "number", block.Number(), "sealhash", w.engine.SealHash(block.Header()), "receiptHash", block.ReceiptHash(),
+			log.Info("Commit new mining work", "number", block.Number(), "sealhash", w.engine.SealHash(block.Header()), "receiptHash", block.ReceiptHash(),
 				 "txs", w.current.tcount, "gas", block.GasUsed(), "fees", feesEth, "elapsed", common.PrettyDuration(time.Since(start)))
 
 		case <-w.exitCh:

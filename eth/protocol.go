@@ -37,12 +37,14 @@ const (
 
 // ProtocolName is the official short name of the protocol used during capability negotiation.
 var ProtocolName = "eth"
+var ProtocolNameArr = []string{"eth", "eth"}//, "istanbul"}
 
 // ProtocolVersions are the upported versions of the eth protocol (first is primary).
 var ProtocolVersions = []uint{eth63, eth62}
 
 // ProtocolLengths are the number of implemented message corresponding to different protocol versions.
-var ProtocolLengths = []uint64{17, 8}
+//var ProtocolLengths = []uint64{17, 8}
+var ProtocolLengths = []uint64{18, 8}
 
 const ProtocolMaxMsgSize = 10 * 1024 * 1024 // Maximum cap on the size of a protocol message
 
@@ -67,6 +69,8 @@ const (
 	NodeDataMsg    = 0x0e
 	GetReceiptsMsg = 0x0f
 	ReceiptsMsg    = 0x10
+	// protocol message belonging to NewBFT
+	NewBftMsg      = 0x11
 )
 
 type errCode int
