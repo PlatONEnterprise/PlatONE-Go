@@ -19,6 +19,7 @@ package eth
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/BCOSnetwork/BCOS-Go/accounts"
@@ -40,6 +41,7 @@ import (
 	"github.com/BCOSnetwork/BCOS-Go/ethdb"
 	"github.com/BCOSnetwork/BCOS-Go/event"
 	"github.com/BCOSnetwork/BCOS-Go/internal/ethapi"
+	"github.com/BCOSnetwork/BCOS-Go/life/utils"
 	"github.com/BCOSnetwork/BCOS-Go/log"
 	"github.com/BCOSnetwork/BCOS-Go/miner"
 	"github.com/BCOSnetwork/BCOS-Go/node"
@@ -55,8 +57,8 @@ import (
 	"sync/atomic"
 )
 
-func InitInnerCallFunc(ethPtr *Ethereum)    {
-	innerCall := func(conAddr common.Address, data []byte) ([]byte) {
+func InitInnerCallFunc(ethPtr *Ethereum) {
+	innerCall := func(conAddr common.Address, data []byte) []byte {
 		ctx := context.Background()
 
 		// Get the state
@@ -65,16 +67,16 @@ func InitInnerCallFunc(ethPtr *Ethereum)    {
 			return nil
 		}
 
-		from 	 := common.Address{}
-		to 		 := &conAddr
-		gas 	 := uint64(0x999999999)
+		from := common.Address{}
+		to := &conAddr
+		gas := uint64(0x999999999)
 		gasPrice := (hexutil.Big)(*big.NewInt(0x333333))
-		nonce 	 := uint64(0)
-		value 	 := (hexutil.Big)(*big.NewInt(0))
+		nonce := uint64(0)
+		value := (hexutil.Big)(*big.NewInt(0))
 
 		// Create new call message
 		msg := types.NewMessage(from, to, nonce, value.ToInt(), gas, gasPrice.ToInt(), data, false, types.NormalTxType)
-		
+
 		// Get a new instance of the EVM.
 		evm, vmError, err := ethPtr.APIBackend.GetEVM(ctx, msg, state, header, vm.Config{})
 		if err != nil {
@@ -92,6 +94,121 @@ func InitInnerCallFunc(ethPtr *Ethereum)    {
 		return res
 	}
 
+	sysContractCall := func(sc *common.SystemConfig) {
+		ctx := context.Background()
+
+		// Get the state
+		state, header, err := ethPtr.APIBackend.StateAndHeaderByNumber(ctx, -1)
+		if state == nil || err != nil {
+			return
+		}
+
+		// Create new call message
+		msg := types.NewMessage(common.Address{}, nil, 1, big.NewInt(1), 0x1, big.NewInt(1), nil, false, types.NormalTxType)
+
+		// Get a new instance of the EVM.
+		evm, vmError, err := ethPtr.APIBackend.GetEVM(ctx, msg, state, header, vm.Config{})
+		if err != nil {
+			return
+		}
+
+		// clusure method for call Contract
+		callContract := func(conAddr common.Address, data []byte) []byte {
+			res, _, _ := evm.Call(vm.AccountRef(common.Address{}), conAddr, data, uint64(0xffffffffff), big.NewInt(0))
+			if err := vmError(); err != nil {
+				return nil
+			}
+			return res
+		}
+
+		// Get all system contracts' address
+		var fh string = "getContractAddress"
+
+		systemContractList := []string{"__sys_NodeManager",
+			"__sys_NodeRegister",
+			"__sys_UserRegister",
+			"__sys_UserManager",
+			"__sys_ParamManager",
+			"__sys_RoleManager",
+			"__sys_RoleRegister"}
+
+		// Update system contract address
+		for _, contractName := range systemContractList {
+			callParams := []interface{}{contractName, "latest"}
+			btsRes := callContract(common.HexToAddress(core.CnsManagerAddr), common.GenCallData(fh, callParams))
+			strRes := common.CallResAsString(btsRes)
+			if !(len(strRes) == 0 || common.IsHexZeroAddress(strRes)) {
+				sc.ContractAddress[contractName] = common.HexToAddress(strRes)
+			}
+		}
+
+		// Get contract parameters from contract
+		paramAddr := sc.ContractAddress["__sys_ParamManager"]
+		if paramAddr != (common.Address{}){
+			funcName := "getTxGasLimit"
+			funcParams:= []interface{}{}
+			res := callContract(paramAddr, common.GenCallData(funcName,funcParams))
+			if res != nil{
+				sc.SysParam.TxGasLimit = common.CallResAsInt64(res)
+			}
+			funcName  = "getCBFTTimeParam"
+			funcParams= []interface{}{}
+			res = callContract(paramAddr, common.GenCallData(funcName,funcParams))
+			if res != nil {
+				strRes := common.CallResAsString(res)
+
+				var cbftCfgTime common.CBFTProduceBlockCfg
+				if err := json.Unmarshal([]byte(strRes), &cbftCfgTime); err != nil {
+					log.Error("contract return invalid data", "result", strRes, "err", err.Error())
+				}else{
+					sc.SysParam.CBFTTime = cbftCfgTime
+				}
+			}
+			funcName = "getGasContractName"
+			funcParams = []interface{}{}
+			res = callContract(paramAddr, common.GenCallData(funcName,funcParams))
+			if res != nil{
+				sc.SysParam.GasContractName = common.CallResAsString(res)
+			}
+		}
+
+		if sc.SysParam.GasContractName != ""{
+			cnsAddr := common.HexToAddress(core.CnsManagerAddr)
+			funcName := "getContractAddress"
+			funcParams := []interface{}{sc.SysParam.GasContractName, "latest"}
+			res := callContract(cnsAddr, common.GenCallData(funcName,funcParams))
+			if res != nil{
+				sc.SysParam.GasContractAddr = common.HexToAddress(common.CallResAsString(res))
+			}
+		}
+
+		// Get nodes from contract
+		nodeManagerAddr := sc.ContractAddress["__sys_NodeManager"]
+		if nodeManagerAddr != (common.Address{}){
+			funcName := "getAllNodes"
+			funcParams := []interface{}{}
+			res := callContract(nodeManagerAddr, common.GenCallData(funcName,funcParams))
+			if res != nil{
+				sc.SysParam.GasContractAddr = common.HexToAddress(common.CallResAsString(res))
+			}
+
+			strRes := common.CallResAsString(res)
+			log.Debug("get nodes info", "node", strRes)
+
+			var tmp common.CommonResult
+			if err := json.Unmarshal(utils.String2bytes(strRes), &tmp); err != nil {
+				log.Warn("unmarshal consensus node list failed", "result", strRes, "err", err.Error())
+			}else if tmp.RetCode != 0 {
+				log.Debug("contract inner error", "code", tmp.RetCode, "msg", tmp.RetMsg)
+			}else {
+				sc.Nodes = tmp.Data
+			}
+		}
+		return
+	}
+
+	common.InitSystemconfig()
+	common.SetSysContractCallFunc(sysContractCall)
 	common.SetInnerCallFunc(innerCall)
 }
 
@@ -193,7 +310,7 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 		shutdownChan:   make(chan bool),
 		networkID:      config.NetworkId,
 		gasPrice:       config.MinerGasPrice,
-		etherbase:      crypto.PubkeyToAddress(ctx.NodeKey().PublicKey),//config.Etherbase,
+		etherbase:      crypto.PubkeyToAddress(ctx.NodeKey().PublicKey), //config.Etherbase,
 		bloomRequests:  make(chan chan *bloombits.Retrieval),
 		bloomIndexer:   NewBloomIndexer(chainDb, params.BloomBitsBlocks, params.BloomConfirms),
 	}
@@ -277,7 +394,7 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	}
 	eth.APIBackend.gpo = gasprice.NewOracle(eth.APIBackend, gpoParams)
 
-	if _, ok := eth.engine.(consensus.Istanbul); ok{
+	if _, ok := eth.engine.(consensus.Istanbul); ok {
 		rootNodes := chainConfig.Istanbul.InitialNodes
 		for _, node := range rootNodes {
 			p2p.AddPeer(node)
@@ -292,8 +409,6 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 			break // only one root key
 		}
 	}
-
-
 
 	return eth, nil
 }
@@ -354,12 +469,12 @@ func CreateConsensusEngine(ctx *node.ServiceContext, chainConfig *params.ChainCo
 		chainConfig.Cbft.LegalCoefficient = cbftConfig.LegalCoefficient
 		chainConfig.Cbft.Duration = cbftConfig.Duration
 		return cbft.New(chainConfig.Cbft, blockSignatureCh, cbftResultCh, highestLogicalBlockCh)
-	}else if chainConfig.Istanbul != nil{
+	} else if chainConfig.Istanbul != nil {
 		//if chainConfig.Istanbul.Epoch != 0 {
 		//	config.Istanbul.Epoch = chainConfig.Istanbul.Epoch
 		//}
 		//config.Istanbul.ProposerPolicy = istanbul.ProposerPolicy(chainConfig.Istanbul.ProposerPolicy)
-		return istanbulBackend.New(chainConfig.Istanbul ,ctx.NodeKey() , db)
+		return istanbulBackend.New(chainConfig.Istanbul, ctx.NodeKey(), db)
 	}
 	return nil
 }
@@ -429,8 +544,6 @@ func (s *Ethereum) Etherbase() (eb common.Address, err error) {
 	s.lock.RLock()
 	etherbase := s.etherbase
 	s.lock.RUnlock()
-
-
 
 	if etherbase != (common.Address{}) {
 		return etherbase, nil
@@ -565,9 +678,9 @@ func (s *Ethereum) StopMining() {
 	s.miner.Stop()
 }
 
-func (s *Ethereum) IsMining() bool      { return s.miner.Mining() }
-func (s *Ethereum) Miner() *miner.Miner { return s.miner }
-func (s *Ethereum) ExtendedDb() ethdb.Database { return s.extDb }
+func (s *Ethereum) IsMining() bool                     { return s.miner.Mining() }
+func (s *Ethereum) Miner() *miner.Miner                { return s.miner }
+func (s *Ethereum) ExtendedDb() ethdb.Database         { return s.extDb }
 func (s *Ethereum) AccountManager() *accounts.Manager  { return s.accountManager }
 func (s *Ethereum) BlockChain() *core.BlockChain       { return s.blockchain }
 func (s *Ethereum) TxPool() *core.TxPool               { return s.txPool }
@@ -612,12 +725,12 @@ func (s *Ethereum) Start(srvr *p2p.Server) error {
 	if engine, ok := s.engine.(consensus.Istanbul); ok {
 		_ = engine
 
-		if true{
+		if true {
 			for _, n := range s.chainConfig.Istanbul.InitialNodes {
 				srvr.AddConsensusPeer(discover.NewNode(n.ID, n.IP, n.UDP, n.TCP))
 			}
 		}
-	}else if engine, ok := s.engine.(consensus.Bft); ok{
+	} else if engine, ok := s.engine.(consensus.Bft); ok {
 		engine.SetPrivateKey(srvr.Config.PrivateKey)
 		if flag, err := engine.IsConsensusNode(); flag && err == nil {
 			for _, n := range s.chainConfig.Cbft.InitialNodes {

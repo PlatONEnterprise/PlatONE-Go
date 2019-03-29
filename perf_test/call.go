@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 
 	"github.com/BCOSnetwork/BCOS-Go/cmd/ctool/core"
 )
@@ -34,4 +35,66 @@ func getContractByAddress(addr string) bool {
 	} else {
 		return false
 	}
+}
+
+func getTxByHash(hash string) bool {
+
+	params := []string{hash}
+	r, err := Send(params, "eth_getTransactionByHash")
+	if err != nil {
+		fmt.Printf("send http post to get contract address error ")
+		return false
+	}
+
+	var resp map[string]interface{}
+	err = json.Unmarshal([]byte(r), &resp)
+	if err != nil {
+		panic(err)
+	}
+
+	if resp["result"].(map[string]interface{})["blockNumber"] != nil {
+		return true
+	} else {
+		return false
+	}
+}
+
+func getCurrentBlockNum() int64 {
+
+	params := []string{}
+	r, err := Send(params, "eth_blockNumber")
+	if err != nil {
+		fmt.Printf("send http post to get contract address error ")
+		return -1
+	}
+
+	var resp map[string]interface{}
+	err = json.Unmarshal([]byte(r), &resp)
+	if err != nil {
+		panic(err)
+	}
+
+	d, _ := strconv.ParseInt(resp["result"].(string), 0, 64)
+	return d
+}
+
+func getBlockTxNum(h int64) int64 {
+	var height interface{}
+	height = "0x" + strconv.FormatInt(h, 16)
+	params := []interface{}{height, true}
+	r, err := Send(params, "eth_getBlockByNumber")
+	if err != nil {
+		fmt.Printf("send http post to get contract address error ")
+		return -1
+	}
+
+	var resp map[string]interface{}
+	err = json.Unmarshal([]byte(r), &resp)
+	if err != nil {
+		panic(err)
+	}
+
+	tmp := resp["result"].(map[string]interface{})["transactions"].([]interface{})
+
+	return int64(len(tmp))
 }

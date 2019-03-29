@@ -634,9 +634,9 @@ func (pool *TxPool) reset(oldHead, newHead *types.Header) {
 func (pool *TxPool) Stop() {
 	// Unsubscribe all subscriptions registered from txpool
 	pool.scope.Close()
-
-	pool.chainHeadSub.Unsubscribe()
-
+	if pool.chainconfig.Istanbul != nil {
+		pool.chainHeadSub.Unsubscribe()
+	}
 	close(pool.exitCh)
 
 	pool.wg.Wait()
@@ -805,12 +805,15 @@ func (pool *TxPool) validateTx(tx *types.Transaction, local bool) error {
 */
 	// Ensure the transaction doesn't exceed the current txansaction limit gas
 	// which stored in the system contract
+	/*
 	callParams := []interface{} {"__sys_ParamManager", "latest"}
 	cnsContractAddr := common.HexToAddress("0x0000000000000000000000000000000000000011")
 	btsRes := common.InnerCall(cnsContractAddr, "getContractAddress", callParams)
 	strRes := common.CallResAsString(btsRes)
+	*/
 
 	txGasLimit := int64(10000000000000)
+	/*
 	if len(strRes) == 0 {
 		log.Trace("contract not exist", "name", "__sys_ParamManager")
 	} else {
@@ -819,6 +822,10 @@ func (pool *TxPool) validateTx(tx *types.Transaction, local bool) error {
 			btsRes = common.InnerCall(paramContractAddr, "getTxGasLimit", []interface{}{})
 			txGasLimit = common.CallResAsInt64(btsRes)
 		}
+	}
+	*/
+	if common.SysCfg != nil{
+	    txGasLimit = common.SysCfg.GetTxGasLimit()
 	}
 
 	log.Trace("test", "txslimit", txGasLimit)

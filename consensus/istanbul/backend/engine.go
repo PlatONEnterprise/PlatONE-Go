@@ -529,8 +529,6 @@ func (sb *backend) Stop() error {
 
 // snapshot retrieves the authorization snapshot at a given point in time.
 func (sb *backend) snapshot(chain consensus.ChainReader, number uint64, hash common.Hash, parents []*types.Header) (*Snapshot, error) {
-	log.Debug("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    snapshot(）", "number", number, "hash", hash)
-
 	// Search for a snapshot in memory or on disk for checkpoints
 	var (
 		headers []*types.Header

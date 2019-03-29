@@ -18,6 +18,8 @@ func Trap(ch chan int) {
 	signal.Notify(c, os.Interrupt)
 
 	// Block until a signal is received.
-	<-c
-	ch <- 1
+	for {
+		<-c
+		ch <- 1
+	}
 }

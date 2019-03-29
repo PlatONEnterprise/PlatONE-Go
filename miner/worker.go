@@ -419,11 +419,8 @@ func (w *worker) newWorkLoop(recommit time.Duration) {
 			log.Info("received a event of ChainHeadEvent", "hash", head.Block.Hash(), "number", head.Block.NumberU64(), "parentHash", head.Block.ParentHash())
 			w.blockChainCache.ClearCache(head.Block)
 
-			// todo: 处理
-			//get chainHeadEvent, commit new work
-			/*if _,ok := w.engine.(consensus.Istanbul); ok {
-				commit(false, commitInterruptNewHead, nil)
-			}*/
+			////
+			common.SysCfg.UpdateSystemConfig()
 
 			if cbft, ok := w.engine.(consensus.Bft); ok {
 				cbft.OnBlockSynced()

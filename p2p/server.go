@@ -365,18 +365,22 @@ func UpdatePeer() {
 		joinNodes = append(joinNodes, curPeer)
 		log.Info("joined peer = ", curPeer)
 	}
+	/*
+		cnsAddress := common.HexToAddress("0x0000000000000000000000000000000000000011")
+		nodeAddressRes := common.InnerCall(cnsAddress, "getContractAddress", []interface{}{ "__sys_NodeManager", "latest"})
+		nodeManagerAddress := common.HexToAddress(common.CallResAsString(nodeAddressRes))
 
-	cnsAddress := common.HexToAddress("0x0000000000000000000000000000000000000011")
-	nodeAddressRes := common.InnerCall(cnsAddress, "getContractAddress", []interface{}{ "__sys_NodeManager", "latest"})
-	nodeManagerAddress := common.HexToAddress(common.CallResAsString(nodeAddressRes))
+		// if I am in blockList, disconnect all connected peers.
 
-	// if I am in blockList, disconnect all connected peers.
-	enodeNodesRes := common.InnerCall(nodeManagerAddress, "getDeletedEnodeNodes", []interface{}{}) // need disconnect
-	enodeNodesStr := common.CallResAsString(enodeNodesRes)
-	log.Info("delete enodeNodesStr = ", enodeNodesStr)
-	enodeNodes := strings.Split(enodeNodesStr, "|")
+		enodeNodesRes := common.InnerCall(nodeManagerAddress, "getDeletedEnodeNodes", []interface{}{}) // need disconnect
+		enodeNodesStr := common.CallResAsString(enodeNodesRes)
+		log.Info("delete enodeNodesStr = ", enodeNodesStr)
+		enodeNodes := strings.Split(enodeNodesStr, "|")
+		*/
+	enodeNodes := common.SysCfg.GetDeletedNodes()
 	blacked := false
-	for _, enodeNodeStr := range enodeNodes {
+	for _, ennodeNode := range enodeNodes {
+		enodeNodeStr := fmt.Sprintf("enode://%s@%s:%d",ennodeNode.PublicKey,ennodeNode.ExternalIP,ennodeNode.P2pPort )
 		if node, error := discover.ParseNode(enodeNodeStr); error == nil {
 			curPubKey := node.ID.String()
 			blacked = curPubKey == selfPublicKey
@@ -397,20 +401,41 @@ func UpdatePeer() {
 		return
 	}
 
-	enodeNodesRes = common.InnerCall(nodeManagerAddress, "getNormalEnodeNodes", []interface{}{}) // need connect
-	enodeNodesStr = common.CallResAsString(enodeNodesRes)
-	log.Info("connect enodeNodesStr = ", enodeNodesStr)
-	enodeNodes = strings.Split(enodeNodesStr, "|")
+	// enodeNodesRes = common.InnerCall(nodeManagerAddress, "getNormalEnodeNodes", []interface{}{}) // need connect
+	// enodeNodesStr = common.CallResAsString(enodeNodesRes)
+	// log.Info("connect enodeNodesStr = ", enodeNodesStr)
+	// enodeNodes = strings.Split(enodeNodesStr, "|")
+	enodeNodes = common.SysCfg.GetNormalNodes()
 
 	// if root node not in contract node list, join to node list
-	if rootNode != nil {
-		rootPublicKeyroot := rootNode.ID.String()
-		if (!strings.Contains(enodeNodesStr, rootPublicKeyroot)) {
-			enodeNodes = append(enodeNodes, rootNode.String())
+	// if rootNode != nil {
+	// 	rootPublicKeyroot := rootNode.ID.String()
+	// 	if (!strings.Contains(enodeNodesStr, rootPublicKeyroot)) {
+	// 		enodeNodes = append(enodeNodes, rootNode.String())
+	// 	}
+	// }
+
+	if rootNode != nil{
+		hasRoot := false
+		for _, enodeNode := range enodeNodes{
+			if enodeNode.PublicKey == rootNode.ID.String(){
+				hasRoot = true
+			}
+		}
+
+		if(!hasRoot){
+			rootNodeInfo := common.NodeInfo{
+				PublicKey:rootNode.ID.String(),
+				ExternalIP:rootNode.IP.String(),
+				P2pPort:int32(uint32(rootNode.UDP)),
+			}
+			enodeNodes = append(enodeNodes, rootNodeInfo)
 		}
 	}
 
-	for _, enodeNodeStr := range enodeNodes {
+	for _, enodeNode := range enodeNodes {
+		enodeNodeStr := fmt.Sprintf("enode://%s@%s:%d",enodeNode.PublicKey,enodeNode.ExternalIP,enodeNode.P2pPort )
+
 		if node, error := discover.ParseNode(enodeNodeStr); error == nil {
 			curPubKey := node.ID.String()
 			joined := false
@@ -1020,6 +1045,7 @@ func (srv *Server) SetupConn(fd net.Conn, flags connFlag, dialDest *discover.Nod
 	}
 
 	// if I am in blockList, forbid to connect
+	/*
 	cnsAddress := common.HexToAddress("0x0000000000000000000000000000000000000011")
 	nodeAddressRes := common.InnerCall(cnsAddress, "getContractAddress", []interface{}{ "__sys_NodeManager", "latest"})
 	nodeManagerAddress := common.HexToAddress(common.CallResAsString(nodeAddressRes))
@@ -1029,6 +1055,14 @@ func (srv *Server) SetupConn(fd net.Conn, flags connFlag, dialDest *discover.Nod
 	if strings.Contains(enodeNodesStr, selfPublicKey) {
 		srv.log.Warn("I am in block list: ", selfPublicKey)
 		return errors.New("shutdown")
+	}
+	*/
+	deleted := common.SysCfg.GetDeletedNodes()
+	for _, node := range deleted{
+		if node.PublicKey == srv.Self().ID.String(){
+			srv.log.Warn("I am in block list: ", node.PublicKey)
+			return errors.New("shutdown")
+		}
 	}
 
 	c := &conn{fd: fd, transport: srv.newTransport(fd), flags: flags, cont: make(chan error)}
