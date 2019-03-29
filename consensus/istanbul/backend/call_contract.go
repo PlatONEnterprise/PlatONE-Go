@@ -1,10 +1,8 @@
 package backend
 
 import (
-	"encoding/json"
 	"errors"
 	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/life/utils"
 	"github.com/BCOSnetwork/BCOS-Go/log"
 	"github.com/BCOSnetwork/BCOS-Go/p2p/discover"
 )
@@ -40,37 +38,13 @@ type nodeInfo struct {
 // getInitialNodesList catch initial nodes List from paramManager contract when
 // new a dpos and miner a new block
 func getConsensusNodesList() ([]discover.NodeID, error) {
-
-	// get paramMgr contract address first
-	callParams := []interface{}{"__sys_NodeManager", "latest"}
-	cnsContractAddr := common.HexToAddress("0x0000000000000000000000000000000000000011")
-	btsRes := common.InnerCall(cnsContractAddr, "getContractAddress", callParams)
-	strRes := common.CallResAsString(btsRes)
-	if common.IsHexZeroAddress(strRes) {
-		// log.Debug("system contract not found", "name", "__sys_NodeManager")
-		return nil, ErrContractNotFound
+	var tmp []common.NodeInfo
+	if common.SysCfg != nil{
+		tmp = common.SysCfg.GetConsensusNodes()
 	}
 
-	// get node list
-	nodeMgrContractAddr := common.HexToAddress(strRes)
-	callParams = []interface{}{"{\"type\":1,\"status\":1}"} // getAllUsefulConsensusNodeList
-	btsRes = common.InnerCall(nodeMgrContractAddr, "getNodes", callParams)
-	strRes = common.CallResAsString(btsRes)
-	log.Debug("get nodes info", "node", strRes)
-
-	var tmp commonResult
-	if err := json.Unmarshal(utils.String2bytes(strRes), &tmp); err != nil {
-		log.Error("get all useful consensus node list failed", "result", strRes, "err", err.Error())
-		return nil, err
-	}
-
-	if tmp.RetCode != 0 {
-		log.Debug("contract inner error", "code", tmp.RetCode, "msg", tmp.RetMsg)
-		return nil, errors.New(tmp.RetMsg)
-	}
-
-	nodeIDs := make([]discover.NodeID, 0, len(tmp.Data))
-	for _, dataObj := range tmp.Data {
+	nodeIDs := make([]discover.NodeID, 0, len(tmp))
+	for _, dataObj := range tmp {
 		if pubKey := dataObj.PublicKey; len(pubKey) > 0 {
 			log.Debug("consensus node id", "pubkey", pubKey)
 			if nodeID, err := discover.HexID(pubKey); err == nil {

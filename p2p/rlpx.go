@@ -450,6 +450,7 @@ func receiverEncHandshake(conn io.ReadWriter, prv *ecdsa.PrivateKey) (s secrets,
 
 	validNode := (pubStr == GetRootNode().ID.String()) // root node is forbid delete!
 	if !validNode {
+		/*
 		cnsAddress := common.HexToAddress("0x0000000000000000000000000000000000000011")
 		nodeAddressRes := common.InnerCall(cnsAddress, "getContractAddress", []interface{}{ "__sys_NodeManager", "latest"})
 
@@ -457,6 +458,10 @@ func receiverEncHandshake(conn io.ReadWriter, prv *ecdsa.PrivateKey) (s secrets,
 		validNodeRes := common.InnerCall(nodeManagerAddress, "validJoinNode", []interface{}{ pubStr})
 
 		validNode = common.CallResAsBool(validNodeRes)
+		*/
+		if common.SysCfg.IsValidJoinNode(pubStr) {
+			validNode = true
+		}
 	}
 
 	log.Info("pubStr = ", pubStr, "validNode = ", validNode)

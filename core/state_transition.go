@@ -138,6 +138,11 @@ func GetCnsAddr(evm *vm.EVM, msg Message, cnsName string) (*common.Address, erro
 	addrProxy := common.HexToAddress(CnsManagerAddr)
 
 	var contractName, contractVer string
+	var ToAddr common.Address
+
+	if contractName == "cnsManager" {
+		return &addrProxy, nil
+	}
 
 	posOfColon := strings.Index(cnsName, ":")
 
@@ -145,28 +150,26 @@ func GetCnsAddr(evm *vm.EVM, msg Message, cnsName string) (*common.Address, erro
 	if posOfColon == -1 {
 		contractName = cnsName
 		contractVer = "latest"
+		ToAddr = common.SysCfg.GetContractAddress(contractName)
+		return &ToAddr, nil
 	} else {
 		contractName = cnsName[:posOfColon]
 		contractVer = cnsName[posOfColon+1:]
+		if contractName == "" || contractVer == ""{
+			return nil, errors.New("cns name do not has the right format")
+		}
+
+		params := []interface{}{contractName, contractVer}
+
+		snapshot := evm.StateDB.Snapshot()
+		ret := common.InnerCall(addrProxy, "getContractAddress", params)
+		evm.StateDB.RevertToSnapshot(snapshot)
+
+		toAddrStr := common.CallResAsString(ret)
+		ToAddr = common.HexToAddress(toAddrStr)
+
+		return &ToAddr, nil
 	}
-	if contractName == "" || contractVer == ""{
-		return nil, errors.New("cns name do not has the right format")
-	}
-
-	if contractName == "cnsManager" {
-		return &addrProxy, nil
-	}
-
-	params := []interface{}{contractName, contractVer}
-
-	snapshot := evm.StateDB.Snapshot()
-	ret := common.InnerCall(addrProxy, "getContractAddress", params)
-	evm.StateDB.RevertToSnapshot(snapshot)
-
-	toAddrStr := common.CallResAsString(ret)
-	ToAddr := common.HexToAddress(toAddrStr)
-
-	return &ToAddr, nil
 }
 
 // ApplyMessage computes the new state by applying the given message

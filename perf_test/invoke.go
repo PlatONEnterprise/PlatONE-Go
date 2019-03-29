@@ -1,60 +1,56 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
+	"github.com/BCOSnetwork/BCOS-Go/common"
 	"github.com/BCOSnetwork/BCOS-Go/cmd/ctool/core"
 	"github.com/BCOSnetwork/BCOS-Go/common/hexutil"
 	"github.com/BCOSnetwork/BCOS-Go/rlp"
 )
 
-func invoke(contractAddress string, abiPath string, funcParams string, txType int) error {
+var lastTxHash string
+
+func invoke(contractAddress string, abiPath string, funcParams string, txType int) (error, interface{}) {
 
 	if contractAddress == "" {
 		fmt.Printf("contract address can't be empty!")
-		return errors.New("contract address can't be empty!")
+		return errors.New("contract address can't be empty!"), nil
 	}
 
 	if abiPath == "" {
 		fmt.Printf("abi can't be empty!")
-		return errors.New("abi can't be empty!")
+		return errors.New("abi can't be empty!"), nil
 	}
 
 	if funcParams == "" {
 		fmt.Printf("func can't be empty!")
-		return errors.New("func can't be empty!")
+		return errors.New("func can't be empty!"), nil
 	}
 
-	parseConfigJson(*configPath)
-
-	//Judging whether this contract exists or not
-	// if !getContractByAddress(contractAddress) {
-	// 	panic("the contract address is not exist ...")
-	// }
-
-	err := InvokeContract(contractAddress, abiPath, funcParams, txType)
+	err, ret := InvokeContract(contractAddress, abiPath, funcParams, txType)
 	if err != nil {
 		panic(fmt.Errorf("invokeContract contract error,%s", err.Error()))
 	}
-	return nil
+	return nil, ret
 
 }
 
-func InvokeContract(contractAddr string, abiPath string, funcParams string, txType int) error {
+func InvokeContract(contractAddr string, abiPath string, funcParams string, txType int) (error, interface{}) {
 
 	funcName, inputParams := core.GetFuncNameAndParams(funcParams)
 
 	//Judging whether this method exists or not
 	abiFunc, err := parseFuncFromAbi(abiPath, funcName)
 	if err != nil {
-		return err
+		return err, nil
 	}
 
 	if len(abiFunc.Inputs) != len(inputParams) {
 		return fmt.Errorf("incorrect number of parameters ,request=%d,get=%d\n",
-			len(abiFunc.Inputs), len(funcParams))
+			len(abiFunc.Inputs), len(funcParams)), nil
 	}
 
 	if txType == 0 {
@@ -70,14 +66,14 @@ func InvokeContract(contractAddr string, abiPath string, funcParams string, txTy
 		input := abiFunc.Inputs[i]
 		p, e := core.StringConverter(v, input.Type)
 		if e != nil {
-			return fmt.Errorf("incorrect param type: %s,index:%d", v, i)
+			return fmt.Errorf("incorrect param type: %s,index:%d", v, i), nil
 		}
 		paramArr = append(paramArr, p)
 	}
 
 	paramBytes, e := rlp.EncodeToBytes(paramArr)
 	if e != nil {
-		return fmt.Errorf("rpl encode error,%s", e.Error())
+		return fmt.Errorf("rpl encode error,%s", e.Error()), nil
 	}
 
 	txParams := core.TxParams{
@@ -95,22 +91,22 @@ func InvokeContract(contractAddr string, abiPath string, funcParams string, txTy
 		params[0] = txParams
 		params[1] = "latest"
 
-		paramJson, _ := json.Marshal(params)
-		fmt.Printf("\n request json data：%s \n", string(paramJson))
+		//paramJson, _ := json.Marshal(params)
+		//fmt.Printf("\n request json data：%s \n", string(paramJson))
 		r, err = Send(params, "eth_call")
 	} else {
 		params := make([]interface{}, 1)
 		params[0] = txParams
 
-		paramJson, _ := json.Marshal(params)
-		fmt.Printf("\n request json data：%s \n", string(paramJson))
+		//paramJson, _ := json.Marshal(params)
+		//fmt.Printf("\n request json data：%s \n", string(paramJson))
 		r, err = Send(params, "eth_sendTransaction")
 	}
 
-	fmt.Printf("\n response json：%s \n", r)
+	//fmt.Printf("\n response json：%s \n", r)
 
 	if err != nil {
-		return fmt.Errorf("send http post to invokeContract contract error,%s", e.Error())
+		return fmt.Errorf("send http post to invokeContract contract error,%s", e.Error()), nil
 	}
 	resp := parseResponse(r)
 
@@ -119,12 +115,13 @@ func InvokeContract(contractAddr string, abiPath string, funcParams string, txTy
 		if len(abiFunc.Outputs) != 0 && abiFunc.Outputs[0].Type != "void" {
 			bytes, _ := hexutil.Decode(resp.Result)
 			result := core.BytesConverter(bytes, abiFunc.Outputs[0].Type)
-			fmt.Printf("\nresult: %v\n", result)
-			return nil
+			//fmt.Printf("\nresult: %v\n", result)
+			return nil, result
 		}
-		fmt.Printf("\n result: []\n")
 	} else {
-		fmt.Printf("\n trasaction hash: %s\n", resp.Result)
+		//fmt.Printf("\n trasaction hash: %s\n", resp.Result)
+		pos := strings.Index(resp.Result, "0x")
+		lastTxHash = resp.Result[pos : pos+common.HashLength*2+2]
 	}
-	return nil
+	return nil, nil
 }
