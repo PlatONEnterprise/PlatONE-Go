@@ -634,24 +634,25 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 		feeContractAddr = ""
 	)
 
-	feeContractAddr, isUseContractToken,err = st.ifUseContractTokenAsFee()
-	if nil != err{
-		st.state.SetNonce(msg.From(), st.state.GetNonce(sender.Address())+1)
-		return nil, 0, true, nil
-	}
-
-	if isUseContractToken{
-		// init initialGas value = txMsg.gas
-		if err = st.preContractGasCheck(feeContractAddr); err != nil {
-			st.state.SetNonce(msg.From(), st.state.GetNonce(sender.Address())+1)
-			return nil, 0, true, nil
-		}
-	}else {
-		// init initialGas value = txMsg.gas
+	//TODO comment temporarily for performance test
+	//feeContractAddr, isUseContractToken,err = st.ifUseContractTokenAsFee()
+	//if nil != err{
+	//	st.state.SetNonce(msg.From(), st.state.GetNonce(sender.Address())+1)
+	//	return nil, 0, true, nil
+	//}
+	//
+	//if isUseContractToken{
+	//	// init initialGas value = txMsg.gas
+	//	if err = st.preContractGasCheck(feeContractAddr); err != nil {
+	//		st.state.SetNonce(msg.From(), st.state.GetNonce(sender.Address())+1)
+	//		return nil, 0, true, nil
+	//	}
+	//}else {
+	//	// init initialGas value = txMsg.gas
 		if err = st.preCheck(); err != nil {
 			return
 		}
-	}
+	//}
 
 	homestead := st.evm.ChainConfig().IsHomestead(st.evm.BlockNumber)
 	contractCreation := msg.To() == nil
