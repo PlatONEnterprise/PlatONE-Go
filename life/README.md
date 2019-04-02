@@ -2,7 +2,7 @@
 
 [![GoDoc][1]][2] [![Discord][7]][8] [![MIT licensed][5]][6] [![Build Status][9]][10] [![Go Report Card][11]][12]
 
-[1]: https://godoc.org/Platon-go/life?status.svg
+[1]: https://godoc.org/Bcos-go/life?status.svg
 [2]: https://godoc.org/github.com/perlin-network/life
 [5]: https://img.shields.io/badge/license-MIT-blue.svg
 [6]: LICENSE

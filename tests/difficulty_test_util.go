@@ -19,9 +19,9 @@ package tests
 import (
 	"math/big"
 
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/common/math"
-	"github.com/PlatONnetwork/PlatON-Go/params"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/common/math"
+	"github.com/BCOSnetwork/BCOS-Go/params"
 )
 
 //go:generate gencodec -type DifficultyTest -field-override difficultyTestMarshaling -out gen_difficultytest.go

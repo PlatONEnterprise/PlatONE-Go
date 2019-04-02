@@ -36,16 +36,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/core/types"
-	"github.com/PlatONnetwork/PlatON-Go/crypto"
-	"github.com/PlatONnetwork/PlatON-Go/log"
-	"github.com/PlatONnetwork/PlatON-Go/swarm/api"
-	swarm "github.com/PlatONnetwork/PlatON-Go/swarm/api/client"
-	"github.com/PlatONnetwork/PlatON-Go/swarm/multihash"
-	"github.com/PlatONnetwork/PlatON-Go/swarm/storage"
-	"github.com/PlatONnetwork/PlatON-Go/swarm/storage/mru"
-	"github.com/PlatONnetwork/PlatON-Go/swarm/testutil"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/core/types"
+	"github.com/BCOSnetwork/BCOS-Go/crypto"
+	"github.com/BCOSnetwork/BCOS-Go/log"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/api"
+	swarm "github.com/BCOSnetwork/BCOS-Go/swarm/api/client"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/multihash"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/storage"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/storage/mru"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/testutil"
 )
 
 func init() {

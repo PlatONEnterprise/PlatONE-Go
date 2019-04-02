@@ -4,8 +4,8 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/PlatONnetwork/PlatON-Go/core/types"
-	"github.com/PlatONnetwork/PlatON-Go/crypto"
+	"github.com/BCOSnetwork/BCOS-Go/core/types"
+	"github.com/BCOSnetwork/BCOS-Go/crypto"
 )
 
 func TestMPCListAdd(t *testing.T) {

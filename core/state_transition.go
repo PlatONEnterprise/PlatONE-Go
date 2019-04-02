@@ -20,18 +20,18 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/PlatONnetwork/PlatON-Go/life/utils"
+	"github.com/BCOSnetwork/BCOS-Go/life/utils"
 	"math"
 	"math/big"
 	"strings"
 
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/core/state"
-	"github.com/PlatONnetwork/PlatON-Go/core/types"
-	"github.com/PlatONnetwork/PlatON-Go/core/vm"
-	"github.com/PlatONnetwork/PlatON-Go/log"
-	"github.com/PlatONnetwork/PlatON-Go/params"
-	"github.com/PlatONnetwork/PlatON-Go/rlp"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/core/state"
+	"github.com/BCOSnetwork/BCOS-Go/core/types"
+	"github.com/BCOSnetwork/BCOS-Go/core/vm"
+	"github.com/BCOSnetwork/BCOS-Go/log"
+	"github.com/BCOSnetwork/BCOS-Go/params"
+	"github.com/BCOSnetwork/BCOS-Go/rlp"
 )
 
 var (

@@ -3,9 +3,9 @@ package vm
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/core/types"
-	"github.com/PlatONnetwork/PlatON-Go/params"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/core/types"
+	"github.com/BCOSnetwork/BCOS-Go/params"
 	"math/big"
 )
 

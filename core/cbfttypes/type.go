@@ -1,8 +1,8 @@
 package cbfttypes
 
 import (
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/core/types"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/core/types"
 	"math/big"
 )
 

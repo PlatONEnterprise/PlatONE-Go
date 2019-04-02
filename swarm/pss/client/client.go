@@ -25,14 +25,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/PlatONnetwork/PlatON-Go/common/hexutil"
-	"github.com/PlatONnetwork/PlatON-Go/p2p"
-	"github.com/PlatONnetwork/PlatON-Go/p2p/discover"
-	"github.com/PlatONnetwork/PlatON-Go/p2p/protocols"
-	"github.com/PlatONnetwork/PlatON-Go/rlp"
-	"github.com/PlatONnetwork/PlatON-Go/rpc"
-	"github.com/PlatONnetwork/PlatON-Go/swarm/log"
-	"github.com/PlatONnetwork/PlatON-Go/swarm/pss"
+	"github.com/BCOSnetwork/BCOS-Go/common/hexutil"
+	"github.com/BCOSnetwork/BCOS-Go/p2p"
+	"github.com/BCOSnetwork/BCOS-Go/p2p/discover"
+	"github.com/BCOSnetwork/BCOS-Go/p2p/protocols"
+	"github.com/BCOSnetwork/BCOS-Go/rlp"
+	"github.com/BCOSnetwork/BCOS-Go/rpc"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/log"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/pss"
 )
 
 const (

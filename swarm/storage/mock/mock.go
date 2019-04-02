@@ -36,7 +36,7 @@ import (
 	"errors"
 	"io"
 
-	"github.com/PlatONnetwork/PlatON-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/common"
 )
 
 // ErrNotFound indicates that the chunk is not found.

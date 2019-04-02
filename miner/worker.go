@@ -18,26 +18,26 @@ package miner
 
 import (
 	"bytes"
-	"github.com/PlatONnetwork/PlatON-Go/consensus/cbft"
-	"github.com/PlatONnetwork/PlatON-Go/p2p"
+	"github.com/BCOSnetwork/BCOS-Go/consensus/cbft"
+	"github.com/BCOSnetwork/BCOS-Go/p2p"
 	"math/big"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/consensus"
-	"github.com/PlatONnetwork/PlatON-Go/consensus/misc"
-	"github.com/PlatONnetwork/PlatON-Go/core"
-	"github.com/PlatONnetwork/PlatON-Go/core/cbfttypes"
-	"github.com/PlatONnetwork/PlatON-Go/core/state"
-	"github.com/PlatONnetwork/PlatON-Go/core/types"
-	"github.com/PlatONnetwork/PlatON-Go/core/vm"
-	"github.com/PlatONnetwork/PlatON-Go/ethdb"
-	"github.com/PlatONnetwork/PlatON-Go/event"
-	"github.com/PlatONnetwork/PlatON-Go/log"
-	"github.com/PlatONnetwork/PlatON-Go/params"
-	"github.com/PlatONnetwork/PlatON-Go/rpc"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/consensus"
+	"github.com/BCOSnetwork/BCOS-Go/consensus/misc"
+	"github.com/BCOSnetwork/BCOS-Go/core"
+	"github.com/BCOSnetwork/BCOS-Go/core/cbfttypes"
+	"github.com/BCOSnetwork/BCOS-Go/core/state"
+	"github.com/BCOSnetwork/BCOS-Go/core/types"
+	"github.com/BCOSnetwork/BCOS-Go/core/vm"
+	"github.com/BCOSnetwork/BCOS-Go/ethdb"
+	"github.com/BCOSnetwork/BCOS-Go/event"
+	"github.com/BCOSnetwork/BCOS-Go/log"
+	"github.com/BCOSnetwork/BCOS-Go/params"
+	"github.com/BCOSnetwork/BCOS-Go/rpc"
 )
 
 const (
@@ -539,7 +539,7 @@ func (w *worker) mainLoop() {
 		case <-w.chainSideCh:
 			// If our mining block contains less than 2 uncle blocks,
 			// add the new uncle block if valid and regenerate a mining block.
-		// removed by PlatON
+		// removed by BCOS
 
 		case  ev := <-w.txsCh:
 			// Apply transactions to the pending state if we're not mining.

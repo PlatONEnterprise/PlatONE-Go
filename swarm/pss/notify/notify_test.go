@@ -9,17 +9,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/PlatONnetwork/PlatON-Go/common/hexutil"
-	"github.com/PlatONnetwork/PlatON-Go/crypto"
-	"github.com/PlatONnetwork/PlatON-Go/log"
-	"github.com/PlatONnetwork/PlatON-Go/node"
-	"github.com/PlatONnetwork/PlatON-Go/p2p/discover"
-	"github.com/PlatONnetwork/PlatON-Go/p2p/simulations"
-	"github.com/PlatONnetwork/PlatON-Go/p2p/simulations/adapters"
-	"github.com/PlatONnetwork/PlatON-Go/swarm/network"
-	"github.com/PlatONnetwork/PlatON-Go/swarm/pss"
-	"github.com/PlatONnetwork/PlatON-Go/swarm/state"
-	whisper "github.com/PlatONnetwork/PlatON-Go/whisper/whisperv5"
+	"github.com/BCOSnetwork/BCOS-Go/common/hexutil"
+	"github.com/BCOSnetwork/BCOS-Go/crypto"
+	"github.com/BCOSnetwork/BCOS-Go/log"
+	"github.com/BCOSnetwork/BCOS-Go/node"
+	"github.com/BCOSnetwork/BCOS-Go/p2p/discover"
+	"github.com/BCOSnetwork/BCOS-Go/p2p/simulations"
+	"github.com/BCOSnetwork/BCOS-Go/p2p/simulations/adapters"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/network"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/pss"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/state"
+	whisper "github.com/BCOSnetwork/BCOS-Go/whisper/whisperv5"
 )
 
 var (

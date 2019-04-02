@@ -25,11 +25,11 @@ import (
 	"io/ioutil"
 	"math/big"
 
-	"github.com/PlatONnetwork/PlatON-Go/accounts/abi/bind"
-	"github.com/PlatONnetwork/PlatON-Go/accounts/abi/bind/backends"
-	"github.com/PlatONnetwork/PlatON-Go/contracts/chequebook/contract"
-	"github.com/PlatONnetwork/PlatON-Go/core"
-	"github.com/PlatONnetwork/PlatON-Go/crypto"
+	"github.com/BCOSnetwork/BCOS-Go/accounts/abi/bind"
+	"github.com/BCOSnetwork/BCOS-Go/accounts/abi/bind/backends"
+	"github.com/BCOSnetwork/BCOS-Go/contracts/chequebook/contract"
+	"github.com/BCOSnetwork/BCOS-Go/core"
+	"github.com/BCOSnetwork/BCOS-Go/crypto"
 )
 
 var (

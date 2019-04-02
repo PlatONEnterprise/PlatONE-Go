@@ -5,8 +5,8 @@ import (
 	"os"
 	"sort"
 
-	"github.com/PlatONnetwork/PlatON-Go/cmd/ctool/core"
-	"github.com/PlatONnetwork/PlatON-Go/cmd/utils"
+	"github.com/BCOSnetwork/BCOS-Go/cmd/ctool/core"
+	"github.com/BCOSnetwork/BCOS-Go/cmd/utils"
 	"gopkg.in/urfave/cli.v1"
 )
 

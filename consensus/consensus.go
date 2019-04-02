@@ -19,14 +19,14 @@ package consensus
 
 import (
 	"crypto/ecdsa"
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/core/cbfttypes"
-	"github.com/PlatONnetwork/PlatON-Go/core/state"
-	"github.com/PlatONnetwork/PlatON-Go/core/types"
-	"github.com/PlatONnetwork/PlatON-Go/p2p"
-	"github.com/PlatONnetwork/PlatON-Go/p2p/discover"
-	"github.com/PlatONnetwork/PlatON-Go/params"
-	"github.com/PlatONnetwork/PlatON-Go/rpc"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/core/cbfttypes"
+	"github.com/BCOSnetwork/BCOS-Go/core/state"
+	"github.com/BCOSnetwork/BCOS-Go/core/types"
+	"github.com/BCOSnetwork/BCOS-Go/p2p"
+	"github.com/BCOSnetwork/BCOS-Go/p2p/discover"
+	"github.com/BCOSnetwork/BCOS-Go/params"
+	"github.com/BCOSnetwork/BCOS-Go/rpc"
 	)
 
 // ChainReader defines a small collection of methods needed to access the local

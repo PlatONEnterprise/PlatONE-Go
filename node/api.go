@@ -22,12 +22,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/PlatONnetwork/PlatON-Go/common/hexutil"
-	"github.com/PlatONnetwork/PlatON-Go/crypto"
-	"github.com/PlatONnetwork/PlatON-Go/metrics"
-	"github.com/PlatONnetwork/PlatON-Go/p2p"
-	"github.com/PlatONnetwork/PlatON-Go/p2p/discover"
-	"github.com/PlatONnetwork/PlatON-Go/rpc"
+	"github.com/BCOSnetwork/BCOS-Go/common/hexutil"
+	"github.com/BCOSnetwork/BCOS-Go/crypto"
+	"github.com/BCOSnetwork/BCOS-Go/metrics"
+	"github.com/BCOSnetwork/BCOS-Go/p2p"
+	"github.com/BCOSnetwork/BCOS-Go/p2p/discover"
+	"github.com/BCOSnetwork/BCOS-Go/rpc"
 )
 
 // PrivateAdminAPI is the collection of administrative API methods exposed only

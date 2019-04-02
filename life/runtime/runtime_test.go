@@ -1,9 +1,9 @@
 package runtime
 
 import (
-	"github.com/PlatONnetwork/PlatON-Go/common/math"
-	"github.com/PlatONnetwork/PlatON-Go/life/utils"
-	"github.com/PlatONnetwork/PlatON-Go/rlp"
+	"github.com/BCOSnetwork/BCOS-Go/common/math"
+	"github.com/BCOSnetwork/BCOS-Go/life/utils"
+	"github.com/BCOSnetwork/BCOS-Go/rlp"
 	"bytes"
 	"fmt"
 	"io/ioutil"
@@ -11,9 +11,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/core/state"
-	"github.com/PlatONnetwork/PlatON-Go/ethdb"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/core/state"
+	"github.com/BCOSnetwork/BCOS-Go/ethdb"
 )
 
 func TestDefaults(t *testing.T) {

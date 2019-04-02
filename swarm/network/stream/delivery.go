@@ -22,12 +22,12 @@ import (
 
 	"fmt"
 
-	"github.com/PlatONnetwork/PlatON-Go/metrics"
-	"github.com/PlatONnetwork/PlatON-Go/p2p/discover"
-	"github.com/PlatONnetwork/PlatON-Go/swarm/log"
-	"github.com/PlatONnetwork/PlatON-Go/swarm/network"
-	"github.com/PlatONnetwork/PlatON-Go/swarm/spancontext"
-	"github.com/PlatONnetwork/PlatON-Go/swarm/storage"
+	"github.com/BCOSnetwork/BCOS-Go/metrics"
+	"github.com/BCOSnetwork/BCOS-Go/p2p/discover"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/log"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/network"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/spancontext"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/storage"
 	opentracing "github.com/opentracing/opentracing-go"
 )
 

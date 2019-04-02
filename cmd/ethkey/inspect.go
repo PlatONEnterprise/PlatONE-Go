@@ -21,9 +21,9 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/PlatONnetwork/PlatON-Go/accounts/keystore"
-	"github.com/PlatONnetwork/PlatON-Go/cmd/utils"
-	"github.com/PlatONnetwork/PlatON-Go/crypto"
+	"github.com/BCOSnetwork/BCOS-Go/accounts/keystore"
+	"github.com/BCOSnetwork/BCOS-Go/cmd/utils"
+	"github.com/BCOSnetwork/BCOS-Go/crypto"
 	"gopkg.in/urfave/cli.v1"
 )
 

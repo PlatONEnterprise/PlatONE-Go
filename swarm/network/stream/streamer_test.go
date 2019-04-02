@@ -22,8 +22,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/PlatONnetwork/PlatON-Go/crypto/sha3"
-	p2ptest "github.com/PlatONnetwork/PlatON-Go/p2p/testing"
+	"github.com/BCOSnetwork/BCOS-Go/crypto/sha3"
+	p2ptest "github.com/BCOSnetwork/BCOS-Go/p2p/testing"
 )
 
 func TestStreamerSubscribe(t *testing.T) {

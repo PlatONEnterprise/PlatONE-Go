@@ -21,13 +21,13 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/consensus/istanbul"
-	"github.com/PlatONnetwork/PlatON-Go/consensus/istanbul/validator"
-	"github.com/PlatONnetwork/PlatON-Go/crypto"
-	"github.com/PlatONnetwork/PlatON-Go/ethdb"
-	"github.com/PlatONnetwork/PlatON-Go/event"
-	elog "github.com/PlatONnetwork/PlatON-Go/log"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/consensus/istanbul"
+	"github.com/BCOSnetwork/BCOS-Go/consensus/istanbul/validator"
+	"github.com/BCOSnetwork/BCOS-Go/crypto"
+	"github.com/BCOSnetwork/BCOS-Go/ethdb"
+	"github.com/BCOSnetwork/BCOS-Go/event"
+	elog "github.com/BCOSnetwork/BCOS-Go/log"
 )
 
 var testLogger = elog.New()

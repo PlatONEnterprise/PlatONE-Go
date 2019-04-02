@@ -25,9 +25,9 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/swarm/storage"
-	"github.com/PlatONnetwork/PlatON-Go/swarm/storage/mock"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/storage"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/storage/mock"
 )
 
 // MockStore creates NodeStore instances from provided GlobalStorer,

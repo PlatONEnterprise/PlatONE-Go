@@ -20,7 +20,7 @@ import (
 	"context"
 	"path"
 
-	"github.com/PlatONnetwork/PlatON-Go/swarm/storage"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/storage"
 )
 
 type Response struct {

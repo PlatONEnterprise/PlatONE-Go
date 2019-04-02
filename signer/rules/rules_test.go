@@ -22,13 +22,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/PlatONnetwork/PlatON-Go/accounts"
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/common/hexutil"
-	"github.com/PlatONnetwork/PlatON-Go/core/types"
-	"github.com/PlatONnetwork/PlatON-Go/internal/ethapi"
-	"github.com/PlatONnetwork/PlatON-Go/signer/core"
-	"github.com/PlatONnetwork/PlatON-Go/signer/storage"
+	"github.com/BCOSnetwork/BCOS-Go/accounts"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/common/hexutil"
+	"github.com/BCOSnetwork/BCOS-Go/core/types"
+	"github.com/BCOSnetwork/BCOS-Go/internal/ethapi"
+	"github.com/BCOSnetwork/BCOS-Go/signer/core"
+	"github.com/BCOSnetwork/BCOS-Go/signer/storage"
 )
 
 const JS = `

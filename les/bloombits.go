@@ -19,8 +19,8 @@ package les
 import (
 	"time"
 
-	"github.com/PlatONnetwork/PlatON-Go/common/bitutil"
-	"github.com/PlatONnetwork/PlatON-Go/light"
+	"github.com/BCOSnetwork/BCOS-Go/common/bitutil"
+	"github.com/BCOSnetwork/BCOS-Go/light"
 )
 
 const (

@@ -17,9 +17,9 @@
 package validator
 
 import (
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/consensus/istanbul"
-	"github.com/PlatONnetwork/PlatON-Go/params"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/consensus/istanbul"
+	"github.com/BCOSnetwork/BCOS-Go/params"
 )
 
 func New(addr common.Address) istanbul.Validator {

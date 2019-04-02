@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/PlatONnetwork/PlatON-Go/cmd/utils"
-	"github.com/PlatONnetwork/PlatON-Go/crypto"
+	"github.com/BCOSnetwork/BCOS-Go/cmd/utils"
+	"github.com/BCOSnetwork/BCOS-Go/crypto"
 	"crypto/ecdsa"
 	"encoding/hex"
 	"fmt"

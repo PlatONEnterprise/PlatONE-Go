@@ -21,16 +21,16 @@ import "C"
 /*
 #cgo LDFLAGS: -Wl,-rpath="./libs"
 #cgo LDFLAGS: -L./libs
-#cgo LDFLAGS: -lmpc_vm_platonsdk
+#cgo LDFLAGS: -lmpc_vm_bcossdk
 #include <stdio.h>
 #include <stdlib.h>
-#include "platonvmsdk.h"
+#include "bcosvmsdk.h"
 */
 //import "C"
 
 import (
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/log"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/log"
 	"unsafe"
 )
 

@@ -20,9 +20,9 @@ import (
 	"context"
 	"sync"
 
-	ethereum "github.com/PlatONnetwork/PlatON-Go"
-	"github.com/PlatONnetwork/PlatON-Go/event"
-	"github.com/PlatONnetwork/PlatON-Go/rpc"
+	ethereum "github.com/BCOSnetwork/BCOS-Go"
+	"github.com/BCOSnetwork/BCOS-Go/event"
+	"github.com/BCOSnetwork/BCOS-Go/rpc"
 )
 
 // PublicDownloaderAPI provides an API which gives information about the current synchronisation status.

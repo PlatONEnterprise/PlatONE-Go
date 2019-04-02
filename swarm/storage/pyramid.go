@@ -25,8 +25,8 @@ import (
 	"sync"
 	"time"
 
-	ch "github.com/PlatONnetwork/PlatON-Go/swarm/chunk"
-	"github.com/PlatONnetwork/PlatON-Go/swarm/log"
+	ch "github.com/BCOSnetwork/BCOS-Go/swarm/chunk"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/log"
 )
 
 /*

@@ -20,7 +20,7 @@ import (
 	"errors"
 	"math/big"
 
-	"github.com/PlatONnetwork/PlatON-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/common"
 )
 
 const Version = "1.0"

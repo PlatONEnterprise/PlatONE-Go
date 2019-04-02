@@ -22,11 +22,11 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/core/types"
-	"github.com/PlatONnetwork/PlatON-Go/internal/ethapi"
-	"github.com/PlatONnetwork/PlatON-Go/params"
-	"github.com/PlatONnetwork/PlatON-Go/rpc"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/core/types"
+	"github.com/BCOSnetwork/BCOS-Go/internal/ethapi"
+	"github.com/BCOSnetwork/BCOS-Go/params"
+	"github.com/BCOSnetwork/BCOS-Go/rpc"
 )
 
 var maxPrice = big.NewInt(500 * params.GWei)

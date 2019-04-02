@@ -19,8 +19,8 @@ package downloader
 import (
 	"errors"
 	"fmt"
-	"github.com/PlatONnetwork/PlatON-Go/common/hexutil"
-	"github.com/PlatONnetwork/PlatON-Go/consensus"
+	"github.com/BCOSnetwork/BCOS-Go/common/hexutil"
+	"github.com/BCOSnetwork/BCOS-Go/consensus"
 	"io/ioutil"
 	"math/big"
 	"sync"
@@ -28,14 +28,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/core"
-	"github.com/PlatONnetwork/PlatON-Go/core/types"
-	"github.com/PlatONnetwork/PlatON-Go/crypto"
-	"github.com/PlatONnetwork/PlatON-Go/ethdb"
-	"github.com/PlatONnetwork/PlatON-Go/event"
-	"github.com/PlatONnetwork/PlatON-Go/params"
-	"github.com/PlatONnetwork/PlatON-Go/trie"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/core"
+	"github.com/BCOSnetwork/BCOS-Go/core/types"
+	"github.com/BCOSnetwork/BCOS-Go/crypto"
+	"github.com/BCOSnetwork/BCOS-Go/ethdb"
+	"github.com/BCOSnetwork/BCOS-Go/event"
+	"github.com/BCOSnetwork/BCOS-Go/params"
+	"github.com/BCOSnetwork/BCOS-Go/trie"
 )
 
 var (
@@ -76,7 +76,7 @@ type downloadTester struct {
 }
 
 func GenesisBlockForTesting(db ethdb.Database, addr common.Address, balance *big.Int) *types.Block {
-	buf, err := ioutil.ReadFile("./testdata/platon.json")
+	buf, err := ioutil.ReadFile("./testdata/bcos.json")
 	if err != nil {
 		return nil
 	}

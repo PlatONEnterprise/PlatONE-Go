@@ -29,8 +29,8 @@ import (
 
 	"github.com/cespare/cp"
 	"github.com/davecgh/go-spew/spew"
-	"github.com/PlatONnetwork/PlatON-Go/accounts"
-	"github.com/PlatONnetwork/PlatON-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/accounts"
+	"github.com/BCOSnetwork/BCOS-Go/common"
 )
 
 var (

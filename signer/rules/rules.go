@@ -22,12 +22,12 @@ import (
 	"os"
 	"strings"
 
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/internal/ethapi"
-	"github.com/PlatONnetwork/PlatON-Go/log"
-	"github.com/PlatONnetwork/PlatON-Go/signer/core"
-	"github.com/PlatONnetwork/PlatON-Go/signer/rules/deps"
-	"github.com/PlatONnetwork/PlatON-Go/signer/storage"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/internal/ethapi"
+	"github.com/BCOSnetwork/BCOS-Go/log"
+	"github.com/BCOSnetwork/BCOS-Go/signer/core"
+	"github.com/BCOSnetwork/BCOS-Go/signer/rules/deps"
+	"github.com/BCOSnetwork/BCOS-Go/signer/storage"
 	"github.com/robertkrimen/otto"
 )
 

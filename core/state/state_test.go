@@ -17,15 +17,15 @@
 package state
 
 import (
-	"github.com/PlatONnetwork/PlatON-Go/trie"
+	"github.com/BCOSnetwork/BCOS-Go/trie"
 	"bytes"
 	"fmt"
 	"math/big"
 	"testing"
 
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/crypto"
-	"github.com/PlatONnetwork/PlatON-Go/ethdb"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/crypto"
+	"github.com/BCOSnetwork/BCOS-Go/ethdb"
 	checker "gopkg.in/check.v1"
 )
 
@@ -250,7 +250,7 @@ func compareStateObjects(so0, so1 *stateObject, t *testing.T) {
 }
 
 func TestEmptyByte(t *testing.T) {
-	db, _ := ethdb.NewLDBDatabase("D:\\resource\\platon\\platon-go\\data1", 0, 0)
+	db, _ := ethdb.NewLDBDatabase("D:\\resource\\bcos\\bcos-go\\data1", 0, 0)
 	state, _ := New(common.Hash{}, NewDatabase(db))
 
 	address := common.HexToAddress("0x823140710bf13990e4500136726d8b55")

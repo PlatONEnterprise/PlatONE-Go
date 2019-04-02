@@ -23,7 +23,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/PlatONnetwork/PlatON-Go/p2p/simulations/pipes"
+	"github.com/BCOSnetwork/BCOS-Go/p2p/simulations/pipes"
 )
 
 func TestTCPPipe(t *testing.T) {

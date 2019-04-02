@@ -17,10 +17,10 @@
 package istanbul
 
 import (
-	"github.com/PlatONnetwork/PlatON-Go/params"
+	"github.com/BCOSnetwork/BCOS-Go/params"
 	"strings"
 
-	"github.com/PlatONnetwork/PlatON-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/common"
 )
 
 type Validator interface {

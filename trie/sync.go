@@ -19,11 +19,11 @@ package trie
 import (
 	"errors"
 	"fmt"
-	"github.com/PlatONnetwork/PlatON-Go/rlp"
+	"github.com/BCOSnetwork/BCOS-Go/rlp"
 
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/common/prque"
-	"github.com/PlatONnetwork/PlatON-Go/ethdb"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/common/prque"
+	"github.com/BCOSnetwork/BCOS-Go/ethdb"
 )
 
 // ErrNotRequested is returned by the trie sync when it's requested to process a

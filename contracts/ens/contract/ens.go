@@ -6,12 +6,12 @@ package contract
 import (
 	"strings"
 
-	ethereum "github.com/PlatONnetwork/PlatON-Go"
-	"github.com/PlatONnetwork/PlatON-Go/accounts/abi"
-	"github.com/PlatONnetwork/PlatON-Go/accounts/abi/bind"
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/core/types"
-	"github.com/PlatONnetwork/PlatON-Go/event"
+	ethereum "github.com/BCOSnetwork/BCOS-Go"
+	"github.com/BCOSnetwork/BCOS-Go/accounts/abi"
+	"github.com/BCOSnetwork/BCOS-Go/accounts/abi/bind"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/core/types"
+	"github.com/BCOSnetwork/BCOS-Go/event"
 )
 
 // ENSABI is the input ABI used to generate the binding from.

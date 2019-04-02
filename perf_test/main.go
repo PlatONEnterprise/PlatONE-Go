@@ -12,8 +12,8 @@ import (
 	// "github.com/shirou/gopsutil/mem"
 	// "github.com/shirou/gopsutil/net"
 
-	types "github.com/PlatONnetwork/PlatON-Go/core/types"
-	cli "github.com/PlatONnetwork/PlatON-Go/ethclient"
+	types "github.com/BCOSnetwork/BCOS-Go/core/types"
+	cli "github.com/BCOSnetwork/BCOS-Go/ethclient"
 )
 
 var (

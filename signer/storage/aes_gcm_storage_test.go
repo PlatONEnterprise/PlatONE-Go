@@ -22,8 +22,8 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/log"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/log"
 	"github.com/mattn/go-colorable"
 )
 

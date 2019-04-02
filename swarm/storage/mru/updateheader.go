@@ -17,7 +17,7 @@
 package mru
 
 import (
-	"github.com/PlatONnetwork/PlatON-Go/swarm/storage"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/storage"
 )
 
 // updateHeader models the non-payload components of a Resource Update

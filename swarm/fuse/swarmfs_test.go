@@ -29,10 +29,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/PlatONnetwork/PlatON-Go/swarm/api"
-	"github.com/PlatONnetwork/PlatON-Go/swarm/storage"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/api"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/storage"
 
-	"github.com/PlatONnetwork/PlatON-Go/log"
+	"github.com/BCOSnetwork/BCOS-Go/log"
 
 	colorable "github.com/mattn/go-colorable"
 )

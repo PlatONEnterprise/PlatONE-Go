@@ -12,7 +12,7 @@ import (
 	"fmt"
 	"unsafe"
 
-	"github.com/PlatONnetwork/PlatON-Go/life/exec"
+	"github.com/BCOSnetwork/BCOS-Go/life/exec"
 )
 
 // define: void vc_InitGadgetEnv();

@@ -23,7 +23,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/PlatONnetwork/PlatON-Go/log"
+	"github.com/BCOSnetwork/BCOS-Go/log"
 	"gopkg.in/urfave/cli.v1"
 )
 

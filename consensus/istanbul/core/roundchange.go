@@ -20,8 +20,8 @@ import (
 	"math/big"
 	"sync"
 
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/consensus/istanbul"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/consensus/istanbul"
 )
 
 // sendNextRoundChange sends the ROUND CHANGE message with current round + 1

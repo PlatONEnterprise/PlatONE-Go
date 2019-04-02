@@ -22,9 +22,9 @@ import (
 	"math/big"
 	"sort"
 
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/core/types"
-	"github.com/PlatONnetwork/PlatON-Go/log"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/core/types"
+	"github.com/BCOSnetwork/BCOS-Go/log"
 )
 
 // nonceHeap is a heap.Interface implementation over 64bit unsigned integers for

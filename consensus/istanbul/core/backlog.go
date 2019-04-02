@@ -17,7 +17,7 @@
 package core
 
 import (
-	"github.com/PlatONnetwork/PlatON-Go/consensus/istanbul"
+	"github.com/BCOSnetwork/BCOS-Go/consensus/istanbul"
 	"gopkg.in/karalabe/cookiejar.v2/collections/prque"
 )
 

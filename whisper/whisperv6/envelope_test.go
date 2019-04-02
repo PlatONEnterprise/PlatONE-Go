@@ -22,7 +22,7 @@ import (
 	mrand "math/rand"
 	"testing"
 
-	"github.com/PlatONnetwork/PlatON-Go/crypto"
+	"github.com/BCOSnetwork/BCOS-Go/crypto"
 )
 
 func TestEnvelopeOpenAcceptsOnlyOneKeyTypeInFilter(t *testing.T) {

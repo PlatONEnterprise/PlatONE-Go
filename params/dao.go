@@ -19,7 +19,7 @@ package params
 import (
 	"math/big"
 
-	"github.com/PlatONnetwork/PlatON-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/common"
 )
 
 // DAOForkBlockExtra is the block header extra-data field to set for the DAO fork

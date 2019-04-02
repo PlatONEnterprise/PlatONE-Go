@@ -23,14 +23,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/PlatONnetwork/PlatON-Go/node"
-	"github.com/PlatONnetwork/PlatON-Go/p2p/discover"
-	"github.com/PlatONnetwork/PlatON-Go/p2p/simulations/adapters"
-	"github.com/PlatONnetwork/PlatON-Go/swarm/log"
-	"github.com/PlatONnetwork/PlatON-Go/swarm/network"
-	"github.com/PlatONnetwork/PlatON-Go/swarm/network/simulation"
-	"github.com/PlatONnetwork/PlatON-Go/swarm/state"
-	"github.com/PlatONnetwork/PlatON-Go/swarm/storage"
+	"github.com/BCOSnetwork/BCOS-Go/node"
+	"github.com/BCOSnetwork/BCOS-Go/p2p/discover"
+	"github.com/BCOSnetwork/BCOS-Go/p2p/simulations/adapters"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/log"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/network"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/network/simulation"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/state"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/storage"
 )
 
 //constants for random file generation

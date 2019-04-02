@@ -3,8 +3,8 @@ package http
 import (
 	"context"
 
-	"github.com/PlatONnetwork/PlatON-Go/swarm/api"
-	"github.com/PlatONnetwork/PlatON-Go/swarm/sctx"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/api"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/sctx"
 )
 
 type contextKey int

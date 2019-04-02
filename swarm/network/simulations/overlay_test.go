@@ -26,9 +26,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/PlatONnetwork/PlatON-Go/p2p/discover"
-	"github.com/PlatONnetwork/PlatON-Go/p2p/simulations"
-	"github.com/PlatONnetwork/PlatON-Go/swarm/log"
+	"github.com/BCOSnetwork/BCOS-Go/p2p/discover"
+	"github.com/BCOSnetwork/BCOS-Go/p2p/simulations"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/log"
 )
 
 var (

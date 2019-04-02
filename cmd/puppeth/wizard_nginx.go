@@ -19,7 +19,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/PlatONnetwork/PlatON-Go/log"
+	"github.com/BCOSnetwork/BCOS-Go/log"
 )
 
 // ensureVirtualHost checks whether a reverse-proxy is running on the specified

@@ -18,12 +18,12 @@ package core
 
 import (
 	"errors"
-	"github.com/PlatONnetwork/PlatON-Go/log"
+	"github.com/BCOSnetwork/BCOS-Go/log"
 	"math/big"
 	"reflect"
 
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/consensus/istanbul"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/consensus/istanbul"
 )
 
 func (c *core) sendCommit() {

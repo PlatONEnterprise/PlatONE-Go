@@ -20,9 +20,9 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/consensus/istanbul"
-	"github.com/PlatONnetwork/PlatON-Go/rlp"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/consensus/istanbul"
+	"github.com/BCOSnetwork/BCOS-Go/rlp"
 )
 
 func TestMessageSetWithPreprepare(t *testing.T) {

@@ -1,7 +1,7 @@
 package types
 
 import (
-	"github.com/PlatONnetwork/PlatON-Go/rlp"
+	"github.com/BCOSnetwork/BCOS-Go/rlp"
 	"io"
 )
 

@@ -24,7 +24,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/PlatONnetwork/PlatON-Go/swarm/log"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/log"
 )
 
 // asymmetrical key exchange between two directly connected peers

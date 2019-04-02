@@ -22,14 +22,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/PlatONnetwork/PlatON-Go/metrics"
-	"github.com/PlatONnetwork/PlatON-Go/p2p/protocols"
-	"github.com/PlatONnetwork/PlatON-Go/swarm/log"
-	pq "github.com/PlatONnetwork/PlatON-Go/swarm/network/priorityqueue"
-	"github.com/PlatONnetwork/PlatON-Go/swarm/network/stream/intervals"
-	"github.com/PlatONnetwork/PlatON-Go/swarm/spancontext"
-	"github.com/PlatONnetwork/PlatON-Go/swarm/state"
-	"github.com/PlatONnetwork/PlatON-Go/swarm/storage"
+	"github.com/BCOSnetwork/BCOS-Go/metrics"
+	"github.com/BCOSnetwork/BCOS-Go/p2p/protocols"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/log"
+	pq "github.com/BCOSnetwork/BCOS-Go/swarm/network/priorityqueue"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/network/stream/intervals"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/spancontext"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/state"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/storage"
 	opentracing "github.com/opentracing/opentracing-go"
 )
 

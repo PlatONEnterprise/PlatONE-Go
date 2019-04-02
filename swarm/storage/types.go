@@ -27,10 +27,10 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/crypto/sha3"
-	"github.com/PlatONnetwork/PlatON-Go/swarm/bmt"
-	ch "github.com/PlatONnetwork/PlatON-Go/swarm/chunk"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/crypto/sha3"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/bmt"
+	ch "github.com/BCOSnetwork/BCOS-Go/swarm/chunk"
 )
 
 const MaxPO = 16

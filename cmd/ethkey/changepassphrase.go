@@ -5,8 +5,8 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/PlatONnetwork/PlatON-Go/accounts/keystore"
-	"github.com/PlatONnetwork/PlatON-Go/cmd/utils"
+	"github.com/BCOSnetwork/BCOS-Go/accounts/keystore"
+	"github.com/BCOSnetwork/BCOS-Go/cmd/utils"
 	"gopkg.in/urfave/cli.v1"
 )
 

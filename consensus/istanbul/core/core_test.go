@@ -22,9 +22,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/PlatONnetwork/PlatON-Go/consensus/istanbul"
-	"github.com/PlatONnetwork/PlatON-Go/core/types"
-	elog "github.com/PlatONnetwork/PlatON-Go/log"
+	"github.com/BCOSnetwork/BCOS-Go/consensus/istanbul"
+	"github.com/BCOSnetwork/BCOS-Go/core/types"
+	elog "github.com/BCOSnetwork/BCOS-Go/log"
 )
 
 func makeBlock(number int64) *types.Block {

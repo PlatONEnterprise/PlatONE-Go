@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"sync/atomic"
 
-	"github.com/PlatONnetwork/PlatON-Go/common/math"
-	"github.com/PlatONnetwork/PlatON-Go/params"
+	"github.com/BCOSnetwork/BCOS-Go/common/math"
+	"github.com/BCOSnetwork/BCOS-Go/params"
 )
 
 // Interpreter is used to run Ethereum based contracts and will utilise the

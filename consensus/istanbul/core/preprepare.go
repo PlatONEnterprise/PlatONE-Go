@@ -20,8 +20,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/PlatONnetwork/PlatON-Go/consensus"
-	"github.com/PlatONnetwork/PlatON-Go/consensus/istanbul"
+	"github.com/BCOSnetwork/BCOS-Go/consensus"
+	"github.com/BCOSnetwork/BCOS-Go/consensus/istanbul"
 )
 
 func (c *core) sendPreprepare(request *istanbul.Request) {

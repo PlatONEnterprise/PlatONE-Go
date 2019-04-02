@@ -23,14 +23,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/common/bitutil"
-	"github.com/PlatONnetwork/PlatON-Go/core/bloombits"
-	"github.com/PlatONnetwork/PlatON-Go/core/rawdb"
-	"github.com/PlatONnetwork/PlatON-Go/core/types"
-	"github.com/PlatONnetwork/PlatON-Go/ethdb"
-	"github.com/PlatONnetwork/PlatON-Go/event"
-	"github.com/PlatONnetwork/PlatON-Go/node"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/common/bitutil"
+	"github.com/BCOSnetwork/BCOS-Go/core/bloombits"
+	"github.com/BCOSnetwork/BCOS-Go/core/rawdb"
+	"github.com/BCOSnetwork/BCOS-Go/core/types"
+	"github.com/BCOSnetwork/BCOS-Go/ethdb"
+	"github.com/BCOSnetwork/BCOS-Go/event"
+	"github.com/BCOSnetwork/BCOS-Go/node"
 )
 
 func BenchmarkBloomBits512(b *testing.B) {
@@ -64,7 +64,7 @@ func BenchmarkBloomBits32k(b *testing.B) {
 const benchFilterCnt = 2000
 
 func benchmarkBloomBits(b *testing.B, sectionSize uint64) {
-	benchDataDir := node.DefaultDataDir() + "/platon/chaindata"
+	benchDataDir := node.DefaultDataDir() + "/bcos/chaindata"
 	fmt.Println("Running bloombits benchmark   section size:", sectionSize)
 
 	db, err := ethdb.NewLDBDatabase(benchDataDir, 128, 1024)
@@ -174,7 +174,7 @@ func clearBloomBits(db ethdb.Database) {
 }
 
 func BenchmarkNoBloomBits(b *testing.B) {
-	benchDataDir := node.DefaultDataDir() + "/platon/chaindata"
+	benchDataDir := node.DefaultDataDir() + "/bcos/chaindata"
 	fmt.Println("Running benchmark without bloombits")
 	db, err := ethdb.NewLDBDatabase(benchDataDir, 128, 1024)
 	if err != nil {

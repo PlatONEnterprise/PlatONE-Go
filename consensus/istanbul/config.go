@@ -16,7 +16,7 @@
 
 package istanbul
 
-import "github.com/PlatONnetwork/PlatON-Go/params"
+import "github.com/BCOSnetwork/BCOS-Go/params"
 
 type ProposerPolicy params.ProposerPolicy
 

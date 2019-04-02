@@ -25,15 +25,15 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/PlatONnetwork/PlatON-Go/accounts"
-	"github.com/PlatONnetwork/PlatON-Go/accounts/keystore"
-	"github.com/PlatONnetwork/PlatON-Go/accounts/usbwallet"
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/crypto"
-	"github.com/PlatONnetwork/PlatON-Go/log"
-	"github.com/PlatONnetwork/PlatON-Go/p2p"
-	"github.com/PlatONnetwork/PlatON-Go/p2p/discover"
-	"github.com/PlatONnetwork/PlatON-Go/rpc"
+	"github.com/BCOSnetwork/BCOS-Go/accounts"
+	"github.com/BCOSnetwork/BCOS-Go/accounts/keystore"
+	"github.com/BCOSnetwork/BCOS-Go/accounts/usbwallet"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/crypto"
+	"github.com/BCOSnetwork/BCOS-Go/log"
+	"github.com/BCOSnetwork/BCOS-Go/p2p"
+	"github.com/BCOSnetwork/BCOS-Go/p2p/discover"
+	"github.com/BCOSnetwork/BCOS-Go/rpc"
 )
 
 const (
@@ -49,7 +49,7 @@ const (
 // all registered services.
 type Config struct {
 	// Name sets the instance name of the node. It must not contain the / character and is
-	// used in the devp2p node identifier. The instance name of platon is "platon". If no
+	// used in the devp2p node identifier. The instance name of bcos is "bcos". If no
 	// value is specified, the basename of the current executable is used.
 	Name string `toml:"-"`
 
@@ -233,8 +233,8 @@ func DefaultWSEndpoint() string {
 func (c *Config) NodeName() string {
 	name := c.name()
 	// Backwards compatibility: previous versions used title-cased "Geth", keep that.
-	if name == "platon" || name == "platon-testnet" {
-		name = "PlatONnetwork"
+	if name == "bcos" || name == "bcos-testnet" {
+		name = "BCOSnetwork"
 	}
 	if c.UserIdent != "" {
 		name += "/" + c.UserIdent
@@ -258,7 +258,7 @@ func (c *Config) name() string {
 	return c.Name
 }
 
-// These resources are resolved differently for "platon" instances.
+// These resources are resolved differently for "bcos" instances.
 var isOldGethResource = map[string]bool{
 	"chaindata":          true,
 	"nodes":              true,
@@ -276,10 +276,10 @@ func (c *Config) ResolvePath(path string) string {
 		return ""
 	}
 	// Backwards-compatibility: ensure that data directory files created
-	// by platon 1.4 are used if they exist.
-	if c.name() == "platon" && isOldGethResource[path] {
+	// by bcos 1.4 are used if they exist.
+	if c.name() == "bcos" && isOldGethResource[path] {
 		oldpath := ""
-		if c.Name == "platon" {
+		if c.Name == "bcos" {
 			oldpath = filepath.Join(c.DataDir, path)
 		}
 		if oldpath != "" && common.FileExist(oldpath) {

@@ -16,7 +16,7 @@
 
 package core
 
-import "github.com/PlatONnetwork/PlatON-Go/common"
+import "github.com/BCOSnetwork/BCOS-Go/common"
 
 // BadHashes represent a set of manually tracked bad hashes (usually hard forks)
 var BadHashes = map[common.Hash]bool{

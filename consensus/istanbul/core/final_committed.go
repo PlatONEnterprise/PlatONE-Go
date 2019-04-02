@@ -16,7 +16,7 @@
 
 package core
 
-import "github.com/PlatONnetwork/PlatON-Go/common"
+import "github.com/BCOSnetwork/BCOS-Go/common"
 
 func (c *core) handleFinalCommitted() error {
 	logger := c.logger.New("state", c.state)

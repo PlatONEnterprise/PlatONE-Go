@@ -26,16 +26,16 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/common/prque"
-	"github.com/PlatONnetwork/PlatON-Go/core/state"
-	"github.com/PlatONnetwork/PlatON-Go/core/types"
-	"github.com/PlatONnetwork/PlatON-Go/core/rawdb"
-	"github.com/PlatONnetwork/PlatON-Go/ethdb"
-	"github.com/PlatONnetwork/PlatON-Go/event"
-	"github.com/PlatONnetwork/PlatON-Go/log"
-	"github.com/PlatONnetwork/PlatON-Go/metrics"
-	"github.com/PlatONnetwork/PlatON-Go/params"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/common/prque"
+	"github.com/BCOSnetwork/BCOS-Go/core/state"
+	"github.com/BCOSnetwork/BCOS-Go/core/types"
+	"github.com/BCOSnetwork/BCOS-Go/core/rawdb"
+	"github.com/BCOSnetwork/BCOS-Go/ethdb"
+	"github.com/BCOSnetwork/BCOS-Go/event"
+	"github.com/BCOSnetwork/BCOS-Go/log"
+	"github.com/BCOSnetwork/BCOS-Go/metrics"
+	"github.com/BCOSnetwork/BCOS-Go/params"
 )
 
 const (
@@ -208,7 +208,7 @@ type TxPool struct {
 	gasPrice *big.Int
 	txFeed   event.Feed
 	scope    event.SubscriptionScope
-	// modified by PlatON
+	// modified by BCOS
 	chainHeadCh chan *types.Block
 	chainHeadEventCh  chan ChainHeadEvent
 	chainHeadSub event.Subscription
@@ -265,7 +265,7 @@ func NewTxPool(config TxPoolConfig, chainconfig *params.ChainConfig, chain txPoo
 		beats:       make(map[common.Address]time.Time),
 		all:         newTxLookup(),
 		db: db,
-		// modified by PlatON
+		// modified by BCOS
 		chainHeadEventCh: make(chan ChainHeadEvent, chainHeadChanSize),
 		chainHeadCh: make(chan *types.Block, chainHeadChanSize),
 		exitCh:      make(chan struct{}),
@@ -296,7 +296,7 @@ func NewTxPool(config TxPoolConfig, chainconfig *params.ChainConfig, chain txPoo
 		}
 	}
 	// Subscribe events from blockchain
-	// modified by PlatON
+	// modified by BCOS
 	if pool.chainconfig.Istanbul != nil{
 		pool.chainHeadSub = pool.chain.SubscribeChainHeadEvent(pool.chainHeadEventCh)
 	}
@@ -457,7 +457,7 @@ func (pool *TxPool) lockedReset(oldHead, newHead *types.Header) {
 	pool.reset(oldHead, newHead)
 }
 
-// added by PlatON
+// added by BCOS
 func (pool *TxPool) Reset(newBlock *types.Block) {
 	if pool == nil {
 		// tx pool not initialized yet.
