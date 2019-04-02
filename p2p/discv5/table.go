@@ -29,7 +29,7 @@ import (
 	"net"
 	"sort"
 
-	"github.com/PlatONnetwork/PlatON-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/common"
 )
 
 const (

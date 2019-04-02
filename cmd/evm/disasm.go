@@ -22,7 +22,7 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/PlatONnetwork/PlatON-Go/core/asm"
+	"github.com/BCOSnetwork/BCOS-Go/core/asm"
 	cli "gopkg.in/urfave/cli.v1"
 )
 

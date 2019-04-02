@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/PlatONnetwork/PlatON-Go/life/exec"
-	"github.com/PlatONnetwork/PlatON-Go/life/resolver"
-	"github.com/PlatONnetwork/PlatON-Go/log"
+	"github.com/BCOSnetwork/BCOS-Go/life/exec"
+	"github.com/BCOSnetwork/BCOS-Go/life/resolver"
+	"github.com/BCOSnetwork/BCOS-Go/log"
 	"fmt"
 	"io/ioutil"
 	"time"
@@ -27,7 +27,7 @@ func main() {
 	rl := resolver.NewResolver(0x01)
 	// Read WebAssembly *.wasm file.
 	//input, err := ioutil.ReadFile(flag.Arg(0))
-	input, err := ioutil.ReadFile("D:\\repos\\Platon-contract\\build\\hello\\hello.wasm")
+	input, err := ioutil.ReadFile("D:\\repos\\Bcos-contract\\build\\hello\\hello.wasm")
 	//fmt.Println(common.ToHex(input))
 	if err != nil {
 		panic(err)

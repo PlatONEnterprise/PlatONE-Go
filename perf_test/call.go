@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/PlatONnetwork/PlatON-Go/cmd/ctool/core"
+	"github.com/BCOSnetwork/BCOS-Go/cmd/ctool/core"
 )
 
 // 判断合约是否成功上链

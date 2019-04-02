@@ -22,10 +22,10 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/PlatONnetwork/PlatON-Go/accounts/abi"
-	"github.com/PlatONnetwork/PlatON-Go/accounts/abi/bind"
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/core/types"
+	"github.com/BCOSnetwork/BCOS-Go/accounts/abi"
+	"github.com/BCOSnetwork/BCOS-Go/accounts/abi/bind"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/core/types"
 )
 
 // Signer is an interaface defining the callback when a contract requires a

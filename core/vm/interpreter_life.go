@@ -5,18 +5,18 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/common/math"
-	"github.com/PlatONnetwork/PlatON-Go/core/lru"
-	"github.com/PlatONnetwork/PlatON-Go/life/utils"
-	"github.com/PlatONnetwork/PlatON-Go/log"
-	"github.com/PlatONnetwork/PlatON-Go/rlp"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/common/math"
+	"github.com/BCOSnetwork/BCOS-Go/core/lru"
+	"github.com/BCOSnetwork/BCOS-Go/life/utils"
+	"github.com/BCOSnetwork/BCOS-Go/log"
+	"github.com/BCOSnetwork/BCOS-Go/rlp"
 	"math/big"
 	"reflect"
 	"strings"
 
-	"github.com/PlatONnetwork/PlatON-Go/life/exec"
-	"github.com/PlatONnetwork/PlatON-Go/life/resolver"
+	"github.com/BCOSnetwork/BCOS-Go/life/exec"
+	"github.com/BCOSnetwork/BCOS-Go/life/resolver"
 )
 
 var (

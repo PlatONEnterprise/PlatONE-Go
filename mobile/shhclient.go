@@ -19,8 +19,8 @@
 package geth
 
 import (
-	"github.com/PlatONnetwork/PlatON-Go/whisper/shhclient"
-	whisper "github.com/PlatONnetwork/PlatON-Go/whisper/whisperv6"
+	"github.com/BCOSnetwork/BCOS-Go/whisper/shhclient"
+	whisper "github.com/BCOSnetwork/BCOS-Go/whisper/whisperv6"
 )
 
 // WhisperClient provides access to the Ethereum APIs.

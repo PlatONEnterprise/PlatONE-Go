@@ -19,8 +19,8 @@ package state
 import (
 	"testing"
 
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/ethdb"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/ethdb"
 )
 
 var addr = common.BytesToAddress([]byte("test"))

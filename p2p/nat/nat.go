@@ -25,7 +25,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/PlatONnetwork/PlatON-Go/log"
+	"github.com/BCOSnetwork/BCOS-Go/log"
 	"github.com/jackpal/go-nat-pmp"
 )
 

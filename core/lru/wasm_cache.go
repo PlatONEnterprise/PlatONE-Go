@@ -1,9 +1,9 @@
 package lru
 
 import (
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/life/compiler"
-	"github.com/PlatONnetwork/PlatON-Go/log"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/life/compiler"
+	"github.com/BCOSnetwork/BCOS-Go/log"
 	"bytes"
 	"encoding/gob"
 	"github.com/hashicorp/golang-lru/simplelru"

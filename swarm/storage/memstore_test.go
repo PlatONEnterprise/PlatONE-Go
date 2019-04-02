@@ -20,7 +20,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/PlatONnetwork/PlatON-Go/swarm/log"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/log"
 )
 
 func newTestMemStore() *MemStore {

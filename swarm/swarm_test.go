@@ -28,10 +28,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/crypto"
-	"github.com/PlatONnetwork/PlatON-Go/rpc"
-	"github.com/PlatONnetwork/PlatON-Go/swarm/api"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/crypto"
+	"github.com/BCOSnetwork/BCOS-Go/rpc"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/api"
 )
 
 // TestNewSwarm validates Swarm fields in repsect to the provided configuration.
@@ -199,8 +199,8 @@ func TestParseEnsAPIAddress(t *testing.T) {
 	}{
 		{
 			description: "IPC endpoint",
-			value:       "/data/testnet/platon.ipc",
-			endpoint:    "/data/testnet/platon.ipc",
+			value:       "/data/testnet/bcos.ipc",
+			endpoint:    "/data/testnet/bcos.ipc",
 		},
 		{
 			description: "HTTP endpoint",
@@ -214,8 +214,8 @@ func TestParseEnsAPIAddress(t *testing.T) {
 		},
 		{
 			description: "IPC Endpoint and TLD",
-			value:       "test:/data/testnet/platon.ipc",
-			endpoint:    "/data/testnet/platon.ipc",
+			value:       "test:/data/testnet/bcos.ipc",
+			endpoint:    "/data/testnet/bcos.ipc",
 			tld:         "test",
 		},
 		{
@@ -232,8 +232,8 @@ func TestParseEnsAPIAddress(t *testing.T) {
 		},
 		{
 			description: "IPC Endpoint and contract address",
-			value:       "314159265dD8dbb310642f98f50C066173C1259b@/data/testnet/platon.ipc",
-			endpoint:    "/data/testnet/platon.ipc",
+			value:       "314159265dD8dbb310642f98f50C066173C1259b@/data/testnet/bcos.ipc",
+			endpoint:    "/data/testnet/bcos.ipc",
 			addr:        common.HexToAddress("314159265dD8dbb310642f98f50C066173C1259b"),
 		},
 		{
@@ -250,8 +250,8 @@ func TestParseEnsAPIAddress(t *testing.T) {
 		},
 		{
 			description: "IPC Endpoint, TLD and contract address",
-			value:       "test:314159265dD8dbb310642f98f50C066173C1259b@/data/testnet/platon.ipc",
-			endpoint:    "/data/testnet/platon.ipc",
+			value:       "test:314159265dD8dbb310642f98f50C066173C1259b@/data/testnet/bcos.ipc",
+			endpoint:    "/data/testnet/bcos.ipc",
 			addr:        common.HexToAddress("314159265dD8dbb310642f98f50C066173C1259b"),
 			tld:         "test",
 		},

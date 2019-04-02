@@ -54,7 +54,7 @@ func TestBloom(t *testing.T) {
 import (
 	"testing"
 
-	"github.com/PlatONnetwork/PlatON-Go/core/state"
+	"github.com/BCOSnetwork/BCOS-Go/core/state"
 )
 
 func TestBloom9(t *testing.T) {

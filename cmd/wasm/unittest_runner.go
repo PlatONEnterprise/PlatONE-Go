@@ -1,12 +1,12 @@
 package main
 
 import (
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/core/vm"
-	"github.com/PlatONnetwork/PlatON-Go/life/compiler"
-	"github.com/PlatONnetwork/PlatON-Go/life/exec"
-	"github.com/PlatONnetwork/PlatON-Go/life/resolver"
-	"github.com/PlatONnetwork/PlatON-Go/log"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/core/vm"
+	"github.com/BCOSnetwork/BCOS-Go/life/compiler"
+	"github.com/BCOSnetwork/BCOS-Go/life/exec"
+	"github.com/BCOSnetwork/BCOS-Go/life/resolver"
+	"github.com/BCOSnetwork/BCOS-Go/log"
 	"bytes"
 	"encoding/hex"
 	"encoding/json"
@@ -24,7 +24,7 @@ import (
 	"strings"
 )
 
-// The runner used in the unit test is mainly responsible for testing the Platonlib c++ library.
+// The runner used in the unit test is mainly responsible for testing the Bcoslib c++ library.
 // The wasm file is executed according to the dir scan directory.
 // The wasm is entered from the main entry.
 // The db is created according to --outdir.
@@ -248,12 +248,12 @@ func newUnitTestResolver(ldb *leveldb.DB, logStream *bytes.Buffer) *UnitTestReso
 			"getTestLogSize":           &exec.FunctionImport{Execute: resolver.envGetTestLogSize, GasCost: constGasFunc},
 			"clearLog":                 &exec.FunctionImport{Execute: resolver.envClearLog, GasCost: constGasFunc},
 			"setStateDB":               &exec.FunctionImport{Execute: resolver.envSetStateDB, GasCost: constGasFunc},
-			"platonCallString":         &exec.FunctionImport{Execute: resolver.envPlatonCall, GasCost: constGasFunc},
-			"platonCallInt64":          &exec.FunctionImport{Execute: resolver.envPlatonCall, GasCost: constGasFunc},
-			"platonDelegateCallString": &exec.FunctionImport{Execute: resolver.envPlatonCall, GasCost: constGasFunc},
-			"platonDelegateCallInt64":  &exec.FunctionImport{Execute: resolver.envPlatonCall, GasCost: constGasFunc},
-			"platonCall":               &exec.FunctionImport{Execute: resolver.envPlatonCall, GasCost: constGasFunc},
-			"platonDelegateCall":       &exec.FunctionImport{Execute: resolver.envPlatonCall, GasCost: constGasFunc},
+			"bcosCallString":         &exec.FunctionImport{Execute: resolver.envBcosCall, GasCost: constGasFunc},
+			"bcosCallInt64":          &exec.FunctionImport{Execute: resolver.envBcosCall, GasCost: constGasFunc},
+			"bcosDelegateCallString": &exec.FunctionImport{Execute: resolver.envBcosCall, GasCost: constGasFunc},
+			"bcosDelegateCallInt64":  &exec.FunctionImport{Execute: resolver.envBcosCall, GasCost: constGasFunc},
+			"bcosCall":               &exec.FunctionImport{Execute: resolver.envBcosCall, GasCost: constGasFunc},
+			"bcosDelegateCall":       &exec.FunctionImport{Execute: resolver.envBcosCall, GasCost: constGasFunc},
 			"emitEvent":                &exec.FunctionImport{Execute: resolver.envEmitEvent, GasCost: constGasFunc},
 			"bigintAdd":                &exec.FunctionImport{Execute: resolver.envBigintAdd, GasCost: constGasFunc},
 			"envMalloc":                &exec.FunctionImport{Execute: resolver.envMalloc, GasCost: constGasFunc},
@@ -373,7 +373,7 @@ func (r *UnitTestResolver) envSetStateDB(vm *exec.VirtualMachine) int64 {
 	return 0
 }
 
-func (r *UnitTestResolver) envPlatonCall(vm *exec.VirtualMachine) int64 {
+func (r *UnitTestResolver) envBcosCall(vm *exec.VirtualMachine) int64 {
 	addr := int(int32(vm.GetCurrentFrame().Locals[0]))
 	params := int(int32(vm.GetCurrentFrame().Locals[1]))
 	paramsLen := int(int32(vm.GetCurrentFrame().Locals[2]))

@@ -11,23 +11,23 @@
 GOBIN = $(shell pwd)/build/bin
 GO ?= latest
 
-platon:
+bcos:
 	build/build_deps.sh
-	build/env.sh go run build/ci.go install ./cmd/platon
+	build/env.sh go run build/ci.go install ./cmd/bcos
 	@echo "Done building."
-	@echo "Run \"$(GOBIN)/platon\" to launch platon."
+	@echo "Run \"$(GOBIN)/bcos\" to launch bcos."
 
-platon-with-mpc:
+bcos-with-mpc:
 	build/build_deps.sh
-	build/env.sh go run build/ci.go install -mpc on ./cmd/platon
-	@echo "Done building platon with mpc."
-	@echo "Run \"$(GOBIN)/platon\" to launch platon."
+	build/env.sh go run build/ci.go install -mpc on ./cmd/bcos
+	@echo "Done building bcos with mpc."
+	@echo "Run \"$(GOBIN)/bcos\" to launch bcos."
 
-platon-with-vc:
+bcos-with-vc:
 	build/build_deps.sh
-	build/env.sh go run build/ci.go install -vc on ./cmd/platon
-	@echo "Done building platon with vc."
-	@echo "Run \"$(GOBIN)/platon\" to launch platon."
+	build/env.sh go run build/ci.go install -vc on ./cmd/bcos
+	@echo "Done building bcos with vc."
+	@echo "Run \"$(GOBIN)/bcos\" to launch bcos."
 
 swarm:
 	build/env.sh go run build/ci.go install ./cmd/swarm

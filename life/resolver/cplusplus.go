@@ -18,11 +18,11 @@ import (
 	"math"
 	"math/big"
 
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	inner "github.com/PlatONnetwork/PlatON-Go/common/math"
-	"github.com/PlatONnetwork/PlatON-Go/crypto"
-	"github.com/PlatONnetwork/PlatON-Go/life/compiler"
-	"github.com/PlatONnetwork/PlatON-Go/life/exec"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	inner "github.com/BCOSnetwork/BCOS-Go/common/math"
+	"github.com/BCOSnetwork/BCOS-Go/crypto"
+	"github.com/BCOSnetwork/BCOS-Go/life/compiler"
+	"github.com/BCOSnetwork/BCOS-Go/life/exec"
 )
 
 var (
@@ -179,12 +179,12 @@ func newCfcSet() map[string]map[string]*exec.FunctionImport {
 			"getCallerNonce": &exec.FunctionImport{Execute: envGetCallerNonce, GasCost: constGasFunc(compiler.GasQuickStep)},
 			"callTransfer":   &exec.FunctionImport{Execute: envCallTransfer, GasCost: constGasFunc(compiler.GasQuickStep)},
 
-			"platonCall":               &exec.FunctionImport{Execute: envPlatonCall, GasCost: envPlatonCallGasCost},
-			"platonCallInt64":          &exec.FunctionImport{Execute: envPlatonCallInt64, GasCost: envPlatonCallInt64GasCost},
-			"platonCallString":         &exec.FunctionImport{Execute: envPlatonCallString, GasCost: envPlatonCallStringGasCost},
-			"platonDelegateCall":       &exec.FunctionImport{Execute: envPlatonDelegateCall, GasCost: envPlatonCallStringGasCost},
-			"platonDelegateCallInt64":  &exec.FunctionImport{Execute: envPlatonDelegateCallInt64, GasCost: envPlatonCallStringGasCost},
-			"platonDelegateCallString": &exec.FunctionImport{Execute: envPlatonDelegateCallString, GasCost: envPlatonCallStringGasCost},
+			"bcosCall":               &exec.FunctionImport{Execute: envBcosCall, GasCost: envBcosCallGasCost},
+			"bcosCallInt64":          &exec.FunctionImport{Execute: envBcosCallInt64, GasCost: envBcosCallInt64GasCost},
+			"bcosCallString":         &exec.FunctionImport{Execute: envBcosCallString, GasCost: envBcosCallStringGasCost},
+			"bcosDelegateCall":       &exec.FunctionImport{Execute: envBcosDelegateCall, GasCost: envBcosCallStringGasCost},
+			"bcosDelegateCallInt64":  &exec.FunctionImport{Execute: envBcosDelegateCallInt64, GasCost: envBcosCallStringGasCost},
+			"bcosDelegateCallString": &exec.FunctionImport{Execute: envBcosDelegateCallString, GasCost: envBcosCallStringGasCost},
 
 			//nizkpail
 			"pailEncrypt": &exec.FunctionImport{Execute: envPailEncrypt, GasCost: constGasFunc(compiler.GasPailEncrypt)},
@@ -933,7 +933,7 @@ func envCallTransfer(vm *exec.VirtualMachine) int64 {
 	}
 }
 
-func envPlatonCall(vm *exec.VirtualMachine) int64 {
+func envBcosCall(vm *exec.VirtualMachine) int64 {
 	addr := int(int32(vm.GetCurrentFrame().Locals[0]))
 	params := int(int32(vm.GetCurrentFrame().Locals[1]))
 	paramsLen := int(int32(vm.GetCurrentFrame().Locals[2]))
@@ -944,7 +944,7 @@ func envPlatonCall(vm *exec.VirtualMachine) int64 {
 	}
 	return 0
 }
-func envPlatonDelegateCall(vm *exec.VirtualMachine) int64 {
+func envBcosDelegateCall(vm *exec.VirtualMachine) int64 {
 	addr := int(int32(vm.GetCurrentFrame().Locals[0]))
 	params := int(int32(vm.GetCurrentFrame().Locals[1]))
 	paramsLen := int(int32(vm.GetCurrentFrame().Locals[2]))
@@ -957,7 +957,7 @@ func envPlatonDelegateCall(vm *exec.VirtualMachine) int64 {
 	return 0
 }
 
-func envPlatonCallInt64(vm *exec.VirtualMachine) int64 {
+func envBcosCallInt64(vm *exec.VirtualMachine) int64 {
 	addr := int(int32(vm.GetCurrentFrame().Locals[0]))
 	params := int(int32(vm.GetCurrentFrame().Locals[1]))
 	paramsLen := int(int32(vm.GetCurrentFrame().Locals[2]))
@@ -970,7 +970,7 @@ func envPlatonCallInt64(vm *exec.VirtualMachine) int64 {
 	return common.BytesToInt64(ret)
 }
 
-func envPlatonDelegateCallInt64(vm *exec.VirtualMachine) int64 {
+func envBcosDelegateCallInt64(vm *exec.VirtualMachine) int64 {
 	addr := int(int32(vm.GetCurrentFrame().Locals[0]))
 	params := int(int32(vm.GetCurrentFrame().Locals[1]))
 	paramsLen := int(int32(vm.GetCurrentFrame().Locals[2]))
@@ -983,7 +983,7 @@ func envPlatonDelegateCallInt64(vm *exec.VirtualMachine) int64 {
 	return common.BytesToInt64(ret)
 }
 
-func envPlatonCallString(vm *exec.VirtualMachine) int64 {
+func envBcosCallString(vm *exec.VirtualMachine) int64 {
 	addr := int(int32(vm.GetCurrentFrame().Locals[0]))
 	params := int(int32(vm.GetCurrentFrame().Locals[1]))
 	paramsLen := int(int32(vm.GetCurrentFrame().Locals[2]))
@@ -996,7 +996,7 @@ func envPlatonCallString(vm *exec.VirtualMachine) int64 {
 	return MallocString(vm, string(ret))
 }
 
-func envPlatonDelegateCallString(vm *exec.VirtualMachine) int64 {
+func envBcosDelegateCallString(vm *exec.VirtualMachine) int64 {
 	addr := int(int32(vm.GetCurrentFrame().Locals[0]))
 	params := int(int32(vm.GetCurrentFrame().Locals[1]))
 	paramsLen := int(int32(vm.GetCurrentFrame().Locals[2]))
@@ -1009,14 +1009,14 @@ func envPlatonDelegateCallString(vm *exec.VirtualMachine) int64 {
 	return MallocString(vm, string(ret))
 }
 
-func envPlatonCallGasCost(vm *exec.VirtualMachine) (uint64, error) {
+func envBcosCallGasCost(vm *exec.VirtualMachine) (uint64, error) {
 	return 1, nil
 }
 
-func envPlatonCallInt64GasCost(vm *exec.VirtualMachine) (uint64, error) {
+func envBcosCallInt64GasCost(vm *exec.VirtualMachine) (uint64, error) {
 	return 1, nil
 }
 
-func envPlatonCallStringGasCost(vm *exec.VirtualMachine) (uint64, error) {
+func envBcosCallStringGasCost(vm *exec.VirtualMachine) (uint64, error) {
 	return 1, nil
 }

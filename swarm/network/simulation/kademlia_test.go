@@ -22,9 +22,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/PlatONnetwork/PlatON-Go/node"
-	"github.com/PlatONnetwork/PlatON-Go/p2p/simulations/adapters"
-	"github.com/PlatONnetwork/PlatON-Go/swarm/network"
+	"github.com/BCOSnetwork/BCOS-Go/node"
+	"github.com/BCOSnetwork/BCOS-Go/p2p/simulations/adapters"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/network"
 )
 
 func TestWaitTillHealthy(t *testing.T) {

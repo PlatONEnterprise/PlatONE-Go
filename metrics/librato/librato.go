@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/PlatONnetwork/PlatON-Go/metrics"
+	"github.com/BCOSnetwork/BCOS-Go/metrics"
 )
 
 // a regexp for extracting the unit from time.Duration.String

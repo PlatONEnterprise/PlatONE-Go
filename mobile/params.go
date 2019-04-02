@@ -21,9 +21,9 @@ package geth
 import (
 	"encoding/json"
 
-	"github.com/PlatONnetwork/PlatON-Go/core"
-	"github.com/PlatONnetwork/PlatON-Go/p2p/discv5"
-	"github.com/PlatONnetwork/PlatON-Go/params"
+	"github.com/BCOSnetwork/BCOS-Go/core"
+	"github.com/BCOSnetwork/BCOS-Go/p2p/discv5"
+	"github.com/BCOSnetwork/BCOS-Go/params"
 )
 
 // MainnetGenesis returns the JSON spec to use for the main Ethereum network. It

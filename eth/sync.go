@@ -22,12 +22,12 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/core/types"
-	"github.com/PlatONnetwork/PlatON-Go/eth/downloader"
-	"github.com/PlatONnetwork/PlatON-Go/log"
-	"github.com/PlatONnetwork/PlatON-Go/p2p"
-	"github.com/PlatONnetwork/PlatON-Go/p2p/discover"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/core/types"
+	"github.com/BCOSnetwork/BCOS-Go/eth/downloader"
+	"github.com/BCOSnetwork/BCOS-Go/log"
+	"github.com/BCOSnetwork/BCOS-Go/p2p"
+	"github.com/BCOSnetwork/BCOS-Go/p2p/discover"
 )
 
 const (
@@ -173,7 +173,7 @@ func (pm *ProtocolManager) synchronise(peer *peer) {
 	bn := currentBlock.Number()
 
 	pHead, pBn := peer.Head()
-	//modified by platon
+	//modified by bcos
 	diff := new(big.Int).Sub(pBn, bn)
 	if diff.Cmp(big.NewInt(5)) <= 0 {
 		return

@@ -19,8 +19,8 @@ package trie
 import (
 	"fmt"
 
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/log"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/log"
 )
 
 // SecureTrie wraps a trie with key hashing. In a secure trie, all

@@ -22,7 +22,7 @@ import "C"
 /*
 #cgo LDFLAGS: -Wl,-rpath="./libs"
 #cgo LDFLAGS: -L./libs
-#cgo LDFLAGS: -ljuzixmpcvm_platonsdk_demo
+#cgo LDFLAGS: -ljuzixmpcvm_bcossdk_demo
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -31,8 +31,8 @@ extern int notify_security_calculation(const char* taskid, const char* pubkey, c
 //import "C"
 
 import (
-	"github.com/PlatONnetwork/PlatON-Go/common"
-	"github.com/PlatONnetwork/PlatON-Go/log"
+	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/log"
 	"fmt"
 	"unsafe"
 )

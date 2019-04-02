@@ -25,7 +25,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/PlatONnetwork/PlatON-Go/ethdb"
+	"github.com/BCOSnetwork/BCOS-Go/ethdb"
 )
 
 func newTestLDB() (*ethdb.LDBDatabase, func()) {
@@ -49,9 +49,9 @@ var test_values = []string{"", "a", "1251", "\x00123\x00"}
 
 func OpenTestLDB() (*ethdb.LDBDatabase, func()) {
 
-//	dirname := "D:/data/platon/chaindata"
-//	dirname := "D:/platon-node/data/platon/extdb"
-	dirname := "D:/platon-node/data/platon/extdb"
+//	dirname := "D:/data/bcos/chaindata"
+//	dirname := "D:/bcos-node/data/bcos/extdb"
+	dirname := "D:/bcos-node/data/bcos/extdb"
 	db, err := ethdb.NewLDBDatabase(dirname, 0, 0)
 	if err != nil {
 		panic("failed to create test database: " + err.Error())

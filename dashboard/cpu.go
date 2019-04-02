@@ -21,7 +21,7 @@ package dashboard
 import (
 	"syscall"
 
-	"github.com/PlatONnetwork/PlatON-Go/log"
+	"github.com/BCOSnetwork/BCOS-Go/log"
 )
 
 // getProcessCPUTime retrieves the process' CPU time since program startup.

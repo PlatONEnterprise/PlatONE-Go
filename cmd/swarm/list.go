@@ -22,8 +22,8 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/PlatONnetwork/PlatON-Go/cmd/utils"
-	swarm "github.com/PlatONnetwork/PlatON-Go/swarm/api/client"
+	"github.com/BCOSnetwork/BCOS-Go/cmd/utils"
+	swarm "github.com/BCOSnetwork/BCOS-Go/swarm/api/client"
 	"gopkg.in/urfave/cli.v1"
 )
 

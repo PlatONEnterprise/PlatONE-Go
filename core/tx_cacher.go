@@ -19,7 +19,7 @@ package core
 import (
 	"runtime"
 
-	"github.com/PlatONnetwork/PlatON-Go/core/types"
+	"github.com/BCOSnetwork/BCOS-Go/core/types"
 )
 
 // senderCacher is a concurrent transaction sender recoverer anc cacher.

@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/PlatONnetwork/PlatON-Go/cmd/ctool/core"
+	"github.com/BCOSnetwork/BCOS-Go/cmd/ctool/core"
 )
 
 func Send(params interface{}, action string) (string, error) {

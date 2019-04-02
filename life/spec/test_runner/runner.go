@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/PlatONnetwork/PlatON-Go/life/exec"
+	"github.com/BCOSnetwork/BCOS-Go/life/exec"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"

@@ -17,7 +17,7 @@
 package rlp
 
 import (
-	"github.com/PlatONnetwork/PlatON-Go/common/hexutil"
+	"github.com/BCOSnetwork/BCOS-Go/common/hexutil"
 	"bytes"
 	"encoding/binary"
 	"errors"

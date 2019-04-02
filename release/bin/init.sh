@@ -97,7 +97,7 @@ function create_genesis() {
 }
 
 function init_root() {
-    if [ -d ../data/platon ]; then
+    if [ -d ../data/bcos ]; then
         echo; echo "Node already initialized, re initailize?"
         yes_or_no
         if [ $? -ne 1 ]; then
@@ -142,14 +142,14 @@ function init_root() {
     echo; echo "[Step 4: create genesis]"
     create_genesis $ip
 
-    rm -rf ../data/platon
+    rm -rf ../data/bcos
 
     echo; echo "[Step 5: init chain data]"
-    ./platon --datadir ../data init ../conf/genesis.json
+    ./bcos --datadir ../data init ../conf/genesis.json
 }
 
 function init_slave() {
-    if [ -d ../data/platon ]; then
+    if [ -d ../data/bcos ]; then
         echo; echo "Node already initialized, re initailize?"
         yes_or_no
         if [ $? -ne 1 ]; then
@@ -184,10 +184,10 @@ function init_slave() {
         return 1
     fi
 
-    rm -rf ../data/platon
+    rm -rf ../data/bcos
 
     echo; echo "[Step 3: init chain data]"
-    ./platon --datadir ../data init ../conf/genesis.json
+    ./bcos --datadir ../data init ../conf/genesis.json
 }
 
 function main() {

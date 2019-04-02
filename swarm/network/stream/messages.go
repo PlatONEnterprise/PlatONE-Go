@@ -21,11 +21,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/PlatONnetwork/PlatON-Go/metrics"
-	"github.com/PlatONnetwork/PlatON-Go/swarm/log"
-	bv "github.com/PlatONnetwork/PlatON-Go/swarm/network/bitvector"
-	"github.com/PlatONnetwork/PlatON-Go/swarm/spancontext"
-	"github.com/PlatONnetwork/PlatON-Go/swarm/storage"
+	"github.com/BCOSnetwork/BCOS-Go/metrics"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/log"
+	bv "github.com/BCOSnetwork/BCOS-Go/swarm/network/bitvector"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/spancontext"
+	"github.com/BCOSnetwork/BCOS-Go/swarm/storage"
 	opentracing "github.com/opentracing/opentracing-go"
 )
 
