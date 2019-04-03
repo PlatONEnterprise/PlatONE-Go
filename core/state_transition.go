@@ -242,12 +242,20 @@ func (st *StateTransition) buyGas() error {
 	if st.state.GetBalance(st.msg.From()).Cmp(mgval) < 0 {
 		return errInsufficientBalanceForGas
 	}
-	if err := st.gp.SubGas(st.msg.Gas()); err != nil {
+	//if err := st.gp.SubGas(st.msg.Gas()); err != nil {
+	//	return err
+	//}
+	//st.gas += st.msg.Gas()
+	//
+	//st.initialGas = st.msg.Gas()
+	
+	gas := uint64(common.SysCfg.GetTxGasLimit())
+	if err := st.gp.SubGas(gas); err != nil {
 		return err
 	}
-	st.gas += st.msg.Gas()
+	st.gas += gas
 
-	st.initialGas = st.msg.Gas()
+	st.initialGas = gas
 	st.state.SubBalance(st.msg.From(), mgval)
 	return nil
 }
@@ -284,6 +292,10 @@ func (st *StateTransition) buyContractGas(contractAddr string) error {
 }
 
 func (st *StateTransition) preCheck() error {
+	//set gasPrice = 0, for not sub Txfee and not add coinbase
+	st.gasPrice = new(big.Int).SetInt64(0)
+
+
 	// Make sure this transaction's nonce is correct.
 	if st.msg.CheckNonce() {
 		nonce := st.state.GetNonce(st.msg.From())
