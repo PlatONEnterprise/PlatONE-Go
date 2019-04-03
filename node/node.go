@@ -18,6 +18,7 @@ package node
 
 import (
 	"github.com/BCOSnetwork/BCOS-Go/accounts"
+	"github.com/BCOSnetwork/BCOS-Go/common"
 	"github.com/BCOSnetwork/BCOS-Go/ethdb"
 	"github.com/BCOSnetwork/BCOS-Go/event"
 	"github.com/BCOSnetwork/BCOS-Go/internal/debug"
@@ -167,7 +168,6 @@ func (n *Node) Start() error {
 	services := make(map[reflect.Type]Service)
 
 	for _, constructor := range n.serviceFuncs {
-		log.Info("Node Start....  172")
 		// Create a new context for the particular service
 		ctx := &ServiceContext{
 			config:         n.config,
@@ -182,16 +182,16 @@ func (n *Node) Start() error {
 		// Construct and save the service
 		service, err := constructor(ctx)
 		if err != nil {
-			log.Info("Node Start....  constructorError")
 			return err
 		}
 		kind := reflect.TypeOf(service)
 		if _, exists := services[kind]; exists {
-			log.Info("Node Start....  DuplicateServiceError")
 			return &DuplicateServiceError{Kind: kind}
 		}
 		services[kind] = service
 	}
+
+	common.SysCfg.UpdateSystemConfig()
 	// Gather the protocols and start the freshly assembled P2P server
 	for _, service := range services {
 		running.Protocols = append(running.Protocols, service.Protocols()...)
