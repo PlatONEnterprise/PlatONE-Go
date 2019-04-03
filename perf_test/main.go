@@ -9,6 +9,7 @@ import (
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/mem"
 	"github.com/shirou/gopsutil/net"
+	"math/rand"
 	"os"
 	"strconv"
 	"sync"
@@ -45,7 +46,10 @@ var (
 const (
 	consensusLogFile      = "./consensus_data.txt"
 	simpleContractLogFile = "./contract_data.txt"
-	contractName          = "demoContract"
+)
+
+var (
+	contractName          = "perf" + strconv.Itoa(rand.Intn(999999999))
 	versionFrontPart      = "1.1.1."
 )
 
