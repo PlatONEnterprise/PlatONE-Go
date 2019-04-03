@@ -27,15 +27,15 @@ var GasTable = [256]Instruction{
 	},
 	opcodes.Unreachable: {
 		Execute: nil,
-		GasCost: constGasFunc(1),
+		GasCost: constGasFunc(0),
 	},
 	opcodes.Select: {
 		Execute: nil,
-		GasCost: constGasFunc(1),
+		GasCost: constGasFunc(3),
 	},
 	opcodes.I32Const: {
 		Execute: nil,
-		GasCost: constGasFunc(1),
+		GasCost: constGasFunc(0),
 	},
 	opcodes.I32Add: {
 		Execute: nil,
@@ -47,23 +47,23 @@ var GasTable = [256]Instruction{
 	},
 	opcodes.I32Mul: {
 		Execute: nil,
-		GasCost: constGasFunc(1),
+		GasCost: constGasFunc(3),
 	},
 	opcodes.I32DivS: {
 		Execute: nil,
-		GasCost: constGasFunc(1),
+		GasCost: constGasFunc(80),
 	},
 	opcodes.I32DivU: {
 		Execute: nil,
-		GasCost: constGasFunc(1),
+		GasCost: constGasFunc(80),
 	},
 	opcodes.I32RemS: {
 		Execute: nil,
-		GasCost: constGasFunc(1),
+		GasCost: constGasFunc(80),
 	},
 	opcodes.I32RemU: {
 		Execute: nil,
-		GasCost: constGasFunc(1),
+		GasCost: constGasFunc(80),
 	},
 	opcodes.I32And: {
 		Execute: nil,
@@ -91,19 +91,19 @@ var GasTable = [256]Instruction{
 	},
 	opcodes.I32Rotl: {
 		Execute: nil,
-		GasCost: constGasFunc(1),
+		GasCost: constGasFunc(2),
 	},
 	opcodes.I32Rotr: {
 		Execute: nil,
-		GasCost: constGasFunc(1),
+		GasCost: constGasFunc(2),
 	},
 	opcodes.I32Clz: {
 		Execute: nil,
-		GasCost: constGasFunc(1),
+		GasCost: constGasFunc(105),
 	},
 	opcodes.I32Ctz: {
 		Execute: nil,
-		GasCost: constGasFunc(1),
+		GasCost: constGasFunc(105),
 	},
 	opcodes.I32PopCnt: {
 		Execute: nil,
@@ -156,7 +156,7 @@ var GasTable = [256]Instruction{
 
 		opcodes.I64Const: {
 			Execute: nil,
-			GasCost: constGasFunc(1),
+			GasCost: constGasFunc(0),
 		},
 		opcodes.I64Add: {
 			Execute: nil,
@@ -168,31 +168,31 @@ var GasTable = [256]Instruction{
 		},
 		opcodes.I64Mul: {
 			Execute: nil,
-			GasCost: constGasFunc(1),
+			GasCost: constGasFunc(3),
 		},
 		opcodes.I64DivS: {
 			Execute: nil,
-			GasCost: constGasFunc(1),
+			GasCost: constGasFunc(80),
 		},
 		opcodes.I64DivU: {
 			Execute: nil,
-			GasCost: constGasFunc(1),
+			GasCost: constGasFunc(80),
 		},
 		opcodes.I64RemS: {
 			Execute: nil,
-			GasCost: constGasFunc(1),
+			GasCost: constGasFunc(80),
 		},
 		opcodes.I64RemU: {
 			Execute: nil,
-			GasCost: constGasFunc(1),
+			GasCost: constGasFunc(80),
 		},
 		opcodes.I64Rotl: {
 			Execute: nil,
-			GasCost: constGasFunc(1),
+			GasCost: constGasFunc(2),
 		},
 		opcodes.I64Rotr: {
 			Execute: nil,
-			GasCost: constGasFunc(1),
+			GasCost: constGasFunc(2),
 		},
 		opcodes.I64Clz: {
 			Execute: nil,
@@ -439,7 +439,7 @@ var GasTable = [256]Instruction{
 
 		opcodes.I32WrapI64: {
 			Execute: nil,
-			GasCost: constGasFunc(1),
+			GasCost: constGasFunc(3),
 		},
 		opcodes.I32TruncUF32: {
 			Execute: nil,
@@ -475,7 +475,7 @@ var GasTable = [256]Instruction{
 		},
 		opcodes.I64ExtendUI32: {
 			Execute: nil,
-			GasCost: constGasFunc(1),
+			GasCost: constGasFunc(3),
 		},
 		opcodes.I64ExtendSI32: {
 			Execute: nil,
@@ -525,11 +525,11 @@ var GasTable = [256]Instruction{
 
 		opcodes.I32Load: {
 			Execute: nil,
-			GasCost: constGasFunc(1),
+			GasCost: constGasFunc(3),
 		},
 		opcodes.I64Load: {
 			Execute: nil,
-			GasCost: constGasFunc(1),
+			GasCost: constGasFunc(3),
 		},
 
 		opcodes.I32Store: {
@@ -543,44 +543,44 @@ var GasTable = [256]Instruction{
 
 		opcodes.I32Load8S: {
 			Execute: nil,
-			GasCost: constGasFunc(1),
+			GasCost: constGasFunc(3),
 		},
 		opcodes.I32Load16S: {
 			Execute: nil,
-			GasCost: constGasFunc(1),
+			GasCost: constGasFunc(3),
 		},
 		opcodes.I64Load8S: {
 			Execute: nil,
-			GasCost: constGasFunc(1),
+			GasCost: constGasFunc(3),
 		},
 		opcodes.I64Load16S: {
 			Execute: nil,
-			GasCost: constGasFunc(1),
+			GasCost: constGasFunc(3),
 		},
 		opcodes.I64Load32S: {
 			Execute: nil,
-			GasCost: constGasFunc(1),
+			GasCost: constGasFunc(3),
 		},
 
 		opcodes.I32Load8U: {
 			Execute: nil,
-			GasCost: constGasFunc(1),
+			GasCost: constGasFunc(3),
 		},
 		opcodes.I32Load16U: {
 			Execute: nil,
-			GasCost: constGasFunc(1),
+			GasCost: constGasFunc(3),
 		},
 		opcodes.I64Load8U: {
 			Execute: nil,
-			GasCost: constGasFunc(1),
+			GasCost: constGasFunc(3),
 		},
 		opcodes.I64Load16U: {
 			Execute: nil,
-			GasCost: constGasFunc(1),
+			GasCost: constGasFunc(3),
 		},
 		opcodes.I64Load32U: {
 			Execute: nil,
-			GasCost: constGasFunc(1),
+			GasCost: constGasFunc(3),
 		},
 
 		opcodes.I32Store8: {
@@ -610,7 +610,7 @@ var GasTable = [256]Instruction{
 		},
 		opcodes.JmpIf: {
 			Execute: nil,
-			GasCost: constGasFunc(1),
+			GasCost: constGasFunc(0),
 		},
 		opcodes.JmpEither: {
 			Execute: nil,
@@ -618,37 +618,37 @@ var GasTable = [256]Instruction{
 		},
 		opcodes.JmpTable: {
 			Execute: nil,
-			GasCost: constGasFunc(1),
+			GasCost: constGasFunc(2),
 		},
 		opcodes.ReturnValue: {
 			Execute: nil,
-			GasCost: constGasFunc(1),
+			GasCost: constGasFunc(2),
 		},
 		opcodes.ReturnVoid: {
 			Execute: nil,
-			GasCost: constGasFunc(1),
+			GasCost: constGasFunc(2),
 		},
 
 		opcodes.GetLocal: {
 			Execute: nil,
-			GasCost: constGasFunc(1),
+			GasCost: constGasFunc(3),
 		},
 		opcodes.SetLocal: {
 			Execute: nil,
-			GasCost: constGasFunc(1),
+			GasCost: constGasFunc(3),
 		},
 
 		opcodes.GetGlobal: {
 			Execute: nil,
-			GasCost: constGasFunc(1),
+			GasCost: constGasFunc(3),
 		},
 		opcodes.SetGlobal: {
 			Execute: nil,
-			GasCost: constGasFunc(1),
+			GasCost: constGasFunc(3),
 		},
 		opcodes.Call: {
 			Execute: nil,
-			GasCost: constGasFunc(1),
+			GasCost: constGasFunc(2),
 		},
 		opcodes.CallIndirect: {
 			Execute: nil,
