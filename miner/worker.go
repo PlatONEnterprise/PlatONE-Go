@@ -445,42 +445,50 @@ func (w *worker) newWorkLoop(recommit time.Duration) {
 		case <-timer.C:
 			// If mining is running resubmit a new work cycle periodically to pull in
 			// higher priced transactions. Disable this overhead for pending blocks.
-			if w.isRunning() {
-				if cbftEngine, ok := w.engine.(consensus.Bft); ok {
-					if shouldSeal, error := cbftEngine.ShouldSeal(); error == nil {
-						if shouldSeal {
-							if shouldCommit, commitBlock := w.shouldCommit(time.Now().UnixNano() / 1e6); shouldCommit {
-								log.Info("begin to package new block regularly ")
-								timestamp = time.Now().UnixNano() / 1e6
-								commit(false, commitInterruptResubmit, commitBlock)
-								continue
-							}
-							timer.Reset(recommit)
-						} else {
-							timer.Reset(100 * time.Millisecond)
-						}
-					}
+			if !w.isRunning() {
+				continue
+			}
 
-				} else if eng, ok := w.engine.(consensus.Istanbul); ok{
-					// todo: shouldSeal()
-					if eng.ShouldSeal() {
-						log.Info("+++++++++++++++++++++++++++++++++++ShouldSeal() -> true")
-						commit(false, commitInterruptResubmit, nil)
-					} else{
-						//log.Info("...")
-					}
-
-					// timer.Reset(recommit)
-					timer.Reset(100 * time.Millisecond)
-				}else if w.config.Clique == nil || w.config.Clique.Period > 0 {
-					// Short circuit if no new transaction arrives.
-					if atomic.LoadInt32(&w.newTxs) == 0 {
-						timer.Reset(recommit)
-						continue
-					}
-					timestamp = time.Now().UnixNano() / 1e6
-					commit(true, commitInterruptResubmit, nil)
+			if cbftEngine, ok := w.engine.(consensus.Bft); ok {
+				shouldSeal, error := cbftEngine.ShouldSeal()
+				if error != nil {
+					continue
 				}
+
+				if !shouldSeal {
+					timer.Reset(100 * time.Millisecond)
+					continue
+				}
+
+				shouldCommit, commitBlock := w.shouldCommit(time.Now().UnixNano() / 1e6)
+				if !shouldCommit {
+					timer.Reset(recommit)
+					continue
+				}
+
+				log.Debug("begin to package new block regularly ")
+				timestamp = time.Now().UnixNano() / 1e6
+				commit(false, commitInterruptResubmit, commitBlock)
+
+			} else if eng, ok := w.engine.(consensus.Istanbul); ok{
+				// todo: shouldSeal()
+				if eng.ShouldSeal() {
+					log.Info("+++++++++++++++++++++++++++++++++++ShouldSeal() -> true")
+					commit(false, commitInterruptResubmit, nil)
+				} else{
+					//log.Info("...")
+				}
+
+				// timer.Reset(recommit)
+				timer.Reset(100 * time.Millisecond)
+			} else if w.config.Clique == nil || w.config.Clique.Period > 0 {
+				// Short circuit if no new transaction arrives.
+				if atomic.LoadInt32(&w.newTxs) == 0 {
+					timer.Reset(recommit)
+					continue
+				}
+				timestamp = time.Now().UnixNano() / 1e6
+				commit(true, commitInterruptResubmit, nil)
 			}
 
 		case interval := <-w.resubmitIntervalCh:
@@ -1397,18 +1405,19 @@ func (w *worker) shouldCommit(timestamp int64) (bool, *types.Block) {
 	baseBlock, commitTime := w.commitWorkEnv.commitBaseBlock, w.commitWorkEnv.commitTime
 	highestLogicalBlock := w.commitWorkEnv.getHighestLogicalBlock()
 
-	shouldCommit := baseBlock == nil || baseBlock.Hash().Hex() != highestLogicalBlock.Hash().Hex()
-
-	pending, err := w.eth.TxPool().PendingLimited()
-	// Whether there are trades in the trading pool
-	if err == nil && len(pending) > 0 && nil != baseBlock &&
-		baseBlock.Hash().Hex() == highestLogicalBlock.Hash().Hex() {
-		log.Info("w.eth.TxPool()","pending:", len(pending))
+	shouldCommit := false
+	if baseBlock == nil || baseBlock.Hash().Hex() != highestLogicalBlock.Hash().Hex() {
 		shouldCommit = true
+	} else {
+		pending, err := w.eth.TxPool().PendingLimited()
+		if err == nil && len(pending) > 0 {
+			log.Info("w.eth.TxPool()","pending:", len(pending))
+			shouldCommit = true
+		}
 	}
 
 	if shouldCommit && timestamp != 0 {
-		shouldCommit = shouldCommit && (timestamp-commitTime >= w.recommit.Nanoseconds()/1e6)
+		shouldCommit = (timestamp-commitTime) >= w.recommit.Nanoseconds()/1e6
 	}
 	if shouldCommit {
 		w.commitWorkEnv.commitBaseBlock = highestLogicalBlock

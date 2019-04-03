@@ -65,6 +65,7 @@ type Cbft struct {
 	blockSignOutCh        chan *cbfttypes.BlockSignature //a channel to send block signature
 	cbftResultOutCh       chan *cbfttypes.CbftResult     //a channel to send consensus result
 	highestLogicalBlockCh chan *types.Block
+	discardBlockCh        chan struct{}
 	closeOnce             sync.Once
 	exitCh                chan struct{}
 	txPool                *core.TxPool
@@ -775,28 +776,28 @@ func (cbft *Cbft) dataReceiverLoop() {
 	for {
 		select {
 		case v := <-cbft.dataReceiveCh:
-			sign, ok := v.(*cbfttypes.BlockSignature)
-			if ok {
-				err := cbft.signReceiver(sign)
-				if err != nil {
+			if sign, ok := v.(*cbfttypes.BlockSignature); ok {
+				if err := cbft.signReceiver(sign); err != nil {
 					cbft.log.Error("Error", "msg", err)
 				}
 			} else {
-				blockExt, ok := v.(*BlockExt)
-				if ok {
-					err := cbft.blockReceiver(blockExt)
-					if err != nil {
+				if blockExt, ok := v.(*BlockExt); ok {
+					if err := cbft.blockReceiver(blockExt); err != nil {
 						cbft.log.Error("Error", "msg", err)
 					}
 				} else {
-					_, ok := v.(*cbfttypes.BlockSynced)
-					if ok {
-						cbft.blockSynced()
+					if _, ok := v.(*cbfttypes.BlockSynced); ok {
+						//cbft.blockSynced()
 					} else {
 						cbft.log.Error("Received wrong data type")
 					}
 				}
 			}
+		case <-cbft.discardBlockCh:
+			if ok := cbft.discardUnconfirmedBlock(); !ok {
+				cbft.log.Debug("not need discard block")
+			}
+
 		case <-cbft.exitCh:
 			cbft.log.Debug("consensus engine exit")
 			return
@@ -858,6 +859,54 @@ func (cbft *Cbft) removeByTailored(badBlock *BlockExt) {
 	} else {
 		cbft.blockExtMap.Delete(badBlock.block.Hash())
 	}
+}
+
+// discardUnconfirmedBlock will check if there are much blocks unconfirmed,
+// discard it if true, else return false
+func (cbft *Cbft) discardUnconfirmedBlock() bool {
+	log.Info("check if need discard unconfirmed block")
+
+	highestLogicalBlock := cbft.getHighestLogical()
+	highestConfirmedBlock := cbft.getHighestConfirmed()
+
+	log.Debug("current env info",
+		"highest", highestLogicalBlock.number,
+		"hash", highestLogicalBlock.block.Hash(),
+		"confirmed", highestConfirmedBlock.number,
+		"hash", highestConfirmedBlock.block.Hash())
+
+	if highestLogicalBlock.block.Hash() == highestConfirmedBlock.block.Hash() ||
+		highestLogicalBlock.number != highestConfirmedBlock.number + 10 {
+		return false
+	}
+
+	// delete all blocks from highest confirmed
+	if len(highestConfirmedBlock.children) > 0 {
+		for _, child := range highestConfirmedBlock.children {
+			cbft.cleanByTailoredTree(child)
+		}
+	}
+
+	// restore highest confirmed block and highest logical block
+	if highestConfirmedBlock != nil {
+		cbft.highestConfirmed.Store(highestConfirmedBlock)
+
+		for _, child := range highestConfirmedBlock.children {
+			child.parent = nil
+			child.inTree = false
+		}
+		highestConfirmedBlock.children = nil
+	}
+
+	newHighestLogical := cbft.findHighestLogical(highestConfirmedBlock)
+	if newHighestLogical != nil {
+		cbft.setHighestLogical(highestConfirmedBlock, false)
+		log.Debug("getHighestLogical", "number", newHighestLogical.number)
+	} else {
+		log.Debug("newHighestLogical is nil ")
+	}
+
+	return true
 }
 
 // signReceiver handles the received block signature
@@ -1041,26 +1090,6 @@ func (cbft *Cbft) blockReceiver(tmp *BlockExt) error {
 
 		if isLogical {
 			newHighestConfirmed := cbft.findLastClosestConfirmedIncludingSelf(cbft.getHighestConfirmed())
-
-			if currentBlockNum > newHighestConfirmed.number && currentBlockNum - newHighestConfirmed.number == 10 {
-				f := func(k, v interface{}) bool {
-					hash := k.(common.Hash)
-					ext := v.(*BlockExt)
-
-					if ext.number >= highestConfirmedNum && ext.number <= currentBlockNum &&
-						hash != cbft.getHighestConfirmed().block.Hash() {
-						cbft.blockExtMap.Delete(hash)
-					}
-					return true
-				}
-				cbft.blockExtMap.Range(f)
-
-				for number, _ := range cbft.signedSet {
-					if number > newHighestConfirmed.number {
-						delete(cbft.signedSet, number)
-					}
-				}
-			}
 
 			newHighestLogical := cbft.findHighestLogical(cbft.getHighestConfirmed())
 			//rearrange new logical path, and sign block if necessary
@@ -1491,6 +1520,16 @@ func (cbft *Cbft) Seal(chain consensus.ChainReader, block *types.Block, sealResu
 	current.inTree = true
 	current.isExecuted = true
 	current.isSigned = true
+
+	cbft.log.Info("check unconfirmed block")
+	if current.number == cbft.getHighestConfirmed().number + 11 {
+		cbft.log.Debug("send discard unconfirmed block message")
+		//cbft.discardBlockCh <- struct{}{}
+
+		cbft.discardUnconfirmedBlock()
+
+		return nil, errors.New("too much unconfirmed block")
+	}
 
 	//save the block to cbft.blockExtMap
 	cbft.saveBlockExt(sealedBlock.Hash(), current)

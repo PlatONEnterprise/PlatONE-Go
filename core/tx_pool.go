@@ -390,7 +390,7 @@ func (pool *TxPool) loop() {
 
 				pool.mu.Unlock()
 			}
-			// Handle ChainHeadEvent
+		// Handle ChainHeadEvent
 		case ev := <-pool.chainHeadEventCh:
 			if ev.Block != nil {
 				pool.mu.Lock()
