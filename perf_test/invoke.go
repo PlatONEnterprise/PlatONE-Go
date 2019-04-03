@@ -11,7 +11,10 @@ import (
 	"github.com/BCOSnetwork/BCOS-Go/rlp"
 )
 
-var lastTxHash string
+var (
+	txHashList []string
+	lastTxHash string
+)
 
 func invoke(contractAddress string, abiPath string, funcParams string, txType int) (error, interface{}) {
 
@@ -122,6 +125,7 @@ func InvokeContract(contractAddr string, abiPath string, funcParams string, txTy
 		//fmt.Printf("\n trasaction hash: %s\n", resp.Result)
 		pos := strings.Index(resp.Result, "0x")
 		lastTxHash = resp.Result[pos : pos+common.HashLength*2+2]
+		txHashList = append(txHashList, lastTxHash)
 	}
 	return nil, nil
 }

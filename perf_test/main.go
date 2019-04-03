@@ -130,7 +130,6 @@ func main() {
 
 			var tries int = 0
 			startNum := getCurrentBlockNum()
-			start := time.Now()
 			for {
 				tries++
 				// 简单合约调用
@@ -139,7 +138,7 @@ func main() {
 					*deployContractAddress + ")"
 				//fmt.Fprintln(w, str)
 				err, _ = invoke(*contractAddress, *abiPath, str, *txType)
-
+				time.Sleep(2*time.Millisecond)
 				inChan <- 1
 				w.Flush()
 				if tries >= *registerContractNum {
@@ -149,8 +148,6 @@ func main() {
 					for getTxByHash(lastTxHash) == false {
 
 					}
-					// 交易已上链
-					elapsed := time.Since(start)
 
 					err, ret := invoke(*contractAddress, *abiPath, "getRegisteredContracts(0,10000)", *txType)
 					if err != nil {
@@ -175,15 +172,22 @@ func main() {
 					fmt.Fprintf(w, "成功注册合约总数：%d\n", registerContracts)
 					w.Flush()
 
-					stopNum := getCurrentBlockNum()
+					endNum := getCurrentBlockNum()
 
 					var sum int64 = 0
-					for i := startNum; i <= stopNum; i++ {
-						sum += getBlockTxNum(i)
+					var startTimestamp int64
+					var endTimestamp int64
+					n, startTimestamp := getBlockTxNum(startNum)
+					sum += n
+					for i := startNum + 1; i <= endNum; i++ {
+						n, endTimestamp = getBlockTxNum(i)
+						sum += n
 					}
 
-					fmt.Printf("注册合约tps：%f tx/s\n", float64(sum)/elapsed.Seconds())
-					fmt.Fprintf(w, "注册合约tps：%f tx/s\n", float64(sum)/elapsed.Seconds())
+					fmt.Println("###start", startTimestamp, "end", endTimestamp)
+					fmt.Println("hash list", txHashList)
+					fmt.Printf("注册合约tps：%f tx/s\n", float64(sum)/float64(endTimestamp - startTimestamp))
+					fmt.Fprintf(w, "注册合约tps：%f tx/s\n", float64(sum)/float64(endTimestamp - startTimestamp))
 					w.Flush()
 					wg.Done()
 					break
