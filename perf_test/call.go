@@ -74,18 +74,19 @@ func getCurrentBlockNum() int64 {
 		panic(err)
 	}
 
-	d, _ := strconv.ParseInt(resp["result"].(string), 0, 64)
-	return d
+	num, _ := strconv.ParseInt(resp["result"].(string), 0, 64)
+
+	return num
 }
 
-func getBlockTxNum(h int64) int64 {
+func getBlockTxNum(h int64) (num, timestamp int64) {
 	var height interface{}
 	height = "0x" + strconv.FormatInt(h, 16)
 	params := []interface{}{height, true}
 	r, err := Send(params, "eth_getBlockByNumber")
 	if err != nil {
 		fmt.Printf("send http post to get contract address error ")
-		return -1
+		return -1, -1
 	}
 
 	var resp map[string]interface{}
@@ -94,7 +95,9 @@ func getBlockTxNum(h int64) int64 {
 		panic(err)
 	}
 
-	tmp := resp["result"].(map[string]interface{})["transactions"].([]interface{})
+	txList := resp["result"].(map[string]interface{})["transactions"].([]interface{})
 
-	return int64(len(tmp))
+	timestamp, _ = strconv.ParseInt(resp["result"].(map[string]interface{})["timestamp"].(string), 0, 64)
+	num = int64(len(txList))
+	return
 }
