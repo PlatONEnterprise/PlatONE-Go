@@ -63,7 +63,7 @@ func InitSystemconfig() {
 		HighsetNumber: new(big.Int).SetInt64(0),
 		SysParam: &SystemParameter{
 			BlockGasLimit:0xffffffffffff,
-			TxGasLimit: 0xffffffffff,
+			TxGasLimit: 10000000000000,
 			CBFTTime: CBFTProduceBlockCfg{
 				ProduceDuration: int32(10),
 				BlockInterval:   int32(1),
@@ -106,7 +106,7 @@ func (sc *SystemConfig) GetTxGasLimit() int64 {
 	}
 
 	if sc.SysParam.TxGasLimit == 0 {
-		return 0xffffffffff
+		return 10000000000000
 	}
 	return sc.SysParam.TxGasLimit
 }
