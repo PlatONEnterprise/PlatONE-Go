@@ -94,7 +94,7 @@ func (sc *SystemConfig) GetBlockGasLimit() int64 {
 	if sc.SysParam.BlockGasLimit == 0 {
 		return 0xffffffffffff
 	}
-	return sc.SysParam.TxGasLimit
+	return sc.SysParam.BlockGasLimit
 }
 
 func (sc *SystemConfig) GetTxGasLimit() int64 {
