@@ -579,8 +579,6 @@ func (sb *backend) snapshot(chain consensus.ChainReader, number uint64, hash com
 				addrs = append(addrs, common.HexToAddress(addr))
 			}
 
-			log.Info("addrs:", "addr", addrs)
-
 			//snap = newSnapshot(sb.config.Epoch, 0, genesis.Hash(), validator.NewSet(istanbulExtra.Validators, sb.config.ProposerPolicy))
 			snap = newSnapshot(sb.config.Epoch, 0, genesis.Hash(), validator.NewSet(addrs, sb.config.ProposerPolicy))
 			if err := snap.store(sb.db); err != nil {
