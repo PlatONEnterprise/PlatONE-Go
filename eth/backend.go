@@ -149,7 +149,19 @@ func InitInnerCallFunc(ethPtr *Ethereum) {
 			funcParams:= []interface{}{}
 			res := callContract(paramAddr, common.GenCallData(funcName,funcParams))
 			if res != nil{
-				sc.SysParam.TxGasLimit = common.CallResAsInt64(res)
+				ret := common.CallResAsInt64(res)
+				if ret > 0{
+					sc.SysParam.TxGasLimit = ret
+				}
+			}
+			funcName = "getBlockGasLimit"
+			funcParams= []interface{}{}
+			res = callContract(paramAddr, common.GenCallData(funcName,funcParams))
+			if res != nil{
+				ret := common.CallResAsInt64(res)
+				if ret > 0{
+					sc.SysParam.TxGasLimit = ret
+				}
 			}
 			funcName  = "getCBFTTimeParam"
 			funcParams= []interface{}{}
