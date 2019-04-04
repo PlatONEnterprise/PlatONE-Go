@@ -1001,7 +1001,7 @@ func (w *worker) commitTransactionsWithHeader(header *types.Header, txs *types.T
 		switch err {
 		case core.ErrGasLimitReached:
 			// Pop the current out-of-gas transaction without shifting in the next from the account
-			log.Warn("Gas limit exceeded for current block", "blockNumber", header.Number, "blockParentHash", header.ParentHash, "tx.hash", tx.Hash(), "sender", from, w.current.state)
+			log.Warn("Gas limit exceeded for current block", "blockNumber", header.Number, "blockParentHash", header.ParentHash, "tx.hash", tx.Hash(), "sender", from, "senderCurNonce", w.current.state.GetNonce(from), "tx.nonce", tx.Nonce())
 			txs.Pop()
 			rpc.MonitorWriteData(rpc.TransactionExecuteStatus, tx.Hash().String(),"false", w.extdb)
 		case core.ErrNonceTooLow:
@@ -1222,7 +1222,7 @@ func (w *worker) commitNewWork(interrupt *int32, noempty bool, timestamp int64, 
 
 	log.Debug("Begin consensus for new block", "number", header.Number, "gasLimit", header.GasLimit, "parentHash", parent.Hash(), "parentNumber", parent.NumberU64(), "parentStateRoot", parent.Root(), "timestamp", time.Now().UnixNano()/1e6)
 	if err := w.engine.Prepare(w.chain, header); err != nil {
-		log.Error("Failed to prepare header for mining", "err", err)
+		log.Debug("Failed to prepare header for mining", "err", err)
 		return
 	}
 

@@ -160,7 +160,7 @@ func InitInnerCallFunc(ethPtr *Ethereum) {
 			if res != nil{
 				ret := common.CallResAsInt64(res)
 				if ret > 0{
-					sc.SysParam.TxGasLimit = ret
+					sc.SysParam.BlockGasLimit = ret
 				}
 			}
 			funcName  = "getCBFTTimeParam"
@@ -205,7 +205,6 @@ func InitInnerCallFunc(ethPtr *Ethereum) {
 			}
 
 			strRes := common.CallResAsString(res)
-			log.Debug("get nodes info", "node", strRes)
 
 			var tmp common.CommonResult
 			if err := json.Unmarshal(utils.String2bytes(strRes), &tmp); err != nil {

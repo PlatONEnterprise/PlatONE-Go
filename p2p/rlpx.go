@@ -464,7 +464,7 @@ func receiverEncHandshake(conn io.ReadWriter, prv *ecdsa.PrivateKey) (s secrets,
 		}
 	}
 
-	log.Info("pubStr = ", pubStr, "validNode = ", validNode)
+	log.Info("PeerInfo","pubStr", pubStr, "validNode", validNode)
 
 	if(!validNode) {
 		log.Warn("joined node is a deleted node ", pubStr)
