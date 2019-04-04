@@ -36,7 +36,8 @@ func HttpPost(param core.JsonParam) (string, error) {
 	request, _ := http.NewRequest("POST", config.Url, reqNew)
 	request.Header.Set("Content-type", "application/json")
 	response, err := client.Do(request)
-	if response == nil && err != nil {
+	defer response.Body.Close()
+	if response == nil || err != nil {
 		panic(fmt.Sprintf("no response from node,%s", err.Error()))
 	}
 	if err == nil && response.StatusCode == 200 {
