@@ -3,24 +3,22 @@ package main
 import (
 	"bufio"
 	"context"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/mem"
 	"github.com/shirou/gopsutil/net"
+	"math/rand"
 	"os"
 	"strconv"
 	"sync"
 	"time"
 
-	"github.com/BCOSnetwork/BCOS-Go/log"
-
 	// "github.com/shirou/gopsutil/cpu"
 	// "github.com/shirou/gopsutil/mem"
 	// "github.com/shirou/gopsutil/net"
 
-	types "github.com/BCOSnetwork/BCOS-Go/core/types"
+	"github.com/BCOSnetwork/BCOS-Go/core/types"
 	cli "github.com/BCOSnetwork/BCOS-Go/ethclient"
 )
 
@@ -38,15 +36,18 @@ var (
 	chanValue             = flag.Uint("chanValue", 1000, "每秒最大压力")
 	deployContractAddress = flag.String("deployContractAddress", "", "部署合约地址")
 	registerContractNum   = flag.Int("registerContractNum", 10, "注册合约总数")
-	stressTest            = flag.Bool("stressTest", false, "是否开启压力测试")
+	stressTest            = flag.Int("stressTest", 0, "是否开启压力测试, 1:简单合约测试(setter&getter) 2. 复杂合约测试(CNS)")
 	consensusTest         = flag.Bool("consensusTest", false, "是否开启共识测试")
 )
 
 const (
 	consensusLogFile      = "./consensus_data.txt"
 	simpleContractLogFile = "./contract_data.txt"
-	contractName          = "demoContract"
-	versionFrontPart      = "1.1.1."
+)
+
+var (
+	contractName string = "demoContractNo" + strconv.Itoa(rand.Int())
+	versionFrontPart = "1.1.1."
 )
 
 func main() {
@@ -112,7 +113,7 @@ func main() {
 		}()
 	}
 
-	if *stressTest {
+	if *stressTest != 0 {
 		wg.Add(1)
 		go func() {
 			handle, err := os.Create(simpleContractLogFile)
@@ -124,76 +125,89 @@ func main() {
 
 			//Judging whether this contract exists or not
 			parseConfigJson(*configPath)
-			if !getContractByAddress(*deployContractAddress) {
-				panic("the contract address is not exist ...")
+			if *stressTest == 1 {
+				// 简单合约调用
+				if !getContractByAddress(*contractAddress) {
+					panic("-contractAddress [...] is not exist ...")
+				}
+			} else if *stressTest == 2 {
+				if !getContractByAddress(*deployContractAddress) {
+					panic("-deployContractAddress [...] is not exist ...")
+				}
+			} else {
+				panic("-stressTest is invalid ...")
 			}
 
 			var tries int = 0
 			startNum := getCurrentBlockNum()
+		stressTest:
 			for {
 				tries++
-				// 简单合约调用
+				var str string
+				if *stressTest == 1 {
+					// 简单合约调用
+					str = "invokeNotify(\"test1....\")"
+				} else {
+					// 复杂合约调用
+					str = "cnsRegister(" + contractName + "," + versionFrontPart + strconv.Itoa(tries) + "," +
+						*deployContractAddress + ")"
+				}
 
-				str := "cnsRegister(" + contractName + "," + versionFrontPart + strconv.Itoa(tries) + "," +
-					*deployContractAddress + ")"
-				//fmt.Fprintln(w, str)
+				fmt.Fprintln(w, str)
 				err, _ = invoke(*contractAddress, *abiPath, str, *txType)
-				time.Sleep(2*time.Millisecond)
-				inChan <- 1
-				w.Flush()
+				time.Sleep(2 * time.Millisecond)
+				//inChan <- 1
+
 				if tries >= *registerContractNum {
 					// 查询成功注册合约总数
-					var records map[string]interface{}
+					var startTimestamp int64
+					var endTimestamp int64
 
-					for getTxByHash(lastTxHash) == false {
-
+					last := len(txHashList) - 1
+					for getTxByHash(txHashList[last]) == false &&
+						getTxByHash(txHashList[last - 2]) == false &&
+						getTxByHash(txHashList[last - 4]) == false &&
+						getTxByHash(txHashList[last - 6]) == false {
+						select {
+						case <-closeChan:
+							break stressTest
+						default:
+						}
 					}
-
-					err, ret := invoke(*contractAddress, *abiPath, "getRegisteredContracts(0,10000)", *txType)
-					if err != nil {
-						panic(err.Error())
-					}
-
-					trimRet := []byte(ret.(string))
-					l := len(trimRet) - 1
-					for trimRet[l] == byte(0) {
-						l--
-					}
-
-					if err := json.Unmarshal(trimRet[:l+1], &records); err != nil {
-						panic(err)
-
-					} else if records["code"] != 0 || records["msg"].(string) != "ok" {
-						log.Error("contract inner error", "code", records["code"], "msg", records["msg"].(string))
-					}
-
-					registerContracts := int(records["data"].(map[string]interface{})["total"].(float64)) - 1
-					fmt.Printf("成功注册合约总数：%d\n", registerContracts)
-					fmt.Fprintf(w, "成功注册合约总数：%d\n", registerContracts)
-					w.Flush()
 
 					endNum := getCurrentBlockNum()
 
-					var sum int64 = 0
-					var startTimestamp int64
-					var endTimestamp int64
-					n, startTimestamp := getBlockTxNum(startNum)
-					sum += n
+					sum, startTimestamp := getBlockTxNum(startNum)
 					for i := startNum + 1; i <= endNum; i++ {
+						var n int64
 						n, endTimestamp = getBlockTxNum(i)
 						sum += n
 					}
 
+					if *stressTest == 2 {
+						registerContracts := getPerfResults().(int64)
+						fmt.Printf("成功注册合约总数：%d\n", registerContracts)
+						fmt.Fprintf(w, "成功注册合约总数：%d\n", registerContracts)
+					}
+
 					fmt.Println("###start", startTimestamp, "end", endTimestamp)
 					fmt.Println("hash list", txHashList)
-					fmt.Printf("注册合约tps：%f tx/s\n", float64(sum)/float64(endTimestamp - startTimestamp))
-					fmt.Fprintf(w, "注册合约tps：%f tx/s\n", float64(sum)/float64(endTimestamp - startTimestamp))
+					fmt.Printf("注册合约tps：%f tx/s\n", float64(sum)/float64(endTimestamp-startTimestamp))
+					fmt.Fprintf(w, "注册合约tps：%f tx/s\n", float64(sum)/float64(endTimestamp-startTimestamp))
 					w.Flush()
-					wg.Done()
+
 					break
 				}
 
+				select {
+				case <-closeChan:
+					w.Flush()
+					break stressTest
+				default:
+					continue
+				}
 			}
+			wg.Done()
 		}()
 	}
 	/*

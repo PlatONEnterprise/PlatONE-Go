@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/BCOSnetwork/BCOS-Go/cmd/ctool/core"
+	"github.com/BCOSnetwork/BCOS-Go/log"
 )
 
 // 判断合约是否成功上链
@@ -100,4 +101,38 @@ func getBlockTxNum(h int64) (num, timestamp int64) {
 	timestamp, _ = strconv.ParseInt(resp["result"].(map[string]interface{})["timestamp"].(string), 0, 64)
 	num = int64(len(txList))
 	return
+}
+
+func getPerfResults() (interface{}) {
+	var ret interface{}
+	var err error
+	if *stressTest == 1 {
+		err, ret = invoke(*contractAddress, *abiPath, "getName()", *txType)
+		if err != nil {
+			panic(err)
+		}
+		return ret
+	} else {
+		var records map[string]interface{}
+
+		err, ret = invoke(*contractAddress, *abiPath, "getRegisteredContracts(0,10000)", *txType)
+		if err != nil {
+			panic(err)
+		}
+		trimRet := []byte(ret.(string))
+		l := len(trimRet) - 1
+		for trimRet[l] == byte(0) {
+			l--
+		}
+
+		if err := json.Unmarshal(trimRet[:l+1], &records); err != nil {
+			panic(err)
+
+		} else if records["code"] != 0 || records["msg"].(string) != "ok" {
+			log.Error("contract inner error", "code", records["code"], "msg", records["msg"].(string))
+		}
+
+		registerContracts := int64(records["data"].(map[string]interface{})["total"].(float64)) - 1
+		return registerContracts
+	}
 }
