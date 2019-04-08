@@ -124,8 +124,9 @@ func main() {
 
 						curBlockNum = getCurrentBlockNum()
 						curNum, curTimestamp = getBlockTxNum(curBlockNum)
-
-						fmt.Printf("当前区块tps：%4.2f tx/s\n", float64(curNum)/float64(curTimestamp-preTimestamp))
+						if curTimestamp != preTimestamp {
+							fmt.Printf("当前区块tps：%4.2f tx/s\n", float64(curNum)/float64(curTimestamp-preTimestamp))
+						}
 					}
 
 				case <-closeChan:
