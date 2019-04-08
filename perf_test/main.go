@@ -55,6 +55,8 @@ var (
 	curNum       int64
 	curBlockNum  int64
 	curTimestamp int64
+
+	count int = 0
 )
 
 func main() {
@@ -72,7 +74,6 @@ func main() {
 		// 计算平均共识时间
 		wg.Add(1)
 		go func() {
-			var count int = 0
 			var start time.Time
 			var elapsed time.Duration
 
@@ -130,9 +131,7 @@ func main() {
 					}
 
 				case <-closeChan:
-					panic("stop by interrupt...")
-					w.Flush()
-					break perf
+					panic("stopped, interuppted by signal...")
 				default:
 
 				}
@@ -145,7 +144,13 @@ func main() {
 	}
 
 	if *stressTest != 0 {
-		time.Sleep(2 * time.Second)
+		// 等待newHead事件
+		if *consensusTest {
+			for count <= 2 {
+				time.Sleep(1 * time.Second)
+			}
+		}
+
 		wg.Add(1)
 		go func() {
 			handle, err := os.Create(simpleContractLogFile)
@@ -207,7 +212,7 @@ func main() {
 						getTxByHash(txHashList[last-6]) == false {
 						select {
 						case <-closeChan:
-							break stressTest
+							panic("stopped, interuppted by signal...")
 						default:
 						}
 					}
@@ -238,8 +243,7 @@ func main() {
 
 				select {
 				case <-closeChan:
-					w.Flush()
-					break stressTest
+					panic("stopped, interuppted by signal...")
 				default:
 					continue
 				}
