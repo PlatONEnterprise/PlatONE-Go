@@ -70,7 +70,7 @@ var (
 
 	// ErrInsufficientFunds is returned if the total cost of executing a transaction
 	// is higher than the balance of the user's account.
-	ErrInsufficientFunds = errors.New("insufficient funds for gas * price + value")
+	ErrInsufficientFunds = errors.New("insufficient funds for value")
 
 	// ErrIntrinsicGas is returned if the transaction is specified to use less gas
 	// than required to start the invocation.
@@ -828,7 +828,7 @@ func (pool *TxPool) validateTx(tx *types.Transaction, local bool) error {
 	    txGasLimit = common.SysCfg.GetTxGasLimit()
 	}
 
-	log.Info("validateTx test", "txslimit", txGasLimit)
+	log.Debug("validateTx test", "txslimit", txGasLimit)
 	//if uint64(txGasLimit) < tx.Gas() {
 	//	return ErrTransactionGasLimit
 	//}
@@ -859,10 +859,10 @@ func (pool *TxPool) validateTx(tx *types.Transaction, local bool) error {
 	//}
 	// Transactor should have enough funds to cover the costs
 	// cost == V + GP * GL
-	/*if pool.currentState.GetBalance(from).Cmp(tx.Cost()) < 0 {
+	if pool.currentState.GetBalance(from).Cmp(tx.Value()) < 0 {
 		return ErrInsufficientFunds
 	}
-	intrGas, err := IntrinsicGas(tx.Data(), tx.To() == nil, pool.homestead)
+	/*intrGas, err := IntrinsicGas(tx.Data(), tx.To() == nil, pool.homestead)
 	if err != nil {
 		return err
 	}

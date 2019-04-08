@@ -58,7 +58,7 @@ func (c *core) handlePreprepare(msg *message, src istanbul.Validator) error {
 
 	// ----parse future preprepare begin -------------------------------------------
 	if preprepare.View.Sequence.Cmp(c.current.sequence) != 0 {
-		logger.Warn("expected sequence ", c.current.sequence, "but get sequence ", preprepare.View.Sequence)
+		logger.Warn("handlePreprepare", "expected sequence ", c.current.sequence, "but get sequence ", preprepare.View.Sequence)
 		return errors.New("unexpected sequence")
 	}
 
