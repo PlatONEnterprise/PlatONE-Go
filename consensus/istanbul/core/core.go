@@ -291,7 +291,7 @@ func (c *core) catchUpRound(view *istanbul.View) {
 
 // updateRoundState updates round state by checking if locking block is necessary
 func (c *core) updateRoundState(view *istanbul.View, validatorSet istanbul.ValidatorSet, roundChange bool) {
-	log.Debug("updateRoundState", "roundChange", "current", c.current)
+	log.Debug("updateRoundState roundChange", "current", c.current)
 	if nil != c.current {
 		if view.Sequence.Cmp(c.current.sequence) > 0 {
 			log.Info(fmt.Sprintf("sequence changed,from %d,to %d", c.current.sequence, view.Sequence))

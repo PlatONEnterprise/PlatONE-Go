@@ -473,14 +473,13 @@ func (w *worker) newWorkLoop(recommit time.Duration) {
 			} else if eng, ok := w.engine.(consensus.Istanbul); ok{
 				// todo: shouldSeal()
 				if eng.ShouldSeal() {
-					log.Info("+++++++++++++++++++++++++++++++++++ShouldSeal() -> true")
+					log.Debug("+++++++++++++++++++++++++++++++++++ShouldSeal() -> true")
 					commit(false, commitInterruptResubmit, nil)
+					timer.Reset(1000 * time.Millisecond)
 				} else{
 					//log.Info("...")
+					timer.Reset(100 * time.Millisecond)
 				}
-
-				// timer.Reset(recommit)
-				timer.Reset(100 * time.Millisecond)
 			} else if w.config.Clique == nil || w.config.Clique.Period > 0 {
 				// Short circuit if no new transaction arrives.
 				if atomic.LoadInt32(&w.newTxs) == 0 {
@@ -1002,7 +1001,7 @@ func (w *worker) commitTransactionsWithHeader(header *types.Header, txs *types.T
 		switch err {
 		case core.ErrGasLimitReached:
 			// Pop the current out-of-gas transaction without shifting in the next from the account
-			log.Warn("Gas limit exceeded for current block", "blockNumber", header.Number, "blockParentHash", header.ParentHash, "tx.hash", tx.Hash(), "sender", from, w.current.state)
+			log.Warn("Gas limit exceeded for current block", "blockNumber", header.Number, "blockParentHash", header.ParentHash, "tx.hash", tx.Hash(), "sender", from, "senderCurNonce", w.current.state.GetNonce(from), "tx.nonce", tx.Nonce())
 			txs.Pop()
 			rpc.MonitorWriteData(rpc.TransactionExecuteStatus, tx.Hash().String(),"false", w.extdb)
 		case core.ErrNonceTooLow:
@@ -1221,9 +1220,9 @@ func (w *worker) commitNewWork(interrupt *int32, noempty bool, timestamp int64, 
 		header.Coinbase = w.coinbase
 	}
 
-	log.Debug("cbft begin to consensus for new block", "number", header.Number, "gasLimit", header.GasLimit, "parentHash", parent.Hash(), "parentNumber", parent.NumberU64(), "parentStateRoot", parent.Root(), "timestamp", time.Now().UnixNano()/1e6)
+	log.Debug("Begin consensus for new block", "number", header.Number, "gasLimit", header.GasLimit, "parentHash", parent.Hash(), "parentNumber", parent.NumberU64(), "parentStateRoot", parent.Root(), "timestamp", time.Now().UnixNano()/1e6)
 	if err := w.engine.Prepare(w.chain, header); err != nil {
-		log.Error("Failed to prepare header for mining", "err", err)
+		log.Debug("Failed to prepare header for mining", "err", err)
 		return
 	}
 

@@ -828,10 +828,10 @@ func (pool *TxPool) validateTx(tx *types.Transaction, local bool) error {
 	    txGasLimit = common.SysCfg.GetTxGasLimit()
 	}
 
-	log.Trace("test", "txslimit", txGasLimit)
-	if uint64(txGasLimit) < tx.Gas() {
-		return ErrTransactionGasLimit
-	}
+	log.Info("validateTx test", "txslimit", txGasLimit)
+	//if uint64(txGasLimit) < tx.Gas() {
+	//	return ErrTransactionGasLimit
+	//}
 
 	// Make sure the transaction is signed properly
 	from, err := types.Sender(pool.signer, tx)
@@ -859,7 +859,7 @@ func (pool *TxPool) validateTx(tx *types.Transaction, local bool) error {
 	//}
 	// Transactor should have enough funds to cover the costs
 	// cost == V + GP * GL
-	if pool.currentState.GetBalance(from).Cmp(tx.Cost()) < 0 {
+	/*if pool.currentState.GetBalance(from).Cmp(tx.Cost()) < 0 {
 		return ErrInsufficientFunds
 	}
 	intrGas, err := IntrinsicGas(tx.Data(), tx.To() == nil, pool.homestead)
@@ -868,7 +868,8 @@ func (pool *TxPool) validateTx(tx *types.Transaction, local bool) error {
 	}
 	if tx.Gas() < intrGas {
 		return ErrIntrinsicGas
-	}
+	}*/
+
 	return nil
 }
 

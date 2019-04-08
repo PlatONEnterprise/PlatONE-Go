@@ -38,6 +38,7 @@ type NodeInfo struct {
 }
 
 type SystemParameter struct {
+	BlockGasLimit   int64
 	TxGasLimit      int64
 	CBFTTime        CBFTProduceBlockCfg
 	GasContractName string
@@ -54,12 +55,14 @@ type SystemConfig struct {
 
 var SysCfg *SystemConfig
 
+
 func InitSystemconfig() {
 	SysCfg = &SystemConfig{
 		SystemConfigMu: &sync.RWMutex{},
 		Nodes:         make([]NodeInfo, 0),
 		HighsetNumber: new(big.Int).SetInt64(0),
 		SysParam: &SystemParameter{
+			BlockGasLimit:0xffffffffffff,
 			TxGasLimit: 10000000000000,
 			CBFTTime: CBFTProduceBlockCfg{
 				ProduceDuration: int32(10),
@@ -81,9 +84,27 @@ func (sc *SystemConfig) UpdateSystemConfig() {
 	sysContractCall(sc)
 }
 
+func (sc *SystemConfig) GetBlockGasLimit() int64 {
+	sc.SystemConfigMu.RLock()
+	defer sc.SystemConfigMu.RUnlock()
+
+	if sc.SysParam.BlockGasLimit < sc.SysParam.TxGasLimit {
+		sc.SysParam.BlockGasLimit = sc.SysParam.TxGasLimit
+	}
+	if sc.SysParam.BlockGasLimit == 0 {
+		return 0xffffffffffff
+	}
+	return sc.SysParam.BlockGasLimit
+}
+
 func (sc *SystemConfig) GetTxGasLimit() int64 {
 	sc.SystemConfigMu.RLock()
 	defer sc.SystemConfigMu.RUnlock()
+
+	if sc.SysParam.TxGasLimit >  sc.SysParam.BlockGasLimit{
+		sc.SysParam.TxGasLimit = sc.SysParam.BlockGasLimit
+	}
+
 	if sc.SysParam.TxGasLimit == 0 {
 		return 10000000000000
 	}
