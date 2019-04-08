@@ -1,0 +1,111 @@
+[
+    {
+        "name": "registerNode",
+        "inputs": [
+            {
+                "name": "nodeJson",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "int32"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "approve",
+        "inputs": [
+            {
+                "name": "publicKey",
+                "type": "string"
+            },
+            {
+                "name": "status",
+                "type": "int32"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "int32"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "getRegisterInfoByStatus",
+        "inputs": [
+            {
+                "name": "status",
+                "type": "int32"
+            },
+            {
+                "name": "pageNum",
+                "type": "int32"
+            },
+            {
+                "name": "pageSize",
+                "type": "int32"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "getRegisterInfoByPublicKey",
+        "inputs": [
+            {
+                "name": "publicKey",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "getRegisterInfoByOwnerAddress",
+        "inputs": [
+            {
+                "name": "owner",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "Notify",
+        "inputs": [
+            {
+                "type": "uint64"
+            },
+            {
+                "type": "string"
+            }
+        ],
+        "type": "event"
+    }
+]
