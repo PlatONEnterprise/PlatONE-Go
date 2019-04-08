@@ -32,12 +32,13 @@ var (
 	//funcParams            = flag.String("funcParams", "", "待测合约的接口及参数")
 	txType                = flag.Int("txType", 0, "指定发送的交易类型")
 	benchmark             = flag.Bool("benchmark", false, "是否开启benchmark")
-	blockDuration         = flag.Int("blockDuration", 1, "性能测试的区块区间数")
+	blockDuration         = flag.Int("blockDuration", 10, "性能测试的区块区间数")
 	chanValue             = flag.Uint("chanValue", 1000, "每秒最大压力")
 	deployContractAddress = flag.String("deployContractAddress", "", "部署合约地址")
 	registerContractNum   = flag.Int("registerContractNum", 10, "注册合约总数")
 	stressTest            = flag.Int("stressTest", 0, "是否开启压力测试, 1:简单合约测试(setter&getter) 2. 复杂合约测试(CNS)")
 	consensusTest         = flag.Bool("consensusTest", false, "是否开启共识测试")
+	realtimeTps           = flag.Bool("realtimeTps", false, "是否开启实时压力测试")
 )
 
 const (
@@ -46,14 +47,21 @@ const (
 )
 
 var (
-	contractName string = "demoContractNo" + strconv.Itoa(rand.Int())
-	versionFrontPart = "1.1.1."
+	contractName     string = "demoContractNo" + strconv.Itoa(rand.Int())
+	versionFrontPart        = "1.1.1."
+
+	preTimestamp int64
+
+	curNum       int64
+	curBlockNum  int64
+	curTimestamp int64
 )
 
 func main() {
 	var wg sync.WaitGroup
 
 	flag.Parse()
+	parseConfigJson(*configPath)
 
 	inChan := make(chan int, *chanValue)
 	defer close(inChan)
@@ -98,6 +106,7 @@ func main() {
 					fmt.Fprintf(w, "当前区块共识时间 %4.3f 秒\n", curElapsed.Seconds())
 					fmt.Printf("当前区块共识时间 %4.3f 秒\n", curElapsed.Seconds())
 					cur = time.Now()
+
 					count++
 					if count == 1 {
 						start = time.Now()
@@ -105,15 +114,37 @@ func main() {
 						elapsed = time.Since(start)
 						break perf
 					}
+
+					// 计算每个区块的tps
+					if count == 1 {
+						curBlockNum = getCurrentBlockNum()
+						curNum, curTimestamp = getBlockTxNum(curBlockNum)
+					} else {
+						preTimestamp = curTimestamp
+
+						curBlockNum = getCurrentBlockNum()
+						curNum, curTimestamp = getBlockTxNum(curBlockNum)
+
+						fmt.Printf("当前区块tps：%4.2f tx/s\n", float64(curNum)/float64(curTimestamp-preTimestamp))
+					}
+
+				case <-closeChan:
+					panic("stop by interrupt...")
+					w.Flush()
+					break perf
+				default:
+
 				}
 			}
 			fmt.Fprintf(w, "平均共识时间 %4.3f 秒\n", elapsed.Seconds()/float64(*blockDuration))
 			w.Flush()
+
 			wg.Done()
 		}()
 	}
 
 	if *stressTest != 0 {
+		time.Sleep(2 * time.Second)
 		wg.Add(1)
 		go func() {
 			handle, err := os.Create(simpleContractLogFile)
@@ -124,7 +155,6 @@ func main() {
 			w := bufio.NewWriter(handle)
 
 			//Judging whether this contract exists or not
-			parseConfigJson(*configPath)
 			if *stressTest == 1 {
 				// 简单合约调用
 				if !getContractByAddress(*contractAddress) {
@@ -153,9 +183,11 @@ func main() {
 						*deployContractAddress + ")"
 				}
 
+				//fmt.Println(str, *registerContractNum, tries)
 				fmt.Fprintln(w, str)
+
 				err, _ = invoke(*contractAddress, *abiPath, str, *txType)
-				time.Sleep(2 * time.Millisecond)
+				//time.Sleep(2 * time.Millisecond)
 				//inChan <- 1
 
 				if tries >= *registerContractNum {
@@ -163,11 +195,15 @@ func main() {
 					var startTimestamp int64
 					var endTimestamp int64
 
+					if *realtimeTps {
+						break stressTest
+					}
+
 					last := len(txHashList) - 1
 					for getTxByHash(txHashList[last]) == false &&
-						getTxByHash(txHashList[last - 2]) == false &&
-						getTxByHash(txHashList[last - 4]) == false &&
-						getTxByHash(txHashList[last - 6]) == false {
+						getTxByHash(txHashList[last-2]) == false &&
+						getTxByHash(txHashList[last-4]) == false &&
+						getTxByHash(txHashList[last-6]) == false {
 						select {
 						case <-closeChan:
 							break stressTest
@@ -206,6 +242,7 @@ func main() {
 				default:
 					continue
 				}
+
 			}
 			wg.Done()
 		}()
@@ -329,7 +366,5 @@ func main() {
 	}
 
 	go Trap(closeChan)
-
 	wg.Wait()
-
 }
