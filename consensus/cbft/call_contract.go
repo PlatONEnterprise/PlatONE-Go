@@ -77,7 +77,7 @@ func getConsensusNodesList() ([]discover.NodeID, error) {
 	nodeIDs := make([]discover.NodeID, 0, len(tmp))
 	for _, dataObj := range tmp {
 		if pubKey := dataObj.PublicKey; len(pubKey) > 0 {
-			log.Debug("consensus node id", "pubkey", pubKey)
+			log.Debug("Consensus node", "PublicKey", pubKey)
 			if nodeID, err := discover.HexID(pubKey); err == nil {
 				nodeIDs = append(nodeIDs, nodeID)
 			}

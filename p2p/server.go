@@ -447,7 +447,7 @@ func UpdatePeer() {
 			}
 			// oh, not connected and not myself
 			if (!joined) && (selfPublicKey != curPubKey) {
-				log.Info("add node: ", curPubKey)
+				log.Info("Add node", "PublicKey",curPubKey)
 				server.AddPeer(node)
 			}
 		}

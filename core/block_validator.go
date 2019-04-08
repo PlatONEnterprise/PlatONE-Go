@@ -18,6 +18,7 @@ package core
 
 import (
 	"fmt"
+	"github.com/BCOSnetwork/BCOS-Go/common"
 	"github.com/BCOSnetwork/BCOS-Go/consensus"
 	"github.com/BCOSnetwork/BCOS-Go/core/state"
 	"github.com/BCOSnetwork/BCOS-Go/core/types"
@@ -100,7 +101,11 @@ func (v *BlockValidator) ValidateState(block, parent *types.Block, statedb *stat
 // the gas allowance.
 func CalcGasLimit(parent *types.Block, gasFloor, gasCeil uint64) uint64 {
 
-	return parent.GasLimit()
+	if common.SysCfg != nil{
+		return uint64(common.SysCfg.GetBlockGasLimit())
+	}else{
+		return parent.GasLimit()
+	}
 
 	// contrib = (parentGasUsed * 3 / 2) / 1024
 	contrib := (parent.GasUsed() + parent.GasUsed()/2) / params.GasLimitBoundDivisor

@@ -343,18 +343,6 @@ func startNode(ctx *cli.Context, stack *node.Node) {
 	}()
 
 	// Start auxiliary services if enabled
-	if ctx.GlobalBool(utils.MiningEnabledFlag.Name){
-		log.Info("utils.MiningEnabledFlag.Name: true")
-	}else{
-		log.Info("utils.MiningEnabledFlag.Name: false")
-	}
-
-	if ctx.GlobalBool(utils.MiningEnabledFlag.Name){
-		log.Info("utils.MiningEnabledFlag.Name: true")
-	}else{
-		log.Info("utils.MiningEnabledFlag.Name: false")
-	}
-
 	if ctx.GlobalBool(utils.MiningEnabledFlag.Name) || ctx.GlobalBool(utils.DeveloperFlag.Name) {
 		// Mining only makes sense if a full Ethereum node is running
 		if ctx.GlobalString(utils.SyncModeFlag.Name) == "light" {
