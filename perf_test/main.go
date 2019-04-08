@@ -125,7 +125,7 @@ func main() {
 						curBlockNum = getCurrentBlockNum()
 						curNum, curTimestamp = getBlockTxNum(curBlockNum)
 						if curTimestamp != preTimestamp {
-							fmt.Printf("当前区块tps：%4.2f tx/s\n", float64(curNum)/float64(curTimestamp-preTimestamp))
+							fmt.Printf("当前区块tps：%4.2f tx/s\n\n", float64(curNum)/float64(curTimestamp-preTimestamp))
 						}
 					}
 
