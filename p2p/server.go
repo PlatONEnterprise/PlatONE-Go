@@ -363,7 +363,7 @@ func UpdatePeer() {
 	for _, peer := range peers {
 		curPeer := "enode://" + peer.ID + "@" + peer.Network.RemoteAddress
 		joinNodes = append(joinNodes, curPeer)
-		log.Info("joined peer = ", curPeer)
+		log.Info("joined peer", "curPeer", curPeer)
 	}
 	/*
 		cnsAddress := common.HexToAddress("0x0000000000000000000000000000000000000011")

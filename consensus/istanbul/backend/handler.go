@@ -20,7 +20,6 @@ import (
 	"bytes"
 	"errors"
 	"io/ioutil"
-	"math/big"
 	"reflect"
 
 	"github.com/BCOSnetwork/BCOS-Go/core/types"
@@ -112,7 +111,7 @@ func (sb *backend) HandleMsg(addr common.Address, msg p2p.Msg) (bool, error) {
 			defer reader.Reset(payload) // restore so main eth/handler can decode
 			var request struct {        // this has to be same as eth/protocol.go#newBlockData as we are reading NewBlockMsg
 				Block *types.Block
-				TD    *big.Int
+				//TD    *big.Int
 			}
 			if err := msg.Decode(&request); err != nil {
 				log.Debug("Proposer was unable to decode the NewBlockMsg", "error", err)
