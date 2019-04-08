@@ -43,7 +43,8 @@ func newRoundState(view *istanbul.View, validatorSet istanbul.ValidatorSet, lock
 		pendingRequest: pendingRequest,
 		hasBadProposal: hasBadProposal,
 
-		lockedRound:   lockedRound,
+		lockedRound:    lockedRound,
+		lockedPrepares: newMessageSet(validatorSet),
 		//preprepareSet: preprepareSet,
 		//prepareSet:    prepareSet,
 		//commitSet:     commitSet,
@@ -65,7 +66,8 @@ type roundState struct {
 	lockedHash     common.Hash
 	pendingRequest *istanbul.Request
 
-	lockedRound   *big.Int
+	lockedRound    *big.Int
+	lockedPrepares *messageSet
 	//preprepareSet PreprepareSet // all preprepare message at current sequence
 	//prepareSet    VoteSet       // all prepare vote at current sequence
 	//commitSet     VoteSet       // all commit vote at current sequence
@@ -158,6 +160,8 @@ func (s *roundState) LockHash() {
 
 	if s.Preprepare != nil {
 		s.lockedHash = s.Preprepare.Proposal.Hash()
+		s.lockedRound = s.round
+		s.lockedPrepares = s.Prepares
 	}
 }
 
@@ -166,6 +170,8 @@ func (s *roundState) UnlockHash() {
 	defer s.mu.Unlock()
 
 	s.lockedHash = common.Hash{}
+	s.lockedRound = big.NewInt(0)
+	s.lockedPrepares = newMessageSet(s.Prepares.valSet)
 }
 
 func (s *roundState) IsHashLocked() bool {

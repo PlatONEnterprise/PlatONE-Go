@@ -18,11 +18,13 @@ package core
 
 import (
 	"fmt"
+	"io"
 	"math/big"
 	"strings"
 	"sync"
 
 	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/BCOSnetwork/BCOS-Go/rlp"
 	"github.com/BCOSnetwork/BCOS-Go/consensus/istanbul"
 )
 
@@ -46,6 +48,29 @@ type messageSet struct {
 	valSet     istanbul.ValidatorSet
 	messagesMu *sync.Mutex
 	messages   map[common.Address]*message
+}
+
+func (ms *messageSet) EncodeRLP(w io.Writer) error {
+	return rlp.Encode(w, []interface{}{ms.view, ms.Values()})
+}
+
+// DecodeRLP implements rlp.Decoder, and load the consensus fields from a RLP stream.
+func (ms *messageSet) DecodeRLP(s *rlp.Stream) error {
+	var msgSet struct {
+		View     *istanbul.View
+		Messages []*message
+	}
+
+	if err := s.Decode(&msgSet); err != nil {
+		return err
+	}
+	ms.view = msgSet.View
+
+	for _, val := range msgSet.Messages {
+		ms.messages[val.Address] = val
+	}
+
+	return nil
 }
 
 func (ms *messageSet) View() *istanbul.View {
