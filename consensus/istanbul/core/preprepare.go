@@ -17,8 +17,11 @@
 package core
 
 import (
+	"github.com/PlatONnetwork/PlatON-Go/rlp"
+	"math/big"
 	"time"
 
+	"github.com/BCOSnetwork/BCOS-Go/common"
 	"github.com/BCOSnetwork/BCOS-Go/consensus"
 	"github.com/BCOSnetwork/BCOS-Go/consensus/istanbul"
 )
@@ -29,18 +32,30 @@ func (c *core) sendPreprepare(request *istanbul.Request) {
 	if c.current.Sequence().Cmp(request.Proposal.Number()) == 0 && c.IsProposer() {
 		logger.Info("*****************sendPreprepare**************")
 		curView := c.currentView()
-		preprepare, err := Encode(&istanbul.Preprepare{
-			View:     curView,
-			Proposal: request.Proposal,
-		})
+		preprepare := &istanbul.Preprepare{
+			View:           curView,
+			Proposal:       request.Proposal,
+			LockedRound:    big.NewInt(0),
+			LockedHash:     common.Hash{},
+			LockedPrepares: newMessageSet(c.current.Prepares.valSet),
+		}
+
+		if c.current.IsHashLocked() {
+			preprepare.LockedRound = c.current.lockedRound
+			preprepare.LockedHash = c.current.lockedHash
+			preprepare.LockedPrepares = c.current.lockedPrepares
+		}
+		logger.Debug("sendPreprepare", "preprepare", preprepare)
+
+		encodedPreprepare, err := Encode(preprepare)
 		if err != nil {
-			logger.Error("Failed to encode", "view", curView)
+			logger.Error("Failed to encode", "view", curView, "err", err)
 			return
 		}
 
 		c.broadcast(&message{
 			Code: msgPreprepare,
-			Msg:  preprepare,
+			Msg:  encodedPreprepare,
 		})
 	}
 }
@@ -119,6 +134,11 @@ func (c *core) handlePreprepare(msg *message, src istanbul.Validator) error {
 				c.setState(StatePrepared)
 				c.sendCommit()
 			} else {
+				if preprepare.LockedRound.Cmp(c.current.lockedRound) >= 0 && !common.EmptyHash(preprepare.LockedHash) {
+					logger.Debug("handle POLPreprepare")
+					return c.handlePOLPreprepare(src, preprepare)
+				}
+
 				// Send round change
 				c.sendNextRoundChange()
 			}
@@ -131,6 +151,49 @@ func (c *core) handlePreprepare(msg *message, src istanbul.Validator) error {
 			c.sendPrepare()
 		}
 	}
+
+	return nil
+}
+
+func (c *core) handlePOLPreprepare(src istanbul.Validator, preprepare *istanbul.Preprepare) error {
+	logger := c.logger.New("from", src, "state", c.state)
+	logger.Info("*********************handlePOLPreprepare*****************************")
+
+	_, r, err := rlp.EncodeToReader(preprepare.LockedPrepares)
+	if nil != err {
+		logger.Error("Failed to EncodeToReader", "LockedPrepares", preprepare.LockedPrepares, "err", err)
+		return err
+	}
+
+	prepares := newMessageSet(c.valSet)
+	err = rlp.Decode(r, prepares)
+	if nil != err {
+		logger.Error("Failed to decode", "LockedPrepares", preprepare.LockedPrepares, "err", err)
+		return err
+	}
+
+	// check if the vote is invalid
+	valPrepares := prepares.Values()
+	for _, m := range valPrepares {
+		payload, err := m.Payload()
+		if nil != err {
+			logger.Error("Failed to encode", "err", err)
+			return err
+		}
+
+		// Decode message and check its signature
+		msg := new(message)
+		if err := msg.FromPayload(payload, c.validateFn); err != nil {
+			logger.Error("Failed to decode message from payload", "err", err)
+			return err
+		}
+	}
+
+	c.current.UnlockHash()
+
+	c.acceptPreprepare(preprepare)
+	c.setState(StatePreprepared)
+	c.sendPrepare()
 
 	return nil
 }
