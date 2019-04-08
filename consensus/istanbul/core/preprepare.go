@@ -17,7 +17,6 @@
 package core
 
 import (
-	"errors"
 	"time"
 
 	"github.com/BCOSnetwork/BCOS-Go/consensus"
@@ -56,16 +55,16 @@ func (c *core) handlePreprepare(msg *message, src istanbul.Validator) error {
 		return errFailedDecodePreprepare
 	}
 
-	// ----parse future preprepare begin -------------------------------------------
-	if preprepare.View.Sequence.Cmp(c.current.sequence) != 0 {
-		logger.Warn("handlePreprepare", "expected sequence ", c.current.sequence, "but get sequence ", preprepare.View.Sequence)
-		return errors.New("unexpected sequence")
-	}
-
-	if preprepare.View.Round.Cmp(c.current.round) > 0 {
-		return c.handleFuturePreprepare(preprepare, src)
-	}
-	// ----parse future preprepare end -------------------------------------------
+	//// ----parse future preprepare begin -------------------------------------------
+	//if preprepare.View.Sequence.Cmp(c.current.sequence) != 0 {
+	//	logger.Warn("handlePreprepare", "expected sequence ", c.current.sequence, "but get sequence ", preprepare.View.Sequence)
+	//	return errors.New("unexpected sequence")
+	//}
+	//
+	//if preprepare.View.Round.Cmp(c.current.round) > 0 {
+	//	return c.handleFuturePreprepare(preprepare, src)
+	//}
+	//// ----parse future preprepare end -------------------------------------------
 
 	// Ensure we have the same view with the PRE-PREPARE message
 	// If it is old message, see if we need to broadcast COMMIT
@@ -136,34 +135,34 @@ func (c *core) handlePreprepare(msg *message, src istanbul.Validator) error {
 	return nil
 }
 
-func (c *core) handleFuturePreprepare(preprepare *istanbul.Preprepare, src istanbul.Validator) error {
-	logger := c.logger.New("from", src, "state", c.state)
-	logger.Info("*********************handleFuturePreprepare*****************************")
-
-	// Get validator set for the given proposal
-	valSet := c.backend.ParentValidators(preprepare.Proposal).Copy()
-	previousProposer := c.backend.GetProposer(preprepare.Proposal.Number().Uint64() - 1)
-	valSet.CalcProposer(previousProposer, preprepare.View.Round.Uint64())
-	// 1. The proposer needs to be a proposer matches the given (Sequence + Round)
-	// 2. The given block must exist
-	if !valSet.IsProposer(src.Address()) || !c.backend.HasPropsal(preprepare.Proposal.Hash(), preprepare.Proposal.Number()) {
-		logger.Warn("invalid future preprepare message")
-		return errors.New("invalid future preprepare message")
-	}
-
-	if duration, err := c.backend.Verify(preprepare.Proposal); nil != err {
-		logger.Warn("Failed to verify future proposal", "err", err, duration)
-		return err
-	}
-
-	//把preprepare提议添加到当前preprepareSet
-	if nil == c.current.preprepareSet {
-		c.current.preprepareSet = make(PreprepareSet)
-	}
-	c.current.preprepareSet[preprepare.View.Round] = preprepare
-
-	return nil
-}
+//func (c *core) handleFuturePreprepare(preprepare *istanbul.Preprepare, src istanbul.Validator) error {
+//	logger := c.logger.New("from", src, "state", c.state)
+//	logger.Info("*********************handleFuturePreprepare*****************************")
+//
+//	// Get validator set for the given proposal
+//	valSet := c.backend.ParentValidators(preprepare.Proposal).Copy()
+//	previousProposer := c.backend.GetProposer(preprepare.Proposal.Number().Uint64() - 1)
+//	valSet.CalcProposer(previousProposer, preprepare.View.Round.Uint64())
+//	// 1. The proposer needs to be a proposer matches the given (Sequence + Round)
+//	// 2. The given block must exist
+//	if !valSet.IsProposer(src.Address()) || !c.backend.HasPropsal(preprepare.Proposal.Hash(), preprepare.Proposal.Number()) {
+//		logger.Warn("invalid future preprepare message")
+//		return errors.New("invalid future preprepare message")
+//	}
+//
+//	if duration, err := c.backend.Verify(preprepare.Proposal); nil != err {
+//		logger.Warn("Failed to verify future proposal", "err", err, duration)
+//		return err
+//	}
+//
+//	//把preprepare提议添加到当前preprepareSet
+//	if nil == c.current.preprepareSet {
+//		c.current.preprepareSet = make(PreprepareSet)
+//	}
+//	c.current.preprepareSet[preprepare.View.Round] = preprepare
+//
+//	return nil
+//}
 
 func (c *core) acceptPreprepare(preprepare *istanbul.Preprepare) {
 	c.consensusTimestamp = time.Now()

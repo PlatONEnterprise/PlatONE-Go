@@ -18,7 +18,6 @@ package core
 
 import (
 	"bytes"
-	"fmt"
 	"github.com/BCOSnetwork/BCOS-Go/params"
 	"math"
 	"math/big"
@@ -292,28 +291,15 @@ func (c *core) catchUpRound(view *istanbul.View) {
 // updateRoundState updates round state by checking if locking block is necessary
 func (c *core) updateRoundState(view *istanbul.View, validatorSet istanbul.ValidatorSet, roundChange bool) {
 	log.Debug("updateRoundState roundChange", "current", c.current)
-	if nil != c.current {
-		if view.Sequence.Cmp(c.current.sequence) > 0 {
-			log.Info(fmt.Sprintf("sequence changed,from %d,to %d", c.current.sequence, view.Sequence))
-			c.current = newRoundState(view, validatorSet, common.Hash{}, nil, nil, c.backend.HasBadProposal, big.NewInt(-1), make(PreprepareSet), make(VoteSet), make(VoteSet))
-			return
-		}
-	} else {
-		c.current = newRoundState(view, validatorSet, common.Hash{}, nil, nil, c.backend.HasBadProposal, big.NewInt(-1), make(PreprepareSet), make(VoteSet), make(VoteSet))
-		return
-	}
-
 	// Lock only if both roundChange is true and it is locked
 	if roundChange && c.current != nil {
 		if c.current.IsHashLocked() {
-			c.current = newRoundState(view, validatorSet, c.current.GetLockedHash(), c.current.Preprepare, c.current.pendingRequest, c.backend.HasBadProposal, c.current.lockedRound, c.current.preprepareSet, c.current.prepareSet, c.current.commitSet)
+			c.current = newRoundState(view, validatorSet, c.current.GetLockedHash(), c.current.Preprepare, c.current.pendingRequest, c.backend.HasBadProposal, c.current.lockedRound)
 		} else {
-			c.current = newRoundState(view, validatorSet, common.Hash{}, nil, c.current.pendingRequest, c.backend.HasBadProposal, big.NewInt(-1), c.current.preprepareSet, c.current.prepareSet, c.current.commitSet)
+			c.current = newRoundState(view, validatorSet, common.Hash{}, nil, c.current.pendingRequest, c.backend.HasBadProposal, big.NewInt(0))
 		}
 	} else {
-		if nil != c.current {
-			c.current = newRoundState(view, validatorSet, common.Hash{}, nil, nil, c.backend.HasBadProposal, big.NewInt(-1), c.current.preprepareSet, c.current.prepareSet, c.current.commitSet)
-		}
+		c.current = newRoundState(view, validatorSet, common.Hash{}, nil, nil, c.backend.HasBadProposal, big.NewInt(0))
 	}
 
 	log.Info("===========================================")
