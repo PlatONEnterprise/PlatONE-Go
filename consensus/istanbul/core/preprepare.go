@@ -18,6 +18,7 @@ package core
 
 import (
 	"github.com/BCOSnetwork/BCOS-Go/rlp"
+	"github.com/pkg/errors"
 	"math/big"
 	"time"
 
@@ -69,17 +70,6 @@ func (c *core) handlePreprepare(msg *message, src istanbul.Validator) error {
 	if err != nil {
 		return errFailedDecodePreprepare
 	}
-
-	//// ----parse future preprepare begin -------------------------------------------
-	//if preprepare.View.Sequence.Cmp(c.current.sequence) != 0 {
-	//	logger.Warn("handlePreprepare", "expected sequence ", c.current.sequence, "but get sequence ", preprepare.View.Sequence)
-	//	return errors.New("unexpected sequence")
-	//}
-	//
-	//if preprepare.View.Round.Cmp(c.current.round) > 0 {
-	//	return c.handleFuturePreprepare(preprepare, src)
-	//}
-	//// ----parse future preprepare end -------------------------------------------
 
 	// Ensure we have the same view with the PRE-PREPARE message
 	// If it is old message, see if we need to broadcast COMMIT
@@ -175,18 +165,16 @@ func (c *core) handlePOLPreprepare(src istanbul.Validator, preprepare *istanbul.
 	// check if the vote is invalid
 	valPrepares := prepares.Values()
 	for _, m := range valPrepares {
-		payload, err := m.Payload()
-		if nil != err {
-			logger.Error("Failed to encode", "err", err)
-			return err
+		err := m.Validate(c.validateFn)
+		if nil != err{
+			logger.Error("Failed to validate msg","err",err)
+			return  err
 		}
-
-		// Decode message and check its signature
-		msg := new(message)
-		if err := msg.FromPayload(payload, c.validateFn); err != nil {
-			logger.Error("Failed to decode message from payload", "err", err)
-			return err
-		}
+	}
+	
+	if prepares.Size() < c.valSet.Size()-c.valSet.F(){
+		logger.Error("POLprepprepare is invalid, lockedprepares vote -2/3")
+		return errors.New("POLprepprepare is invalid, lockedprepares vote -2/3")
 	}
 
 	c.current.UnlockHash()
@@ -197,35 +185,6 @@ func (c *core) handlePOLPreprepare(src istanbul.Validator, preprepare *istanbul.
 
 	return nil
 }
-
-//func (c *core) handleFuturePreprepare(preprepare *istanbul.Preprepare, src istanbul.Validator) error {
-//	logger := c.logger.New("from", src, "state", c.state)
-//	logger.Info("*********************handleFuturePreprepare*****************************")
-//
-//	// Get validator set for the given proposal
-//	valSet := c.backend.ParentValidators(preprepare.Proposal).Copy()
-//	previousProposer := c.backend.GetProposer(preprepare.Proposal.Number().Uint64() - 1)
-//	valSet.CalcProposer(previousProposer, preprepare.View.Round.Uint64())
-//	// 1. The proposer needs to be a proposer matches the given (Sequence + Round)
-//	// 2. The given block must exist
-//	if !valSet.IsProposer(src.Address()) || !c.backend.HasPropsal(preprepare.Proposal.Hash(), preprepare.Proposal.Number()) {
-//		logger.Warn("invalid future preprepare message")
-//		return errors.New("invalid future preprepare message")
-//	}
-//
-//	if duration, err := c.backend.Verify(preprepare.Proposal); nil != err {
-//		logger.Warn("Failed to verify future proposal", "err", err, duration)
-//		return err
-//	}
-//
-//	//把preprepare提议添加到当前preprepareSet
-//	if nil == c.current.preprepareSet {
-//		c.current.preprepareSet = make(PreprepareSet)
-//	}
-//	c.current.preprepareSet[preprepare.View.Round] = preprepare
-//
-//	return nil
-//}
 
 func (c *core) acceptPreprepare(preprepare *istanbul.Preprepare) {
 	c.consensusTimestamp = time.Now()

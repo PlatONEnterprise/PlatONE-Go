@@ -45,9 +45,6 @@ func newRoundState(view *istanbul.View, validatorSet istanbul.ValidatorSet, lock
 
 		lockedRound:    lockedRound,
 		lockedPrepares: lockedPrepares,
-		//preprepareSet: preprepareSet,
-		//prepareSet:    prepareSet,
-		//commitSet:     commitSet,
 	}
 }
 
@@ -68,9 +65,6 @@ type roundState struct {
 
 	lockedRound    *big.Int
 	lockedPrepares *messageSet
-	//preprepareSet PreprepareSet // all preprepare message at current sequence
-	//prepareSet    VoteSet       // all prepare vote at current sequence
-	//commitSet     VoteSet       // all commit vote at current sequence
 
 	mu             *sync.RWMutex
 	hasBadProposal func(hash common.Hash) bool
