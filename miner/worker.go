@@ -422,6 +422,10 @@ func (w *worker) newWorkLoop(recommit time.Duration) {
 			////
 			common.SysCfg.UpdateSystemConfig()
 
+			if h, ok := w.engine.(consensus.Handler); ok {
+				h.NewChainHead()
+			}
+
 			if cbft, ok := w.engine.(consensus.Bft); ok {
 				cbft.OnBlockSynced()
 			}
