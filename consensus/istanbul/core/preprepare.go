@@ -17,9 +17,12 @@
 package core
 
 import (
-	"errors"
+	"github.com/BCOSnetwork/BCOS-Go/rlp"
+	"github.com/pkg/errors"
+	"math/big"
 	"time"
 
+	"github.com/BCOSnetwork/BCOS-Go/common"
 	"github.com/BCOSnetwork/BCOS-Go/consensus"
 	"github.com/BCOSnetwork/BCOS-Go/consensus/istanbul"
 )
@@ -30,18 +33,30 @@ func (c *core) sendPreprepare(request *istanbul.Request) {
 	if c.current.Sequence().Cmp(request.Proposal.Number()) == 0 && c.IsProposer() {
 		logger.Info("*****************sendPreprepare**************")
 		curView := c.currentView()
-		preprepare, err := Encode(&istanbul.Preprepare{
-			View:     curView,
-			Proposal: request.Proposal,
-		})
+		preprepare := &istanbul.Preprepare{
+			View:           curView,
+			Proposal:       request.Proposal,
+			LockedRound:    big.NewInt(0),
+			LockedHash:     common.Hash{},
+			LockedPrepares: newMessageSet(c.current.Prepares.valSet),
+		}
+
+		if c.current.IsHashLocked() {
+			preprepare.LockedRound = c.current.lockedRound
+			preprepare.LockedHash = c.current.lockedHash
+			preprepare.LockedPrepares = c.current.lockedPrepares
+		}
+		logger.Debug("sendPreprepare", "preprepare", preprepare)
+
+		encodedPreprepare, err := Encode(preprepare)
 		if err != nil {
-			logger.Error("Failed to encode", "view", curView)
+			logger.Error("Failed to encode", "view", curView, "err", err)
 			return
 		}
 
 		c.broadcast(&message{
 			Code: msgPreprepare,
-			Msg:  preprepare,
+			Msg:  encodedPreprepare,
 		})
 	}
 }
@@ -55,17 +70,6 @@ func (c *core) handlePreprepare(msg *message, src istanbul.Validator) error {
 	if err != nil {
 		return errFailedDecodePreprepare
 	}
-
-	// ----parse future preprepare begin -------------------------------------------
-	if preprepare.View.Sequence.Cmp(c.current.sequence) != 0 {
-		logger.Warn("handlePreprepare", "expected sequence ", c.current.sequence, "but get sequence ", preprepare.View.Sequence)
-		return errors.New("unexpected sequence")
-	}
-
-	if preprepare.View.Round.Cmp(c.current.round) > 0 {
-		return c.handleFuturePreprepare(preprepare, src)
-	}
-	// ----parse future preprepare end -------------------------------------------
 
 	// Ensure we have the same view with the PRE-PREPARE message
 	// If it is old message, see if we need to broadcast COMMIT
@@ -120,6 +124,11 @@ func (c *core) handlePreprepare(msg *message, src istanbul.Validator) error {
 				c.setState(StatePrepared)
 				c.sendCommit()
 			} else {
+				if preprepare.LockedRound.Cmp(c.current.lockedRound) >= 0 && !common.EmptyHash(preprepare.LockedHash) && preprepare.LockedHash == preprepare.Proposal.Hash() {
+					logger.Debug("handle POLPreprepare")
+					return c.handlePOLPreprepare(src, preprepare)
+				}
+
 				// Send round change
 				c.sendNextRoundChange()
 			}
@@ -136,31 +145,43 @@ func (c *core) handlePreprepare(msg *message, src istanbul.Validator) error {
 	return nil
 }
 
-func (c *core) handleFuturePreprepare(preprepare *istanbul.Preprepare, src istanbul.Validator) error {
+func (c *core) handlePOLPreprepare(src istanbul.Validator, preprepare *istanbul.Preprepare) error {
 	logger := c.logger.New("from", src, "state", c.state)
-	logger.Info("*********************handleFuturePreprepare*****************************")
+	logger.Info("*********************handlePOLPreprepare*****************************")
 
-	// Get validator set for the given proposal
-	valSet := c.backend.ParentValidators(preprepare.Proposal).Copy()
-	previousProposer := c.backend.GetProposer(preprepare.Proposal.Number().Uint64() - 1)
-	valSet.CalcProposer(previousProposer, preprepare.View.Round.Uint64())
-	// 1. The proposer needs to be a proposer matches the given (Sequence + Round)
-	// 2. The given block must exist
-	if !valSet.IsProposer(src.Address()) || !c.backend.HasPropsal(preprepare.Proposal.Hash(), preprepare.Proposal.Number()) {
-		logger.Warn("invalid future preprepare message")
-		return errors.New("invalid future preprepare message")
-	}
-
-	if duration, err := c.backend.Verify(preprepare.Proposal); nil != err {
-		logger.Warn("Failed to verify future proposal", "err", err, duration)
+	_, r, err := rlp.EncodeToReader(preprepare.LockedPrepares)
+	if nil != err {
+		logger.Error("Failed to EncodeToReader", "LockedPrepares", preprepare.LockedPrepares, "err", err)
 		return err
 	}
 
-	//把preprepare提议添加到当前preprepareSet
-	if nil == c.current.preprepareSet {
-		c.current.preprepareSet = make(PreprepareSet)
+	prepares := newMessageSet(c.valSet)
+	err = rlp.Decode(r, prepares)
+	if nil != err {
+		logger.Error("Failed to decode", "LockedPrepares", preprepare.LockedPrepares, "err", err)
+		return err
 	}
-	c.current.preprepareSet[preprepare.View.Round] = preprepare
+
+	// check if the vote is invalid
+	valPrepares := prepares.Values()
+	for _, m := range valPrepares {
+		err := m.Validate(c.validateFn)
+		if nil != err{
+			logger.Error("Failed to validate msg","err",err)
+			return  err
+		}
+	}
+	
+	if prepares.Size() < c.valSet.Size()-c.valSet.F(){
+		logger.Error("POLprepprepare is invalid, lockedprepares vote -2/3")
+		return errors.New("POLprepprepare is invalid, lockedprepares vote -2/3")
+	}
+
+	c.current.UnlockHash()
+
+	c.acceptPreprepare(preprepare)
+	c.setState(StatePreprepared)
+	c.sendPrepare()
 
 	return nil
 }

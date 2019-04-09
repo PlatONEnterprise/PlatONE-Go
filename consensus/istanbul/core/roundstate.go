@@ -31,7 +31,7 @@ import (
 // we need to keep a reference of preprepare in order to propose locked proposal when there is a lock and itself is the proposer
 func newRoundState(view *istanbul.View, validatorSet istanbul.ValidatorSet, lockedHash common.Hash,
 	preprepare *istanbul.Preprepare, pendingRequest *istanbul.Request, hasBadProposal func(hash common.Hash) bool,
-	lockedRound *big.Int, preprepareSet PreprepareSet, prepareSet VoteSet, commitSet VoteSet) *roundState {
+	lockedRound *big.Int, lockedPrepares *messageSet) *roundState {
 	return &roundState{
 		round:          view.Round,
 		sequence:       view.Sequence,
@@ -43,17 +43,15 @@ func newRoundState(view *istanbul.View, validatorSet istanbul.ValidatorSet, lock
 		pendingRequest: pendingRequest,
 		hasBadProposal: hasBadProposal,
 
-		lockedRound:   lockedRound,
-		preprepareSet: preprepareSet,
-		prepareSet:    prepareSet,
-		commitSet:     commitSet,
+		lockedRound:    lockedRound,
+		lockedPrepares: lockedPrepares,
 	}
 }
 
 // cache all round preprepare at current sequence
-type PreprepareSet map[*big.Int]*istanbul.Preprepare //key: round value
+//type PreprepareSet map[*big.Int]*istanbul.Preprepare //key: round value
 
-type VoteSet map[*big.Int]*messageSet //key: round value
+//type VoteSet map[*big.Int]*messageSet //key: round value
 
 // roundState stores the consensus state
 type roundState struct {
@@ -65,10 +63,8 @@ type roundState struct {
 	lockedHash     common.Hash
 	pendingRequest *istanbul.Request
 
-	lockedRound   *big.Int      // -1 means no lock
-	preprepareSet PreprepareSet // all preprepare message at current sequence
-	prepareSet    VoteSet       // all prepare vote at current sequence
-	commitSet     VoteSet       // all commit vote at current sequence
+	lockedRound    *big.Int
+	lockedPrepares *messageSet
 
 	mu             *sync.RWMutex
 	hasBadProposal func(hash common.Hash) bool
@@ -158,6 +154,8 @@ func (s *roundState) LockHash() {
 
 	if s.Preprepare != nil {
 		s.lockedHash = s.Preprepare.Proposal.Hash()
+		s.lockedRound = s.round
+		s.lockedPrepares = s.Prepares
 	}
 }
 
@@ -166,6 +164,8 @@ func (s *roundState) UnlockHash() {
 	defer s.mu.Unlock()
 
 	s.lockedHash = common.Hash{}
+	s.lockedRound = big.NewInt(0)
+	s.lockedPrepares = newMessageSet(s.Prepares.valSet)
 }
 
 func (s *roundState) IsHashLocked() bool {
