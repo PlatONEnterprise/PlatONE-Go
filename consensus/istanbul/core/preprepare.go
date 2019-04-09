@@ -17,7 +17,7 @@
 package core
 
 import (
-	"github.com/PlatONnetwork/PlatON-Go/rlp"
+	"github.com/BCOSnetwork/BCOS-Go/rlp"
 	"math/big"
 	"time"
 

@@ -294,17 +294,15 @@ func (c *core) updateRoundState(view *istanbul.View, validatorSet istanbul.Valid
 	// Lock only if both roundChange is true and it is locked
 	if roundChange && c.current != nil {
 		if c.current.IsHashLocked() {
-			c.current = newRoundState(view, validatorSet, c.current.GetLockedHash(), c.current.Preprepare, c.current.pendingRequest, c.backend.HasBadProposal, c.current.lockedRound)
+			c.current = newRoundState(view, validatorSet, c.current.GetLockedHash(), c.current.Preprepare, c.current.pendingRequest, c.backend.HasBadProposal, c.current.lockedRound, c.current.lockedPrepares)
 		} else {
-			c.current = newRoundState(view, validatorSet, common.Hash{}, nil, c.current.pendingRequest, c.backend.HasBadProposal, big.NewInt(0))
+			c.current = newRoundState(view, validatorSet, common.Hash{}, nil, c.current.pendingRequest, c.backend.HasBadProposal, big.NewInt(0), nil)
 		}
 	} else {
-		c.current = newRoundState(view, validatorSet, common.Hash{}, nil, nil, c.backend.HasBadProposal, big.NewInt(0))
+		c.current = newRoundState(view, validatorSet, common.Hash{}, nil, nil, c.backend.HasBadProposal, big.NewInt(0), nil)
 	}
 
-	log.Info("===========================================")
 	log.Info("====== roundChange round: " + c.current.round.String() + ", height:" + c.current.Sequence().String() + " ======")
-	log.Info("===========================================")
 }
 
 func (c *core) setState(state State) {
