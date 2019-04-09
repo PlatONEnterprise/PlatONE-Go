@@ -18,6 +18,7 @@ package core
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"io"
 
 	"github.com/BCOSnetwork/BCOS-Go/common"
@@ -131,18 +132,28 @@ func (m *message) FromPayload(b []byte, validateFn func([]byte, []byte) (common.
 		return err
 	}
 
+	return m.Validate(validateFn)
+}
+
+func (m *message) Validate(validateFn func([]byte, []byte) (common.Address, error)) error {
 	// Validate message (on a message without Signature)
 	if validateFn != nil {
-		var payload []byte
-		payload, err = m.PayloadNoSig()
+		payload, err := m.PayloadNoSig()
 		if err != nil {
 			return err
 		}
 
-		_, err = validateFn(payload, m.Signature)
+		signer, err := validateFn(payload, m.Signature)
+		if nil != err {
+			return err
+		}
+
+		if signer != m.Address {
+			return errors.New("signer != msg.Address")
+		}
 	}
-	// Still return the message even the err is not nil
-	return err
+
+	return nil
 }
 
 func (m *message) Payload() ([]byte, error) {
