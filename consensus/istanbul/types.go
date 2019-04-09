@@ -96,24 +96,32 @@ func (v *View) Cmp(y *View) int {
 type Preprepare struct {
 	View     *View
 	Proposal Proposal
+
+	LockedHash     common.Hash
+	LockedRound    *big.Int
+	LockedPrepares interface{}
 }
 
 // EncodeRLP serializes b into the Ethereum RLP format.
 func (b *Preprepare) EncodeRLP(w io.Writer) error {
-	return rlp.Encode(w, []interface{}{b.View, b.Proposal})
+	return rlp.Encode(w, []interface{}{b.View, b.Proposal, b.LockedHash, b.LockedRound, b.LockedPrepares})
 }
 
 // DecodeRLP implements rlp.Decoder, and load the consensus fields from a RLP stream.
 func (b *Preprepare) DecodeRLP(s *rlp.Stream) error {
 	var preprepare struct {
-		View     *View
-		Proposal *types.Block
+		View           *View
+		Proposal       *types.Block
+		LockedHash     common.Hash
+		LockedRound    *big.Int
+		LockedPrepares interface{}
 	}
 
 	if err := s.Decode(&preprepare); err != nil {
 		return err
 	}
 	b.View, b.Proposal = preprepare.View, preprepare.Proposal
+	b.LockedHash, b.LockedRound, b.LockedPrepares = preprepare.LockedHash, preprepare.LockedRound, preprepare.LockedPrepares
 
 	return nil
 }

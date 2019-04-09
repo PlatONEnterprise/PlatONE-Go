@@ -17,9 +17,7 @@
 package core
 
 import (
-	"errors"
 	"github.com/BCOSnetwork/BCOS-Go/log"
-	"math/big"
 	"reflect"
 
 	"github.com/BCOSnetwork/BCOS-Go/common"
@@ -63,42 +61,6 @@ func (c *core) handleCommit(msg *message, src istanbul.Validator) error {
 		return errFailedDecodeCommit
 	}
 
-	if commit.View.Sequence.Cmp(c.current.sequence) != 0 {
-		return errors.New("future sequence's commit")
-	}
-
-	if commit.View.Round.Cmp(c.current.round) < 0 {
-		return errors.New("old round's commit")
-	}
-
-	if err := c.addCommit(commit, msg, src); err != nil {
-		return err
-	}
-
-	currentMaxRound := big.NewInt(-1)
-
-	// get the max round on which we have a +2/3 prepares
-	for r, _ := range c.current.preprepareSet {
-		if c.current.commitSet[r].Size() >= c.valSet.Size()-c.valSet.F() {
-			if r.Cmp(currentMaxRound) > 0 {
-				currentMaxRound = r
-			}
-		}
-	}
-
-	if currentMaxRound.Cmp(c.current.lockedRound) > 0 {
-		c.current.lockedRound = currentMaxRound
-		c.current.lockedHash = c.current.preprepareSet[currentMaxRound].Proposal.Hash()
-		c.current.round = currentMaxRound
-		c.current.Preprepare = c.current.preprepareSet[currentMaxRound]
-		c.current.Prepares = c.current.prepareSet[currentMaxRound]
-		c.current.Commits = c.current.commitSet[currentMaxRound]
-
-		c.sendCommit()
-		c.commit()
-		return nil
-	}
-
 	if err := c.checkMessage(msgCommit, commit.View); err != nil {
 		return err
 	}
@@ -119,31 +81,6 @@ func (c *core) handleCommit(msg *message, src istanbul.Validator) error {
 		// Still need to call LockHash here since state can skip Prepared state and jump directly to the Committed state.
 		c.current.LockHash()
 		c.commit()
-	}
-
-	return nil
-}
-
-func (c *core) addCommit(commit *istanbul.Subject, msg *message, src istanbul.Validator) error {
-	logger := c.logger.New("addNewCommit", "from", src, "state", c.state)
-
-	msgSet, ok := c.current.commitSet[commit.View.Round]
-	// Add the COMMIT message to current round state
-	if ok {
-		if err := msgSet.Add(msg); err != nil {
-			logger.Error("Failed to record commit message", "msg", msg, "err", err)
-			return err
-		}
-	} else {
-		commitSet := newMessageSet(c.valSet)
-		commitSet.view.Sequence = commit.View.Sequence
-		commitSet.view.Round = commit.View.Round
-
-		if err := commitSet.Add(msg); err != nil {
-			logger.Error("Failed to record commit message", "msg", msg, "err", err)
-			return err
-		}
-		c.current.commitSet[commit.View.Round] = commitSet
 	}
 
 	return nil

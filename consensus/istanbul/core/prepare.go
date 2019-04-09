@@ -17,7 +17,6 @@
 package core
 
 import (
-	"math/big"
 	"reflect"
 
 	"github.com/BCOSnetwork/BCOS-Go/consensus/istanbul"
@@ -48,12 +47,6 @@ func (c *core) handlePrepare(msg *message, src istanbul.Validator) error {
 		return errFailedDecodePrepare
 	}
 
-	if shouldUpdateLockAndRoundState := c.addPrepare(msg, prepare); shouldUpdateLockAndRoundState {
-		if c.updateLockAndRoundState() {
-			return nil
-		}
-	}
-
 	if err := c.checkMessage(msgPrepare, prepare.View); err != nil {
 		return err
 	}
@@ -77,79 +70,6 @@ func (c *core) handlePrepare(msg *message, src istanbul.Validator) error {
 	}
 
 	return nil
-}
-
-func (c *core) updateLockAndRoundState() bool {
-	currentMaxRound := big.NewInt(-1)
-
-	// get the max round on which we have a +2/3 prepares
-	for round, _ := range c.current.preprepareSet {
-		if c.current.prepareSet[round].Size() >= c.valSet.Size()-c.valSet.F() {
-			if round.Cmp(currentMaxRound) > 0 {
-				currentMaxRound = round
-			}
-		}
-	}
-
-	//
-	if currentMaxRound.Cmp(c.current.lockedRound) > 0 {
-		// update lock and round state
-		c.current.lockedRound = currentMaxRound                                         //设置锁定在哪一轮，不管以前是否锁定
-		c.current.lockedHash = c.current.preprepareSet[currentMaxRound].Proposal.Hash() //设置lockRound轮对应的blockhash
-		c.current.round = currentMaxRound
-
-		c.current.Preprepare = c.current.preprepareSet[currentMaxRound]
-		c.current.Prepares = c.current.prepareSet[currentMaxRound]
-		c.current.Commits = c.current.commitSet[currentMaxRound]
-
-		c.setState(StatePrepared)
-		// send commit for this proposal
-		c.sendCommit()
-		// relock to higher round
-		return true
-	}
-
-	return false
-}
-
-// addPrepare caches the received prepare messages if they are for the same sequence with current sequence
-func (c *core) addPrepare(msg *message, prepare *istanbul.Subject) bool {
-	logger := c.logger.New("state", c.state)
-
-	shouldUpdateLockAndRoundState := false
-
-	if prepare.View != nil && prepare.View.Sequence != nil && prepare.View.Round != nil {
-		if prepare.View.Sequence.Cmp(c.current.sequence) != 0 {
-			logger.Warn("Prepare message with not the same sequence", "current: ", c.current.sequence, "prepare:", prepare.View.Sequence)
-			return shouldUpdateLockAndRoundState
-		}
-
-		//
-		if prepare.View.Round.Cmp(c.current.lockedRound) < 0 {
-			logger.Debug("Prepare message with lower round than current locked round, need not cache", "current locked round: ", c.current.lockedRound, "prepare:", prepare.View.Round)
-
-			return shouldUpdateLockAndRoundState
-		}
-
-		if prepareSet, ok := c.current.prepareSet[prepare.View.Round]; ok {
-			if err := prepareSet.Add(msg); err != nil {
-				logger.Warn("Failed to add PREPARE message to prepareSet", "msg", prepare)
-			}
-		} else {
-			prepareSet := newMessageSet(c.valSet)
-			prepareSet.view.Sequence = prepare.View.Sequence
-			prepareSet.view.Round = prepare.View.Round
-			if err := prepareSet.Add(msg); err != nil {
-				logger.Warn("Failed to add PREPARE message to prepareSet", "msg", prepare)
-			}
-
-			c.current.prepareSet[prepare.View.Round] = prepareSet
-		}
-
-		shouldUpdateLockAndRoundState = true
-	}
-
-	return shouldUpdateLockAndRoundState
 }
 
 // verifyPrepare verifies if the received PREPARE message is equivalent to our subject
