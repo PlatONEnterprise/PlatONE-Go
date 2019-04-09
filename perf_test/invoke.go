@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/BCOSnetwork/BCOS-Go/common"
 	"github.com/BCOSnetwork/BCOS-Go/cmd/ctool/core"
+	"github.com/BCOSnetwork/BCOS-Go/common"
 	"github.com/BCOSnetwork/BCOS-Go/common/hexutil"
 	"github.com/BCOSnetwork/BCOS-Go/rlp"
 )
@@ -128,4 +128,84 @@ func InvokeContract(contractAddr string, abiPath string, funcParams string, txTy
 		txHashList = append(txHashList, lastTxHash)
 	}
 	return nil, nil
+}
+
+func assembleForWs(contractAddress string, abiPath string, funcParams string, txType int) []interface{} {
+
+	if contractAddress == "" {
+		fmt.Printf("contract address can't be empty!")
+		return nil
+	}
+
+	if abiPath == "" {
+		fmt.Printf("abi can't be empty!")
+		return nil
+	}
+
+	if funcParams == "" {
+		fmt.Printf("func can't be empty!")
+		return nil
+	}
+
+	return AssembleParamsByWs(contractAddress, abiPath, funcParams, txType)
+
+}
+
+func AssembleParamsByWs(contractAddr string, abiPath string, funcParams string, txType int) []interface{} {
+
+	funcName, inputParams := core.GetFuncNameAndParams(funcParams)
+
+	//Judging whether this method exists or not
+	abiFunc, err := parseFuncFromAbi(abiPath, funcName)
+	if err != nil {
+		return nil
+	}
+
+	if len(abiFunc.Inputs) != len(inputParams) {
+		return nil
+	}
+
+	if txType == 0 {
+		txType = invokeContract
+	}
+
+	paramArr := [][]byte{
+		core.Int64ToBytes(int64(txType)),
+		[]byte(funcName),
+	}
+
+	for i, v := range inputParams {
+		input := abiFunc.Inputs[i]
+		p, e := core.StringConverter(v, input.Type)
+		if e != nil {
+			return nil
+		}
+		paramArr = append(paramArr, p)
+	}
+
+	paramBytes, e := rlp.EncodeToBytes(paramArr)
+	if e != nil {
+		return nil
+	}
+
+	txParams := core.TxParams{
+		From:     config.From,
+		To:       contractAddr,
+		GasPrice: config.GasPrice,
+		Gas:      config.Gas,
+		Data:     hexutil.Encode(paramBytes),
+		TxType:   txType,
+	}
+
+	if abiFunc.Constant == "true" {
+		params := make([]interface{}, 2)
+		params[0] = txParams
+		params[1] = "latest"
+		return params
+	} else {
+		params := make([]interface{}, 1)
+		params[0] = txParams
+		return params
+	}
+
 }
