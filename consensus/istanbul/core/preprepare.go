@@ -134,7 +134,7 @@ func (c *core) handlePreprepare(msg *message, src istanbul.Validator) error {
 				c.setState(StatePrepared)
 				c.sendCommit()
 			} else {
-				if preprepare.LockedRound.Cmp(c.current.lockedRound) >= 0 && !common.EmptyHash(preprepare.LockedHash) {
+				if preprepare.LockedRound.Cmp(c.current.lockedRound) >= 0 && !common.EmptyHash(preprepare.LockedHash) && preprepare.LockedHash == preprepare.Proposal.Hash() {
 					logger.Debug("handle POLPreprepare")
 					return c.handlePOLPreprepare(src, preprepare)
 				}
