@@ -5,21 +5,17 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/shirou/gopsutil/cpu"
-	"github.com/shirou/gopsutil/mem"
-	"github.com/shirou/gopsutil/net"
 	"math/rand"
 	"os"
 	"strconv"
 	"sync"
 	"time"
 
-	// "github.com/shirou/gopsutil/cpu"
-	// "github.com/shirou/gopsutil/mem"
-	// "github.com/shirou/gopsutil/net"
-
 	"github.com/BCOSnetwork/BCOS-Go/core/types"
 	cli "github.com/BCOSnetwork/BCOS-Go/ethclient"
+	"github.com/shirou/gopsutil/cpu"
+	"github.com/shirou/gopsutil/mem"
+	"github.com/shirou/gopsutil/net"
 )
 
 var (
@@ -35,10 +31,11 @@ var (
 	blockDuration         = flag.Int("blockDuration", 10, "性能测试的区块区间数")
 	chanValue             = flag.Uint("chanValue", 1000, "每秒最大压力")
 	deployContractAddress = flag.String("deployContractAddress", "", "部署合约地址")
-	registerContractNum   = flag.Int("registerContractNum", 10, "注册合约总数")
+	totalCount            = flag.Int("totalCount", 10, "发送调用合约交易总数")
 	stressTest            = flag.Int("stressTest", 0, "是否开启压力测试, 1:简单合约测试(setter&getter) 2. 复杂合约测试(CNS)")
 	consensusTest         = flag.Bool("consensusTest", false, "是否开启共识测试")
 	realtimeTps           = flag.Bool("realtimeTps", false, "是否开启实时压力测试")
+	useWs                 = flag.Bool("useWs", false, "是否使用websocket进行压力测试，默认http。")
 )
 
 const (
@@ -57,6 +54,7 @@ var (
 	curTimestamp int64
 
 	count int = 0
+	tries int = 0
 )
 
 func main() {
@@ -84,6 +82,37 @@ func main() {
 				os.Exit(1)
 			}
 			defer client.Close()
+
+			// 通过ws发送交易
+			if *useWs {
+				go func() {
+					for count <= 2 {
+						time.Sleep(1 * time.Second)
+					}
+
+					for i := 0; i < *totalCount; i++ {
+						var str string
+						if *stressTest == 1 {
+							// 简单合约调用
+							str = "invokeNotify(\"test" + strconv.Itoa(i+1) + "....\")"
+						} else {
+							// 复杂合约调用
+							str = "cnsRegister(" + contractName + "," + versionFrontPart + strconv.Itoa(i) + "," +
+								*deployContractAddress + ")"
+						}
+
+						params := assembleForWs(*contractAddress, *abiPath, str, *txType)
+						if params == nil {
+							panic("assembleForWs failed")
+						}
+						err := client.SendTransaction(context.Background(), params[0])
+						if err != nil {
+							panic(err)
+						}
+					}
+				}()
+			}
+
 			heads := make(chan *types.Header, 1)
 			sub, err := client.SubscribeNewHead(context.Background(), heads)
 			if err != nil {
@@ -143,7 +172,7 @@ func main() {
 		}()
 	}
 
-	if *stressTest != 0 {
+	if *stressTest != 0 && !*useWs {
 		// 等待newHead事件
 		if *consensusTest {
 			for count <= 2 {
@@ -174,7 +203,6 @@ func main() {
 				panic("-stressTest is invalid ...")
 			}
 
-			var tries int = 0
 			startNum := getCurrentBlockNum()
 		stressTest:
 			for {
@@ -189,14 +217,14 @@ func main() {
 						*deployContractAddress + ")"
 				}
 
-				//fmt.Println(str, *registerContractNum, tries)
+				//fmt.Println(str, *totalCount, tries)
 				fmt.Fprintln(w, str)
 
 				err, _ = invoke(*contractAddress, *abiPath, str, *txType)
 				//time.Sleep(2 * time.Millisecond)
 				//inChan <- 1
 
-				if tries >= *registerContractNum {
+				if tries >= *totalCount {
 					// 查询成功注册合约总数
 					var startTimestamp int64
 					var endTimestamp int64
