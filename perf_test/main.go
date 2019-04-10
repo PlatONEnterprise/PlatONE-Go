@@ -105,7 +105,7 @@ func main() {
 						if params == nil {
 							panic("assembleForWs failed")
 						}
-						err := client.SendTransaction(context.Background(), params[0])
+						err := client.SendTransaction2(context.Background(), params[0])
 						if err != nil {
 							panic(err)
 						}

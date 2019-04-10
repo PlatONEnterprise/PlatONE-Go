@@ -451,7 +451,7 @@ func (ec *Client) EstimateGas(ctx context.Context, msg ethereum.CallMsg) (uint64
 //
 // If the transaction was a contract creation use the TransactionReceipt method to get the
 // contract address after the transaction has been mined.
-func (ec *Client) SendRawTransaction(ctx context.Context, tx *types.Transaction) error {
+func (ec *Client) SendTransaction(ctx context.Context, tx *types.Transaction) error {
 	data, err := rlp.EncodeToBytes(tx)
 	if err != nil {
 		return err
@@ -459,7 +459,7 @@ func (ec *Client) SendRawTransaction(ctx context.Context, tx *types.Transaction)
 	return ec.c.CallContext(ctx, nil, "eth_sendRawTransaction", common.ToHex(data))
 }
 
-func (ec *Client) SendTransaction(ctx context.Context, paras interface{}) error {
+func (ec *Client) SendTransaction2(ctx context.Context, paras interface{}) error {
 
 	return ec.c.CallContext(ctx, nil, "eth_sendTransaction", paras)
 }
