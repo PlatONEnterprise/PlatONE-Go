@@ -43,18 +43,17 @@ var (
 	errHighestLogicalBlock = errors.New("cannot find a logical block")
 	errListConfirmedBlocks = errors.New("list confirmed blocks error")
 	errMissingSignature    = errors.New("extra-data 65 byte signature suffix missing")
-	extraSeal              = 65
-	windowSize             = 10
+)
 
+const (
+	extraSeal      = 65
+	windowSize     = 10
 	//periodMargin is a percentum for period margin
-	periodMargin = uint64(20)
-
+	periodMargin   = uint64(20)
 	//maxPingLatency is the time in milliseconds between Ping and Pong
 	maxPingLatency = int64(5000)
-
 	//maxAvgLatency is the time in milliseconds between two peers
-	maxAvgLatency = int64(2000)
-
+	maxAvgLatency  = int64(2000)
 	maxResetCacheSize = 512
 )
 
@@ -83,33 +82,7 @@ type Cbft struct {
 	resetCache            *lru.Cache
 }
 
-func (cbft *Cbft) getRootIrreversible() *BlockExt {
-	v := cbft.rootIrreversible.Load()
-	if v == nil {
-		return nil
-	} else {
-		return v.(*BlockExt)
-	}
-}
-
-func (cbft *Cbft) getHighestConfirmed() *BlockExt {
-	v := cbft.highestConfirmed.Load()
-	if v == nil {
-		return nil
-	} else {
-		return v.(*BlockExt)
-	}
-}
-func (cbft *Cbft) getHighestLogical() *BlockExt {
-	v := cbft.highestLogical.Load()
-	if v == nil {
-		return nil
-	} else {
-		return v.(*BlockExt)
-	}
-}
-
-var cbft *Cbft
+var cbft *Cbft = nil
 
 // New creates a concurrent BFT consensus engine
 func New(config *params.CbftConfig, blockSignatureCh chan *cbfttypes.BlockSignature, cbftResultCh chan *cbfttypes.CbftResult, highestLogicalBlockCh chan *types.Block) *Cbft {
@@ -122,22 +95,7 @@ func New(config *params.CbftConfig, blockSignatureCh chan *cbfttypes.BlockSignat
 	rootNodeID := config.InitialNodes[0].ID
 
 	var cbftNodeIds []discover.NodeID
-	initConsensusNodeIds, err := getConsensusNodesList()
-	bIsFind := false
-	for _, node := range initConsensusNodeIds {
-		if node == rootNodeID {
-			bIsFind = true
-			break
-		}
-	}
-	if false == bIsFind {
-		cbftNodeIds = append(cbftNodeIds, rootNodeID)
-	}
-
-	if err == nil && len(initConsensusNodeIds) > 0 {
-		cbftNodeIds = append(cbftNodeIds, initConsensusNodeIds...)
-	}
-
+	cbftNodeIds = append(cbftNodeIds, rootNodeID)
 	_dpos := newDpos(rootNodeID, cbftNodeIds)
 
 	cbft = &Cbft{
@@ -180,12 +138,50 @@ func New(config *params.CbftConfig, blockSignatureCh chan *cbfttypes.BlockSignat
 	return cbft
 }
 
-// reloadCBFTParams reload params
-func (self *Cbft) reloadCBFTParams() {
-	rootID := self.dpos.rootNodeID
+func SetBlockChainCache(blockChainCache *core.BlockChainCache) {
+	cbft.blockChainCache = blockChainCache
+}
+
+// SetBackend sets blockChain and txPool into cbft
+func SetBackend(blockChain *core.BlockChain, txPool *core.TxPool) {
+	cbft.log.Debug("call SetBackend()")
+	cbft.blockChain = blockChain
+	cbft.dpos.SetStartTimeOfEpoch(blockChain.Genesis().Time().Int64())
+
+	currentBlock := blockChain.CurrentBlock()
+
+	genesisParentHash := bytes.Repeat([]byte{0x00}, 32)
+	if bytes.Equal(currentBlock.ParentHash().Bytes(), genesisParentHash) && currentBlock.Number() == nil {
+		currentBlock.Header().Number = big.NewInt(0)
+	}
+
+	cbft.log.Debug("init cbft.highestLogicalBlock", "hash", currentBlock.Hash(), "number", currentBlock.NumberU64())
+
+	current := NewBlockExt(currentBlock, currentBlock.NumberU64())
+	current.inTree = true
+	current.isExecuted = true
+	current.isSigned = true
+	current.isConfirmed = true
+	current.number = currentBlock.NumberU64()
+
+	cbft.saveBlockExt(currentBlock.Hash(), current)
+
+	cbft.highestConfirmed.Store(current)
+
+	//cbft.highestLogical = current
+	cbft.setHighestLogical(current, false)
+
+	cbft.rootIrreversible.Store(current)
+
+	cbft.txPool = txPool
+}
+
+// ReloadCBFTParams reload params
+func ReloadCBFTParams() {
+	rootID := cbft.dpos.rootNodeID
 
 	var cbftNodeIDs []discover.NodeID
-//	cbftNodeIDs = append(cbftNodeIDs, rootID)
+	//	cbftNodeIDs = append(cbftNodeIDs, rootID)
 	consensusNodeIDs, err := getConsensusNodesList()
 	bIsFind := false
 	for _, node := range consensusNodeIDs {
@@ -203,13 +199,24 @@ func (self *Cbft) reloadCBFTParams() {
 	}
 
 	// need test
-	self.dpos.primaryNodeList = cbftNodeIDs
+	cbft.dpos.primaryNodeList = cbftNodeIDs
 
-	if err = getCBFTConfigParams(self.config); err != nil {
-		self.config.Duration = 1
-		self.config.Period = 10
+	if err = getCBFTConfigParams(cbft.config); err != nil {
+		cbft.config.Duration = 1
+		cbft.config.Period = 10
 	}
 }
+
+// IsSignedBySelf returns if the block is signed by local.
+func IsSignedBySelf(sealHash common.Hash, signature []byte) bool {
+	ok, err := verifySign(cbft.config.NodeID, sealHash, signature)
+	if err != nil {
+		cbft.log.Error("verify sign error", "errors", err)
+		return false
+	}
+	return ok
+}
+
 
 // BlockExt is an extension from Block
 type BlockExt struct {
@@ -235,41 +242,65 @@ func NewBlockExt(block *types.Block, blockNum uint64) *BlockExt {
 	}
 }
 
-var flowControl *FlowControl
-
-// FlowControl is a rectifier for sequential blocks
-type FlowControl struct {
-	nodeID      discover.NodeID
-	lastTime    int64
-	maxInterval int64
-	minInterval int64
-}
-
-func NewFlowControl() *FlowControl {
-	return &FlowControl{
-		nodeID:      discover.NodeID{},
-		maxInterval: int64(cbft.config.Period*1000 + cbft.config.Period*1000*periodMargin/100),
-		minInterval: int64(cbft.config.Period*1000 - cbft.config.Period*1000*periodMargin/100),
+// isParent checks if a block is another's parent
+func (parent *BlockExt) isParent(child *types.Block) bool {
+	if parent.block != nil && parent.block.NumberU64()+1 == child.NumberU64() && parent.block.Hash() == child.ParentHash() {
+		return true
 	}
+	return false
 }
 
-// control checks if the block is received at a proper rate
-func (flowControl *FlowControl) control(nodeID discover.NodeID, rcvTime int64) bool {
-	passed := false
-	if flowControl.nodeID == nodeID {
-		differ := rcvTime - flowControl.lastTime
-		if differ >= flowControl.minInterval && differ <= flowControl.maxInterval {
-			passed = true
+// isAncestor checks if a block is another's ancestor
+func (lower *BlockExt) isAncestor(higher *BlockExt) bool {
+
+	if higher == nil || higher.block == nil || lower == nil || lower.block == nil {
+		return false
+	}
+	generations := higher.block.NumberU64() - lower.block.NumberU64()
+	if generations <= 0 {
+		return false
+	}
+
+	for i := uint64(0); i < generations; i++ {
+		parent := higher.parent
+		if parent != nil {
+			higher = parent
 		} else {
-			passed = false
+			return false
 		}
-	} else {
-		passed = true
 	}
-	flowControl.nodeID = nodeID
-	flowControl.lastTime = rcvTime
 
-	return passed
+	if lower.block.Hash() == higher.block.Hash() && lower.block.NumberU64() == higher.block.NumberU64() {
+		return true
+	}
+	return false
+}
+
+// getRootIrreversible return root block which is irreversible
+func (cbft *Cbft) getRootIrreversible() *BlockExt {
+	v := cbft.rootIrreversible.Load()
+	if v == nil {
+		return nil
+	} else {
+		return v.(*BlockExt)
+	}
+}
+
+func (cbft *Cbft) getHighestConfirmed() *BlockExt {
+	v := cbft.highestConfirmed.Load()
+	if v == nil {
+		return nil
+	} else {
+		return v.(*BlockExt)
+	}
+}
+func (cbft *Cbft) getHighestLogical() *BlockExt {
+	v := cbft.highestLogical.Load()
+	if v == nil {
+		return nil
+	} else {
+		return v.(*BlockExt)
+	}
 }
 
 // findBlockExt finds BlockExt in cbft.blockExtMap
@@ -291,14 +322,6 @@ func (cbft *Cbft) collectSign(ext *BlockExt, sign *common.BlockConfirmSign) {
 			}
 		}
 	}
-}
-
-// isParent checks if a block is another's parent
-func (parent *BlockExt) isParent(child *types.Block) bool {
-	if parent.block != nil && parent.block.NumberU64()+1 == child.NumberU64() && parent.block.Hash() == child.ParentHash() {
-		return true
-	}
-	return false
 }
 
 // findParent finds ext's parent with non-nil block
@@ -369,31 +392,6 @@ func (cbft *Cbft) saveBlockExt(hash common.Hash, ext *BlockExt) {
 	cbft.log.Debug("save block in memory", "hash", hash, "number", ext.number, "totalBlocks", length)
 }
 
-// isAncestor checks if a block is another's ancestor
-func (lower *BlockExt) isAncestor(higher *BlockExt) bool {
-
-	if higher == nil || higher.block == nil || lower == nil || lower.block == nil {
-		return false
-	}
-	generations := higher.block.NumberU64() - lower.block.NumberU64()
-	if generations <= 0 {
-		return false
-	}
-
-	for i := uint64(0); i < generations; i++ {
-		parent := higher.parent
-		if parent != nil {
-			higher = parent
-		} else {
-			return false
-		}
-	}
-
-	if lower.block.Hash() == higher.block.Hash() && lower.block.NumberU64() == higher.block.NumberU64() {
-		return true
-	}
-	return false
-}
 
 // findHighest finds the highest block from current start; If there are multiple highest blockExts, return the one that has most signs
 func (cbft *Cbft) findHighest(current *BlockExt) *BlockExt {
@@ -638,10 +636,6 @@ func (cbft *Cbft) IsPrimaryNode() bool {
 	return false
 }
 
-func SetBlockChainCache(blockChainCache *core.BlockChainCache) {
-	cbft.blockChainCache = blockChainCache
-}
-
 // setHighestLogical sets highest logical block and send it to the highestLogicalBlockCh
 func (cbft *Cbft) setHighestLogical(highestLogical *BlockExt, forked bool) {
 	cur := cbft.getHighestLogical()
@@ -652,40 +646,6 @@ func (cbft *Cbft) setHighestLogical(highestLogical *BlockExt, forked bool) {
 		}
 		cbft.highestLogicalBlockCh <- highestLogical.block
 	}
-}
-
-// SetBackend sets blockChain and txPool into cbft
-func SetBackend(blockChain *core.BlockChain, txPool *core.TxPool) {
-	cbft.log.Debug("call SetBackend()")
-	cbft.blockChain = blockChain
-	cbft.dpos.SetStartTimeOfEpoch(blockChain.Genesis().Time().Int64())
-
-	currentBlock := blockChain.CurrentBlock()
-
-	genesisParentHash := bytes.Repeat([]byte{0x00}, 32)
-	if bytes.Equal(currentBlock.ParentHash().Bytes(), genesisParentHash) && currentBlock.Number() == nil {
-		currentBlock.Header().Number = big.NewInt(0)
-	}
-
-	cbft.log.Debug("init cbft.highestLogicalBlock", "hash", currentBlock.Hash(), "number", currentBlock.NumberU64())
-
-	current := NewBlockExt(currentBlock, currentBlock.NumberU64())
-	current.inTree = true
-	current.isExecuted = true
-	current.isSigned = true
-	current.isConfirmed = true
-	current.number = currentBlock.NumberU64()
-
-	cbft.saveBlockExt(currentBlock.Hash(), current)
-
-	cbft.highestConfirmed.Store(current)
-
-	//cbft.highestLogical = current
-	cbft.setHighestLogical(current, false)
-
-	cbft.rootIrreversible.Store(current)
-
-	cbft.txPool = txPool
 }
 
 // BlockSynchronisation reset the cbft env, such as cbft.highestLogical, cbft.highestConfirmed.
@@ -787,7 +747,7 @@ func (cbft *Cbft) dataReceiverLoop() {
 					}
 				} else {
 					if _, ok := v.(*cbfttypes.BlockSynced); ok {
-						//cbft.blockSynced()
+						cbft.blockSynced()
 					} else {
 						cbft.log.Error("Received wrong data type")
 					}
@@ -1027,9 +987,6 @@ func (cbft *Cbft) blockReceiver(tmp *BlockExt) error {
 			"current", currentBlockNum)
 		return nil
 	}
-
-	// reload elements in dpos before check if block legal. It is also used in ShouldSeal
-	cbft.reloadCBFTParams()
 
 	//recover the producer's NodeID
 	producerID, sign, err := ecrecover(block.Header())
@@ -1333,10 +1290,6 @@ func (cbft *Cbft) cleanByNumber(upperLimit uint64) {
 // ShouldSeal checks if it's local's turn to package new block at current time.
 func (cbft *Cbft) ShouldSeal() (bool, error) {
 	cbft.log.Debug("call ShouldSeal()")
-
-	// reload elements in dpos before check if turn seal
-	cbft.reloadCBFTParams()
-
 	// Non-consensus nodes cannot block
 	if flag, _ := cbft.IsConsensusNode(); !flag {
 		return false, nil
@@ -1573,7 +1526,7 @@ func (cbft *Cbft) Seal(chain consensus.ChainReader, block *types.Block, sealResu
 
 // SealHash returns the hash of a block prior to it being sealed.
 func (b *Cbft) SealHash(header *types.Header) common.Hash {
-	cbft.log.Debug("call SealHash()", "hash", header.Hash(), "number", header.Number.Uint64())
+	b.log.Debug("call SealHash()", "hash", header.Hash(), "number", header.Number.Uint64())
 	return header.SealHash()
 }
 
@@ -1714,15 +1667,6 @@ func (cbft *Cbft) GetBlock(hash common.Hash, number uint64) *types.Block {
 	return nil
 }
 
-// IsSignedBySelf returns if the block is signed by local.
-func IsSignedBySelf(sealHash common.Hash, signature []byte) bool {
-	ok, err := verifySign(cbft.config.NodeID, sealHash, signature)
-	if err != nil {
-		cbft.log.Error("verify sign error", "errors", err)
-		return false
-	}
-	return ok
-}
 
 // storeBlocks sends the blocks to cbft.cbftResultOutCh, the receiver will write them into chain
 func (cbft *Cbft) storeBlocks(blocksToStore []*BlockExt) {

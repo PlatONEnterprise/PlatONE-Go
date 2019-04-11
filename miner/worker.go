@@ -244,9 +244,6 @@ func newWorker(config *params.ChainConfig, engine consensus.Engine, eth Backend,
 	worker.chainSideSub = eth.BlockChain().SubscribeChainSideEvent(worker.chainSideCh)
 
 	// Sanitize recommit interval if the user-specified one is too short.
-	if config.Cbft != nil {
-		recommit = time.Duration(config.Cbft.Period) * time.Second
-	}
 	if recommit < minRecommitInterval {
 		log.Warn("Sanitizing miner recommit interval", "provided", recommit, "updated", minRecommitInterval)
 		recommit = minRecommitInterval
@@ -419,13 +416,9 @@ func (w *worker) newWorkLoop(recommit time.Duration) {
 			log.Info("received a event of ChainHeadEvent", "hash", head.Block.Hash(), "number", head.Block.NumberU64(), "parentHash", head.Block.ParentHash())
 			w.blockChainCache.ClearCache(head.Block)
 
-			////
-			common.SysCfg.UpdateSystemConfig()
-
 			if h, ok := w.engine.(consensus.Handler); ok {
 				h.NewChainHead()
 			}
-
 			if cbft, ok := w.engine.(consensus.Bft); ok {
 				cbft.OnBlockSynced()
 			}
@@ -451,6 +444,27 @@ func (w *worker) newWorkLoop(recommit time.Duration) {
 			// higher priced transactions. Disable this overhead for pending blocks.
 			if !w.isRunning() {
 				continue
+			}
+
+			// reset time interval if paramManage contract config modified
+			cbft.ReloadCBFTParams()
+			nowInterval := time.Duration(common.SysCfg.GetCBFTTime().BlockInterval) * time.Second
+			if nowInterval < minRecommitInterval {
+				nowInterval = minRecommitInterval
+			}
+			if recommit != nowInterval {
+				log.Info("block seal interval adjust", "orig", recommit.String(), "now", nowInterval.String())
+				minRecommit, recommit = nowInterval, nowInterval
+				if w.resubmitHook != nil {
+					w.resubmitHook(minRecommit, recommit)
+				}
+
+				oldInterval := recommit
+				recommit = nowInterval
+				if nowInterval > oldInterval {
+					timer.Reset(nowInterval - recommit)
+					continue
+				}
 			}
 
 			if cbftEngine, ok := w.engine.(consensus.Bft); ok {
@@ -822,10 +836,8 @@ func (w *worker) resultLoop() {
 			log.Debug("cbft consensus successful", "hash", hash, "number", number, "timestamp", time.Now().UnixNano()/1e6)
 
 			// Different block could share same sealhash, deep copy here to prevent write-write conflict.
-			var (
-				receipts = make([]*types.Receipt, len(_receipts))
-				logs     []*types.Log
-			)
+			var logs []*types.Log
+			receipts := make([]*types.Receipt, len(_receipts))
 			for i, receipt := range _receipts {
 				receipts[i] = new(types.Receipt)
 				*receipts[i] = *receipt
@@ -853,6 +865,15 @@ func (w *worker) resultLoop() {
 			}
 			rpc.MonitorWriteData(rpc.BlockCommitTime, block.Hash().String(),"", w.extdb)
 			log.Info("Successfully write new block", "hash", block.Hash(), "number", block.NumberU64())
+
+			// load system contract configure
+			if common.SysCfg != nil {
+				common.SysCfg.UpdateSystemConfig()
+			}
+			if _, ok := w.engine.(consensus.Bft); ok {
+				log.Info("load config as insert chain success")
+				cbft.ReloadCBFTParams()
+			}
 
 			// Broadcast the block and announce chain insertion event
 			w.mux.Post(core.NewMinedBlockEvent{Block: block})

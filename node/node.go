@@ -18,7 +18,6 @@ package node
 
 import (
 	"github.com/BCOSnetwork/BCOS-Go/accounts"
-	"github.com/BCOSnetwork/BCOS-Go/common"
 	"github.com/BCOSnetwork/BCOS-Go/ethdb"
 	"github.com/BCOSnetwork/BCOS-Go/event"
 	"github.com/BCOSnetwork/BCOS-Go/internal/debug"
@@ -191,7 +190,6 @@ func (n *Node) Start() error {
 		services[kind] = service
 	}
 
-	common.SysCfg.UpdateSystemConfig()
 	// Gather the protocols and start the freshly assembled P2P server
 	for _, service := range services {
 		running.Protocols = append(running.Protocols, service.Protocols()...)
@@ -293,7 +291,7 @@ func (n *Node) startInProc(apis []rpc.API) error {
 		if err := handler.RegisterName(api.Namespace, api.Service); err != nil {
 			return err
 		}
-		n.log.Debug("InProc registered", "service", api.Service, "namespace", api.Namespace)
+		n.log.Debug("InProc registered", "service", reflect.TypeOf(api.Service).String(), "namespace", api.Namespace)
 	}
 	n.inprocHandler = handler
 	return nil
