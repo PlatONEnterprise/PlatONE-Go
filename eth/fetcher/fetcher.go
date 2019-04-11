@@ -292,6 +292,7 @@ func (f *Fetcher) loop() {
 				f.forgetHash(hash)
 			}
 		}
+
 		// Import any queued blocks that could potentially fit
 		height := f.chainHeight()
 		for !f.queue.Empty() {
@@ -316,6 +317,7 @@ func (f *Fetcher) loop() {
 			}
 			f.insert(op.origin, op.block)
 		}
+
 		// Wait for an outside event to occur
 		select {
 		case <-f.quit:

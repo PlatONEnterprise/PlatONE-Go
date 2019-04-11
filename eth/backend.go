@@ -22,6 +22,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
+	"math/big"
+	"runtime"
+	"sync"
+	"sync/atomic"
+	"time"
+
 	"github.com/BCOSnetwork/BCOS-Go/accounts"
 	"github.com/BCOSnetwork/BCOS-Go/common"
 	"github.com/BCOSnetwork/BCOS-Go/common/hexutil"
@@ -50,11 +57,6 @@ import (
 	"github.com/BCOSnetwork/BCOS-Go/params"
 	"github.com/BCOSnetwork/BCOS-Go/rlp"
 	"github.com/BCOSnetwork/BCOS-Go/rpc"
-	"math"
-	"math/big"
-	"runtime"
-	"sync"
-	"sync/atomic"
 )
 
 func InitInnerCallFunc(ethPtr *Ethereum) {
@@ -335,20 +337,19 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 		}
 		rawdb.WriteDatabaseVersion(chainDb, core.BlockChainVersion)
 	}
-	var (
-		vmConfig = vm.Config{
-			EnablePreimageRecording: config.EnablePreimageRecording,
-			EWASMInterpreter:        config.EWASMInterpreter,
-			EVMInterpreter:          config.EVMInterpreter,
-		}
-		cacheConfig = &core.CacheConfig{Disabled: config.NoPruning, TrieNodeLimit: config.TrieCache, TrieTimeLimit: config.TrieTimeout}
-	)
 
-	eth.blockchain, err = core.NewBlockChain(chainDb, extDb, cacheConfig, eth.chainConfig, eth.engine, vmConfig, eth.shouldPreserve)
+	vmConfig := vm.Config{
+		EnablePreimageRecording: config.EnablePreimageRecording,
+		EWASMInterpreter:        config.EWASMInterpreter,
+		EVMInterpreter:          config.EVMInterpreter,
+	}
+	cacheConfig := &core.CacheConfig{Disabled: config.NoPruning, TrieNodeLimit: config.TrieCache, TrieTimeLimit: config.TrieTimeout}
+
+	funcSyncCBFTParam := cbft.ReloadCBFTParams
+	eth.blockchain, err = core.NewBlockChain(chainDb, extDb, cacheConfig, eth.chainConfig, eth.engine, vmConfig, eth.shouldPreserve, funcSyncCBFTParam)
 	if err != nil {
 		return nil, err
 	}
-
 	blockChainCache := core.NewBlockChainCache(eth.blockchain)
 
 	// Rewind the chain in case of an incompatible config upgrade.
@@ -359,13 +360,30 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	}
 	eth.bloomIndexer.Start(eth.blockchain)
 
+	eth.APIBackend = &EthAPIBackend{eth, nil}
+	gpoParams := config.GPO
+	if gpoParams.Default == nil {
+		gpoParams.Default = config.MinerGasPrice
+	}
+	eth.APIBackend.gpo = gasprice.NewOracle(eth.APIBackend, gpoParams)
+
+	// set init system param function, then reload cbft param before start up miner
+	InitInnerCallFunc(eth)
+	if common.SysCfg != nil {
+		common.SysCfg.UpdateSystemConfig()
+	}
+	if _, ok := eth.engine.(consensus.Bft); ok {
+		log.Trace("Load system config after start up eth")
+		cbft.ReloadCBFTParams()
+	}
+
 	if config.TxPool.Journal != "" {
 		config.TxPool.Journal = ctx.ResolvePath(config.TxPool.Journal)
 	}
 	//eth.txPool = core.NewTxPool(config.TxPool, eth.chainConfig, eth.blockchain)
 	eth.txPool = core.NewTxPool(config.TxPool, eth.chainConfig, blockChainCache, chainDb, eth.extDb)
+	log.Debug("Transaction pool info", "pool", eth.txPool)
 
-	log.Debug("eth.txPool:::::", "txPool", eth.txPool)
 	// mpcPool deal with mpc transactions
 	// modify By J
 	if config.MPCPool.Journal != "" {
@@ -384,12 +402,15 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 
 	// modify by bcos remove consensusCache
 	//var consensusCache *cbft.Cache = cbft.NewCache(eth.blockchain)
-	eth.miner = miner.New(eth, eth.chainConfig, eth.EventMux(), eth.engine, config.MinerRecommit, config.MinerGasFloor, config.MinerGasCeil, eth.isLocalBlock, blockSignatureCh, cbftResultCh, highestLogicalBlockCh, blockChainCache)
+	recommit := config.MinerRecommit
+	if common.SysCfg != nil {
+		recommit = time.Duration(common.SysCfg.GetCBFTTime().BlockInterval) * time.Second
+	}
+	eth.miner = miner.New(eth, eth.chainConfig, eth.EventMux(), eth.engine, recommit, config.MinerGasFloor, config.MinerGasCeil, eth.isLocalBlock, blockSignatureCh, cbftResultCh, highestLogicalBlockCh, blockChainCache)
 	eth.miner.SetEtherbase(crypto.PubkeyToAddress(ctx.NodeKey().PublicKey))
 	eth.miner.SetExtra(makeExtraData(config.MinerExtraData))
 
 	if _, ok := eth.engine.(consensus.Bft); ok {
-		log.Debug("cbft.SetBackend:::::", "SetBackend", eth.txPool)
 		cbft.SetBlockChainCache(blockChainCache)
 		cbft.SetBackend(eth.blockchain, eth.txPool)
 	}
@@ -397,13 +418,6 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	if eth.protocolManager, err = NewProtocolManager(eth.chainConfig, config.SyncMode, config.NetworkId, eth.eventMux, eth.txPool, eth.engine, eth.blockchain, chainDb); err != nil {
 		return nil, err
 	}
-
-	eth.APIBackend = &EthAPIBackend{eth, nil}
-	gpoParams := config.GPO
-	if gpoParams.Default == nil {
-		gpoParams.Default = config.MinerGasPrice
-	}
-	eth.APIBackend.gpo = gasprice.NewOracle(eth.APIBackend, gpoParams)
 
 	if _, ok := eth.engine.(consensus.Istanbul); ok {
 		rootNodes := chainConfig.Istanbul.InitialNodes
