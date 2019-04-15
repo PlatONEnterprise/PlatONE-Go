@@ -447,7 +447,9 @@ func (w *worker) newWorkLoop(recommit time.Duration) {
 			}
 
 			// reset time interval if paramManage contract config modified
-			cbft.ReloadCBFTParams()
+			if _, ok := w.engine.(consensus.Bft); ok {
+				cbft.ReloadCBFTParams()
+			}
 			nowInterval := time.Duration(common.SysCfg.GetCBFTTime().BlockInterval) * time.Second
 			if nowInterval < minRecommitInterval {
 				nowInterval = minRecommitInterval
