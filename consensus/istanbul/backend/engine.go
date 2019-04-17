@@ -428,7 +428,7 @@ func (sb *backend) Seal(chain consensus.ChainReader, block *types.Block, sealRes
 	sb.sealMu.Lock()
 	sb.proposedBlockHash = block.Hash()
 	clear := func() {
-		sb.proposedBlockHash = common.Hash{}
+		//sb.proposedBlockHash = common.Hash{}
 		sb.sealMu.Unlock()
 	}
 	defer clear()
