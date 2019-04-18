@@ -310,43 +310,44 @@ func NewTxPool(config TxPoolConfig, chainconfig *params.ChainConfig, chain txPoo
 
 func (pool *TxPool) txExtBufferReadLoop() {
 	txExtBuf := make([]*txExt, 0)
+
+	var bufMu  = sync.Mutex{}
+	var timer = time.NewTimer(time.Millisecond  * 10)
+
 	for {
-	doTxExtBuf:
 		select {
 		case ext := <-pool.txExtBuffer:
-			begin := time.Now()
+			bufMu.Lock()
+			txExtBuf = append(txExtBuf, ext)
+			bufMu.Unlock()
+
 			rstFlag := atomic.LoadInt32(&pool.rstFlag)
 			pendingFlag := atomic.LoadInt32(&pool.pendingFlag)
-			if rstFlag == DoingRst || pendingFlag == DoingPending {
-				txExtBuf = append(txExtBuf, ext)
-				log.Trace("Doing reset or doing pending, cached txExt", "len", len(pool.txExtBuffer), "rstFlag", rstFlag, "pendingFlag", pendingFlag, "txExtBufSize", len(txExtBuf))
-				continue
-			} else {
-				for i, txExt := range txExtBuf {
+			if rstFlag != DoingRst && pendingFlag != DoingPending {
+				bufMu.Lock()
+				for _, txExt := range txExtBuf {
 					err := pool.addTxExt(txExt)
 					txExt.txErr <- err
-					rstFlag = atomic.LoadInt32(&pool.rstFlag)
-					pendingFlag = atomic.LoadInt32(&pool.pendingFlag)
-					if rstFlag == DoingRst || pendingFlag == DoingPending {
-						txExtBuf = txExtBuf[i+1:]
-						txExtBuf = append(txExtBuf, ext)
-						log.Trace("Process txExtBuffer", "txExtBufLen", len(txExtBuf), "txExtBufferLen", len(pool.txExtBuffer), "duration", time.Since(begin))
-						log.Trace("Doing reset, reinject txExt", "len", len(pool.txExtBuffer), "rstFlag", rstFlag, "pendingFlag", pendingFlag, "txExtBufSize", len(txExtBuf))
-						goto doTxExtBuf
-					}
 				}
 				txExtBuf = make([]*txExt, 0)
+				bufMu.Unlock()
 			}
-			tx, ok := ext.tx.(*types.Transaction)
-			if ok {
-				log.Trace("Get txExt", "len", len(pool.txExtBuffer), "hash", tx.Hash(), "nonce", tx.Nonce())
-			} else {
-				txs := ext.tx.([]*types.Transaction)
-				log.Trace("Get txExt", "len", len(pool.txExtBuffer), "txsSize", len(txs))
+
+		case <- timer.C:
+			timer.Reset(time.Millisecond * 10)
+
+			rstFlag := atomic.LoadInt32(&pool.rstFlag)
+			pendingFlag := atomic.LoadInt32(&pool.pendingFlag)
+			if rstFlag != DoingRst && pendingFlag != DoingPending {
+				bufMu.Lock()
+				for _, txExt := range txExtBuf {
+					err := pool.addTxExt(txExt)
+					txExt.txErr <- err
+				}
+				txExtBuf = make([]*txExt, 0)
+				bufMu.Unlock()
 			}
-			err := pool.addTxExt(ext)
-			ext.txErr <- err
-			log.Trace("Process txExtBuffer", "txExtBufLen", len(txExtBuf), "txExtBufferLen", len(pool.txExtBuffer), "duration", time.Since(begin))
+
 		case <-pool.exitCh:
 			return
 		}
