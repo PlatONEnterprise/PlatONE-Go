@@ -92,8 +92,8 @@ type BlockChain struct {
 
 	db     ethdb.Database // Low level persistent database to store final content in
 	extdb  ethdb.Database
-	triegc *prque.Prque   // Priority queue mapping block numbers to tries to gc
-	gcproc time.Duration  // Accumulates canonical block processing for trie dumping
+	triegc *prque.Prque  // Priority queue mapping block numbers to tries to gc
+	gcproc time.Duration // Accumulates canonical block processing for trie dumping
 
 	hc            *HeaderChain
 	rmLogsFeed    event.Feed
@@ -132,7 +132,7 @@ type BlockChain struct {
 	badBlocks      *lru.Cache              // Bad block cache
 	shouldPreserve func(*types.Block) bool // Function used to determine whether should preserve the given block.
 
-	syncCBFTParam  func()  // used for reload cbft param
+	syncCBFTParam func() // used for reload cbft param
 }
 
 // NewBlockChain returns a fully initialised block chain using information
@@ -155,7 +155,7 @@ func NewBlockChain(db ethdb.Database, extdb ethdb.Database, cacheConfig *CacheCo
 		chainConfig:    chainConfig,
 		cacheConfig:    cacheConfig,
 		db:             db,
-		extdb:			extdb,
+		extdb:          extdb,
 		triegc:         prque.New(nil),
 		stateCache:     state.NewDatabase(db),
 		quit:           make(chan struct{}),
@@ -211,6 +211,7 @@ func (bc *BlockChain) getProcInterrupt() bool {
 func (bc *BlockChain) loadLastState() error {
 	// Restore the last known head block
 	head := rawdb.ReadHeadBlockHash(bc.db)
+	missingStateBlocks := make(types.Blocks, 0)
 	if head == (common.Hash{}) {
 		// Corrupt or empty database, init from scratch
 		log.Warn("Empty database, resetting chain")
@@ -227,7 +228,7 @@ func (bc *BlockChain) loadLastState() error {
 	if _, err := state.New(currentBlock.Root(), bc.stateCache); err != nil {
 		// Dangling block without a state associated, init from scratch
 		log.Warn("Head state missing, repairing chain", "number", currentBlock.Number(), "hash", currentBlock.Hash(), "err", err)
-		if err := bc.repair(&currentBlock); err != nil {
+		if err := bc.repair(&currentBlock, &missingStateBlocks); err != nil {
 			return err
 		}
 	}
@@ -257,6 +258,12 @@ func (bc *BlockChain) loadLastState() error {
 	log.Info("Loaded most recent local header", "number", currentHeader.Number, "hash", currentHeader.Hash(), "age", common.PrettyAge(time.Unix(currentHeader.Time.Int64(), 0)))
 	log.Info("Loaded most recent local full block", "number", currentBlock.Number(), "hash", currentBlock.Hash(), "age", common.PrettyAge(time.Unix(currentBlock.Time().Int64(), 0)))
 	log.Info("Loaded most recent local fast block", "number", currentFastBlock.Number(), "hash", currentFastBlock.Hash(), "age", common.PrettyAge(time.Unix(currentFastBlock.Time().Int64(), 0)))
+
+	if len(missingStateBlocks) != 0 {
+		log.Info("start to replay blocks!", "Number", len(missingStateBlocks))
+		_, err := bc.InsertChain(missingStateBlocks)
+		return err
+	}
 
 	return nil
 }
@@ -423,16 +430,23 @@ func (bc *BlockChain) ResetWithGenesisBlock(genesis *types.Block) error {
 //
 // This method only rolls back the current block. The current header and current
 // fast block are left intact.
-func (bc *BlockChain) repair(head **types.Block) error {
+func (bc *BlockChain) repair(head **types.Block, sortedMissingStateBlocks *types.Blocks) error {
+	missingStateBlocks := make(types.Blocks, 0)
 	for {
 		// Abort if we've rewound to a head block that does have associated state
 		if _, err := state.New((*head).Root(), bc.stateCache); err == nil {
 			log.Info("Rewound blockchain to past state", "number", (*head).Number(), "hash", (*head).Hash())
-			return nil
+			break
 		}
 		// Otherwise rewind one block and recheck state availability there
+		missingStateBlocks = append(missingStateBlocks, bc.GetBlock((*head).Hash(), (*head).NumberU64()))
 		(*head) = bc.GetBlock((*head).ParentHash(), (*head).NumberU64()-1)
 	}
+
+	for i, _ := range missingStateBlocks {
+		*sortedMissingStateBlocks = append(*sortedMissingStateBlocks, missingStateBlocks[len(missingStateBlocks)-1-i])
+	}
+	return nil
 }
 
 // Export writes the active chain to the given writer.
@@ -1002,9 +1016,12 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.
 		bc.insert(block)
 
 		// parse block and retrieves txs
+
 		receipts := bc.GetReceiptsByHash(block.Hash())
-		MPC_POOL.InjectTxs(block, receipts, bc, state)
-		VC_POOL.InjectTxs(block, receipts, bc, state)
+		if MPC_POOL != nil && VC_POOL != nil {
+			MPC_POOL.InjectTxs(block, receipts, bc, state)
+			VC_POOL.InjectTxs(block, receipts, bc, state)
+		}
 	}
 	bc.futureBlocks.Remove(block.Hash())
 	return status, nil
