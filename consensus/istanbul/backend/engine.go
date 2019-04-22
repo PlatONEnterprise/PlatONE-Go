@@ -86,8 +86,8 @@ var (
 var (
 	defaultDifficulty = big.NewInt(1)
 	//nilUncleHash      = types.CalcUncleHash(nil) // Always Keccak256(RLP([])) as uncles are meaningless outside of PoW.
-	emptyNonce        = types.BlockNonce{}
-	now               = time.Now
+	emptyNonce = types.BlockNonce{}
+	now        = time.Now
 
 	nonceAuthVote = hexutil.MustDecode("0xffffffffffffffff") // Magic nonce number to vote on adding a new validator
 	nonceDropVote = hexutil.MustDecode("0x0000000000000000") // Magic nonce number to vote on removing a validator.
@@ -107,6 +107,7 @@ func (sb *backend) Author(header *types.Header) (common.Address, error) {
 // given engine. Verifying the seal may be done optionally here, or explicitly
 // via the VerifySeal method.
 func (sb *backend) VerifyHeader(chain consensus.ChainReader, header *types.Header, seal bool) error {
+	//log.Info("VerifyHeader has pro")
 	return sb.verifyHeader(chain, header, nil)
 }
 
@@ -118,7 +119,7 @@ func (sb *backend) verifyHeader(chain consensus.ChainReader, header *types.Heade
 	if header.Number == nil {
 		return errUnknownBlock
 	}
-
+	//log.Info("VerifyHeader has pro2")
 	// Don't waste time checking blocks from the future
 	if header.Time.Cmp(big.NewInt(now().Unix())) > 0 {
 		return consensus.ErrFutureBlock
@@ -160,6 +161,8 @@ func (sb *backend) verifyCascadingFields(chain consensus.ChainReader, header *ty
 	if number == 0 {
 		return nil
 	}
+
+	log.Info("verifyCascadingFields")
 	// Ensure that the block's timestamp isn't too close to it's parent
 	var parent *types.Header
 	if len(parents) > 0 {
@@ -174,12 +177,14 @@ func (sb *backend) verifyCascadingFields(chain consensus.ChainReader, header *ty
 		return errInvalidTimestamp
 	}
 	// Verify validators in extraData. Validators in snapshot and extraData should be the same.
+	log.Info("getSnapShot")
 	snap, err := sb.snapshot(chain, number-1, header.ParentHash, parents)
 	if err != nil {
 		return err
 	}
 	validators := make([]byte, len(snap.validators())*common.AddressLength)
 	for i, validator := range snap.validators() {
+		log.Info("validator is: ", "address", validator)
 		copy(validators[i*common.AddressLength:], validator[:])
 	}
 	if err := sb.verifySigner(chain, header, parents); err != nil {
@@ -241,6 +246,7 @@ func (sb *backend) verifySigner(chain consensus.ChainReader, header *types.Heade
 
 	// Signer should be in the validator set of previous block's extraData.
 	if _, v := snap.ValSet.GetByAddress(signer); v == nil {
+		log.Info("Unauthorized address is: ", "address", signer)
 		return errUnauthorized
 	}
 	return nil
@@ -253,7 +259,7 @@ func (sb *backend) verifyCommittedSeals(chain consensus.ChainReader, header *typ
 	if number == 0 {
 		return nil
 	}
-
+	log.Info("verifyCommittedSeals")
 	// Retrieve the snapshot needed to verify this header and cache it
 	snap, err := sb.snapshot(chain, number-1, header.ParentHash, parents)
 	if err != nil {
@@ -291,7 +297,7 @@ func (sb *backend) verifyCommittedSeals(chain consensus.ChainReader, header *typ
 	}
 
 	// The length of validSeal should be larger than number of faulty node + 1
-	if validSeal < snap.ValSet.Size() - snap.ValSet.F() /*2*snap.ValSet.F()*/ {
+	if validSeal < snap.ValSet.Size()-snap.ValSet.F() /*2*snap.ValSet.F()*/ {
 		return errInvalidCommittedSeals
 	}
 
@@ -337,31 +343,31 @@ func (sb *backend) Prepare(chain consensus.ChainReader, header *types.Header) er
 		return err
 	}
 
-/*
-	// get valid candidate list
-	sb.candidatesLock.RLock()
-	var addresses []common.Address
-	var authorizes []bool
-	for address, authorize := range sb.candidates {
-		if snap.checkVote(address, authorize) {
-			addresses = append(addresses, address)
-			authorizes = append(authorizes, authorize)
+	/*
+		// get valid candidate list
+		sb.candidatesLock.RLock()
+		var addresses []common.Address
+		var authorizes []bool
+		for address, authorize := range sb.candidates {
+			if snap.checkVote(address, authorize) {
+				addresses = append(addresses, address)
+				authorizes = append(authorizes, authorize)
+			}
 		}
-	}
-	sb.candidatesLock.RUnlock()
+		sb.candidatesLock.RUnlock()
 
-	// pick one of the candidates randomly
-	if len(addresses) > 0 {
-		index := rand.Intn(len(addresses))
-		// add validator voting in coinbase
-		header.Coinbase = addresses[index]
-		if authorizes[index] {
-			copy(header.Nonce[:], nonceAuthVote)
-		} else {
-			copy(header.Nonce[:], nonceDropVote)
+		// pick one of the candidates randomly
+		if len(addresses) > 0 {
+			index := rand.Intn(len(addresses))
+			// add validator voting in coinbase
+			header.Coinbase = addresses[index]
+			if authorizes[index] {
+				copy(header.Nonce[:], nonceAuthVote)
+			} else {
+				copy(header.Nonce[:], nonceDropVote)
+			}
 		}
-	}
-*/
+	*/
 	// add validators in snapshot to extraData's validators section
 	extra, err := prepareExtra(header, snap.validators())
 	if err != nil {
@@ -388,7 +394,7 @@ func (sb *backend) Finalize(chain consensus.ChainReader, header *types.Header, s
 	//header.UncleHash = nilUncleHash
 
 	// Assemble and return the final block for sealing
-	return types.NewBlock(header, txs,  receipts), nil
+	return types.NewBlock(header, txs, receipts), nil
 }
 
 // Seal generates a new block for the given input block with the local miner's
@@ -404,7 +410,7 @@ func (sb *backend) Seal(chain consensus.ChainReader, block *types.Block, sealRes
 		return nil, err
 	}
 	if _, v := snap.ValSet.GetByAddress(sb.address); v == nil {
-	//	return nil, errUnauthorized
+		//	return nil, errUnauthorized
 	}
 
 	parent := chain.GetHeader(header.ParentHash, number-1)
@@ -448,14 +454,15 @@ func (sb *backend) Seal(chain consensus.ChainReader, block *types.Block, sealRes
 				// todo: hash判断
 				if block.Hash() == result.Hash() {
 					//log.Info("^^^^^^^^^^^^^^^^^^^^  seal result ","umber", result.Number() , "Hash", result.Hash())
-					sealResultCh<-result
+					sealResultCh <- result
 					return //result, nil
 				}
 			case <-stop:
 				return //nil, nil
 			}
-	}}()
-	return nil,nil
+		}
+	}()
+	return nil, nil
 
 }
 
@@ -537,6 +544,7 @@ func (sb *backend) snapshot(chain consensus.ChainReader, number uint64, hash com
 	for snap == nil {
 		// If an in-memory snapshot was found, use that
 		if s, ok := sb.recents.Get(hash); ok {
+			log.Info("get snap with this hash", "hash", hash)
 			snap = s.(*Snapshot)
 			break
 		}
@@ -550,6 +558,8 @@ func (sb *backend) snapshot(chain consensus.ChainReader, number uint64, hash com
 		//}
 		// If we're at block zero, make a snapshot
 		if number == 0 {
+			// linqi
+			log.Info("when block is zero")
 			genesis := chain.GetHeaderByNumber(0)
 
 			if err := sb.VerifyHeader(chain, genesis, false); err != nil {
@@ -562,14 +572,14 @@ func (sb *backend) snapshot(chain consensus.ChainReader, number uint64, hash com
 			//}
 
 			addrs := make([]common.Address, 0)
-			for _,nodeId := range sb.config.InitialNodes{
+			for _, nodeId := range sb.config.InitialNodes {
 
 				prefix := make([]byte, 1)
 				prefix[0] = 4
 				nodeID := append(prefix, nodeId.ID[:]...)
 
 				pubKey, err := crypto.UnmarshalPubkey(nodeID)
-				if err!= nil{
+				if err != nil {
 					log.Info("NodeID unmarshal to pubKey failed")
 					continue
 				}
@@ -605,17 +615,20 @@ func (sb *backend) snapshot(chain consensus.ChainReader, number uint64, hash com
 		}
 		headers = append(headers, header)
 		number, hash = number-1, header.ParentHash
+
+		log.Info("end make nil snap")
 	}
 
-	if sb.chain == nil{
-		return nil, errors.New("chain not ready")
-	}
+	//if sb.chain == nil{
+	//	return nil, errors.New("chain not ready")
+	//}
 
 	// Previous snapshot found, apply any pending headers on top of it
 	for i := 0; i < len(headers)/2; i++ {
 		headers[i], headers[len(headers)-1-i] = headers[len(headers)-1-i], headers[i]
 	}
-	snap, err := snap.apply(headers)
+	snap, err := snap.apply(chain, sb, headers)
+
 	if err != nil {
 		return nil, err
 	}

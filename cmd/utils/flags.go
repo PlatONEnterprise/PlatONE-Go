@@ -32,7 +32,8 @@ import (
 	"github.com/BCOSnetwork/BCOS-Go/accounts/keystore"
 	"github.com/BCOSnetwork/BCOS-Go/common"
 	"github.com/BCOSnetwork/BCOS-Go/common/fdlimit"
-	"github.com/BCOSnetwork/BCOS-Go/consensus"
+	istanbulBackend "github.com/BCOSnetwork/BCOS-Go/consensus/istanbul/backend"
+
 	"github.com/BCOSnetwork/BCOS-Go/core"
 	"github.com/BCOSnetwork/BCOS-Go/core/state"
 	"github.com/BCOSnetwork/BCOS-Go/core/vm"
@@ -1399,8 +1400,7 @@ func MakeChain(ctx *cli.Context, stack *node.Node) (chain *core.BlockChain, chai
 	if err != nil {
 		Fatalf("%v", err)
 	}
-	var engine consensus.Engine
-
+	engine := istanbulBackend.New(config.Istanbul, nil, chainDb)
 	if gcmode := ctx.GlobalString(GCModeFlag.Name); gcmode != "full" && gcmode != "archive" {
 		Fatalf("--%s must be either 'full' or 'archive'", GCModeFlag.Name)
 	}
