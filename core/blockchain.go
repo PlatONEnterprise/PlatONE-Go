@@ -138,7 +138,7 @@ type BlockChain struct {
 // NewBlockChain returns a fully initialised block chain using information
 // available in the database. It initialises the default Ethereum Validator and
 // Processor.
-func NewBlockChain(db ethdb.Database, extdb ethdb.Database, cacheConfig *CacheConfig, chainConfig *params.ChainConfig, engine consensus.Engine, vmConfig vm.Config, shouldPreserve func(block *types.Block) bool, sync func()) (*BlockChain, error) {
+func NewBlockChain(db ethdb.Database, extdb ethdb.Database, cacheConfig *CacheConfig, chainConfig *params.ChainConfig, engine consensus.Engine, vmConfig vm.Config, shouldPreserve func(block *types.Block) bool, sync func()) (*BlockChain, types.Blocks, error) {
 	if cacheConfig == nil {
 		cacheConfig = &CacheConfig{
 			TrieNodeLimit: 256 * 1024 * 1024,
@@ -175,14 +175,16 @@ func NewBlockChain(db ethdb.Database, extdb ethdb.Database, cacheConfig *CacheCo
 	var err error
 	bc.hc, err = NewHeaderChain(db, chainConfig, engine, bc.getProcInterrupt)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	bc.genesisBlock = bc.GetBlockByNumber(0)
 	if bc.genesisBlock == nil {
-		return nil, ErrNoGenesis
+		return nil, nil, ErrNoGenesis
 	}
-	if err := bc.loadLastState(); err != nil {
-		return nil, err
+	err ,missingStateBlocks := bc.loadLastState()
+
+	if  err != nil {
+		return nil, nil, err
 	}
 	// Check the current state of the block hashes and make sure that we do not have any of the bad blocks in our chain
 	for hash := range BadHashes {
@@ -199,7 +201,7 @@ func NewBlockChain(db ethdb.Database, extdb ethdb.Database, cacheConfig *CacheCo
 	}
 	// Take ownership of this particular state
 	go bc.update()
-	return bc, nil
+	return bc, missingStateBlocks,nil
 }
 
 func (bc *BlockChain) getProcInterrupt() bool {
@@ -208,28 +210,28 @@ func (bc *BlockChain) getProcInterrupt() bool {
 
 // loadLastState loads the last known chain state from the database. This method
 // assumes that the chain manager mutex is held.
-func (bc *BlockChain) loadLastState() error {
+func (bc *BlockChain) loadLastState() (error, types.Blocks) {
 	// Restore the last known head block
 	head := rawdb.ReadHeadBlockHash(bc.db)
 	missingStateBlocks := make(types.Blocks, 0)
 	if head == (common.Hash{}) {
 		// Corrupt or empty database, init from scratch
 		log.Warn("Empty database, resetting chain")
-		return bc.Reset()
+		return bc.Reset(), nil
 	}
 	// Make sure the entire head block is available
 	currentBlock := bc.GetBlockByHash(head)
 	if currentBlock == nil {
 		// Corrupt or empty database, init from scratch
 		log.Warn("Head block missing, resetting chain", "hash", head)
-		return bc.Reset()
+		return bc.Reset(), nil
 	}
 	// Make sure the state associated with the block is available
 	if _, err := state.New(currentBlock.Root(), bc.stateCache); err != nil {
 		// Dangling block without a state associated, init from scratch
 		log.Warn("Head state missing, repairing chain", "number", currentBlock.Number(), "hash", currentBlock.Hash(), "err", err)
 		if err := bc.repair(&currentBlock, &missingStateBlocks); err != nil {
-			return err
+			return err, nil
 		}
 	}
 	// Everything seems to be fine, set as the head block
@@ -259,13 +261,7 @@ func (bc *BlockChain) loadLastState() error {
 	log.Info("Loaded most recent local full block", "number", currentBlock.Number(), "hash", currentBlock.Hash(), "age", common.PrettyAge(time.Unix(currentBlock.Time().Int64(), 0)))
 	log.Info("Loaded most recent local fast block", "number", currentFastBlock.Number(), "hash", currentFastBlock.Hash(), "age", common.PrettyAge(time.Unix(currentFastBlock.Time().Int64(), 0)))
 
-	if len(missingStateBlocks) != 0 {
-		log.Info("start to replay blocks!", "Number", len(missingStateBlocks))
-		_, err := bc.InsertChain(missingStateBlocks)
-		return err
-	}
-
-	return nil
+	return nil, missingStateBlocks
 }
 
 // SetHead rewinds the local chain to a new head. In the case of headers, everything
@@ -317,8 +313,8 @@ func (bc *BlockChain) SetHead(head uint64) error {
 
 	rawdb.WriteHeadBlockHash(bc.db, currentBlock.Hash())
 	rawdb.WriteHeadFastBlockHash(bc.db, currentFastBlock.Hash())
-
-	return bc.loadLastState()
+	err, _ := bc.loadLastState()
+	return err
 }
 
 // FastSyncCommitHead sets the current head block to the one defined by the hash

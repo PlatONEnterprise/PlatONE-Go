@@ -48,6 +48,24 @@ func New(config *params.IstanbulConfig, privateKey *ecdsa.PrivateKey, db ethdb.D
 	recents, _ := lru.NewARC(inmemorySnapshots)
 	recentMessages, _ := lru.NewARC(inmemoryPeers)
 	knownMessages, _ := lru.NewARC(inmemoryMessages)
+	if privateKey == nil {
+		backend := &backend{
+			config:           config,
+			istanbulEventMux: new(event.TypeMux),
+			privateKey:       privateKey,
+			address:          common.BytesToAddress([]byte("0x0000000000000000000000000000000000000112")),
+			logger:           log.New(),
+			db:               db,
+			commitCh:         make(chan *types.Block, 1),
+			recents:          recents,
+			candidates:       make(map[common.Address]bool),
+			coreStarted:      false,
+			recentMessages:   recentMessages,
+			knownMessages:    knownMessages,
+		}
+		backend.core = istanbulCore.New(backend, backend.config)
+		return backend
+	}
 	backend := &backend{
 		config:           config,
 		istanbulEventMux: new(event.TypeMux),
