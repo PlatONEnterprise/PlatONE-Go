@@ -67,9 +67,12 @@ func getConsensusNodesList(chain consensus.ChainReader, sb *backend, headers []*
 	if common.SysCfg == nil {
 		log.Info("common.SysCfg == nil")
 		loadLastConsensusNodesList(chain, sb, headers)
+
 		common.SysCfg.UpdateSystemConfig()
 		log.Info("UpdateSystemConfig successful")
 	}
+
+
 	tmp = common.SysCfg.GetConsensusNodes()
 	nodeIDs := make([]discover.NodeID, 0, len(tmp))
 	for _, dataObj := range tmp {
