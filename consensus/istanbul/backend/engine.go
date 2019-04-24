@@ -120,7 +120,7 @@ func (sb *backend) verifyHeader(chain consensus.ChainReader, header *types.Heade
 	}
 
 	// Don't waste time checking blocks from the future
-	if header.Time.Cmp(big.NewInt(now().Unix())) > 0 {
+	if header.Time.Cmp(big.NewInt(now().Unix() + 30)) > 0 {
 		return consensus.ErrFutureBlock
 	}
 
