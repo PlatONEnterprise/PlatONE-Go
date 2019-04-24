@@ -104,6 +104,10 @@ func (c *core) handleRoundChange(msg *message, src istanbul.Validator) error {
 		return nil
 	} else if cv.Round.Cmp(roundView.Round) < 0 {
 		// Only gossip the message with current round to other validators.
+		// If the (roundView.Round) == (current.Round+1), gossip the message
+		if cv.Round.Cmp(big.NewInt(0).Add(roundView.Round,big.NewInt(-1))) == 0{
+			return nil
+		}
 		return errIgnored
 	}
 	return nil
