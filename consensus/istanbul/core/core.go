@@ -268,8 +268,10 @@ func (c *core) startNewRound(round *big.Int) {
 		}
 	}
 	c.newRoundChangeTimer()
-
-	logger.Info("New round", "new_round", newView.Round, "new_seq", newView.Sequence, "new_proposer", c.valSet.GetProposer(), "valSet", c.valSet.List(), "size", c.valSet.Size(), "IsProposer", c.IsProposer())
+	log.Info("==================================================")
+	log.Info("RoundChange\t"+"Height: "+newView.Sequence.String()+"\tRound: "+newView.Round.String()+"\tProposer: "+c.valSet.GetProposer().Address().String(),"IsProposer: ",c.IsProposer())
+	log.Info("==================================================")
+	logger.Info("New round", "valSet", c.valSet.List(), "size", c.valSet.Size())
 }
 
 func (c *core) catchUpRound(view *istanbul.View) {
@@ -301,8 +303,6 @@ func (c *core) updateRoundState(view *istanbul.View, validatorSet istanbul.Valid
 	} else {
 		c.current = newRoundState(view, validatorSet, common.Hash{}, nil, nil, c.backend.HasBadProposal, big.NewInt(0), nil)
 	}
-
-	log.Info("====== roundChange round: " + c.current.round.String() + ", height:" + c.current.Sequence().String() + " ======")
 }
 
 func (c *core) setState(state State) {
