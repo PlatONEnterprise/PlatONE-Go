@@ -491,6 +491,11 @@ func (bc *BlockChain) insert(block *types.Block) {
 
 		bc.currentFastBlock.Store(block)
 	}
+
+	// load system contract configure
+	if common.SysCfg != nil {
+		common.SysCfg.UpdateSystemConfig()
+	}
 }
 
 // Genesis retrieves the chain's genesis block.
@@ -1211,10 +1216,6 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		cache, _ := bc.stateCache.TrieDB().Size()
 		stats.report(chain, i, cache)
 
-		// load system contract configure
-		if common.SysCfg != nil {
-			common.SysCfg.UpdateSystemConfig()
-		}
 		if _, ok := bc.engine.(consensus.Bft); ok {
 			log.Info("load config as insert chain success")
 			bc.syncCBFTParam()
