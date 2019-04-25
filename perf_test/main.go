@@ -109,6 +109,8 @@ func main() {
 						if err != nil {
 							panic(err)
 						}
+
+						inChan <- 1
 					}
 				}()
 			}
@@ -222,7 +224,7 @@ func main() {
 
 				err, _ = invoke(*contractAddress, *abiPath, str, *txType)
 				//time.Sleep(2 * time.Millisecond)
-				//inChan <- 1
+				inChan <- 1
 
 				if tries >= *totalCount {
 					// 查询成功注册合约总数
@@ -280,27 +282,25 @@ func main() {
 			wg.Done()
 		}()
 	}
-	/*
-		var wg sync.WaitGroup
-		wg.Add(1)
-		// GetSendSpeed 获取发送速度
-		go func() {
-			now := time.Now()
-			for {
-				if time.Since(now).Seconds() >= 1 {
-					select {
-					case <-inChan:
-						length := ReadChan(inChan)
-						fmt.Printf("Send Speed:%d/s\n", length)
-						now = time.Now()
-					case <-closeChan:
-						panic("too bad")
-						wg.Done()
-					}
+
+	wg.Add(1)
+	// GetSendSpeed 获取发送速度
+	go func() {
+		now := time.Now()
+		for {
+			if time.Since(now).Seconds() >= 1 {
+				select {
+				case <-inChan:
+					length := ReadChan(inChan)
+					fmt.Printf("Send Speed:%d txs/s\n", length)
+					now = time.Now()
+				case <-closeChan:
+					panic("stopped, interuppted by signal...")
+					wg.Done()
 				}
 			}
-		}()
-	*/
+		}
+	}()
 
 	if *benchmark {
 		wg.Add(1)
