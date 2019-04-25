@@ -17,7 +17,6 @@
 package eth
 
 import (
-	"math/big"
 	"math/rand"
 	"sync/atomic"
 	"time"
@@ -170,14 +169,14 @@ func (pm *ProtocolManager) synchronise(peer *peer) {
 	}
 	// Make sure the peer's TD is higher than our own
 	currentBlock := pm.blockchain.CurrentBlock()
-	bn := currentBlock.Number()
+	//bn := currentBlock.Number()
 
 	pHead, pBn := peer.Head()
 	//modified by bcos
-	diff := new(big.Int).Sub(pBn, bn)
-	if diff.Cmp(big.NewInt(5)) <= 0 {
-		return
-	}
+	//diff := new(big.Int).Sub(pBn, bn)
+	//if diff.Cmp(big.NewInt(5)) <= 0 {
+	//	return
+	//}
 	// Otherwise try to sync with the downloader
 	mode := downloader.FullSync
 	if atomic.LoadUint32(&pm.fastSync) == 1 {
