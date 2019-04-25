@@ -422,7 +422,7 @@ func (w *worker) newWorkLoop(recommit time.Duration) {
 			if cbft, ok := w.engine.(consensus.Bft); ok {
 				cbft.OnBlockSynced()
 			}
-            common.SysCfg.UpdateSystemConfig()
+			p2p.UpdatePeer()
 		case highestLogicalBlock := <-w.highestLogicalBlockCh:
 			log.Debug("received a notify for new highest logical", "number", highestLogicalBlock.NumberU64(), "hash", highestLogicalBlock.Hash())
 			w.commitWorkEnv.highestLock.Lock()
