@@ -60,13 +60,15 @@ import (
 )
 
 func InitInnerCallFunc(ethPtr *Ethereum) {
-	innerCall := func(conAddr common.Address, data []byte) []byte {
+	innerCall := func(conAddr common.Address, data []byte) ([]byte, error) {
 		ctx := context.Background()
 
 		// Get the state
 		state, header, err := ethPtr.APIBackend.StateAndHeaderByNumber(ctx, -1)
-		if state == nil || err != nil {
-			return nil
+		if err != nil {
+			return nil, err
+		} else if state == nil {
+			return nil, errors.New("state is nil")
 		}
 
 		from := common.Address{}
@@ -82,7 +84,7 @@ func InitInnerCallFunc(ethPtr *Ethereum) {
 		// Get a new instance of the EVM.
 		evm, vmError, err := ethPtr.APIBackend.GetEVM(ctx, msg, state, header, vm.Config{})
 		if err != nil {
-			return nil
+			return nil, err
 		}
 
 		// Setup the gas pool (also for unmetered requests)
@@ -90,10 +92,10 @@ func InitInnerCallFunc(ethPtr *Ethereum) {
 		gp := new(core.GasPool).AddGas(math.MaxUint64)
 		res, _, _, err := core.ApplyMessage(evm, msg, gp)
 		if err := vmError(); err != nil {
-			return nil
+			return nil, err
 		}
 
-		return res
+		return res, err
 	}
 
 	sysContractCall := func(sc *common.SystemConfig) {
