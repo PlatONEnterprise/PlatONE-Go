@@ -126,16 +126,8 @@ func InitInnerCallFunc(ethPtr *Ethereum) {
 		// Get all system contracts' address
 		var fh string = "getContractAddress"
 
-		systemContractList := []string{"__sys_NodeManager",
-			"__sys_NodeRegister",
-			"__sys_UserRegister",
-			"__sys_UserManager",
-			"__sys_ParamManager",
-			"__sys_RoleManager",
-			"__sys_RoleRegister"}
-
 		// Update system contract address
-		for _, contractName := range systemContractList {
+		for _, contractName := range common.SystemContractList {
 			callParams := []interface{}{contractName, "latest"}
 			btsRes := callContract(common.HexToAddress(core.CnsManagerAddr), common.GenCallData(fh, callParams))
 			strRes := common.CallResAsString(btsRes)
@@ -146,63 +138,63 @@ func InitInnerCallFunc(ethPtr *Ethereum) {
 
 		// Get contract parameters from contract
 		paramAddr := sc.ContractAddress["__sys_ParamManager"]
-		if paramAddr != (common.Address{}){
+		if paramAddr != (common.Address{}) {
 			funcName := "getTxGasLimit"
-			funcParams:= []interface{}{}
-			res := callContract(paramAddr, common.GenCallData(funcName,funcParams))
-			if res != nil{
+			funcParams := []interface{}{}
+			res := callContract(paramAddr, common.GenCallData(funcName, funcParams))
+			if res != nil {
 				ret := common.CallResAsInt64(res)
-				if ret > 0{
+				if ret > 0 {
 					sc.SysParam.TxGasLimit = ret
 				}
 			}
 			funcName = "getBlockGasLimit"
-			funcParams= []interface{}{}
-			res = callContract(paramAddr, common.GenCallData(funcName,funcParams))
-			if res != nil{
+			funcParams = []interface{}{}
+			res = callContract(paramAddr, common.GenCallData(funcName, funcParams))
+			if res != nil {
 				ret := common.CallResAsInt64(res)
-				if ret > 0{
+				if ret > 0 {
 					sc.SysParam.BlockGasLimit = ret
 				}
 			}
-			funcName  = "getCBFTTimeParam"
-			funcParams= []interface{}{}
-			res = callContract(paramAddr, common.GenCallData(funcName,funcParams))
+			funcName = "getCBFTTimeParam"
+			funcParams = []interface{}{}
+			res = callContract(paramAddr, common.GenCallData(funcName, funcParams))
 			if res != nil {
 				strRes := common.CallResAsString(res)
 
 				var cbftCfgTime common.CBFTProduceBlockCfg
 				if err := json.Unmarshal([]byte(strRes), &cbftCfgTime); err != nil {
 					log.Error("contract return invalid data", "result", strRes, "err", err.Error())
-				}else{
+				} else {
 					sc.SysParam.CBFTTime = cbftCfgTime
 				}
 			}
 			funcName = "getGasContractName"
 			funcParams = []interface{}{}
-			res = callContract(paramAddr, common.GenCallData(funcName,funcParams))
-			if res != nil{
+			res = callContract(paramAddr, common.GenCallData(funcName, funcParams))
+			if res != nil {
 				sc.SysParam.GasContractName = common.CallResAsString(res)
 			}
 		}
 
-		if sc.SysParam.GasContractName != ""{
+		if sc.SysParam.GasContractName != "" {
 			cnsAddr := common.HexToAddress(core.CnsManagerAddr)
 			funcName := "getContractAddress"
 			funcParams := []interface{}{sc.SysParam.GasContractName, "latest"}
-			res := callContract(cnsAddr, common.GenCallData(funcName,funcParams))
-			if res != nil{
+			res := callContract(cnsAddr, common.GenCallData(funcName, funcParams))
+			if res != nil {
 				sc.SysParam.GasContractAddr = common.HexToAddress(common.CallResAsString(res))
 			}
 		}
 
 		// Get nodes from contract
 		nodeManagerAddr := sc.ContractAddress["__sys_NodeManager"]
-		if nodeManagerAddr != (common.Address{}){
+		if nodeManagerAddr != (common.Address{}) {
 			funcName := "getAllNodes"
 			funcParams := []interface{}{}
-			res := callContract(nodeManagerAddr, common.GenCallData(funcName,funcParams))
-			if res != nil{
+			res := callContract(nodeManagerAddr, common.GenCallData(funcName, funcParams))
+			if res != nil {
 				sc.SysParam.GasContractAddr = common.HexToAddress(common.CallResAsString(res))
 			}
 
@@ -211,9 +203,9 @@ func InitInnerCallFunc(ethPtr *Ethereum) {
 			var tmp common.CommonResult
 			if err := json.Unmarshal(utils.String2bytes(strRes), &tmp); err != nil {
 				log.Warn("unmarshal consensus node list failed", "result", strRes, "err", err.Error())
-			}else if tmp.RetCode != 0 {
+			} else if tmp.RetCode != 0 {
 				log.Debug("contract inner error", "code", tmp.RetCode, "msg", tmp.RetMsg)
-			}else {
+			} else {
 				sc.Nodes = tmp.Data
 			}
 		}

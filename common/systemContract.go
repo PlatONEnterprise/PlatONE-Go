@@ -7,6 +7,15 @@ import (
 
 var (
 	sysContractCall func(sc *SystemConfig) = nil
+
+	SystemContractList = []string{
+		"__sys_NodeManager",
+		"__sys_NodeRegister",
+		"__sys_UserRegister",
+		"__sys_UserManager",
+		"__sys_ParamManager",
+		"__sys_RoleManager",
+		"__sys_RoleRegister"}
 )
 
 func SetSysContractCallFunc(f func(*SystemConfig)) {
@@ -55,15 +64,14 @@ type SystemConfig struct {
 
 var SysCfg *SystemConfig
 
-
 func InitSystemconfig() {
 	SysCfg = &SystemConfig{
 		SystemConfigMu: &sync.RWMutex{},
-		Nodes:         make([]NodeInfo, 0),
-		HighsetNumber: new(big.Int).SetInt64(0),
+		Nodes:          make([]NodeInfo, 0),
+		HighsetNumber:  new(big.Int).SetInt64(0),
 		SysParam: &SystemParameter{
-			BlockGasLimit:0xffffffffffff,
-			TxGasLimit: 10000000000000,
+			BlockGasLimit: 0xffffffffffff,
+			TxGasLimit:    10000000000000,
 			CBFTTime: CBFTProduceBlockCfg{
 				ProduceDuration: int32(10),
 				BlockInterval:   int32(1),
@@ -101,7 +109,7 @@ func (sc *SystemConfig) GetTxGasLimit() int64 {
 	sc.SystemConfigMu.RLock()
 	defer sc.SystemConfigMu.RUnlock()
 
-	if sc.SysParam.TxGasLimit >  sc.SysParam.BlockGasLimit{
+	if sc.SysParam.TxGasLimit > sc.SysParam.BlockGasLimit {
 		sc.SysParam.TxGasLimit = sc.SysParam.BlockGasLimit
 	}
 
@@ -126,7 +134,7 @@ func (sc *SystemConfig) GetCBFTTime() CBFTProduceBlockCfg {
 func (sc *SystemConfig) GetNormalNodes() []NodeInfo {
 	sc.SystemConfigMu.RLock()
 	defer sc.SystemConfigMu.RUnlock()
-	var normalNodes =make([]NodeInfo,0)
+	var normalNodes = make([]NodeInfo, 0)
 
 	for _, node := range sc.Nodes {
 		if node.Status <= 2 {
@@ -139,7 +147,7 @@ func (sc *SystemConfig) GetNormalNodes() []NodeInfo {
 func (sc *SystemConfig) IsValidJoinNode(publicKey string) bool {
 	sc.SystemConfigMu.RLock()
 	defer sc.SystemConfigMu.RUnlock()
-	var validNodes =make([]NodeInfo,0)
+	var validNodes = make([]NodeInfo, 0)
 
 	for _, node := range sc.Nodes {
 		if (node.Status == 1 || node.Status == 2) && node.PublicKey == publicKey {
@@ -154,7 +162,7 @@ func (sc *SystemConfig) GetConsensusNodes() []NodeInfo {
 	sc.SystemConfigMu.RLock()
 	defer sc.SystemConfigMu.RUnlock()
 
-	consensusNodes := make([]NodeInfo,0)
+	consensusNodes := make([]NodeInfo, 0)
 
 	for _, node := range sc.Nodes {
 		if node.Status == 1 && node.Types == 1 {
@@ -169,7 +177,7 @@ func (sc *SystemConfig) GetDeletedNodes() []NodeInfo {
 	sc.SystemConfigMu.RLock()
 	defer sc.SystemConfigMu.RUnlock()
 
-	var deletedNodes  = make([]NodeInfo,0)
+	var deletedNodes = make([]NodeInfo, 0)
 
 	for _, node := range sc.Nodes {
 		if node.Status == 3 {
