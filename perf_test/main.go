@@ -36,6 +36,7 @@ var (
 	consensusTest         = flag.Bool("consensusTest", false, "是否开启共识测试")
 	realtimeTps           = flag.Bool("realtimeTps", false, "是否开启实时压力测试")
 	useWs                 = flag.Bool("useWs", false, "是否使用websocket进行压力测试，默认http。")
+	nodeListPath          = flag.String("nodeListPath", "", "是否开启多节点发送模式")
 )
 
 const (
@@ -53,8 +54,9 @@ var (
 	curBlockNum  int64
 	curTimestamp int64
 
-	count int = 0
-	tries int = 0
+	count    int = 0
+	tries    int = 0
+	nodeList []string
 )
 
 func main() {
@@ -62,6 +64,10 @@ func main() {
 
 	flag.Parse()
 	parseConfigJson(*configPath)
+
+	if *nodeListPath != "" {
+		nodeList = fileNodeList(*nodeListPath)
+	}
 
 	inChan := make(chan int, *chanValue)
 	defer close(inChan)
@@ -220,7 +226,14 @@ func main() {
 				}
 
 				//fmt.Println(str, *totalCount, tries)
-				fmt.Fprintln(w, str)
+				//fmt.Fprintln(w, str)
+
+				if *nodeListPath != "" {
+					// 更新config
+					index := (tries + rand.Intn(100)) % len(nodeList)
+					httpUrl := nodeList[index]
+					UpdateConfigUrl(httpUrl)
+				}
 
 				err, _ = invoke(*contractAddress, *abiPath, str, *txType)
 				//time.Sleep(2 * time.Millisecond)

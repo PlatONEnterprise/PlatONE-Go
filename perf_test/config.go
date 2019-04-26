@@ -50,3 +50,7 @@ func parseFuncFromAbi(fileName string, funcName string) (*core.FuncDesc, error) 
 	}
 	return nil, fmt.Errorf("function %s not found in %s", funcName, fileName)
 }
+
+func UpdateConfigUrl(url string) {
+	config.Url = url
+}
