@@ -190,7 +190,10 @@ func GetCnsAddr(evm *vm.EVM, msg Message, cnsName string) (*common.Address, erro
 		params := []interface{}{contractName, contractVer}
 
 		snapshot := evm.StateDB.Snapshot()
-		ret := common.InnerCall(addrProxy, "getContractAddress", params)
+		ret, err := common.InnerCall(addrProxy, "getContractAddress", params)
+		if err != nil {
+			return nil, err
+		}
 		evm.StateDB.RevertToSnapshot(snapshot)
 
 		toAddrStr := common.CallResAsString(ret)

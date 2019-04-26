@@ -5,18 +5,18 @@ import (
 )
 
 var (
-	innerCall func(Address, []byte) ([]byte) = nil
+	innerCallRead func(Address, []byte) ([]byte, error) = nil
 )
 
-func SetInnerCallFunc(f func(Address, []byte) ([]byte)) {
-	innerCall = f
+func SetInnerCallFunc(f func(Address, []byte) ([]byte, error)) {
+	innerCallRead  = f
 }
 
-func InnerCall(conAddr Address, funcName string, params []interface{}) ([]byte) {
-	if innerCall == nil {
-		return nil
+func InnerCall(conAddr Address, funcName string, params []interface{}) ([]byte, error) {
+	if  innerCallRead  == nil {
+		return nil, nil
 	} else {
-		return innerCall(conAddr, GenCallData(funcName, params))
+		return innerCallRead(conAddr, GenCallData(funcName, params))
 	}
 }
 
