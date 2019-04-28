@@ -64,7 +64,7 @@ type SystemConfig struct {
 
 var SysCfg *SystemConfig
 
-func InitSystemconfig() {
+func InitSystemconfig(root  NodeInfo) {
 	SysCfg = &SystemConfig{
 		SystemConfigMu: &sync.RWMutex{},
 		Nodes:          make([]NodeInfo, 0),
@@ -79,6 +79,7 @@ func InitSystemconfig() {
 		},
 		ContractAddress: make(map[string]Address),
 	}
+	SysCfg.Nodes = append(SysCfg.Nodes,root)
 }
 
 func (sc *SystemConfig) UpdateSystemConfig() {
