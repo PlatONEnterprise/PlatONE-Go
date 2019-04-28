@@ -60,6 +60,22 @@ import (
 )
 
 func InitInnerCallFunc(ethPtr *Ethereum) {
+	var rootNode discover.Node
+	if _, ok := ethPtr.engine.(consensus.Istanbul); ok {
+		rootNode = ethPtr.chainConfig.Istanbul.InitialNodes[0]
+	} else {
+		rootNode = ethPtr.chainConfig.Cbft.InitialNodes[0]
+	}
+
+	root := common.NodeInfo{
+		Types:1,
+		Status:1,
+		Name:"root",
+		PublicKey:rootNode.ID.String(),
+		P2pPort:int32(rootNode.UDP),
+		ExternalIP:rootNode.IP.String(),
+	}
+
 	innerCall := func(conAddr common.Address, data []byte) ([]byte, error) {
 		ctx := context.Background()
 
@@ -209,12 +225,25 @@ func InitInnerCallFunc(ethPtr *Ethereum) {
 				log.Debug("contract inner error", "code", tmp.RetCode, "msg", tmp.RetMsg)
 			} else {
 				sc.Nodes = tmp.Data
+				hasRoot := false
+
+				for _,node := range sc.Nodes{
+					if node.PublicKey == rootNode.ID.String(){
+						hasRoot = true
+						break
+					}
+				}
+
+				if !hasRoot{
+
+					sc.Nodes = append(sc.Nodes, root)
+				}
 			}
 		}
 		return
 	}
 
-	common.InitSystemconfig()
+	common.InitSystemconfig(root)
 	common.SetSysContractCallFunc(sysContractCall)
 	common.SetInnerCallFunc(innerCall)
 }
