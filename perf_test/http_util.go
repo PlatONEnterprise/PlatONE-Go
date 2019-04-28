@@ -58,7 +58,8 @@ func parseResponse(r string) *core.Response {
 	}
 
 	if resp.Error.Code != 0 {
-		panic(fmt.Sprintf("send transaction error ,error:%v \n", resp.Error.Message))
+		fmt.Printf("send transaction error ,error:%v \n", resp.Error.Message)
+		return nil
 	}
 	return &resp
 }
