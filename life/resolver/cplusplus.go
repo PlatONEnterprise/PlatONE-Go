@@ -179,12 +179,12 @@ func newCfcSet() map[string]map[string]*exec.FunctionImport {
 			"getCallerNonce": &exec.FunctionImport{Execute: envGetCallerNonce, GasCost: constGasFunc(compiler.GasQuickStep)},
 			"callTransfer":   &exec.FunctionImport{Execute: envCallTransfer, GasCost: constGasFunc(compiler.GasQuickStep)},
 
-			"bcosCall":               &exec.FunctionImport{Execute: envBcosCall, GasCost: envBcosCallGasCost},
-			"bcosCallInt64":          &exec.FunctionImport{Execute: envBcosCallInt64, GasCost: envBcosCallInt64GasCost},
-			"bcosCallString":         &exec.FunctionImport{Execute: envBcosCallString, GasCost: envBcosCallStringGasCost},
-			"bcosDelegateCall":       &exec.FunctionImport{Execute: envBcosDelegateCall, GasCost: envBcosCallStringGasCost},
-			"bcosDelegateCallInt64":  &exec.FunctionImport{Execute: envBcosDelegateCallInt64, GasCost: envBcosCallStringGasCost},
-			"bcosDelegateCallString": &exec.FunctionImport{Execute: envBcosDelegateCallString, GasCost: envBcosCallStringGasCost},
+			"bcwasmCall":               &exec.FunctionImport{Execute: envBCWasmCall, GasCost: envBCWasmCallGasCost},
+			"bcwasmCallInt64":          &exec.FunctionImport{Execute: envBCWasmCallInt64, GasCost: envBCWasmCallInt64GasCost},
+			"bcwasmCallString":         &exec.FunctionImport{Execute: envBCWasmCallString, GasCost: envBCWasmCallStringGasCost},
+			"bcwasmDelegateCall":       &exec.FunctionImport{Execute: envBCWasmDelegateCall, GasCost: envBCWasmCallStringGasCost},
+			"bcwasmDelegateCallInt64":  &exec.FunctionImport{Execute: envBCWasmDelegateCallInt64, GasCost: envBCWasmCallStringGasCost},
+			"bcwasmDelegateCallString": &exec.FunctionImport{Execute: envBCWasmDelegateCallString, GasCost: envBCWasmCallStringGasCost},
 
 			//nizkpail
 			"pailEncrypt": &exec.FunctionImport{Execute: envPailEncrypt, GasCost: constGasFunc(compiler.GasPailEncrypt)},
@@ -933,7 +933,7 @@ func envCallTransfer(vm *exec.VirtualMachine) int64 {
 	}
 }
 
-func envBcosCall(vm *exec.VirtualMachine) int64 {
+func envBCWasmCall(vm *exec.VirtualMachine) int64 {
 	addr := int(int32(vm.GetCurrentFrame().Locals[0]))
 	params := int(int32(vm.GetCurrentFrame().Locals[1]))
 	paramsLen := int(int32(vm.GetCurrentFrame().Locals[2]))
@@ -944,7 +944,7 @@ func envBcosCall(vm *exec.VirtualMachine) int64 {
 	}
 	return 0
 }
-func envBcosDelegateCall(vm *exec.VirtualMachine) int64 {
+func envBCWasmDelegateCall(vm *exec.VirtualMachine) int64 {
 	addr := int(int32(vm.GetCurrentFrame().Locals[0]))
 	params := int(int32(vm.GetCurrentFrame().Locals[1]))
 	paramsLen := int(int32(vm.GetCurrentFrame().Locals[2]))
@@ -957,7 +957,7 @@ func envBcosDelegateCall(vm *exec.VirtualMachine) int64 {
 	return 0
 }
 
-func envBcosCallInt64(vm *exec.VirtualMachine) int64 {
+func envBCWasmCallInt64(vm *exec.VirtualMachine) int64 {
 	addr := int(int32(vm.GetCurrentFrame().Locals[0]))
 	params := int(int32(vm.GetCurrentFrame().Locals[1]))
 	paramsLen := int(int32(vm.GetCurrentFrame().Locals[2]))
@@ -970,7 +970,7 @@ func envBcosCallInt64(vm *exec.VirtualMachine) int64 {
 	return common.BytesToInt64(ret)
 }
 
-func envBcosDelegateCallInt64(vm *exec.VirtualMachine) int64 {
+func envBCWasmDelegateCallInt64(vm *exec.VirtualMachine) int64 {
 	addr := int(int32(vm.GetCurrentFrame().Locals[0]))
 	params := int(int32(vm.GetCurrentFrame().Locals[1]))
 	paramsLen := int(int32(vm.GetCurrentFrame().Locals[2]))
@@ -983,7 +983,7 @@ func envBcosDelegateCallInt64(vm *exec.VirtualMachine) int64 {
 	return common.BytesToInt64(ret)
 }
 
-func envBcosCallString(vm *exec.VirtualMachine) int64 {
+func envBCWasmCallString(vm *exec.VirtualMachine) int64 {
 	addr := int(int32(vm.GetCurrentFrame().Locals[0]))
 	params := int(int32(vm.GetCurrentFrame().Locals[1]))
 	paramsLen := int(int32(vm.GetCurrentFrame().Locals[2]))
@@ -996,7 +996,7 @@ func envBcosCallString(vm *exec.VirtualMachine) int64 {
 	return MallocString(vm, string(ret))
 }
 
-func envBcosDelegateCallString(vm *exec.VirtualMachine) int64 {
+func envBCWasmDelegateCallString(vm *exec.VirtualMachine) int64 {
 	addr := int(int32(vm.GetCurrentFrame().Locals[0]))
 	params := int(int32(vm.GetCurrentFrame().Locals[1]))
 	paramsLen := int(int32(vm.GetCurrentFrame().Locals[2]))
@@ -1009,14 +1009,14 @@ func envBcosDelegateCallString(vm *exec.VirtualMachine) int64 {
 	return MallocString(vm, string(ret))
 }
 
-func envBcosCallGasCost(vm *exec.VirtualMachine) (uint64, error) {
+func envBCWasmCallGasCost(vm *exec.VirtualMachine) (uint64, error) {
 	return 1, nil
 }
 
-func envBcosCallInt64GasCost(vm *exec.VirtualMachine) (uint64, error) {
+func envBCWasmCallInt64GasCost(vm *exec.VirtualMachine) (uint64, error) {
 	return 1, nil
 }
 
-func envBcosCallStringGasCost(vm *exec.VirtualMachine) (uint64, error) {
+func envBCWasmCallStringGasCost(vm *exec.VirtualMachine) (uint64, error) {
 	return 1, nil
 }
