@@ -112,6 +112,9 @@ func InvokeContract(contractAddr string, abiPath string, funcParams string, txTy
 		return fmt.Errorf("send http post to invokeContract contract error,%s", e.Error()), nil
 	}
 	resp := parseResponse(r)
+	if resp == nil {
+		return nil, nil
+	}
 
 	//parse the return type through adi
 	if abiFunc.Constant == "true" {
