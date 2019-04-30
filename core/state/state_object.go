@@ -217,7 +217,7 @@ func newObject(db *StateDB, address common.Address, data Account) *stateObject {
 		address:  address,
 		addrHash: crypto.Keccak256Hash(address[:]),
 		data:     data,
-		fwData:NewFwData(),
+		fwData:   NewFwData(),
 
 		originStorage:      make(Storage),
 		originValueStorage: make(map[common.Hash][]byte),
