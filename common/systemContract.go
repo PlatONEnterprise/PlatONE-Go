@@ -79,7 +79,9 @@ func InitSystemconfig(root  NodeInfo) {
 		},
 		ContractAddress: make(map[string]Address),
 	}
-	SysCfg.Nodes = append(SysCfg.Nodes,root)
+	if root.Types == 1 {
+		SysCfg.Nodes = append(SysCfg.Nodes, root)
+	}
 }
 
 func (sc *SystemConfig) UpdateSystemConfig() {

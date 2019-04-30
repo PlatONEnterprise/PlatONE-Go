@@ -89,7 +89,7 @@ func getConsensusNodesList(chain consensus.ChainReader, sb *backend, headers []*
 
 func loadLastConsensusNodesList(chain consensus.ChainReader, sb *backend, headers []*types.Header) {
 
-	innerCall := func(conAddr common.Address, data []byte) []byte {
+	innerCall := func(conAddr common.Address, data []byte) ([]byte, error) {
 		//ctx := context.Background()
 		if sb == nil {
 			log.Info("backend is nil")
@@ -97,9 +97,9 @@ func loadLastConsensusNodesList(chain consensus.ChainReader, sb *backend, header
 
 		log.Info("this is for test loadLastConsensusNodesList", chain.CurrentHeader().Root)
 		// Get the state
-		state, _ := state.New(chain.CurrentHeader().Root, state.NewDatabase(sb.db))
+		state, err := state.New(chain.CurrentHeader().Root, state.NewDatabase(sb.db))
 		if state == nil {
-			return nil
+			return nil,err
 		}
 
 		from := common.Address{}
@@ -127,10 +127,10 @@ func loadLastConsensusNodesList(chain consensus.ChainReader, sb *backend, header
 		gp := new(core.GasPool).AddGas(math.MaxUint64)
 		res, _, _, err := core.ApplyMessage(evm, msg, gp)
 		if err != nil {
-			return nil
+			return nil, err
 		}
 
-		return res
+		return res, err
 	}
 
 	sysContractCall := func(sc *common.SystemConfig) {
@@ -264,7 +264,7 @@ func loadLastConsensusNodesList(chain consensus.ChainReader, sb *backend, header
 		return
 	}
 
-	common.InitSystemconfig()
+	common.InitSystemconfig(common.NodeInfo{})
 	common.SetSysContractCallFunc(sysContractCall)
 	common.SetInnerCallFunc(innerCall)
 
