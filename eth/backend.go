@@ -306,6 +306,7 @@ func (s *Ethereum) AddLesServer(ls LesServer) {
 // initialisation of the common Ethereum object)
 func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	// Ensure configuration values are compatible and sane
+	var missingStateBlocks types.Blocks
 	if config.SyncMode == downloader.LightSync {
 		return nil, errors.New("can't run eth.Ethereum in light sync mode, use les.LightEthereum")
 	}
@@ -369,7 +370,7 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	cacheConfig := &core.CacheConfig{Disabled: config.NoPruning, TrieNodeLimit: config.TrieCache, TrieTimeLimit: config.TrieTimeout}
 
 	funcSyncCBFTParam := cbft.ReloadCBFTParams
-	eth.blockchain, err = core.NewBlockChain(chainDb, extDb, cacheConfig, eth.chainConfig, eth.engine, vmConfig, eth.shouldPreserve, funcSyncCBFTParam)
+	eth.blockchain, missingStateBlocks, err = core.NewBlockChain(chainDb, extDb, cacheConfig, eth.chainConfig, eth.engine, vmConfig, eth.shouldPreserve, funcSyncCBFTParam)
 	if err != nil {
 		return nil, err
 	}
@@ -395,6 +396,15 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	if common.SysCfg != nil {
 		common.SysCfg.UpdateSystemConfig()
 	}
+
+	if len(missingStateBlocks) != 0 {
+		log.Info("start to replay blocks!", "Number", len(missingStateBlocks))
+		_, err := eth.blockchain.InsertChain(missingStateBlocks)
+		if err != nil{
+			return nil, err
+		}
+	}
+
 	if _, ok := eth.engine.(consensus.Bft); ok {
 		log.Trace("Load system config after start up eth")
 		cbft.ReloadCBFTParams()
