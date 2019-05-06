@@ -11,12 +11,12 @@ contract address: 0x2124e0d7392683a9fac7167e30da82858bd0f514
 2. 调用perf_test进行性能测试（以下命令均执行于当前文档所在目录）
 方法一实时使用websocket（推荐）：
 ```shell
-# ./perf_test -useWs -stressTest=1 -abiPath="./data/demo.cpp.abi.json" -configPath="./data/config.json"  -contractAddress="0x2124e0d7392683a9fac7167e30da82858bd0f514" -totalCount=2000 -realtimeTps=true -consensusTest=true
+# ./perf_test -useWs -stressTest=1 -abiPath="./data/demo.cpp.abi.json" -configPath="./data/config.json"  -contractAddress="0x2124e0d7392683a9fac7167e30da82858bd0f514" -totalCount=2000 -httpAsync=true -consensusTest=true
 ```
 
 方法一实时使用http（推荐）：
 ```shell
-# ./perf_test -stressTest=1 -abiPath="./data/demo.cpp.abi.json" -configPath="./data/config.json"  -contractAddress="0x2124e0d7392683a9fac7167e30da82858bd0f514" -totalCount=2000 -realtimeTps=true -consensusTest=true
+# ./perf_test -stressTest=1 -abiPath="./data/demo.cpp.abi.json" -configPath="./data/config.json"  -contractAddress="0x2124e0d7392683a9fac7167e30da82858bd0f514" -totalCount=2000 -httpAsync=true -consensusTest=true
 ```
 
 方法三非实时：
@@ -38,12 +38,12 @@ contract address: 0x7cf06df7bcb5291007ff04f69c179e07a2e1b640
 2. 调用perf_test进行性能测试
 方法一实时使用websocket（推荐）：
 ```shell
-# ./perf_test -useWs -stressTest=2 -abiPath="./data/cnsManager.cpp.abi.json" -configPath="./data/config.json" -totalCount=100 -deployContractAddress="0x7cf06df7bcb5291007ff04f69c179e07a2e1b640" -realtimeTps=true -consensusTest=true
+# ./perf_test -useWs -stressTest=2 -abiPath="./data/cnsManager.cpp.abi.json" -configPath="./data/config.json" -totalCount=100 -deployContractAddress="0x7cf06df7bcb5291007ff04f69c179e07a2e1b640" -httpAsync=true -consensusTest=true
 ```
 
 方法二实时使用http（推荐）：
 ```shell
-# ./perf_test -stressTest=2 -abiPath="./data/cnsManager.cpp.abi.json" -configPath="./data/config.json" -totalCount=100 -deployContractAddress="0x7cf06df7bcb5291007ff04f69c179e07a2e1b640" -realtimeTps=true -consensusTest=true
+# ./perf_test -stressTest=2 -abiPath="./data/cnsManager.cpp.abi.json" -configPath="./data/config.json" -totalCount=100 -deployContractAddress="0x7cf06df7bcb5291007ff04f69c179e07a2e1b640" -httpAsync=true -consensusTest=true
 ```
 
 方法三非实时：
