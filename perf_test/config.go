@@ -21,8 +21,16 @@ const (
 	DefaultConfigFilePath = "/config.json"
 )
 
+type Config struct {
+	From     string `json:"from"`
+	Gas      string `json:"gas"`
+	GasPrice string `json:"gasPrice"`
+	HttpUrl      string `json:"httpUrl"`
+	WsUrl      string `json:"wsUrl"`
+}
+
 var (
-	config = core.Config{}
+	config = Config{}
 )
 
 func parseAbiFromJson(fileName string) ([]core.FuncDesc, error) {
@@ -51,6 +59,6 @@ func parseFuncFromAbi(fileName string, funcName string) (*core.FuncDesc, error) 
 	return nil, fmt.Errorf("function %s not found in %s", funcName, fileName)
 }
 
-func UpdateConfigUrl(url string) {
-	config.Url = url
+func UpdateConfigUrl(httpUrl string) {
+	config.HttpUrl = httpUrl
 }

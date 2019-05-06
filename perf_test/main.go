@@ -20,7 +20,6 @@ import (
 
 var (
 	// 公共参数
-	rpcURL     = flag.String("url", "ws://127.0.0.1:6790", "节点url")
 	configPath = flag.String("configPath", "", "配置文件")
 	// 性能测试参数
 	contractAddress = flag.String("contractAddress", "0x0000000000000000000000000000000000000011", "合约地址，用于合约压测,当地址不为空时，启用合约压测")
@@ -28,13 +27,13 @@ var (
 	//funcParams            = flag.String("funcParams", "", "待测合约的接口及参数")
 	txType                = flag.Int("txType", 0, "指定发送的交易类型")
 	benchmark             = flag.Bool("benchmark", false, "是否开启benchmark")
-	blockDuration         = flag.Int("blockDuration", 10, "性能测试的区块区间数")
-	chanValue             = flag.Uint("chanValue", 1000, "每秒最大压力")
+	blockDuration         = flag.Int("blockDuration", 1000, "性能测试的区块区间数")
+	chanValue             = flag.Uint("chanValue", 10, "每秒最大压力")
 	deployContractAddress = flag.String("deployContractAddress", "", "部署合约地址")
 	totalCount            = flag.Int("totalCount", 10, "发送调用合约交易总数")
 	stressTest            = flag.Int("stressTest", 0, "是否开启压力测试, 1:简单合约测试(setter&getter) 2. 复杂合约测试(CNS)")
 	consensusTest         = flag.Bool("consensusTest", false, "是否开启共识测试")
-	realtimeTps           = flag.Bool("realtimeTps", false, "是否开启实时压力测试")
+	httpAsync             = flag.Bool("httpAsync", false, "是否开启http压力测试异步模式")
 	useWs                 = flag.Bool("useWs", false, "是否使用websocket进行压力测试，默认http。")
 	nodeListPath          = flag.String("nodeListPath", "", "是否开启多节点发送模式")
 )
@@ -61,28 +60,31 @@ var (
 
 func main() {
 	var wg sync.WaitGroup
-
-	flag.Parse()
-	parseConfigJson(*configPath)
-
-	if *nodeListPath != "" {
-		nodeList = fileNodeList(*nodeListPath)
-	}
-
 	inChan := make(chan int, *chanValue)
 	defer close(inChan)
 	closeChan := make(chan int)
 	defer close(closeChan)
 
+	// 读取config.json文件
+	flag.Parse()
+	parseConfigJson(*configPath)
+
+	// 读取nodeList文件
+	if *nodeListPath != "" {
+		nodeList = fileNodeList(*nodeListPath)
+	}
+
+	/*
+	 * 计算平均共识时间
+	 */
 	if *consensusTest {
-		// 计算平均共识时间
 		wg.Add(1)
 		go func() {
 			var start time.Time
 			var elapsed time.Duration
 
 			// Begin to dial node
-			client, err := cli.Dial(*rpcURL)
+			client, err := cli.Dial(config.WsUrl)
 			if err != nil {
 				fmt.Println("client connection error:", err.Error())
 				os.Exit(1)
@@ -180,6 +182,9 @@ func main() {
 		}()
 	}
 
+	/*
+	 * http post压力测试
+	 */
 	if *stressTest != 0 && !*useWs {
 		// 等待newHead事件
 		if *consensusTest {
@@ -244,7 +249,7 @@ func main() {
 					var startTimestamp int64
 					var endTimestamp int64
 
-					if *realtimeTps {
+					if *httpAsync {
 						break stressTest
 					}
 

@@ -32,8 +32,7 @@ func HttpPost(param core.JsonParam) (string, error) {
 	reqNew := bytes.NewBuffer(req)
 
 	//fmt.Println(string(reqNew.Bytes()))
-
-	request, _ := http.NewRequest("POST", config.Url, reqNew)
+	request, _ := http.NewRequest("POST", config.HttpUrl, reqNew)
 	request.Header.Set("Content-type", "application/json")
 	response, err := client.Do(request)
 	//defer response.Body.Close()
