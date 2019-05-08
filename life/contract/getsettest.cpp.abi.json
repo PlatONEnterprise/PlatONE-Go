@@ -1,0 +1,35 @@
+[
+    {
+        "name": "Set",
+        "inputs": [
+            {
+                "name": "key",
+                "type": "string"
+            },
+            {
+                "name": "value",
+                "type": "int32"
+            }
+        ],
+        "outputs": [],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "Get",
+        "inputs": [
+            {
+                "name": "key",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "int32"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    }
+]
