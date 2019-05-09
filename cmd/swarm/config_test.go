@@ -26,9 +26,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/BCOSnetwork/BCOS-Go/rpc"
-	"github.com/BCOSnetwork/BCOS-Go/swarm"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/api"
+	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/api"
 
 	"github.com/docker/docker/pkg/reexec"
 )
@@ -473,7 +473,7 @@ func TestValidateConfig(t *testing.T) {
 	}{
 		{
 			cfg: &api.Config{EnsAPIs: []string{
-				"/data/testnet/bcos.ipc",
+				"/data/testnet/platone.ipc",
 			}},
 		},
 		{
@@ -488,7 +488,7 @@ func TestValidateConfig(t *testing.T) {
 		},
 		{
 			cfg: &api.Config{EnsAPIs: []string{
-				"test:/data/testnet/bcos.ipc",
+				"test:/data/testnet/platone.ipc",
 			}},
 		},
 		{
@@ -498,7 +498,7 @@ func TestValidateConfig(t *testing.T) {
 		},
 		{
 			cfg: &api.Config{EnsAPIs: []string{
-				"314159265dD8dbb310642f98f50C066173C1259b@/data/testnet/bcos.ipc",
+				"314159265dD8dbb310642f98f50C066173C1259b@/data/testnet/platone.ipc",
 			}},
 		},
 		{
@@ -513,7 +513,7 @@ func TestValidateConfig(t *testing.T) {
 		},
 		{
 			cfg: &api.Config{EnsAPIs: []string{
-				"test:314159265dD8dbb310642f98f50C066173C1259b@/data/testnet/bcos.ipc",
+				"test:314159265dD8dbb310642f98f50C066173C1259b@/data/testnet/platone.ipc",
 			}},
 		},
 		{
@@ -546,9 +546,9 @@ func TestValidateConfig(t *testing.T) {
 		},
 		{
 			cfg: &api.Config{EnsAPIs: []string{
-				"@/data/testnet/bcos.ipc",
+				"@/data/testnet/platone.ipc",
 			}},
-			err: "invalid format [tld:][contract-addr@]url for ENS API endpoint configuration \"@/data/testnet/bcos.ipc\": missing contract address",
+			err: "invalid format [tld:][contract-addr@]url for ENS API endpoint configuration \"@/data/testnet/platone.ipc\": missing contract address",
 		},
 	} {
 		err := validateConfig(c.cfg)

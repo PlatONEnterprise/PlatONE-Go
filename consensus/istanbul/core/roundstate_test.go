@@ -21,8 +21,8 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/consensus/istanbul"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul"
 )
 
 func newTestRoundState(view *istanbul.View, validatorSet istanbul.ValidatorSet) *roundState {

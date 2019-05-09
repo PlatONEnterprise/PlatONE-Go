@@ -29,34 +29,34 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/BCOSnetwork/BCOS-Go/accounts"
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/common/hexutil"
-	"github.com/BCOSnetwork/BCOS-Go/consensus"
-	"github.com/BCOSnetwork/BCOS-Go/consensus/cbft"
-	istanbulBackend "github.com/BCOSnetwork/BCOS-Go/consensus/istanbul/backend"
-	"github.com/BCOSnetwork/BCOS-Go/core"
-	"github.com/BCOSnetwork/BCOS-Go/core/bloombits"
-	"github.com/BCOSnetwork/BCOS-Go/core/cbfttypes"
-	"github.com/BCOSnetwork/BCOS-Go/core/rawdb"
-	"github.com/BCOSnetwork/BCOS-Go/core/types"
-	"github.com/BCOSnetwork/BCOS-Go/core/vm"
-	"github.com/BCOSnetwork/BCOS-Go/crypto"
-	"github.com/BCOSnetwork/BCOS-Go/eth/downloader"
-	"github.com/BCOSnetwork/BCOS-Go/eth/filters"
-	"github.com/BCOSnetwork/BCOS-Go/eth/gasprice"
-	"github.com/BCOSnetwork/BCOS-Go/ethdb"
-	"github.com/BCOSnetwork/BCOS-Go/event"
-	"github.com/BCOSnetwork/BCOS-Go/internal/ethapi"
-	"github.com/BCOSnetwork/BCOS-Go/life/utils"
-	"github.com/BCOSnetwork/BCOS-Go/log"
-	"github.com/BCOSnetwork/BCOS-Go/miner"
-	"github.com/BCOSnetwork/BCOS-Go/node"
-	"github.com/BCOSnetwork/BCOS-Go/p2p"
-	"github.com/BCOSnetwork/BCOS-Go/p2p/discover"
-	"github.com/BCOSnetwork/BCOS-Go/params"
-	"github.com/BCOSnetwork/BCOS-Go/rlp"
-	"github.com/BCOSnetwork/BCOS-Go/rpc"
+	"github.com/PlatONEnetwork/PlatONE-Go/accounts"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
+	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
+	"github.com/PlatONEnetwork/PlatONE-Go/consensus/cbft"
+	istanbulBackend "github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul/backend"
+	"github.com/PlatONEnetwork/PlatONE-Go/core"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/bloombits"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/cbfttypes"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/eth/downloader"
+	"github.com/PlatONEnetwork/PlatONE-Go/eth/filters"
+	"github.com/PlatONEnetwork/PlatONE-Go/eth/gasprice"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/event"
+	"github.com/PlatONEnetwork/PlatONE-Go/internal/ethapi"
+	"github.com/PlatONEnetwork/PlatONE-Go/life/utils"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/miner"
+	"github.com/PlatONEnetwork/PlatONE-Go/node"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
+	"github.com/PlatONEnetwork/PlatONE-Go/params"
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
 )
 
 func InitInnerCallFunc(ethPtr *Ethereum) {
@@ -433,7 +433,7 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	eth.mpcPool = core.NewMPCPool(config.MPCPool, eth.chainConfig, eth.blockchain)
 	eth.vcPool = core.NewVCPool(config.VCPool, eth.chainConfig, eth.blockchain)
 
-	// modify by bcos remove consensusCache
+	// modify by platone remove consensusCache
 	//var consensusCache *cbft.Cache = cbft.NewCache(eth.blockchain)
 	recommit := config.MinerRecommit
 	if common.SysCfg != nil {
@@ -476,7 +476,7 @@ func makeExtraData(extra []byte) []byte {
 		// create default extradata
 		extra, _ = rlp.EncodeToBytes([]interface{}{
 			uint(params.VersionMajor<<16 | params.VersionMinor<<8 | params.VersionPatch),
-			"bcos",
+			"platone",
 			runtime.Version(),
 			runtime.GOOS,
 		})

@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/BCOSnetwork/BCOS-Go/common/math"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/math"
 )
 
 func TestBlockNumberJSONUnmarshal(t *testing.T) {

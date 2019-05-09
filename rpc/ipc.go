@@ -20,8 +20,8 @@ import (
 	"context"
 	"net"
 
-	"github.com/BCOSnetwork/BCOS-Go/log"
-	"github.com/BCOSnetwork/BCOS-Go/p2p/netutil"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p/netutil"
 )
 
 // ServeListener accepts connections on l, serving JSON-RPC on them.

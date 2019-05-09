@@ -24,8 +24,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/BCOSnetwork/BCOS-Go/accounts/abi/bind"
-	"github.com/BCOSnetwork/BCOS-Go/common/compiler"
+	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi/bind"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/compiler"
 )
 
 var (

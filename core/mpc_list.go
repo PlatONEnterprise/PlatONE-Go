@@ -1,7 +1,7 @@
 package core
 
 import (
-	"github.com/BCOSnetwork/BCOS-Go/core/types"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"container/heap"
 )
 

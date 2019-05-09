@@ -19,7 +19,7 @@ package vm
 import (
 	"math/big"
 
-	"github.com/BCOSnetwork/BCOS-Go/common/math"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/math"
 )
 
 func memorySha3(stack *Stack) *big.Int {

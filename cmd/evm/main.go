@@ -22,7 +22,7 @@ import (
 	"math/big"
 	"os"
 
-	"github.com/BCOSnetwork/BCOS-Go/cmd/utils"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 	"gopkg.in/urfave/cli.v1"
 )
 

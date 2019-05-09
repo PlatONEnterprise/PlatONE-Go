@@ -30,8 +30,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/BCOSnetwork/BCOS-Go/log"
-	swarm "github.com/BCOSnetwork/BCOS-Go/swarm/api/client"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	swarm "github.com/PlatONEnetwork/PlatONE-Go/swarm/api/client"
 	colorable "github.com/mattn/go-colorable"
 )
 

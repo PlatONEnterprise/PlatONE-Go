@@ -25,13 +25,13 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/crypto"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/api"
-	swarmhttp "github.com/BCOSnetwork/BCOS-Go/swarm/api/http"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/multihash"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/storage/mru"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/testutil"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/api"
+	swarmhttp "github.com/PlatONEnetwork/PlatONE-Go/swarm/api/http"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/multihash"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/storage/mru"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/testutil"
 )
 
 func serverFunc(api *api.API) testutil.TestServer {

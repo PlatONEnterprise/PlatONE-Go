@@ -26,7 +26,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/BCOSnetwork/BCOS-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
 )
 
 const (

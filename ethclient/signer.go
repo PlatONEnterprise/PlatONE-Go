@@ -20,8 +20,8 @@ import (
 	"errors"
 	"math/big"
 
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/core/types"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 )
 
 // senderFromServer is a types.Signer that remembers the sender address returned by the RPC

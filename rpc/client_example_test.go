@@ -22,7 +22,7 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/BCOSnetwork/BCOS-Go/rpc"
+	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
 )
 
 // In this example, our client whishes to track the latest 'block number'

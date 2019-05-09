@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/core/lru"
-	"github.com/BCOSnetwork/BCOS-Go/life/exec"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/lru"
+	"github.com/PlatONEnetwork/PlatONE-Go/life/exec"
 	"bytes"
 	"errors"
 	"fmt"
@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-// The runner used in the unit test is mainly responsible for testing the Bcoslib c++ library.
+// The runner used in the unit test is mainly responsible for testing the PlatONElib c++ library.
 // According to the wasm file in the dir scan directory, the wasm is accessed from the main entry.
 // The db is created according to --outdir. The test tool judges the test result based on the log information.
 

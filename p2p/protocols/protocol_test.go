@@ -23,10 +23,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/BCOSnetwork/BCOS-Go/p2p"
-	"github.com/BCOSnetwork/BCOS-Go/p2p/discover"
-	"github.com/BCOSnetwork/BCOS-Go/p2p/simulations/adapters"
-	p2ptest "github.com/BCOSnetwork/BCOS-Go/p2p/testing"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p/simulations/adapters"
+	p2ptest "github.com/PlatONEnetwork/PlatONE-Go/p2p/testing"
 )
 
 // handshake message type

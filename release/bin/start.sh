@@ -1,9 +1,9 @@
 #!/bin/sh
 
-pids=`ps -ef | grep bcos | grep -v grep | awk '{print $2}'`
+pids=`ps -ef | grep platone | grep -v grep | awk '{print $2}'`
 
 if [ $pids"x" != "x" ]; then
-    echo "An old bcos process[$pids] is runing, please stop it first."
+    echo "An old platone process[$pids] is runing, please stop it first."
     exit
 fi
 
@@ -12,15 +12,15 @@ fi
 datadir="--datadir ../data"
 nodekey="--nodekey ../data/node.prikey"
 rpc="--rpcaddr 0.0.0.0 --rpcport 6789 --rpcapi db,eth,net,web3,admin,personal --rpc"
-#logs="--verbosity 4 --wasmlog ../logs/wasm.log >>../logs/bcos.log" #redirection not work in scrypt, why?
+#logs="--verbosity 4 --wasmlog ../logs/wasm.log >>../logs/platone.log" #redirection not work in scrypt, why?
 logs="--verbosity 4 --wasmlog ./wasm.log"
 
-nohup ./bcos --identity bcos --nodiscover --rpccorsdomain "*" $datadir $nodekey $rpc $logs 2>&1 &
+nohup ./platone --identity platone --nodiscover --rpccorsdomain "*" $datadir $nodekey $rpc $logs 2>&1 &
 
 sleep 1
 
-pids=`ps -ef | grep bcos | grep -v grep | awk '{print $2}'`
+pids=`ps -ef | grep platone | grep -v grep | awk '{print $2}'`
 
 if [ $pids"x" != "x" ]; then
-    echo "Start bcos succ. pid[$pids]"
+    echo "Start platone succ. pid[$pids]"
 fi

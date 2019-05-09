@@ -27,7 +27,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/BCOSnetwork/BCOS-Go/common/math"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/math"
 	"gopkg.in/urfave/cli.v1"
 )
 

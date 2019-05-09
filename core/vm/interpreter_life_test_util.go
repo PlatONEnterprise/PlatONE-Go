@@ -1,9 +1,9 @@
 package vm
 
 import (
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/life/utils"
-	"github.com/BCOSnetwork/BCOS-Go/rlp"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/life/utils"
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"bytes"
 	"encoding/binary"
 	"fmt"

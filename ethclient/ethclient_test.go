@@ -16,7 +16,7 @@
 
 package ethclient
 
-import "github.com/BCOSnetwork/BCOS-Go"
+import "github.com/PlatONEnetwork/PlatONE-Go"
 
 // Verify that Client implements the ethereum interfaces.
 var (

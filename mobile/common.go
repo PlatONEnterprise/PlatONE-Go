@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
 )
 
 // Hash represents the 32 byte Keccak256 hash of arbitrary data.

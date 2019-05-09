@@ -22,9 +22,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/BCOSnetwork/BCOS-Go/cmd/utils"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/api"
-	swarm "github.com/BCOSnetwork/BCOS-Go/swarm/api/client"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/api"
+	swarm "github.com/PlatONEnetwork/PlatONE-Go/swarm/api/client"
 	"gopkg.in/urfave/cli.v1"
 )
 

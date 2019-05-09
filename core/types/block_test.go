@@ -23,8 +23,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/rlp"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )
 
 // from bcValidBlockTest.json, "SimpleTx"

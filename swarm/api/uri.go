@@ -22,8 +22,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/storage"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/storage"
 )
 
 //matches hex swarm hashes

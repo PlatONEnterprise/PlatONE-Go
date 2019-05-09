@@ -22,7 +22,7 @@ import (
 	"html/template"
 	"path"
 
-	"github.com/BCOSnetwork/BCOS-Go/swarm/api"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/api"
 )
 
 type htmlListData struct {

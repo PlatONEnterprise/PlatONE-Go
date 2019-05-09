@@ -27,15 +27,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/BCOSnetwork/BCOS-Go/node"
-	"github.com/BCOSnetwork/BCOS-Go/p2p"
-	"github.com/BCOSnetwork/BCOS-Go/p2p/simulations/adapters"
-	p2ptest "github.com/BCOSnetwork/BCOS-Go/p2p/testing"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/log"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/network"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/network/simulation"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/state"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/storage"
+	"github.com/PlatONEnetwork/PlatONE-Go/node"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p/simulations/adapters"
+	p2ptest "github.com/PlatONEnetwork/PlatONE-Go/p2p/testing"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/network"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/network/simulation"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/state"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/storage"
 )
 
 func TestStreamerRetrieveRequest(t *testing.T) {

@@ -19,7 +19,7 @@ package simulation
 import (
 	"strings"
 
-	"github.com/BCOSnetwork/BCOS-Go/p2p/discover"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
 )
 
 // ConnectToPivotNode connects the node with provided NodeID

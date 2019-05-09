@@ -21,7 +21,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/BCOSnetwork/BCOS-Go/swarm/state"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/state"
 )
 
 // TestDBStore tests basic functionality of DBStore.

@@ -21,7 +21,7 @@ package p2p
 import (
 	"net"
 
-	"github.com/BCOSnetwork/BCOS-Go/metrics"
+	"github.com/PlatONEnetwork/PlatONE-Go/metrics"
 )
 
 var (

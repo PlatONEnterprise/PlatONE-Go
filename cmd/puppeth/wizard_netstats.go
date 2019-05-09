@@ -23,8 +23,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/BCOSnetwork/BCOS-Go/core"
-	"github.com/BCOSnetwork/BCOS-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/core"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/olekukonko/tablewriter"
 )
 

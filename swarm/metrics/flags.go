@@ -19,10 +19,10 @@ package metrics
 import (
 	"time"
 
-	"github.com/BCOSnetwork/BCOS-Go/cmd/utils"
-	gethmetrics "github.com/BCOSnetwork/BCOS-Go/metrics"
-	"github.com/BCOSnetwork/BCOS-Go/metrics/influxdb"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
+	gethmetrics "github.com/PlatONEnetwork/PlatONE-Go/metrics"
+	"github.com/PlatONEnetwork/PlatONE-Go/metrics/influxdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/log"
 	"gopkg.in/urfave/cli.v1"
 )
 

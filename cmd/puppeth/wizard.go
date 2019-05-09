@@ -17,7 +17,7 @@
 package main
 
 import (
-	"github.com/BCOSnetwork/BCOS-Go/p2p/discover"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
 	"bufio"
 	"encoding/json"
 	"fmt"
@@ -31,9 +31,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/core"
-	"github.com/BCOSnetwork/BCOS-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/core"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"golang.org/x/crypto/ssh/terminal"
 )
 

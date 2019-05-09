@@ -3,7 +3,7 @@ package exec
 import (
 	"errors"
 
-	"github.com/BCOSnetwork/BCOS-Go/life/utils"
+	"github.com/PlatONEnetwork/PlatONE-Go/life/utils"
 )
 
 var _ ImportResolver = (*NopResolver)(nil)

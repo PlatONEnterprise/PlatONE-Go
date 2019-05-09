@@ -30,7 +30,7 @@ import (
 	"time"
 	"unicode"
 	"unicode/utf8"
-	"github.com/BCOSnetwork/BCOS-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
 )
 
 var (

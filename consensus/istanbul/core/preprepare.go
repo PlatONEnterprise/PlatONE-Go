@@ -17,14 +17,14 @@
 package core
 
 import (
-	"github.com/BCOSnetwork/BCOS-Go/rlp"
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"github.com/pkg/errors"
 	"math/big"
 	"time"
 
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/consensus"
-	"github.com/BCOSnetwork/BCOS-Go/consensus/istanbul"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
+	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul"
 )
 
 func (c *core) sendPreprepare(request *istanbul.Request) {

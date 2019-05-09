@@ -21,7 +21,7 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/BCOSnetwork/BCOS-Go/event"
+	"github.com/PlatONEnetwork/PlatONE-Go/event"
 )
 
 // Manager is an overarching account manager that can communicate with various

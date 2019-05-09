@@ -26,7 +26,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/BCOSnetwork/BCOS-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/mohae/deepcopy"
 	"github.com/rjeczalik/notify"
 )

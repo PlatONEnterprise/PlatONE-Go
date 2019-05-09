@@ -2,7 +2,7 @@ package exec
 
 import (
 	"fmt"
-	"github.com/BCOSnetwork/BCOS-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
 )
 
 type Memory struct {

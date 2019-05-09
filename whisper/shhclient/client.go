@@ -19,10 +19,10 @@ package shhclient
 import (
 	"context"
 
-	"github.com/BCOSnetwork/BCOS-Go"
-	"github.com/BCOSnetwork/BCOS-Go/common/hexutil"
-	"github.com/BCOSnetwork/BCOS-Go/rpc"
-	whisper "github.com/BCOSnetwork/BCOS-Go/whisper/whisperv6"
+	"github.com/PlatONEnetwork/PlatONE-Go"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
+	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
+	whisper "github.com/PlatONEnetwork/PlatONE-Go/whisper/whisperv6"
 )
 
 // Client defines typed wrappers for the Whisper v6 RPC API.

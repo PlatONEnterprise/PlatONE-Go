@@ -17,7 +17,7 @@
 package core
 
 import (
-	"github.com/BCOSnetwork/BCOS-Go/consensus/istanbul"
+	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul"
 )
 
 func (c *core) handleRequest(request *istanbul.Request) error {

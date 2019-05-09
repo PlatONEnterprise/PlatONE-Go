@@ -21,8 +21,8 @@ import (
 	"github.com/pkg/errors"
 	"io"
 
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/rlp"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )
 
 type Engine interface {

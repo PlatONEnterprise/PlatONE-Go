@@ -2,7 +2,7 @@ package core
 
 import (
 	"fmt"
-	"github.com/BCOSnetwork/BCOS-Go/common/hexutil"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
 	"math/big"
 	"strconv"
 	"strings"

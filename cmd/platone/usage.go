@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with go-ethereum. If not, see <http://www.gnu.org/licenses/>.
 
-// Contains the bcos command usage template and generator.
+// Contains the platone command usage template and generator.
 
 package main
 
@@ -24,8 +24,8 @@ import (
 
 	"strings"
 
-	"github.com/BCOSnetwork/BCOS-Go/cmd/utils"
-	"github.com/BCOSnetwork/BCOS-Go/internal/debug"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
+	"github.com/PlatONEnetwork/PlatONE-Go/internal/debug"
 	"gopkg.in/urfave/cli.v1"
 )
 

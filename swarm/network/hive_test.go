@@ -22,8 +22,8 @@ import (
 	"os"
 	"testing"
 
-	p2ptest "github.com/BCOSnetwork/BCOS-Go/p2p/testing"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/state"
+	p2ptest "github.com/PlatONEnetwork/PlatONE-Go/p2p/testing"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/state"
 )
 
 func newHiveTester(t *testing.T, params *HiveParams, n int, store state.Store) (*bzzTester, *Hive) {

@@ -19,7 +19,7 @@ package vm
 import (
 	"math/big"
 
-	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
 )
 
 // destinations stores one map per contract (keyed by hash of code).

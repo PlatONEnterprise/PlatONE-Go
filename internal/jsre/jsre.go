@@ -26,8 +26,8 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/internal/jsre/deps"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/internal/jsre/deps"
 	"github.com/robertkrimen/otto"
 )
 

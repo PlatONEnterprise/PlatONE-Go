@@ -11,8 +11,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/BCOSnetwork/BCOS-Go/core/types"
-	cli "github.com/BCOSnetwork/BCOS-Go/ethclient"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	cli "github.com/PlatONEnetwork/PlatONE-Go/ethclient"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/mem"
 	"github.com/shirou/gopsutil/net"

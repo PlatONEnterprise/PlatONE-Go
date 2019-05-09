@@ -58,26 +58,26 @@ import (
 	"strings"
 	"time"
 
-	"github.com/BCOSnetwork/BCOS-Go/internal/build"
-	"github.com/BCOSnetwork/BCOS-Go/params"
-	sv "github.com/BCOSnetwork/BCOS-Go/swarm/version"
+	"github.com/PlatONEnetwork/PlatONE-Go/internal/build"
+	"github.com/PlatONEnetwork/PlatONE-Go/params"
+	sv "github.com/PlatONEnetwork/PlatONE-Go/swarm/version"
 )
 
 var (
-	// Files that end up in the bcos*.zip archive.
+	// Files that end up in the platone*.zip archive.
 	gethArchiveFiles = []string{
 		"COPYING",
-		executablePath("bcos"),
+		executablePath("platone"),
 	}
 
-	// Files that end up in the bcos-alltools*.zip archive.
+	// Files that end up in the platone-alltools*.zip archive.
 	allToolsArchiveFiles = []string{
 		"COPYING",
 		executablePath("abigen"),
 		executablePath("ctool"),
 		executablePath("bootnode"),
 		executablePath("evm"),
-		executablePath("bcos"),
+		executablePath("platone"),
 		executablePath("puppeth"),
 		executablePath("rlpdump"),
 		executablePath("wnode"),
@@ -108,7 +108,7 @@ var (
 			Description: "Developer utility version of the EVM (Ethereum Virtual Machine) that is capable of running bytecode snippets within a configurable environment and execution mode.",
 		},
 		{
-			BinaryName:  "bcos",
+			BinaryName:  "platone",
 			Description: "Ethereum CLI client.",
 		},
 		{
@@ -174,7 +174,7 @@ func executablePath(name string) string {
 }
 
 func main() {
-	// go run build/ci.go install ./cmd/bcos
+	// go run build/ci.go install ./cmd/platone
 	log.SetFlags(log.Lshortfile)
 
 	if _, err := os.Stat(filepath.Join("build", "ci.go")); os.IsNotExist(err) {
@@ -212,7 +212,7 @@ func main() {
 // Compiling
 
 func doInstall(cmdline []string) {
-	// ./cmd/bcos
+	// ./cmd/platone
 	var (
 		arch = flag.String("arch", "", "Architecture to cross build for")
 		cc   = flag.String("cc", "", "C compiler to cross build with")
@@ -424,8 +424,8 @@ func doArchive(cmdline []string) {
 		env = build.Env()
 
 		basegeth = archiveBasename(*arch, params.ArchiveVersion(env.Commit))
-		geth     = "bcos-" + basegeth + ext
-		alltools = "bcos-alltools-" + basegeth + ext
+		geth     = "platone-" + basegeth + ext
+		alltools = "platone-alltools-" + basegeth + ext
 
 		baseswarm = archiveBasename(*arch, sv.ArchiveVersion(env.Commit))
 		swarm     = "swarm-" + baseswarm + ext
@@ -557,7 +557,7 @@ func makeWorkdir(wdflag string) string {
 	if wdflag != "" {
 		err = os.MkdirAll(wdflag, 0744)
 	} else {
-		wdflag, err = ioutil.TempDir("", "bcos-build-")
+		wdflag, err = ioutil.TempDir("", "platone-build-")
 	}
 	if err != nil {
 		log.Fatal(err)
@@ -732,7 +732,7 @@ func doWindowsInstaller(cmdline []string) {
 			continue
 		}
 		allTools = append(allTools, filepath.Base(file))
-		if filepath.Base(file) == "bcos.exe" {
+		if filepath.Base(file) == "platone.exe" {
 			gethTool = file
 		} else {
 			devTools = append(devTools, file)
@@ -740,13 +740,13 @@ func doWindowsInstaller(cmdline []string) {
 	}
 
 	// Render NSIS scripts: Installer NSIS contains two installer sections,
-	// first section contains the bcos binary, second section holds the dev tools.
+	// first section contains the platone binary, second section holds the dev tools.
 	templateData := map[string]interface{}{
 		"License":  "COPYING",
 		"Geth":     gethTool,
 		"DevTools": devTools,
 	}
-	build.Render("build/nsis.bcos.nsi", filepath.Join(*workdir, "bcos.nsi"), 0644, nil)
+	build.Render("build/nsis.platone.nsi", filepath.Join(*workdir, "platone.nsi"), 0644, nil)
 	build.Render("build/nsis.install.nsh", filepath.Join(*workdir, "install.nsh"), 0644, templateData)
 	build.Render("build/nsis.uninstall.nsh", filepath.Join(*workdir, "uninstall.nsh"), 0644, allTools)
 	build.Render("build/nsis.pathupdate.nsh", filepath.Join(*workdir, "PathUpdate.nsh"), 0644, nil)
@@ -761,14 +761,14 @@ func doWindowsInstaller(cmdline []string) {
 	if env.Commit != "" {
 		version[2] += "-" + env.Commit[:8]
 	}
-	installer, _ := filepath.Abs("bcos-" + archiveBasename(*arch, params.ArchiveVersion(env.Commit)) + ".exe")
+	installer, _ := filepath.Abs("platone-" + archiveBasename(*arch, params.ArchiveVersion(env.Commit)) + ".exe")
 	build.MustRunCommand("makensis.exe",
 		"/DOUTPUTFILE="+installer,
 		"/DMAJORVERSION="+version[0],
 		"/DMINORVERSION="+version[1],
 		"/DBUILDVERSION="+version[2],
 		"/DARCH="+*arch,
-		filepath.Join(*workdir, "bcos.nsi"),
+		filepath.Join(*workdir, "platone.nsi"),
 	)
 
 	// Sign and publish installer.
@@ -799,11 +799,11 @@ func doAndroidArchive(cmdline []string) {
 	// Build the Android archive and Maven resources
 	build.MustRun(goTool("get", "golang.org/x/mobile/cmd/gomobile", "golang.org/x/mobile/cmd/gobind"))
 	build.MustRun(gomobileTool("init", "--ndk", os.Getenv("ANDROID_NDK")))
-	build.MustRun(gomobileTool("bind", "-ldflags", "-s -w", "--target", "android", "--javapkg", "org.ethereum", "-v", "github.com/BCOSnetwork/BCOS-Go/mobile"))
+	build.MustRun(gomobileTool("bind", "-ldflags", "-s -w", "--target", "android", "--javapkg", "org.ethereum", "-v", "github.com/PlatONEnetwork/PlatONE-Go/mobile"))
 
 	if *local {
 		// If we're building locally, copy bundle to build dir and skip Maven
-		os.Rename("bcos.aar", filepath.Join(GOBIN, "bcos.aar"))
+		os.Rename("platone.aar", filepath.Join(GOBIN, "platone.aar"))
 		return
 	}
 	meta := newMavenMetadata(env)
@@ -813,8 +813,8 @@ func doAndroidArchive(cmdline []string) {
 	maybeSkipArchive(env)
 
 	// Sign and upload the archive to Azure
-	archive := "bcos-" + archiveBasename("android", params.ArchiveVersion(env.Commit)) + ".aar"
-	os.Rename("bcos.aar", archive)
+	archive := "platone-" + archiveBasename("android", params.ArchiveVersion(env.Commit)) + ".aar"
+	os.Rename("platone.aar", archive)
 
 	if err := archiveUpload(archive, *upload, *signer); err != nil {
 		log.Fatal(err)
@@ -904,7 +904,7 @@ func newMavenMetadata(env build.Environment) mavenMetadata {
 	}
 	return mavenMetadata{
 		Version:      version,
-		Package:      "bcos-" + version,
+		Package:      "platone-" + version,
 		Develop:      isUnstableBuild(env),
 		Contributors: contribs,
 	}
@@ -925,7 +925,7 @@ func doXCodeFramework(cmdline []string) {
 	// Build the iOS XCode framework
 	build.MustRun(goTool("get", "golang.org/x/mobile/cmd/gomobile", "golang.org/x/mobile/cmd/gobind"))
 	build.MustRun(gomobileTool("init"))
-	bind := gomobileTool("bind", "-ldflags", "-s -w", "--target", "ios", "--tags", "ios", "-v", "github.com/BCOSnetwork/BCOS-Go/mobile")
+	bind := gomobileTool("bind", "-ldflags", "-s -w", "--target", "ios", "--tags", "ios", "-v", "github.com/PlatONEnetwork/PlatONE-Go/mobile")
 
 	if *local {
 		// If we're building locally, use the build folder and stop afterwards
@@ -933,7 +933,7 @@ func doXCodeFramework(cmdline []string) {
 		build.MustRun(bind)
 		return
 	}
-	archive := "bcos-" + archiveBasename("ios", params.ArchiveVersion(env.Commit))
+	archive := "platone-" + archiveBasename("ios", params.ArchiveVersion(env.Commit))
 	if err := os.Mkdir(archive, os.ModePerm); err != nil {
 		log.Fatal(err)
 	}

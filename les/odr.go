@@ -19,10 +19,10 @@ package les
 import (
 	"context"
 
-	"github.com/BCOSnetwork/BCOS-Go/core"
-	"github.com/BCOSnetwork/BCOS-Go/ethdb"
-	"github.com/BCOSnetwork/BCOS-Go/light"
-	"github.com/BCOSnetwork/BCOS-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/core"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/light"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
 )
 
 // LesOdr implements light.OdrBackend

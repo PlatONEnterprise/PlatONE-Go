@@ -17,7 +17,7 @@
 package api
 
 import (
-	"github.com/BCOSnetwork/BCOS-Go/swarm/network"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/network"
 )
 
 type Control struct {
