@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/BCOSnetwork/BCOS-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
 )
 
 // Enabled is checked by the constructor functions for all of the

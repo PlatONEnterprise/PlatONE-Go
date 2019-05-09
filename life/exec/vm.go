@@ -6,11 +6,11 @@ import (
 	"math"
 	"math/bits"
 
-	"github.com/BCOSnetwork/BCOS-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
 
-	"github.com/BCOSnetwork/BCOS-Go/life/compiler"
-	"github.com/BCOSnetwork/BCOS-Go/life/compiler/opcodes"
-	"github.com/BCOSnetwork/BCOS-Go/life/utils"
+	"github.com/PlatONEnetwork/PlatONE-Go/life/compiler"
+	"github.com/PlatONEnetwork/PlatONE-Go/life/compiler/opcodes"
+	"github.com/PlatONEnetwork/PlatONE-Go/life/utils"
 
 	"github.com/go-interpreter/wagon/wasm"
 )

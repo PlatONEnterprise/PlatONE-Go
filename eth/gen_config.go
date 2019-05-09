@@ -6,11 +6,11 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/common/hexutil"
-	"github.com/BCOSnetwork/BCOS-Go/core"
-	"github.com/BCOSnetwork/BCOS-Go/eth/downloader"
-	"github.com/BCOSnetwork/BCOS-Go/eth/gasprice"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
+	"github.com/PlatONEnetwork/PlatONE-Go/core"
+	"github.com/PlatONEnetwork/PlatONE-Go/eth/downloader"
+	"github.com/PlatONEnetwork/PlatONE-Go/eth/gasprice"
 )
 
 var _ = (*configMarshaling)(nil)

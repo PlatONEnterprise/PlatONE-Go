@@ -22,7 +22,7 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/BCOSnetwork/BCOS-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
 )
 
 func init() {

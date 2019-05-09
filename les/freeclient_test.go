@@ -24,8 +24,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/BCOSnetwork/BCOS-Go/common/mclock"
-	"github.com/BCOSnetwork/BCOS-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/mclock"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
 )
 
 func TestFreeClientPoolL10C100(t *testing.T) {

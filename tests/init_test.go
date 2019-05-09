@@ -29,7 +29,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/BCOSnetwork/BCOS-Go/params"
+	"github.com/PlatONEnetwork/PlatONE-Go/params"
 )
 
 var (

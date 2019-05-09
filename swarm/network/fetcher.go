@@ -21,9 +21,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/BCOSnetwork/BCOS-Go/log"
-	"github.com/BCOSnetwork/BCOS-Go/p2p/discover"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/storage"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/storage"
 )
 
 var searchTimeout = 1 * time.Second

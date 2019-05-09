@@ -41,23 +41,23 @@ import (
 	"sync"
 	"time"
 
-	"github.com/BCOSnetwork/BCOS-Go/accounts"
-	"github.com/BCOSnetwork/BCOS-Go/accounts/keystore"
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/core"
-	"github.com/BCOSnetwork/BCOS-Go/core/types"
-	"github.com/BCOSnetwork/BCOS-Go/eth"
-	"github.com/BCOSnetwork/BCOS-Go/eth/downloader"
-	"github.com/BCOSnetwork/BCOS-Go/ethclient"
-	"github.com/BCOSnetwork/BCOS-Go/ethstats"
-	"github.com/BCOSnetwork/BCOS-Go/les"
-	"github.com/BCOSnetwork/BCOS-Go/log"
-	"github.com/BCOSnetwork/BCOS-Go/node"
-	"github.com/BCOSnetwork/BCOS-Go/p2p"
-	"github.com/BCOSnetwork/BCOS-Go/p2p/discover"
-	"github.com/BCOSnetwork/BCOS-Go/p2p/discv5"
-	"github.com/BCOSnetwork/BCOS-Go/p2p/nat"
-	"github.com/BCOSnetwork/BCOS-Go/params"
+	"github.com/PlatONEnetwork/PlatONE-Go/accounts"
+	"github.com/PlatONEnetwork/PlatONE-Go/accounts/keystore"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/core"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	"github.com/PlatONEnetwork/PlatONE-Go/eth"
+	"github.com/PlatONEnetwork/PlatONE-Go/eth/downloader"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethclient"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethstats"
+	"github.com/PlatONEnetwork/PlatONE-Go/les"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/node"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discv5"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p/nat"
+	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"golang.org/x/net/websocket"
 )
 
@@ -215,7 +215,7 @@ type faucet struct {
 func newFaucet(genesis *core.Genesis, port int, enodes []*discv5.Node, network uint64, stats string, ks *keystore.KeyStore, index []byte) (*faucet, error) {
 	// Assemble the raw devp2p protocol stack
 	stack, err := node.New(&node.Config{
-		Name:    "bcos",
+		Name:    "platone",
 		Version: params.VersionWithMeta,
 		DataDir: filepath.Join(os.Getenv("HOME"), ".faucet"),
 		P2P: p2p.Config{

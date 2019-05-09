@@ -18,11 +18,11 @@ import (
 	"math"
 	"math/big"
 
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	inner "github.com/BCOSnetwork/BCOS-Go/common/math"
-	"github.com/BCOSnetwork/BCOS-Go/crypto"
-	"github.com/BCOSnetwork/BCOS-Go/life/compiler"
-	"github.com/BCOSnetwork/BCOS-Go/life/exec"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	inner "github.com/PlatONEnetwork/PlatONE-Go/common/math"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/life/compiler"
+	"github.com/PlatONEnetwork/PlatONE-Go/life/exec"
 )
 
 var (

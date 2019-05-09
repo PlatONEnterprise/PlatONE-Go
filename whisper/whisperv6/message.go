@@ -28,10 +28,10 @@ import (
 	mrand "math/rand"
 	"strconv"
 
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/crypto"
-	"github.com/BCOSnetwork/BCOS-Go/crypto/ecies"
-	"github.com/BCOSnetwork/BCOS-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto/ecies"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
 )
 
 // MessageParams specifies the exact way a message should be wrapped

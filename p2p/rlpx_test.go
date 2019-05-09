@@ -31,12 +31,12 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/BCOSnetwork/BCOS-Go/crypto"
-	"github.com/BCOSnetwork/BCOS-Go/crypto/ecies"
-	"github.com/BCOSnetwork/BCOS-Go/crypto/sha3"
-	"github.com/BCOSnetwork/BCOS-Go/p2p/discover"
-	"github.com/BCOSnetwork/BCOS-Go/p2p/simulations/pipes"
-	"github.com/BCOSnetwork/BCOS-Go/rlp"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto/ecies"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto/sha3"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p/simulations/pipes"
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )
 
 func TestSharedSecret(t *testing.T) {

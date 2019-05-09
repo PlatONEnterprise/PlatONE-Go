@@ -21,9 +21,9 @@ import (
 	"context"
 	"sync"
 
-	"github.com/BCOSnetwork/BCOS-Go/internal/ethapi"
-	"github.com/BCOSnetwork/BCOS-Go/log"
-	"github.com/BCOSnetwork/BCOS-Go/rpc"
+	"github.com/PlatONEnetwork/PlatONE-Go/internal/ethapi"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
 )
 
 type StdIOUI struct {

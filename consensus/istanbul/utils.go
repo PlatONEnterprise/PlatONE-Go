@@ -17,11 +17,11 @@
 package istanbul
 
 import (
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/crypto"
-	"github.com/BCOSnetwork/BCOS-Go/crypto/sha3"
-	"github.com/BCOSnetwork/BCOS-Go/log"
-	"github.com/BCOSnetwork/BCOS-Go/rlp"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto/sha3"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )
 
 func RLPHash(v interface{}) (h common.Hash) {

@@ -24,7 +24,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"golang.org/x/crypto/pbkdf2"
 )
 

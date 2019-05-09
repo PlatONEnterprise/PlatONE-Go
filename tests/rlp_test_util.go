@@ -24,7 +24,7 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/BCOSnetwork/BCOS-Go/rlp"
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )
 
 // RLPTest is the JSON structure of a single RLP test.

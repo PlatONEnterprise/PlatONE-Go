@@ -20,8 +20,8 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/event"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/event"
 )
 
 // Backend provides application specific functions for Istanbul core

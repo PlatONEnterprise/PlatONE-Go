@@ -1,7 +1,7 @@
 //
 package cbft
 
-import "github.com/BCOSnetwork/BCOS-Go/p2p/discover"
+import "github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
 
 var flowControl *FlowControl
 

@@ -26,11 +26,11 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/common/math"
-	"github.com/BCOSnetwork/BCOS-Go/crypto"
-	"github.com/BCOSnetwork/BCOS-Go/crypto/ecies"
-	"github.com/BCOSnetwork/BCOS-Go/rlp"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/math"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto/ecies"
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )
 
 // Envelope represents a clear-text data packet to transmit through the Whisper

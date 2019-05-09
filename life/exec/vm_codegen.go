@@ -5,8 +5,8 @@ import (
 	"math"
 	"strings"
 
-	"github.com/BCOSnetwork/BCOS-Go/life/compiler"
-	"github.com/BCOSnetwork/BCOS-Go/life/compiler/opcodes"
+	"github.com/PlatONEnetwork/PlatONE-Go/life/compiler"
+	"github.com/PlatONEnetwork/PlatONE-Go/life/compiler/opcodes"
 )
 
 type jitContext struct {

@@ -19,7 +19,7 @@
 package fetcher
 
 import (
-	"github.com/BCOSnetwork/BCOS-Go/metrics"
+	"github.com/PlatONEnetwork/PlatONE-Go/metrics"
 )
 
 var (

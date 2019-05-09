@@ -26,9 +26,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/BCOSnetwork/BCOS-Go/accounts"
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/event"
+	"github.com/PlatONEnetwork/PlatONE-Go/accounts"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/event"
 )
 
 var testSigData = make([]byte, 32)

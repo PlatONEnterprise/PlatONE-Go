@@ -27,12 +27,12 @@ import (
 	"io"
 	"math/big"
 
-	"github.com/BCOSnetwork/BCOS-Go/accounts"
-	"github.com/BCOSnetwork/BCOS-Go/accounts/usbwallet/internal/trezor"
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/common/hexutil"
-	"github.com/BCOSnetwork/BCOS-Go/core/types"
-	"github.com/BCOSnetwork/BCOS-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/accounts"
+	"github.com/PlatONEnetwork/PlatONE-Go/accounts/usbwallet/internal/trezor"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/golang/protobuf/proto"
 )
 

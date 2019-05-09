@@ -23,10 +23,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/BCOSnetwork/BCOS-Go/cmd/utils"
-	"github.com/BCOSnetwork/BCOS-Go/node"
-	"github.com/BCOSnetwork/BCOS-Go/rpc"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/fuse"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
+	"github.com/PlatONEnetwork/PlatONE-Go/node"
+	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/fuse"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -119,7 +119,7 @@ func dialRPC(ctx *cli.Context) (*rpc.Client, error) {
 	if endpoint == "" {
 		endpoint = node.DefaultIPCEndpoint(clientIdentifier)
 	} else if strings.HasPrefix(endpoint, "rpc:") || strings.HasPrefix(endpoint, "ipc:") {
-		// Backwards compatibility with bcos < 1.5 which required
+		// Backwards compatibility with platone < 1.5 which required
 		// these prefixes.
 		endpoint = endpoint[4:]
 	}

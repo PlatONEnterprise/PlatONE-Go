@@ -36,12 +36,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/metrics"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/api"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/log"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/storage"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/storage/mru"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/metrics"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/api"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/storage"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/storage/mru"
 
 	"github.com/rs/cors"
 )

@@ -19,7 +19,7 @@ package trie
 import (
 	"fmt"
 
-	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
 )
 
 // MissingNodeError is returned by the trie functions (TryGet, TryUpdate, TryDelete)

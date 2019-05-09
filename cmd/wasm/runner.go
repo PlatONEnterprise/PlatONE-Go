@@ -1,16 +1,16 @@
 package main
 
 import (
-	"github.com/BCOSnetwork/BCOS-Go/cmd/utils"
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/core"
-	"github.com/BCOSnetwork/BCOS-Go/core/state"
-	"github.com/BCOSnetwork/BCOS-Go/core/vm"
-	"github.com/BCOSnetwork/BCOS-Go/ethdb"
-	"github.com/BCOSnetwork/BCOS-Go/life/runtime"
-	"github.com/BCOSnetwork/BCOS-Go/log"
-	"github.com/BCOSnetwork/BCOS-Go/params"
-	"github.com/BCOSnetwork/BCOS-Go/rlp"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/core"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/life/runtime"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/params"
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -20,7 +20,7 @@ import (
 	"os"
 	"time"
 
-	covert "github.com/BCOSnetwork/BCOS-Go/life/utils"
+	covert "github.com/PlatONEnetwork/PlatONE-Go/life/utils"
 	goruntime "runtime"
 )
 

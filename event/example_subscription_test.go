@@ -19,7 +19,7 @@ package event_test
 import (
 	"fmt"
 
-	"github.com/BCOSnetwork/BCOS-Go/event"
+	"github.com/PlatONEnetwork/PlatONE-Go/event"
 )
 
 func ExampleNewSubscription() {

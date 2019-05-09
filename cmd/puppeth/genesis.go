@@ -17,9 +17,9 @@
 package main
 
 import (
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/common/hexutil"
-	"github.com/BCOSnetwork/BCOS-Go/core"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
+	"github.com/PlatONEnetwork/PlatONE-Go/core"
 )
 
 // cppEthereumGenesisSpec represents the genesis specification format used by the

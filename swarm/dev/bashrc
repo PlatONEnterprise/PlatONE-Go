@@ -1,4 +1,4 @@
-export ROOT="${GOPATH}/src/Bcos-go"
+export ROOT="${GOPATH}/src/PlatONE-go"
 export PATH="${ROOT}/swarm/dev/bin:${PATH}"
 
 cd "${ROOT}/swarm/dev"

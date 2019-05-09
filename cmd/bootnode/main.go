@@ -24,13 +24,13 @@ import (
 	"net"
 	"os"
 
-	"github.com/BCOSnetwork/BCOS-Go/cmd/utils"
-	"github.com/BCOSnetwork/BCOS-Go/crypto"
-	"github.com/BCOSnetwork/BCOS-Go/log"
-	"github.com/BCOSnetwork/BCOS-Go/p2p/discover"
-	"github.com/BCOSnetwork/BCOS-Go/p2p/discv5"
-	"github.com/BCOSnetwork/BCOS-Go/p2p/nat"
-	"github.com/BCOSnetwork/BCOS-Go/p2p/netutil"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discv5"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p/nat"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p/netutil"
 )
 
 func main() {

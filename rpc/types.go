@@ -24,7 +24,7 @@ import (
 	"sync"
 
 	mapset "github.com/deckarep/golang-set"
-	"github.com/BCOSnetwork/BCOS-Go/common/hexutil"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
 )
 
 // API describes the set of methods offered over the RPC interface

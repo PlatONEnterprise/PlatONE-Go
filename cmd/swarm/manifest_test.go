@@ -23,8 +23,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/BCOSnetwork/BCOS-Go/swarm/api"
-	swarm "github.com/BCOSnetwork/BCOS-Go/swarm/api/client"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/api"
+	swarm "github.com/PlatONEnetwork/PlatONE-Go/swarm/api/client"
 )
 
 // TestManifestChange tests manifest add, update and remove

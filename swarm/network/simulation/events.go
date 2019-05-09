@@ -20,9 +20,9 @@ import (
 	"context"
 	"sync"
 
-	"github.com/BCOSnetwork/BCOS-Go/p2p/discover"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
 
-	"github.com/BCOSnetwork/BCOS-Go/p2p"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
 )
 
 // PeerEvent is the type of the channel returned by Simulation.PeerEvents.

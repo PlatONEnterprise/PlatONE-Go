@@ -26,17 +26,17 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/BCOSnetwork/BCOS-Go/cmd/internal/browser"
-	"github.com/BCOSnetwork/BCOS-Go/params"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/internal/browser"
+	"github.com/PlatONEnetwork/PlatONE-Go/params"
 
-	"github.com/BCOSnetwork/BCOS-Go/cmd/utils"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 	cli "gopkg.in/urfave/cli.v1"
 )
 
 var bugCommand = cli.Command{
 	Action:    utils.MigrateFlags(reportBug),
 	Name:      "bug",
-	Usage:     "opens a window to report a bug on the bcos repo",
+	Usage:     "opens a window to report a bug on the platone repo",
 	ArgsUsage: " ",
 	Category:  "MISCELLANEOUS COMMANDS",
 }

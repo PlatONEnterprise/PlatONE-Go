@@ -6,10 +6,10 @@ import (
 	"encoding/json"
 	"math/big"
 
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/common/hexutil"
-	"github.com/BCOSnetwork/BCOS-Go/common/math"
-	"github.com/BCOSnetwork/BCOS-Go/core/types"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/math"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 )
 
 var _ = (*btHeaderMarshaling)(nil)

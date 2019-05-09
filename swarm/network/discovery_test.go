@@ -19,7 +19,7 @@ package network
 import (
 	"testing"
 
-	p2ptest "github.com/BCOSnetwork/BCOS-Go/p2p/testing"
+	p2ptest "github.com/PlatONEnetwork/PlatONE-Go/p2p/testing"
 )
 
 /***

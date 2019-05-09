@@ -27,12 +27,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 )
 
 func tmpKeyStoreIface(t *testing.T, encrypted bool) (dir string, ks keyStore) {
-	d, err := ioutil.TempDir("", "bcos-keystore-test")
+	d, err := ioutil.TempDir("", "platone-keystore-test")
 	if err != nil {
 		t.Fatal(err)
 	}

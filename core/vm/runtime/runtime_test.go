@@ -21,11 +21,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/BCOSnetwork/BCOS-Go/accounts/abi"
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/core/state"
-	"github.com/BCOSnetwork/BCOS-Go/core/vm"
-	"github.com/BCOSnetwork/BCOS-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
 )
 
 func TestDefaults(t *testing.T) {

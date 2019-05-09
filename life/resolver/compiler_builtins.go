@@ -17,7 +17,7 @@ import (
 	"math"
 	"unsafe"
 
-	"github.com/BCOSnetwork/BCOS-Go/life/exec"
+	"github.com/PlatONEnetwork/PlatONE-Go/life/exec"
 )
 
 type uint128 struct {

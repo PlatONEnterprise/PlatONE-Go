@@ -26,8 +26,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
 )
 
 // faucetDockerfile is the Dockerfile required to build a faucet container to

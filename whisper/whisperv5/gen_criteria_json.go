@@ -5,7 +5,7 @@ package whisperv5
 import (
 	"encoding/json"
 
-	"github.com/BCOSnetwork/BCOS-Go/common/hexutil"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
 )
 
 var _ = (*criteriaOverride)(nil)

@@ -23,9 +23,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/BCOSnetwork/BCOS-Go/accounts/keystore"
-	"github.com/BCOSnetwork/BCOS-Go/cmd/utils"
-	"github.com/BCOSnetwork/BCOS-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/accounts/keystore"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"github.com/pborman/uuid"
 	"gopkg.in/urfave/cli.v1"
 )

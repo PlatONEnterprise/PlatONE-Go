@@ -17,9 +17,9 @@
 package core
 
 import (
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/core/cbfttypes"
-	"github.com/BCOSnetwork/BCOS-Go/core/types"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/cbfttypes"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 )
 
 // NewTxsEvent is posted when a batch of transactions enter the transaction pool.

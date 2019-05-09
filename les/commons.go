@@ -19,14 +19,14 @@ package les
 import (
 	"fmt"
 
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/core"
-	"github.com/BCOSnetwork/BCOS-Go/eth"
-	"github.com/BCOSnetwork/BCOS-Go/ethdb"
-	"github.com/BCOSnetwork/BCOS-Go/light"
-	"github.com/BCOSnetwork/BCOS-Go/p2p"
-	"github.com/BCOSnetwork/BCOS-Go/p2p/discover"
-	"github.com/BCOSnetwork/BCOS-Go/params"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/core"
+	"github.com/PlatONEnetwork/PlatONE-Go/eth"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/light"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
+	"github.com/PlatONEnetwork/PlatONE-Go/params"
 )
 
 // lesCommons contains fields needed by both server and client.

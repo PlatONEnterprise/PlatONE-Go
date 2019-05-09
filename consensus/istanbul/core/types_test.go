@@ -21,8 +21,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/consensus/istanbul"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul"
 )
 
 func testPreprepare(t *testing.T) {

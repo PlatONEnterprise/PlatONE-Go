@@ -20,11 +20,11 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/BCOSnetwork/BCOS-Go/accounts/abi/bind"
-	"github.com/BCOSnetwork/BCOS-Go/accounts/abi/bind/backends"
-	"github.com/BCOSnetwork/BCOS-Go/contracts/ens/contract"
-	"github.com/BCOSnetwork/BCOS-Go/core"
-	"github.com/BCOSnetwork/BCOS-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi/bind"
+	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi/bind/backends"
+	"github.com/PlatONEnetwork/PlatONE-Go/contracts/ens/contract"
+	"github.com/PlatONEnetwork/PlatONE-Go/core"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 )
 
 var (

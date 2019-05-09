@@ -22,9 +22,9 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/BCOSnetwork/BCOS-Go/p2p/discover"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
 
-	"github.com/BCOSnetwork/BCOS-Go/swarm/storage"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/storage"
 )
 
 const (

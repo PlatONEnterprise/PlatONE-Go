@@ -17,13 +17,13 @@
 package node
 
 import (
-	"github.com/BCOSnetwork/BCOS-Go/accounts"
-	"github.com/BCOSnetwork/BCOS-Go/ethdb"
-	"github.com/BCOSnetwork/BCOS-Go/event"
-	"github.com/BCOSnetwork/BCOS-Go/internal/debug"
-	"github.com/BCOSnetwork/BCOS-Go/log"
-	"github.com/BCOSnetwork/BCOS-Go/p2p"
-	"github.com/BCOSnetwork/BCOS-Go/rpc"
+	"github.com/PlatONEnetwork/PlatONE-Go/accounts"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/event"
+	"github.com/PlatONEnetwork/PlatONE-Go/internal/debug"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
+	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
 	"errors"
 	"fmt"
 	"github.com/prometheus/prometheus/util/flock"
@@ -97,7 +97,7 @@ func New(conf *Config) (*Node, error) {
 		return nil, errors.New(`Config.Name cannot end in ".ipc"`)
 	}
 	// Ensure that the AccountManager method works before the node has started.
-	// We rely on this in cmd/bcos.
+	// We rely on this in cmd/platone.
 	am, ephemeralKeystore, err := makeAccountManager(conf)
 	if err != nil {
 		return nil, err

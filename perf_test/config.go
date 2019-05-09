@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/BCOSnetwork/BCOS-Go/cmd/ctool/core"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/core"
 )
 
 const (

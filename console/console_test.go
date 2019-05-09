@@ -26,11 +26,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/core"
-	"github.com/BCOSnetwork/BCOS-Go/eth"
-	"github.com/BCOSnetwork/BCOS-Go/internal/jsre"
-	"github.com/BCOSnetwork/BCOS-Go/node"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/core"
+	"github.com/PlatONEnetwork/PlatONE-Go/eth"
+	"github.com/PlatONEnetwork/PlatONE-Go/internal/jsre"
+	"github.com/PlatONEnetwork/PlatONE-Go/node"
 )
 
 const (

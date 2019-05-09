@@ -23,11 +23,11 @@ import (
 	"testing"
 
 	"github.com/docker/docker/pkg/reexec"
-	"github.com/BCOSnetwork/BCOS-Go/internal/cmdtest"
+	"github.com/PlatONEnetwork/PlatONE-Go/internal/cmdtest"
 )
 
 func tmpdir(t *testing.T) string {
-	dir, err := ioutil.TempDir("", "bcos-test")
+	dir, err := ioutil.TempDir("", "platone-test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -43,8 +43,8 @@ type testgeth struct {
 }
 
 func init() {
-	// Run the app if we've been exec'd as "bcos-test" in runGeth.
-	reexec.Register("bcos-test", func() {
+	// Run the app if we've been exec'd as "platone-test" in runGeth.
+	reexec.Register("platone-test", func() {
 		if err := app.Run(os.Args); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
@@ -61,7 +61,7 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-// spawns bcos with the given command line args. If the args don't set --datadir, the
+// spawns platone with the given command line args. If the args don't set --datadir, the
 // child g gets a temporary data directory.
 func runGeth(t *testing.T, args ...string) *testgeth {
 	tt := &testgeth{}
@@ -90,9 +90,9 @@ func runGeth(t *testing.T, args ...string) *testgeth {
 		}()
 	}
 
-	// Boot "bcos". This actually runs the test binary but the TestMain
+	// Boot "platone". This actually runs the test binary but the TestMain
 	// function will prevent any tests from running.
-	tt.Run("bcos-test", args...)
+	tt.Run("platone-test", args...)
 
 	return tt
 }

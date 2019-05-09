@@ -25,15 +25,15 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/BCOSnetwork/BCOS-Go/accounts"
-	"github.com/BCOSnetwork/BCOS-Go/accounts/keystore"
-	"github.com/BCOSnetwork/BCOS-Go/accounts/usbwallet"
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/crypto"
-	"github.com/BCOSnetwork/BCOS-Go/log"
-	"github.com/BCOSnetwork/BCOS-Go/p2p"
-	"github.com/BCOSnetwork/BCOS-Go/p2p/discover"
-	"github.com/BCOSnetwork/BCOS-Go/rpc"
+	"github.com/PlatONEnetwork/PlatONE-Go/accounts"
+	"github.com/PlatONEnetwork/PlatONE-Go/accounts/keystore"
+	"github.com/PlatONEnetwork/PlatONE-Go/accounts/usbwallet"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
+	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
 )
 
 const (
@@ -49,7 +49,7 @@ const (
 // all registered services.
 type Config struct {
 	// Name sets the instance name of the node. It must not contain the / character and is
-	// used in the devp2p node identifier. The instance name of bcos is "bcos". If no
+	// used in the devp2p node identifier. The instance name of platone is "platone". If no
 	// value is specified, the basename of the current executable is used.
 	Name string `toml:"-"`
 
@@ -233,8 +233,8 @@ func DefaultWSEndpoint() string {
 func (c *Config) NodeName() string {
 	name := c.name()
 	// Backwards compatibility: previous versions used title-cased "Geth", keep that.
-	if name == "bcos" || name == "bcos-testnet" {
-		name = "BCOSnetwork"
+	if name == "platone" || name == "platone-testnet" {
+		name = "PlatONEnetwork"
 	}
 	if c.UserIdent != "" {
 		name += "/" + c.UserIdent
@@ -258,7 +258,7 @@ func (c *Config) name() string {
 	return c.Name
 }
 
-// These resources are resolved differently for "bcos" instances.
+// These resources are resolved differently for "platone" instances.
 var isOldGethResource = map[string]bool{
 	"chaindata":          true,
 	"nodes":              true,
@@ -276,10 +276,10 @@ func (c *Config) ResolvePath(path string) string {
 		return ""
 	}
 	// Backwards-compatibility: ensure that data directory files created
-	// by bcos 1.4 are used if they exist.
-	if c.name() == "bcos" && isOldGethResource[path] {
+	// by platone 1.4 are used if they exist.
+	if c.name() == "platone" && isOldGethResource[path] {
 		oldpath := ""
-		if c.Name == "bcos" {
+		if c.Name == "platone" {
 			oldpath = filepath.Join(c.DataDir, path)
 		}
 		if oldpath != "" && common.FileExist(oldpath) {

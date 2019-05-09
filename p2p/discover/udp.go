@@ -25,11 +25,11 @@ import (
 	"net"
 	"time"
 
-	"github.com/BCOSnetwork/BCOS-Go/crypto"
-	"github.com/BCOSnetwork/BCOS-Go/log"
-	"github.com/BCOSnetwork/BCOS-Go/p2p/nat"
-	"github.com/BCOSnetwork/BCOS-Go/p2p/netutil"
-	"github.com/BCOSnetwork/BCOS-Go/rlp"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p/nat"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p/netutil"
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )
 
 // Errors

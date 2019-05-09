@@ -19,7 +19,7 @@ package downloader
 import (
 	"fmt"
 
-	"github.com/BCOSnetwork/BCOS-Go/core/types"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 )
 
 // peerDropFn is a callback type for dropping a peer detected as malicious.

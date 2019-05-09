@@ -1,7 +1,7 @@
 package resolver
 
 import (
-	"github.com/BCOSnetwork/BCOS-Go/life/exec"
+	"github.com/PlatONEnetwork/PlatONE-Go/life/exec"
 )
 
 var (

@@ -28,11 +28,11 @@
 //  	"context"
 //  	"fmt"
 //  	"os"
-//  	pss "github.com/BCOSnetwork/BCOS-Go/swarm/pss/client"
-//  	"github.com/BCOSnetwork/BCOS-Go/p2p/protocols"
-//  	"github.com/BCOSnetwork/BCOS-Go/p2p"
-//  	"github.com/BCOSnetwork/BCOS-Go/swarm/pot"
-//  	"github.com/BCOSnetwork/BCOS-Go/swarm/log"
+//  	pss "github.com/PlatONEnetwork/PlatONE-Go/swarm/pss/client"
+//  	"github.com/PlatONEnetwork/PlatONE-Go/p2p/protocols"
+//  	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
+//  	"github.com/PlatONEnetwork/PlatONE-Go/swarm/pot"
+//  	"github.com/PlatONEnetwork/PlatONE-Go/swarm/log"
 //  )
 //
 //  type FooMsg struct {

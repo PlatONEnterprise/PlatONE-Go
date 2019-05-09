@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/BCOSnetwork/BCOS-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
 )
 
 // deployWallet creates a new web wallet based on some user input.

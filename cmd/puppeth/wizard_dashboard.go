@@ -19,7 +19,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/BCOSnetwork/BCOS-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
 )
 
 // deployDashboard queries the user for various input on deploying a web-service

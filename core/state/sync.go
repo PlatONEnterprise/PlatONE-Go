@@ -19,9 +19,9 @@ package state
 import (
 	"bytes"
 
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/rlp"
-	"github.com/BCOSnetwork/BCOS-Go/trie"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"github.com/PlatONEnetwork/PlatONE-Go/trie"
 )
 
 // NewStateSync create a new state trie download scheduler.

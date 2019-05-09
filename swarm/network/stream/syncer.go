@@ -22,9 +22,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/BCOSnetwork/BCOS-Go/metrics"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/log"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/storage"
+	"github.com/PlatONEnetwork/PlatONE-Go/metrics"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/storage"
 )
 
 const (

@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	configPath = "D:\\resource\\bcos\\BCOS-Go\\src\\github.com\\BCOSnetwork\\BCOS-Go\\cmd\\ctool\\config.json"
+	configPath = "D:\\resource\\platone\\PlatONE-Go\\src\\github.com\\PlatONEnetwork\\PlatONE-Go\\cmd\\ctool\\config.json"
 	pkFilePath = "../test/privateKeys.txt"
 )
 

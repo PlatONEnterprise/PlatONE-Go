@@ -27,9 +27,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/log"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/storage"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/storage"
 )
 
 const (

@@ -19,9 +19,9 @@ package types
 import (
 	"bytes"
 
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/rlp"
-	"github.com/BCOSnetwork/BCOS-Go/trie"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"github.com/PlatONEnetwork/PlatONE-Go/trie"
 )
 
 type DerivableList interface {

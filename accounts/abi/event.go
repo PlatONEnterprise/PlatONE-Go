@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 )
 
 // Event is an event potentially triggered by the EVM's LOG mechanism. The Event

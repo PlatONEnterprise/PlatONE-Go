@@ -22,13 +22,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/core/rawdb"
-	"github.com/BCOSnetwork/BCOS-Go/core/state"
-	"github.com/BCOSnetwork/BCOS-Go/crypto/sha3"
-	"github.com/BCOSnetwork/BCOS-Go/ethdb"
-	"github.com/BCOSnetwork/BCOS-Go/log"
-	"github.com/BCOSnetwork/BCOS-Go/trie"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto/sha3"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/trie"
 )
 
 // stateReq represents a batch of state fetch requests grouped together into

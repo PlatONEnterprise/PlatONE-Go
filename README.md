@@ -1,34 +1,34 @@
-## Go BCOS
+## Go PlatONE
 
-Welcome to the BCOS source code repository! This software is Ethereum-based and it has changed some peculiarities according the BCOS's [whitepaper](https://www.bcos.network/static/pdf/en/BCOS_A%20High-Efficiency%20Trustless%20Computing%20Network_Whitepaper_EN.pdf).
+Welcome to the PlatONE source code repository! This software is Ethereum-based and it has changed some peculiarities according the PlatONE's [whitepaper](https://www.platone.network/static/pdf/en/PlatONE_A%20High-Efficiency%20Trustless%20Computing%20Network_Whitepaper_EN.pdf).
 
 ## Building the source
 
 For prerequisites and detailed build instructions please read the
-[Installation Instructions](https://github.com/BCOSnetwork/wiki/wiki)
+[Installation Instructions](https://github.com/PlatONEnetwork/wiki/wiki)
 on the wiki.
 
-Building bcos requires both a Go (version 1.7 or later) and a C compiler.
+Building platone requires both a Go (version 1.7 or later) and a C compiler.
 You can install them using your favourite package manager.
 Once the dependencies are installed, run
 
-    make bcos
+    make platone
 
 or, to build the full suite of utilities:
 
     make all
 
-If you want to Building bcos with MPC function, run
+If you want to Building platone with MPC function, run
 
-    make bcos-with-mpc
+    make platone-with-mpc
 
 or:
 
     make all-with-mpc
 
-If you want to Building bcos with VC function, run
+If you want to Building platone with VC function, run
 
-    make bcos-with-vc
+    make platone-with-vc
 
 or:
 
@@ -40,17 +40,17 @@ The project comes with several executables found in the `cmd` directory.
 
 | Command    | Description |
 |:----------:|-------------|
-| **`bcos`** | Our main BCOS CLI client. It is the entry point into the BCOS network |
+| **`platone`** | Our main PlatONE CLI client. It is the entry point into the PlatONE network |
 | `ethkey`    | a key related tool. |
 
-## Running a bcos node
+## Running a platone node
 
 ### Config the chain data
 
 first, you need to get an account:
 
 ```
-$ ./bcos --datadir ./data account new
+$ ./platone --datadir ./data account new
 Your new account is locked with a password. Please give a password. Do not forget this password.
 Passphrase:
 Repeat passphrase:
@@ -103,7 +103,7 @@ then, edit the following content and save it as json file, such as genesis.json:
 at last, init the chain as follow:
 
 ```
-$ ./bcos --datadir ./data init bcos.json
+$ ./platone --datadir ./data init platone.json
 ```
 
 and it will output msg as:
@@ -116,7 +116,7 @@ Successfully wrote genesis state
 so we can launch the node: 
 
 ```
-$ ./bcos --identity "bcos" --datadir ./data --nodekey ./data/bcos/nodekey --rpcaddr 0.0.0.0 --rpcport 6789 --rpcapi "db,eth,net,web3,admin,personal" --rpc --nodiscover
+$ ./platone --identity "platone" --datadir ./data --nodekey ./data/platone/nodekey --rpcaddr 0.0.0.0 --rpcport 6789 --rpcapi "db,eth,net,web3,admin,personal" --rpc --nodiscover
 ```
 
 ### Send a transaction
@@ -135,4 +135,4 @@ Check the balance:
  
 OK, it seems that the chain is running correctly
 
-For more information, please visit our. [wiki](https://github.com/BCOSnetwork/wiki/wiki)
+For more information, please visit our. [wiki](https://github.com/PlatONEnetwork/wiki/wiki)

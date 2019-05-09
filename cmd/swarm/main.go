@@ -29,21 +29,21 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/BCOSnetwork/BCOS-Go/accounts"
-	"github.com/BCOSnetwork/BCOS-Go/accounts/keystore"
-	"github.com/BCOSnetwork/BCOS-Go/cmd/utils"
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/console"
-	"github.com/BCOSnetwork/BCOS-Go/crypto"
-	"github.com/BCOSnetwork/BCOS-Go/internal/debug"
-	"github.com/BCOSnetwork/BCOS-Go/log"
-	"github.com/BCOSnetwork/BCOS-Go/node"
-	"github.com/BCOSnetwork/BCOS-Go/p2p/discover"
-	"github.com/BCOSnetwork/BCOS-Go/swarm"
-	bzzapi "github.com/BCOSnetwork/BCOS-Go/swarm/api"
-	swarmmetrics "github.com/BCOSnetwork/BCOS-Go/swarm/metrics"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/tracing"
-	sv "github.com/BCOSnetwork/BCOS-Go/swarm/version"
+	"github.com/PlatONEnetwork/PlatONE-Go/accounts"
+	"github.com/PlatONEnetwork/PlatONE-Go/accounts/keystore"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/console"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/internal/debug"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/node"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm"
+	bzzapi "github.com/PlatONEnetwork/PlatONE-Go/swarm/api"
+	swarmmetrics "github.com/PlatONEnetwork/PlatONE-Go/swarm/metrics"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/tracing"
+	sv "github.com/PlatONEnetwork/PlatONE-Go/swarm/version"
 
 	"gopkg.in/urfave/cli.v1"
 )
@@ -232,7 +232,7 @@ var defaultSubcommandHelp = cli.Command{
 
 var defaultNodeConfig = node.DefaultConfig
 
-// This init function sets defaults so cmd/swarm can run alongside bcos.
+// This init function sets defaults so cmd/swarm can run alongside platone.
 func init() {
 	defaultNodeConfig.Name = clientIdentifier
 	defaultNodeConfig.Version = sv.VersionWithCommit(gitCommit)
@@ -630,9 +630,9 @@ func bzzd(ctx *cli.Context) error {
 	//pss operates on ws
 	cfg.WSModules = append(cfg.WSModules, "pss")
 
-	//bcos only supports --datadir via command line
+	//platone only supports --datadir via command line
 	//in order to be consistent within swarm, if we pass --datadir via environment variable
-	//or via config file, we get the same directory for bcos and swarm
+	//or via config file, we get the same directory for platone and swarm
 	if _, err := os.Stat(bzzconfig.Path); err == nil {
 		cfg.DataDir = bzzconfig.Path
 	}

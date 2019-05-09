@@ -20,8 +20,8 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/ethdb"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
 )
 
 // makeTestTrie create a sample test trie to test node-wise reconstruction.

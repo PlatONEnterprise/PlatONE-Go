@@ -17,7 +17,7 @@
 package simulation
 
 import (
-	"github.com/BCOSnetwork/BCOS-Go/p2p/discover"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
 )
 
 // BucketKey is the type that should be used for keys in simulation buckets.

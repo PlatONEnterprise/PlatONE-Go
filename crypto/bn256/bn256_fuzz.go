@@ -10,8 +10,8 @@ import (
 	"bytes"
 	"math/big"
 
-	cloudflare "github.com/BCOSnetwork/BCOS-Go/crypto/bn256/cloudflare"
-	google "github.com/BCOSnetwork/BCOS-Go/crypto/bn256/google"
+	cloudflare "github.com/PlatONEnetwork/PlatONE-Go/crypto/bn256/cloudflare"
+	google "github.com/PlatONEnetwork/PlatONE-Go/crypto/bn256/google"
 )
 
 // FuzzAdd fuzzez bn256 addition between the Google and Cloudflare libraries.

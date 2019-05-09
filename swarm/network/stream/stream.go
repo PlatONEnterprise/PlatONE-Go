@@ -23,17 +23,17 @@ import (
 	"sync"
 	"time"
 
-	"github.com/BCOSnetwork/BCOS-Go/metrics"
-	"github.com/BCOSnetwork/BCOS-Go/p2p"
-	"github.com/BCOSnetwork/BCOS-Go/p2p/discover"
-	"github.com/BCOSnetwork/BCOS-Go/p2p/protocols"
-	"github.com/BCOSnetwork/BCOS-Go/rpc"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/log"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/network"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/network/stream/intervals"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/pot"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/state"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/storage"
+	"github.com/PlatONEnetwork/PlatONE-Go/metrics"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p/protocols"
+	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/network"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/network/stream/intervals"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/pot"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/state"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/storage"
 )
 
 const (

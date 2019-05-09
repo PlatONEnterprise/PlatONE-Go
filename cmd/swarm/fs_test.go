@@ -28,7 +28,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/BCOSnetwork/BCOS-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	colorable "github.com/mattn/go-colorable"
 )
 

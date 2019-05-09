@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/BCOSnetwork/BCOS-Go/common/hexutil"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
 )
 
 type MyType [5]byte

@@ -22,7 +22,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/BCOSnetwork/BCOS-Go/core/vm"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 )
 
 func TestState(t *testing.T) {

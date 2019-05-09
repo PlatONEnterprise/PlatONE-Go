@@ -20,9 +20,9 @@ import (
 	"encoding/binary"
 	"errors"
 
-	"github.com/BCOSnetwork/BCOS-Go/swarm/chunk"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/log"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/multihash"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/chunk"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/multihash"
 )
 
 // resourceUpdate encapsulates the information sent as part of a resource update

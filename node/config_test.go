@@ -24,8 +24,8 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/BCOSnetwork/BCOS-Go/crypto"
-	"github.com/BCOSnetwork/BCOS-Go/p2p"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
 )
 
 // Tests that datadirs can be successfully created, be them manually configured
@@ -73,14 +73,14 @@ func TestIPCPathResolution(t *testing.T) {
 	}{
 		{"", "", false, ""},
 		{"data", "", false, ""},
-		{"", "bcos.ipc", false, filepath.Join(os.TempDir(), "bcos.ipc")},
-		{"data", "bcos.ipc", false, "data/bcos.ipc"},
-		{"data", "./bcos.ipc", false, "./bcos.ipc"},
-		{"data", "/bcos.ipc", false, "/bcos.ipc"},
+		{"", "platone.ipc", false, filepath.Join(os.TempDir(), "platone.ipc")},
+		{"data", "platone.ipc", false, "data/platone.ipc"},
+		{"data", "./platone.ipc", false, "./platone.ipc"},
+		{"data", "/platone.ipc", false, "/platone.ipc"},
 		{"", "", true, ``},
 		{"data", "", true, ``},
-		{"", "bcos.ipc", true, `\\.\pipe\geth.ipc`},
-		{"data", "bcos.ipc", true, `\\.\pipe\geth.ipc`},
+		{"", "platone.ipc", true, `\\.\pipe\geth.ipc`},
+		{"data", "platone.ipc", true, `\\.\pipe\geth.ipc`},
 		{"data", `\\.\pipe\geth.ipc`, true, `\\.\pipe\geth.ipc`},
 	}
 	for i, test := range tests {

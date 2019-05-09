@@ -25,7 +25,7 @@ import (
 
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/log"
 	"golang.org/x/net/context"
 )
 

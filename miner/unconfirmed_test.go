@@ -19,8 +19,8 @@ package miner
 import (
 	"testing"
 
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/core/types"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 )
 
 // noopChainRetriever is an implementation of headerRetriever that always

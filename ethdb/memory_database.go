@@ -20,7 +20,7 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
 )
 
 /*

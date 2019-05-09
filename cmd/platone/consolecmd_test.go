@@ -27,7 +27,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/BCOSnetwork/BCOS-Go/params"
+	"github.com/PlatONEnetwork/PlatONE-Go/params"
 )
 
 const (
@@ -40,7 +40,7 @@ const (
 func TestConsoleWelcome(t *testing.T) {
 	coinbase := "0x8605cdbbdb6d264aa742e77020dcbc58fcdce182"
 
-	// Start a bcos console, make sure it's cleaned up and terminate the console
+	// Start a platone console, make sure it's cleaned up and terminate the console
 	geth := runGeth(t,
 		"--port", "0", "--maxpeers", "0", "--nodiscover", "--nat", "none",
 		"--etherbase", coinbase, "--shh",
@@ -56,9 +56,9 @@ func TestConsoleWelcome(t *testing.T) {
 
 	// Verify the actual welcome message to the required template
 	geth.Expect(`
-Welcome to the BCOS JavaScript console!
+Welcome to the PlatONE JavaScript console!
 
-instance: bcos/v{{gethver}}/{{goos}}-{{goarch}}/{{gover}}
+instance: platone/v{{gethver}}/{{goos}}-{{goarch}}/{{gover}}
 coinbase: {{.Etherbase}}
 at block: 0 ({{niltime}})
  datadir: {{.Datadir}}
@@ -79,7 +79,7 @@ func TestIPCAttachWelcome(t *testing.T) {
 	} else {
 		ws := tmpdir(t)
 		defer os.RemoveAll(ws)
-		ipc = filepath.Join(ws, "bcos.ipc")
+		ipc = filepath.Join(ws, "platone.ipc")
 	}
 	// Note: we need --shh because testAttachWelcome checks for default
 	// list of ipc modules and shh is included there.
@@ -124,7 +124,7 @@ func TestWSAttachWelcome(t *testing.T) {
 }
 
 func testAttachWelcome(t *testing.T, geth *testgeth, endpoint, apis string) {
-	// Attach to a running bcos note and terminate immediately
+	// Attach to a running platone note and terminate immediately
 	attach := runGeth(t, "attach", endpoint)
 	defer attach.ExpectExit()
 	attach.CloseStdin()
@@ -142,9 +142,9 @@ func testAttachWelcome(t *testing.T, geth *testgeth, endpoint, apis string) {
 
 	// Verify the actual welcome message to the required template
 	attach.Expect(`
-Welcome to the BCOS JavaScript console!
+Welcome to the PlatONE JavaScript console!
 
-instance: bcos/v{{gethver}}/{{goos}}-{{goarch}}/{{gover}}
+instance: platone/v{{gethver}}/{{goos}}-{{goarch}}/{{gover}}
 coinbase: {{etherbase}}
 at block: 0 ({{niltime}}){{if ipc}}
  datadir: {{datadir}}{{end}}

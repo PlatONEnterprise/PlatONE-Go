@@ -27,12 +27,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/BCOSnetwork/BCOS-Go/contracts/ens"
-	"github.com/BCOSnetwork/BCOS-Go/crypto"
-	"github.com/BCOSnetwork/BCOS-Go/log"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/chunk"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/multihash"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/storage"
+	"github.com/PlatONEnetwork/PlatONE-Go/contracts/ens"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/chunk"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/multihash"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/storage"
 )
 
 var (

@@ -23,9 +23,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/rlp"
-	"github.com/BCOSnetwork/BCOS-Go/consensus/istanbul"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul"
 )
 
 // Construct a new message set to accumulate messages for given sequence/view number.

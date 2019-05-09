@@ -6,7 +6,7 @@ import (
 	"errors"
 	"math"
 	"strconv"
-	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
 )
 
 func BytesCombine(pBytes ...[]byte) []byte {

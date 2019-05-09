@@ -17,9 +17,9 @@
 package vm
 
 import (
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/common/math"
-	"github.com/BCOSnetwork/BCOS-Go/params"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/math"
+	"github.com/PlatONEnetwork/PlatONE-Go/params"
 )
 
 // memoryGasCosts calculates the quadratic gas for memory expansion. It does so

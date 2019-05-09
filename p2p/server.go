@@ -27,14 +27,14 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/common/mclock"
-	"github.com/BCOSnetwork/BCOS-Go/event"
-	"github.com/BCOSnetwork/BCOS-Go/log"
-	"github.com/BCOSnetwork/BCOS-Go/p2p/discover"
-	"github.com/BCOSnetwork/BCOS-Go/p2p/discv5"
-	"github.com/BCOSnetwork/BCOS-Go/p2p/nat"
-	"github.com/BCOSnetwork/BCOS-Go/p2p/netutil"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/mclock"
+	"github.com/PlatONEnetwork/PlatONE-Go/event"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discv5"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p/nat"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p/netutil"
 )
 
 const (

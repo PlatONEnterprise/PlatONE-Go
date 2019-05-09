@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/BCOSnetwork/BCOS-Go/metrics"
+	"github.com/PlatONEnetwork/PlatONE-Go/metrics"
 )
 
 type exp struct {

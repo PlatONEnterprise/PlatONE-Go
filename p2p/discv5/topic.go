@@ -23,8 +23,8 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/BCOSnetwork/BCOS-Go/common/mclock"
-	"github.com/BCOSnetwork/BCOS-Go/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/mclock"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
 )
 
 const (

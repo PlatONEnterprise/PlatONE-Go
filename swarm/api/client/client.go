@@ -34,8 +34,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/BCOSnetwork/BCOS-Go/swarm/api"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/storage/mru"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/api"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/storage/mru"
 )
 
 var (

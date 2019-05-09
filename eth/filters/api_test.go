@@ -21,8 +21,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/rpc"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
 )
 
 func TestUnmarshalJSONNewFilterArgs(t *testing.T) {

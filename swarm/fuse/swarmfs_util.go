@@ -24,7 +24,7 @@ import (
 	"os/exec"
 	"runtime"
 
-	"github.com/BCOSnetwork/BCOS-Go/swarm/log"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/log"
 )
 
 func externalUnmount(mountPoint string) error {

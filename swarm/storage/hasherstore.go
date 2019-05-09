@@ -21,9 +21,9 @@ import (
 	"fmt"
 	"sync/atomic"
 
-	"github.com/BCOSnetwork/BCOS-Go/crypto/sha3"
-	ch "github.com/BCOSnetwork/BCOS-Go/swarm/chunk"
-	"github.com/BCOSnetwork/BCOS-Go/swarm/storage/encryption"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto/sha3"
+	ch "github.com/PlatONEnetwork/PlatONE-Go/swarm/chunk"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/storage/encryption"
 )
 
 type hasherStore struct {

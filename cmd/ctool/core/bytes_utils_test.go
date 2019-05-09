@@ -2,7 +2,7 @@ package core
 
 import (
 	"fmt"
-	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"testing"
 )
 

@@ -6,10 +6,10 @@ package contract
 import (
 	"strings"
 
-	"github.com/BCOSnetwork/BCOS-Go/accounts/abi"
-	"github.com/BCOSnetwork/BCOS-Go/accounts/abi/bind"
-	"github.com/BCOSnetwork/BCOS-Go/common"
-	"github.com/BCOSnetwork/BCOS-Go/core/types"
+	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
+	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi/bind"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 )
 
 // FIFSRegistrarABI is the input ABI used to generate the binding from.

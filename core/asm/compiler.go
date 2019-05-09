@@ -22,8 +22,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/BCOSnetwork/BCOS-Go/common/math"
-	"github.com/BCOSnetwork/BCOS-Go/core/vm"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/math"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 )
 
 // Compiler contains information about the parsed source

@@ -25,8 +25,8 @@ import (
 	"math/big"
 	"reflect"
 
-	"github.com/BCOSnetwork/BCOS-Go/accounts/abi"
-	"github.com/BCOSnetwork/BCOS-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
 )
 
 func verify(t *testing.T, jsondata, calldata string, exp []interface{}) {

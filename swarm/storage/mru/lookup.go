@@ -20,7 +20,7 @@ import (
 	"encoding/binary"
 	"hash"
 
-	"github.com/BCOSnetwork/BCOS-Go/swarm/storage"
+	"github.com/PlatONEnetwork/PlatONE-Go/swarm/storage"
 )
 
 // LookupParams is used to specify constraints when performing an update lookup

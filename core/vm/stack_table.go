@@ -19,7 +19,7 @@ package vm
 import (
 	"fmt"
 
-	"github.com/BCOSnetwork/BCOS-Go/params"
+	"github.com/PlatONEnetwork/PlatONE-Go/params"
 )
 
 func makeStackFunc(pop, push int) stackValidationFunc {
