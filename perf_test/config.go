@@ -25,8 +25,8 @@ type Config struct {
 	From     string `json:"from"`
 	Gas      string `json:"gas"`
 	GasPrice string `json:"gasPrice"`
-	HttpUrl      string `json:"httpUrl"`
-	WsUrl      string `json:"wsUrl"`
+	HttpUrl  string `json:"url"`
+	WsUrl    string `json:"wsUrl"`
 }
 
 var (
