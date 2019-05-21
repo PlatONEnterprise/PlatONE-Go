@@ -8,21 +8,21 @@
     "eip158Block": 3,
     "byzantiumBlock": 4,
     "cbft": {
-        "initialNodes": ["enode://NODE-KEY@NODE-IP:16789"]
+        "initialNodes": ["enode://NODE-KEY@NODE-IP:16791"]
      }
   },
   "nonce": "0x0",
   "timestamp": "0x5c074288",
   "extraData": "0x00",
-  "gasLimit": "0x9999999999",
+  "gasLimit": "0xffffffffffff",
   "difficulty": "0x40000",
   "mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
   "coinbase": "0x0000000000000000000000000000000000000000",
   "alloc": {
-    "DEFAULT-ACCOUNT": {
-      "balance": "99999999999999999999999999"
+    "0xDEFAULT-ACCOUNT": {
+      "balance": "100000000000000000000"
     },
-    "0000000000000000000000000000000000000011": {
+    "0x0000000000000000000000000000000000000011": {
       "balance": "0",
       "code": "CNS-CODE"
     }
