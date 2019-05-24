@@ -1022,7 +1022,8 @@ func (w *worker) commitTransactionsWithHeader(header *types.Header, txs *types.T
 		// Start executing the transaction
 		rpc.MonitorWriteData(rpc.TransactionExecuteStartTime, tx.Hash().String(),"", w.extdb)
 		w.current.state.Prepare(tx.Hash(), common.Hash{}, w.current.tcount)
-
+		txHash := tx.Hash()
+		log.Trace("Start executing the transaction", "txHash", txHash[:log.LogHashLen], "blockNumber", header.Number)
 		logs, err := w.commitTransaction(tx, coinbase)
 		rpc.MonitorWriteData(rpc.TransactionExecuteEndTime, tx.Hash().String(),"", w.extdb)
 		switch err {
