@@ -38,6 +38,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
+	"fmt"
 )
 
 const (
@@ -1023,7 +1024,7 @@ func (w *worker) commitTransactionsWithHeader(header *types.Header, txs *types.T
 		rpc.MonitorWriteData(rpc.TransactionExecuteStartTime, tx.Hash().String(),"", w.extdb)
 		w.current.state.Prepare(tx.Hash(), common.Hash{}, w.current.tcount)
 		txHash := tx.Hash()
-		log.Trace("Start executing the transaction", "txHash", txHash[:log.LogHashLen], "blockNumber", header.Number)
+		log.Trace("Start executing the transaction", "txHash", fmt.Sprintf("%x", txHash[:log.LogHashLen]), "blockNumber", header.Number)
 		logs, err := w.commitTransaction(tx, coinbase)
 		rpc.MonitorWriteData(rpc.TransactionExecuteEndTime, tx.Hash().String(),"", w.extdb)
 		switch err {

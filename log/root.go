@@ -12,9 +12,7 @@ var (
 	wamsLogLevel  = LvlInfo
 )
 
-const (
-	LogHashLen = 8
-)
+const LogHashLen = 4
 
 func init() {
 	root.SetHandler(DiscardHandler())

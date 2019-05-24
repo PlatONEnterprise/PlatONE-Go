@@ -27,6 +27,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"fmt"
 )
 
 func init() {
@@ -76,7 +77,7 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 		rpc.MonitorWriteData(rpc.TransactionExecuteStartTime, tx.Hash().String(), "", p.bc.extdb)
 		txHash := tx.Hash()
 		statedb.Prepare(txHash, block.Hash(), i)
-		log.Trace("Perform Transaction", "txHash", txHash[:log.LogHashLen], "blockNumber", block.Number())
+		log.Trace("Perform Transaction", "txHash", fmt.Sprintf("%x", txHash[:log.LogHashLen]), "blockNumber", block.Number())
 		receipt, _, err := ApplyTransaction(p.config, p.bc, nil, gp, statedb, header, tx, usedGas, cfg)
 		rpc.MonitorWriteData(rpc.TransactionExecuteEndTime, tx.Hash().String(), "", p.bc.extdb)
 		if err != nil {
