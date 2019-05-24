@@ -859,7 +859,7 @@ func (pm *ProtocolManager) BroadcastBlock(block *types.Block, propagate bool) {
 		for _, peer := range transfer {
 			peer.AsyncSendNewBlock(block)
 		}
-		log.Trace("Propagated block", "hash", hash[:log.LogHashLen], "blockNumber", block.Number(), "recipients", len(transfer), "duration", common.PrettyDuration(time.Since(block.ReceivedAt)))
+		log.Trace("Propagated block", "hash", fmt.Sprintf("%x", hash[:log.LogHashLen]), "blockNumber", block.Number(), "recipients", len(transfer), "duration", common.PrettyDuration(time.Since(block.ReceivedAt)))
 		return
 	}
 	// Otherwise if the block is indeed in out own chain, announce it
@@ -867,7 +867,7 @@ func (pm *ProtocolManager) BroadcastBlock(block *types.Block, propagate bool) {
 		for _, peer := range peers {
 			peer.AsyncSendNewBlockHash(block)
 		}
-		log.Trace("Announced block", "hash", hash[:log.LogHashLen], "blockNumber", block.Number(),"recipients", len(peers), "duration", common.PrettyDuration(time.Since(block.ReceivedAt)))
+		log.Trace("Announced block", "hash", fmt.Sprintf("%x", hash[:log.LogHashLen]), "blockNumber", block.Number(),"recipients", len(peers), "duration", common.PrettyDuration(time.Since(block.ReceivedAt)))
 	}
 }
 
@@ -909,7 +909,7 @@ func (pm *ProtocolManager) BroadcastTxs(txs types.Transactions) {
 			txset[peer] = append(txset[peer], tx)
 		}
 		txHash := tx.Hash()
-		log.Trace("Broadcast transaction", "hash", txHash[:log.LogHashLen], "recipients", len(peers))
+		log.Trace("Broadcast transaction", "hash", fmt.Sprintf("%x", txHash[:log.LogHashLen]), "recipients", len(peers))
 	}
 
 	// FIXME include this again: peers = peers[:int(math.Sqrt(float64(len(peers))))]
