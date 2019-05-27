@@ -179,10 +179,7 @@ func (sb *backend) Gossip(valSet istanbul.ValidatorSet, payload []byte) error {
 			m.Add(hash, true)
 			sb.recentMessages.Add(addr, m)
 
-			// Bugfix: variable p is a reference,  the content that p point to  will change in every for-loop
-			// so we use a new variable dst in every loop
-			dst :=p
-			go dst.Send(istanbulMsg, payload)
+			go p.Send(istanbulMsg, payload)
 		}
 	}
 	return nil

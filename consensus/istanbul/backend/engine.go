@@ -410,7 +410,7 @@ func (sb *backend) Seal(chain consensus.ChainReader, block *types.Block, sealRes
 		return nil, err
 	}
 	if _, v := snap.ValSet.GetByAddress(sb.address); v == nil {
-		//	return nil, errUnauthorized
+			return nil, errUnauthorized
 	}
 
 	parent := chain.GetHeader(header.ParentHash, number-1)
@@ -450,10 +450,7 @@ func (sb *backend) Seal(chain consensus.ChainReader, block *types.Block, sealRes
 			case result := <-sb.commitCh:
 				// if the block hash and the hash from channel are the same,
 				// return the result. Otherwise, keep waiting the next hash.
-				//log.Info("^^^^^^^^^^^^^^^^^^^^  seal result ","umber", result.Number() , "Hash", result.Hash())
-				// todo: hash判断
 				if block.Hash() == result.Hash() {
-					//log.Info("^^^^^^^^^^^^^^^^^^^^  seal result ","umber", result.Number() , "Hash", result.Hash())
 					sealResultCh <- result
 					return //result, nil
 				}
