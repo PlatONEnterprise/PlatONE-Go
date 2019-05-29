@@ -10,23 +10,30 @@ import (
 )
 
 var (
-	enableModules map[string][]string
-	mhState       *modulesHandlersState
+	enableModules   = make(map[string][]string)
+	mhState         *modulesHandlersState
+	moduleLogLvl    = LvlTrace
+	moduleParamsStr string
 )
-
-// Environmental variable
-const enableModuleLogKey = "ENABLE_MODULE_LOG"
-const modulesLogKey = "MODULES_LOG"
-const modulesDirKey = "MODULES_DIR"
 
 type ModulesHandlerState interface {
 	ModuleLogHandle(string, *Record)
 }
 
-func NewModulesHandlersState() *modulesHandlersState {
-	mhs := &modulesHandlersState{state: make(map[string]Handler)}
-	mhs.Init()
-	return mhs
+func SetModuleLogLvl(lvl Lvl) {
+	moduleLogLvl = lvl
+}
+
+func SetModuleParamsStr(str string) {
+	moduleParamsStr = str
+}
+
+func InitModulesHandlersState() {
+	mhState.Init()
+}
+
+func newModulesHandlersState() *modulesHandlersState {
+	return &modulesHandlersState{state: make(map[string]Handler)}
 }
 
 // modules log will be written to the specified dir
@@ -69,7 +76,7 @@ func (m *modulesHandlersState) ModuleLogHandle(pkg string, record *Record) {
 	for module, vList := range enableModules {
 		for _, v := range vList {
 			if strings.Contains(pkg, v) {
-				if handler, ok := m.Get(module); ok {
+				if handler, ok := m.Get(module); ok && record.Lvl <= moduleLogLvl {
 					handler.Log(record)
 				}
 				return
@@ -93,22 +100,24 @@ func (m *modulesHandlersState) init() {
 
 // get the specified module based on the environment variable
 func EnableModulesLog() (dir string, ok bool) {
-	if os.Getenv(enableModuleLogKey) != "true" {
+	if moduleParamsStr == "" {
 		return
 	}
-	if err := json.Unmarshal([]byte(os.Getenv(modulesLogKey)), &enableModules); err != nil {
+	if err := json.Unmarshal([]byte(moduleParamsStr), &enableModules); err != nil {
 		panic(fmt.Sprintf("read MODULES_LOG env error: %s", err))
 	}
-	if dir = os.Getenv(modulesDirKey); dir != "" {
+
+	if dirL, ok := enableModules["__dir__"]; ok && len(dirL) != 0 && dirL[0] != "" {
+		dir = dirL[0]
 		if err := os.MkdirAll(dir, os.ModePerm); err != nil {
 			panic(fmt.Sprintf("set MODULES_DIR env error: %s", err))
 		}
+		delete(enableModules, "__dir__")
 	}
 	ok = true
 	return
 }
 
 func init() {
-	enableModules = make(map[string][]string)
-	mhState = NewModulesHandlersState()
+	mhState = newModulesHandlersState()
 }
