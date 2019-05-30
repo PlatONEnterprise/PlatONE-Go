@@ -104,13 +104,13 @@ func EnableModulesLog() (dir string, ok bool) {
 		return
 	}
 	if err := json.Unmarshal([]byte(moduleParamsStr), &enableModules); err != nil {
-		panic(fmt.Sprintf("read MODULES_LOG env error: %s", err))
+		panic(fmt.Sprintf("read modules_log_json_params error: %s", err))
 	}
 
 	if dirL, ok := enableModules["__dir__"]; ok && len(dirL) != 0 && dirL[0] != "" {
 		dir = dirL[0]
 		if err := os.MkdirAll(dir, os.ModePerm); err != nil {
-			panic(fmt.Sprintf("set MODULES_DIR env error: %s", err))
+			panic(fmt.Sprintf("create modules log dir error: %s", err))
 		}
 		delete(enableModules, "__dir__")
 	}
