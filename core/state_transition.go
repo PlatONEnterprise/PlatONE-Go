@@ -41,6 +41,7 @@ var (
 const CnsManagerAddr string = "0x0000000000000000000000000000000000000011"
 
 var fwErr = errors.New("firewall error!")
+var FirewallErr = errors.New("Refused by the firewall!")
 
 /*
 A state transition is a change made when a transaction is applied to the current world state
@@ -719,7 +720,8 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 		}
 		var pass bool
 		if ret, pass = fwCheck(evm.StateDB, st.to(), msg.From(), msg.Data()); !pass {
-			vmerr = fwErr
+			err = FirewallErr
+			vmerr = FirewallErr
 			log.Debug("Calling contract was refused by firewall", "err", vmerr)
 		} else {
 			// Increment the nonce for the next transaction

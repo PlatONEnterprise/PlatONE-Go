@@ -103,7 +103,18 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	// Apply the transaction to the current state (included in the env)
 	_, gas, failed, err := ApplyMessage(vmenv, msg, gp)
 	if err != nil {
-		return nil, 0, err
+		if err == FirewallErr{
+			errLog := &types.Log{
+				Address:*msg.To(),
+				Topics: make([]common.Hash,1),
+				Data:	[]byte(err.Error()),
+				BlockNumber:context.BlockNumber.Uint64(),
+			}
+			statedb.AddLog(errLog)
+			err = nil
+		}else{
+			return nil, 0, err
+		}
 	}
 	// Update the state with pending changes
 	var root []byte
