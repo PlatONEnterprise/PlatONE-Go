@@ -8,12 +8,18 @@ var (
 	root          = &logger{[]interface{}{}, new(swapHandler)}
 	StdoutHandler = StreamHandler(os.Stdout, LogfmtFormat())
 	StderrHandler = StreamHandler(os.Stderr, LogfmtFormat())
-	wasmRoot = root.New()
-	wamsLogLevel = LvlInfo
+	wasmRoot      = root.New()
+	wamsLogLevel  = LvlInfo
 )
+
+const LogHashLen = 4
 
 func init() {
 	root.SetHandler(DiscardHandler())
+}
+
+func StandardLog() {
+	root.SetHandler(StreamHandler(os.Stdout, TerminalFormat(true)))
 }
 
 // New returns a new logger with the given context.
@@ -31,13 +37,14 @@ func WasmRoot() Logger {
 	return wasmRoot
 }
 
-func SetWasmLogLevel(level Lvl)  {
+func SetWasmLogLevel(level Lvl) {
 	wamsLogLevel = level
 }
 
 func GetWasmLogLevel() Lvl {
 	return wamsLogLevel
 }
+
 // The following functions bypass the exported logger methods (logger.Debug,
 // etc.) to keep the call depth the same for all paths to logger.write so
 // runtime.Caller(2) always refers to the call site in client code.
