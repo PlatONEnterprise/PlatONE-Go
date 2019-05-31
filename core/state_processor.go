@@ -26,7 +26,13 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
+	"fmt"
 )
+
+func init() {
+	log.StandardLog()
+}
 
 // StateProcessor is a basic Processor, which takes care of transitioning
 // state from one point to another.
@@ -69,7 +75,9 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 	// Iterate over and process the individual transactios
 	for i, tx := range block.Transactions() {
 		rpc.MonitorWriteData(rpc.TransactionExecuteStartTime, tx.Hash().String(), "", p.bc.extdb)
-		statedb.Prepare(tx.Hash(), block.Hash(), i)
+		txHash := tx.Hash()
+		statedb.Prepare(txHash, block.Hash(), i)
+		log.Trace("Perform Transaction", "txHash", fmt.Sprintf("%x", txHash[:log.LogHashLen]), "blockNumber", block.Number())
 		receipt, _, err := ApplyTransaction(p.config, p.bc, nil, gp, statedb, header, tx, usedGas, cfg)
 		rpc.MonitorWriteData(rpc.TransactionExecuteEndTime, tx.Hash().String(), "", p.bc.extdb)
 		if err != nil {
