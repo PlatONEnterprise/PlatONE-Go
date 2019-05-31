@@ -6,6 +6,9 @@ import (
 	"time"
 
 	"github.com/go-stack/stack"
+	"runtime"
+	"runtime/debug"
+	"regexp"
 )
 
 const timeKey = "t"
@@ -18,7 +21,7 @@ const skipLevel = 2
 type Lvl int
 
 const (
-	LvlCrit Lvl = iota
+	LvlCrit  Lvl = iota
 	LvlError
 	LvlWarn
 	LvlInfo
@@ -131,7 +134,12 @@ type logger struct {
 }
 
 func (l *logger) write(msg string, lvl Lvl, ctx []interface{}, skip int) {
-	l.h.Log(&Record{
+	pc, _, _, _ := runtime.Caller(skip)
+	pkg := runtime.FuncForPC(pc).Name()
+	ctx = append(ctx, "pkg_write", pkg)
+	ctx = RoutineIdLog(ctx...)
+
+	record := &Record{
 		Time: time.Now(),
 		Lvl:  lvl,
 		Msg:  msg,
@@ -143,12 +151,18 @@ func (l *logger) write(msg string, lvl Lvl, ctx []interface{}, skip int) {
 			Lvl:  lvlKey,
 			Ctx:  ctxKey,
 		},
-	})
+	}
+	ModuleHandle(pkg, record, mhState)
+	l.h.Log(record)
+}
+
+func ModuleHandle(pkg string, record *Record, state ModulesHandlerState) {
+	state.ModuleLogHandle(pkg, record)
 }
 
 func (l *logger) New(ctx ...interface{}) Logger {
 	child := &logger{newContext(l.ctx, ctx), new(swapHandler)}
-	child.SetHandler(l.h)
+	child.SetHandler(MultiHandler(StreamHandler(os.Stdout, TerminalFormat(true))))
 	return child
 }
 
@@ -242,4 +256,23 @@ func (c Ctx) toArray() []interface{} {
 	}
 
 	return arr
+}
+
+// Log insertion routineId
+func RoutineIdLog(ctx ...interface{}) []interface{} {
+	ctx = append(ctx, "RoutineID", Lazy{Fn: func() string {
+		bytes := debug.Stack()
+		for i, ch := range bytes {
+			if ch == '\n' || ch == '\r' {
+				bytes = bytes[0:i]
+				break
+			}
+		}
+		var valid = regexp.MustCompile(`goroutine\s(\d+)\s+\[`)
+		if params := valid.FindAllStringSubmatch(string(bytes), -1); params != nil {
+			return params[0][1]
+		}
+		return ""
+	}})
+	return ctx
 }

@@ -229,6 +229,9 @@ func init() {
 			return err
 		}
 
+		// init module log
+		debug.SetupModuleLog(ctx)
+
 		// Cap the cache allowance and tune the garbage collector
 		var mem gosigar.Mem
 		if err := mem.Get(); err == nil {

@@ -93,6 +93,11 @@ var (
 		Usage: "output wasm contract log to file",
 		Value: "",
 	}
+	moduleLogParamsFlag = cli.StringFlag{
+		Name:  "moduleLogParams",
+		Usage: "start and set multi-module log parameters",
+		Value: "",
+	}
 )
 
 // Flags holds all command-line flags required for debugging.
@@ -100,8 +105,7 @@ var Flags = []cli.Flag{
 	verbosityFlag, vmoduleFlag, backtraceAtFlag, debugFlag,
 	pprofFlag, pprofAddrFlag, pprofPortFlag,
 	memprofilerateFlag, blockprofilerateFlag, cpuprofileFlag, traceFlag,
-	wasmLogFileFlag,
-
+	wasmLogFileFlag, moduleLogParamsFlag,
 }
 
 var (
@@ -182,6 +186,12 @@ func SetupWasmLog(ctx *cli.Context) error {
 	log.WasmRoot().SetHandler(handler)
 
 	return nil
+}
+
+func SetupModuleLog(ctx *cli.Context) {
+	log.SetModuleLogLvl(log.Lvl(ctx.GlobalInt(verbosityFlag.Name)))
+	log.SetModuleParamsStr(ctx.GlobalString(moduleLogParamsFlag.Name))
+	log.InitModulesHandlersState()
 }
 
 func StartPProf(address string) {
