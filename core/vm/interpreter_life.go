@@ -291,21 +291,47 @@ func parseInputFromAbi(vm *exec.VirtualMachine, input []byte, abi []byte) (txTyp
 			pos := resolver.MallocString(vm, string(bts))
 			params = append(params, pos)
 		case "int8":
+			if len(bts) > 1 {
+				return -1, "", nil, returnType, fmt.Errorf("invalid parameter: want 1 byte but got %d bytes", len(bts))
+			}
 			params = append(params, int64(bts[0]))
 		case "int16":
+			if len(bts) > 2 {
+				return -1, "", nil, returnType, fmt.Errorf("invalid parameter: want 2 byte2 but got %d bytes", len(bts))
+			}
 			params = append(params, int64(binary.BigEndian.Uint16(bts)))
 		case "int32", "int":
+			if len(bts) > 4 {
+				return -1, "", nil, returnType, fmt.Errorf("invalid parameter: want 4 bytes but got %d bytes", len(bts))
+			}
 			params = append(params, int64(binary.BigEndian.Uint32(bts)))
 		case "int64":
+			if len(bts) > 8 {
+				return -1, "", nil, returnType, fmt.Errorf("invalid parameter: want 8 bytes but got %d bytes", len(bts))
+			}
 			params = append(params, int64(binary.BigEndian.Uint64(bts)))
 		case "uint8":
+			if len(bts) > 1 {
+				return -1, "", nil, returnType, fmt.Errorf("invalid parameter: want 1 byte but got %d bytes", len(bts))
+			}
 			params = append(params, int64(bts[0]))
 		case "uint32", "uint":
+			if len(bts) > 4 {
+				return -1, "", nil, returnType, fmt.Errorf("invalid parameter: want 4 bytes but got %d bytes", len(bts))
+			}
 			params = append(params, int64(binary.BigEndian.Uint32(bts)))
 		case "uint64":
+			if len(bts) > 8 {
+				return -1, "", nil, returnType, fmt.Errorf("invalid parameter: want 8 bytes but got %d bytes", len(bts))
+			}
 			params = append(params, int64(binary.BigEndian.Uint64(bts)))
 		case "bool":
+			if len(bts) > 1 {
+				return -1, "", nil, returnType, fmt.Errorf("invalid parameter: want 1 byte but got %d bytes", len(bts))
+			}
 			params = append(params, int64(bts[0]))
+		default:
+			return -1, "", nil, returnType, fmt.Errorf("unexpected parameter type: %s", v.Type)
 		}
 	}
 	return txType, funcName, params, returnType, nil
