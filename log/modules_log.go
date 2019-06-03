@@ -4,20 +4,40 @@ import (
 	"sync"
 	"fmt"
 	"strings"
-	"os"
 	"path/filepath"
 	"encoding/json"
+	"strconv"
+	"os"
 )
 
 var (
-	enableModules   = make(map[string][]string)
+	enableModules = make(map[string][]string)
+	moduleLogLvl  = LvlTrace
+)
+
+var (
 	mhState         *modulesHandlersState
-	moduleLogLvl    = LvlTrace
+	vModule         string
+	backtraceAt     string
 	moduleParamsStr string
+)
+
+const (
+	moduleDirKey          = "__dir__"
+	moduleFileSizeKey     = "__size__"
+	moduleDefaultFileSize = 262144
 )
 
 type ModulesHandlerState interface {
 	ModuleLogHandle(string, *Record)
+}
+
+func SetVModule(v string) {
+	vModule = v
+}
+
+func SetBacktraceAt(b string) {
+	backtraceAt = b
 }
 
 func SetModuleLogLvl(lvl Lvl) {
@@ -43,6 +63,7 @@ type modulesHandlersState struct {
 	once  sync.Once
 	ModulesHandlerState
 	dir   string
+	size  uint
 }
 
 func (m *modulesHandlersState) Init() {
@@ -65,7 +86,7 @@ func (m *modulesHandlersState) Get(k string) (Handler, bool) {
 }
 
 func (m *modulesHandlersState) GetStateFilePath(k string) string {
-	return filepath.Join(m.dir, fmt.Sprintf("%s.log", k))
+	return filepath.Join(m.dir, k)
 }
 
 // different pkg correspond to different modules
@@ -76,7 +97,7 @@ func (m *modulesHandlersState) ModuleLogHandle(pkg string, record *Record) {
 	for module, vList := range enableModules {
 		for _, v := range vList {
 			if strings.Contains(pkg, v) {
-				if handler, ok := m.Get(module); ok && record.Lvl <= moduleLogLvl {
+				if handler, ok := m.Get(module); ok {
 					handler.Log(record)
 				}
 				return
@@ -86,20 +107,28 @@ func (m *modulesHandlersState) ModuleLogHandle(pkg string, record *Record) {
 }
 
 func (m *modulesHandlersState) init() {
-	dir, ok := EnableModulesLog()
+	dir, ok, size := EnableModulesLog()
 	if !ok {
 		return
 	}
-	m.dir = dir
+	m.dir, m.size = dir, size
 	for k := range enableModules {
 		if _, ok := m.Get(k); !ok {
-			m.Put(k, must(FileHandler(m.GetStateFilePath(k), JSONFormat())))
+			g := NewGlogHandler(must(RotatingFileHandler(
+				m.GetStateFilePath(k),
+				m.size,
+				TerminalFormat(true)),
+			))
+			g.Verbosity(moduleLogLvl)
+			g.Vmodule(vModule)
+			g.BacktraceAt(backtraceAt)
+			m.Put(k, g)
 		}
 	}
 }
 
-// get the specified module based on the environment variable
-func EnableModulesLog() (dir string, ok bool) {
+// Start the module log and set the configuration
+func EnableModulesLog() (dir string, ok bool, size uint) {
 	if moduleParamsStr == "" {
 		return
 	}
@@ -107,15 +136,43 @@ func EnableModulesLog() (dir string, ok bool) {
 		panic(fmt.Sprintf("read modules_log_json_params error: %s", err))
 	}
 
-	if dirL, ok := enableModules["__dir__"]; ok && len(dirL) != 0 && dirL[0] != "" {
-		dir = dirL[0]
-		if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+	if d, ok := getEnableModulesConfigKey(moduleDirKey, func(s string) interface{} {
+		if err := os.MkdirAll(s, os.ModePerm); err != nil {
 			panic(fmt.Sprintf("create modules log dir error: %s", err))
 		}
-		delete(enableModules, "__dir__")
+		return s
+	}).(string); ok {
+		dir = d
+	}
+
+	if s, ok := getEnableModulesConfigKey(moduleFileSizeKey, func(sizeStr string) interface{} {
+		var (
+			s   int
+			err error
+		)
+		if s, err = strconv.Atoi(sizeStr); err != nil {
+			panic(fmt.Sprintf("strconv.Atoi error; check the __size__: %s", err))
+		}
+		return s
+	}).(int); ok {
+		size = uint(s)
+	}
+
+	if size == 0 {
+		size = moduleDefaultFileSize
 	}
 	ok = true
 	return
+}
+
+func getEnableModulesConfigKey(key string, fn func(string) interface{}) interface{} {
+	if v, ok := enableModules[key]; ok {
+		delete(enableModules, key)
+		if len(v) != 0 && v[0] != "" {
+			return fn(v[0])
+		}
+	}
+	return nil
 }
 
 func init() {
