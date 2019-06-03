@@ -190,6 +190,8 @@ func SetupWasmLog(ctx *cli.Context) error {
 
 func SetupModuleLog(ctx *cli.Context) {
 	log.SetModuleLogLvl(log.Lvl(ctx.GlobalInt(verbosityFlag.Name)))
+	log.SetBacktraceAt(ctx.GlobalString(backtraceAtFlag.Name))
+	log.SetVModule(ctx.GlobalString(vmoduleFlag.Name))
 	log.SetModuleParamsStr(ctx.GlobalString(moduleLogParamsFlag.Name))
 	log.InitModulesHandlersState()
 }

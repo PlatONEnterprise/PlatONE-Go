@@ -134,9 +134,6 @@ type logger struct {
 }
 
 func (l *logger) write(msg string, lvl Lvl, ctx []interface{}, skip int) {
-	pc, _, _, _ := runtime.Caller(skip)
-	pkg := runtime.FuncForPC(pc).Name()
-	ctx = append(ctx, "pkg_write", pkg)
 	ctx = RoutineIdLog(ctx...)
 
 	record := &Record{
@@ -152,7 +149,7 @@ func (l *logger) write(msg string, lvl Lvl, ctx []interface{}, skip int) {
 			Ctx:  ctxKey,
 		},
 	}
-	ModuleHandle(pkg, record, mhState)
+	ModuleHandle(runtime.FuncForPC(record.Call.PC()).Name(), record, mhState)
 	l.h.Log(record)
 }
 
