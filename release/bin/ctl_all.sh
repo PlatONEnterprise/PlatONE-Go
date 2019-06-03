@@ -4,7 +4,6 @@ cd ../..
 workdir=`pwd`
 cd -
 bindir=`pwd`
-#workdir=`pwd`/../..
 
 if [ "$1" = "stopall" ];
 then
@@ -94,9 +93,9 @@ then
 	do
 	  [ $m -eq 0 ] && ((m=m+1)) && continue
 	  echo send to $i
-	  ssh $i "mkdir -p /home/wxuser/node_cluster"
-	  ssh $i "rm -rf ${workdir}/*"
-	  scp -r ${workdir}/* $i:/home/wxuser/node_cluster/
+          ssh $i "mkdir -p ${workdir}"
+          ssh $i "rm -rf ${workdir}/*"
+          scp -r ${workdir}/* $i:${workdir}
 	done 
 fi
 
