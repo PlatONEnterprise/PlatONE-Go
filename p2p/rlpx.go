@@ -154,7 +154,7 @@ func readProtocolHandshake(rw MsgReader, our *protoHandshake) (*protoHandshake, 
 	}
 	if msg.Code == discMsg {
 		// Disconnect before protocol handshake is valid according to the
-		// spec and we send it ourself if the posthanshake checks fail.
+		// spec and we send it ourself if the post-hanshake checks fail.
 		// We can't return the reason directly, though, because it is echoed
 		// back otherwise. Wrap it in a string instead.
 		var reason [1]DiscReason
@@ -446,32 +446,15 @@ func receiverEncHandshake(conn io.ReadWriter, prv *ecdsa.PrivateKey) (s secrets,
 		log.Warn("receiverEncHandshake ecrecover publickey error ", err)
 		return s, err
 	}
+
 	pubStr := hex.EncodeToString(recoveredPub[1:])
-
-	validNode := (pubStr == GetRootNode().ID.String()) // root node is forbid delete!
-	if !validNode {
-		/*
-		cnsAddress := common.HexToAddress("0x0000000000000000000000000000000000000011")
-		nodeAddressRes := common.InnerCall(cnsAddress, "getContractAddress", []interface{}{ "__sys_NodeManager", "latest"})
-
-		nodeManagerAddress := common.HexToAddress(common.CallResAsString(nodeAddressRes))
-		validNodeRes := common.InnerCall(nodeManagerAddress, "validJoinNode", []interface{}{ pubStr})
-
-		validNode = common.CallResAsBool(validNodeRes)
-		*/
-		if common.SysCfg.IsValidJoinNode(pubStr) {
-			validNode = true
-		}
+	if pubStr == GetRootNode().ID.String() || common.SysCfg.IsValidJoinNode(pubStr) {
+		log.Info("receiverEncHandshake success", "PeerInfo_pubStr", pubStr)
+		return h.secrets(authPacket, authRespPacket)
 	}
 
-	log.Info("PeerInfo","pubStr", pubStr, "validNode", validNode)
-
-	if(!validNode) {
-		log.Warn("joined node is a deleted node ", "pubStr", pubStr)
-		return s, errors.New("join node is a invalid node")
-	}
-
-	return h.secrets(authPacket, authRespPacket)
+	log.Warn("joined node is a deleted node ", "pubStr", pubStr)
+	return s, errors.New("join node is a invalid node")
 }
 
 func (h *encHandshake) handleAuthMsg(msg *authMsgV4, prv *ecdsa.PrivateKey) error {
