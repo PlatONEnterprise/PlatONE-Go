@@ -716,7 +716,9 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 		//check sender permisson
 		res, err := checkSenderPermission(sender.Address(), evm)
 		if err != nil {
-			return nil, 0, true, err
+			st.state.SetNonce(msg.From(), st.state.GetNonce(sender.Address())+1)
+			log.Debug("VM returned with error", "err", vmerr)
+			return nil, 0, true, nil
 		}
 		if !res {
 			st.state.SetNonce(msg.From(), st.state.GetNonce(sender.Address())+1)
@@ -843,6 +845,7 @@ func (st *StateTransition) gasUsed() uint64 {
 	return st.initialGas - st.gas
 }
 
+
 func checkSenderPermission(sender common.Address, evm *vm.EVM) (bool, error){
 	valid, err := isValidUser(sender, evm)
 	if err != nil {
@@ -851,15 +854,11 @@ func checkSenderPermission(sender common.Address, evm *vm.EVM) (bool, error){
 	if !valid {
 		return false, nil
 	}
-	var fn = string("getRolesByAddress")
-	conAddr := common.SysCfg.GetContractAddress("__sys_RoleManager")
-	if constr := conAddr.String(); strings.Compare(constr,"0x0000000000000000000000000000000000000000") == 0 {
+	conAddr, found := getContractAddr("__sys_RoleManager")
+	if !found {
 		return true, nil
 	}
-	useraddr := hex.EncodeToString(sender[:])
-	callParams := []interface{}{string(useraddr)}
-	data := common.GenCallData(fn, callParams)
-	res, _, err := evm.Call(vm.AccountRef(common.Address{}), conAddr, data, uint64(0xffffffffff), big.NewInt(0))
+	res, err := callContractByFw(conAddr, "getRolesByAddress", sender, evm)
 	if err != nil {
 		return false, err
 	}
@@ -873,25 +872,39 @@ func checkSenderPermission(sender common.Address, evm *vm.EVM) (bool, error){
 }
 
 
-func isValidUser(user common.Address, evm *vm.EVM) (bool, error) {
 
-	conAddr := common.SysCfg.GetContractAddress("__sys_UserManager")
-	//data, _ = hex.DecodeString(datastr)
-	constr := conAddr.String()
-	if constr = conAddr.String(); strings.Compare(constr,"0x0000000000000000000000000000000000000000") == 0 {
+func isValidUser(sender common.Address, evm *vm.EVM) (bool, error) {
+
+	conAddr, found := getContractAddr("__sys_UserManager")
+	if !found {
 		return true, nil
 	}
-	useraddr := hex.EncodeToString(user[:])
-	callParams := []interface{}{useraddr}
-	fn := string("isValidUser")
-	data := common.GenCallData(fn, callParams)
-	res, _, err := evm.Call(vm.AccountRef(common.Address{}), conAddr, data, uint64(0xffffffffff), big.NewInt(0))
-	valid := common.CallResAsInt64(res)
+	res, err := callContractByFw(conAddr, "isValidUser", sender, evm)
 	if err != nil {
 		return false, err
 	}
+	valid := common.CallResAsInt64(res)
 	if valid > 0 {
 		return true, nil
 	}
 	return false, nil
 }
+
+func getContractAddr(cn string)(common.Address, bool) {
+	conAddr := common.SysCfg.GetContractAddress(cn)
+	if constr := conAddr.String(); strings.Compare(constr,"0x0000000000000000000000000000000000000000") == 0 {
+		return  common.Address{}, false
+	}
+	return conAddr, true
+
+}
+
+func callContractByFw(conAddr common.Address, fn string, sender common.Address, evm *vm.EVM) ([]byte, error) {
+	useraddr := hex.EncodeToString(sender[:])
+	callParams := []interface{}{useraddr}
+	data := common.GenCallData(fn, callParams)
+	res, _, err := evm.Call(vm.AccountRef(common.Address{}), conAddr, data, uint64(0xffffffffff), big.NewInt(0))
+	return res, err
+
+}
+
