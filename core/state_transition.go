@@ -17,6 +17,7 @@
 package core
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -711,8 +712,16 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 	if err = st.useGas(gas); err != nil {
 		return nil, 0, false, err
 	}
-
 	if contractCreation {
+		//check sender permisson
+		res, err := checkSenderPermission(sender.Address(), evm)
+		if err != nil {
+			return nil, 0, true, err
+		}
+		if !res {
+			st.state.SetNonce(msg.From(), st.state.GetNonce(sender.Address())+1)
+			return nil, 0, true, FirewallErr
+		}
 		ret, _, st.gas, vmerr = evm.Create(sender, st.data, st.gas, st.value)
 	} else {
 		if msg.TxType() != types.CnsTxType {
@@ -832,4 +841,57 @@ func (st *StateTransition) refundGas() {
 // gasUsed returns the amount of gas used up by the state transition.
 func (st *StateTransition) gasUsed() uint64 {
 	return st.initialGas - st.gas
+}
+
+func checkSenderPermission(sender common.Address, evm *vm.EVM) (bool, error){
+	valid, err := isValidUser(sender, evm)
+	if err != nil {
+		return false, err
+	}
+	if !valid {
+		return false, nil
+	}
+	var fn = string("getRolesByAddress")
+	conAddr := common.SysCfg.GetContractAddress("__sys_RoleManager")
+	if constr := conAddr.String(); strings.Compare(constr,"0x0000000000000000000000000000000000000000") == 0 {
+		return true, nil
+	}
+	useraddr := hex.EncodeToString(sender[:])
+	callParams := []interface{}{string(useraddr)}
+	data := common.GenCallData(fn, callParams)
+	res, _, err := evm.Call(vm.AccountRef(common.Address{}), conAddr, data, uint64(0xffffffffff), big.NewInt(0))
+	if err != nil {
+		return false, err
+	}
+	roles := string(res[:])
+	if  strings.Contains(roles, "contractAdmin")  || strings.Contains(roles, "chainCreator") ||
+		strings.Contains(roles, "chainAdmin") || strings.Contains(roles, "contractDeployer") {
+		return true, nil
+	}
+	return false, nil
+
+}
+
+
+func isValidUser(user common.Address, evm *vm.EVM) (bool, error) {
+
+	conAddr := common.SysCfg.GetContractAddress("__sys_UserManager")
+	//data, _ = hex.DecodeString(datastr)
+	constr := conAddr.String()
+	if constr = conAddr.String(); strings.Compare(constr,"0x0000000000000000000000000000000000000000") == 0 {
+		return true, nil
+	}
+	useraddr := hex.EncodeToString(user[:])
+	callParams := []interface{}{useraddr}
+	fn := string("isValidUser")
+	data := common.GenCallData(fn, callParams)
+	res, _, err := evm.Call(vm.AccountRef(common.Address{}), conAddr, data, uint64(0xffffffffff), big.NewInt(0))
+	valid := common.CallResAsInt64(res)
+	if err != nil {
+		return false, err
+	}
+	if valid > 0 {
+		return true, nil
+	}
+	return false, nil
 }
