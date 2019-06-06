@@ -1,0 +1,24 @@
+ParamManager init success...
+init success...
+用户数据===: {"address":"0xfc3ceaf8367c7fe7c91a7c8a862ebac18f4d7a35","name":"root","mobile":"0","email":"","status":0}
+init success...
+init RoleManager contract success
+init RoleRegister success...
+NodeManager init success...
+NodeRegister init success...
+没找到对应的 user_state
+没找到对应的 auditor_address
+没找到对应的 roles
+user:[ 0xcad84e1673d67887349903f2779312dc1fc38e5d ] not found!
+用户申请记录： {"address":"0xcad84e1673d67887349903f2779312dc1fc38e5d","name":"xiaoluo","mobile":"13111111111","email":"123@126.com","remark":"平台用户申请","user_state":1,"auditor_address":"0x","roles":[]}
+reg_user.user_state: 2
+用户申请记录： {"address":"0xcad84e1673d67887349903f2779312dc1fc38e5d","name":"xiaoluo","mobile":"13111111111","email":"123@126.com","remark":"平台用户申请","user_state":2,"auditor_address":"0xfc3ceaf8367c7fe7c91a7c8a862ebac18f4d7a35","roles":[]}
+用户数据===: {"address":"0xcad84e1673d67887349903f2779312dc1fc38e5d","name":"xiaoluo","mobile":"13111111111","email":"123@126.com","status":0}
+保存用户记录成功
+[util] [doGetRoles] no valid roles.
+[RoleRegister] account code:  0
+OK: [RoleRegister] [registerRole] Register success.
+[RoleRegister] invalid roles.
+OK: [RoleManager] [addRole] Add roles success. 0xcad84e1673d67887349903f2779312dc1fc38e5d["contractDeployer"]
+OK: [RoleRegister] [approve] Registration approved. 
+init success...
