@@ -61,20 +61,19 @@ import (
 
 func InitInnerCallFunc(ethPtr *Ethereum) {
 	var rootNode discover.Node
-	if _, ok := ethPtr.engine.(consensus.Istanbul); ok {
-		rootNode = ethPtr.chainConfig.Istanbul.InitialNodes[0]
-	} else {
+	var root common.NodeInfo
+	if _, ok := ethPtr.engine.(consensus.Istanbul); !ok {
 		rootNode = ethPtr.chainConfig.Cbft.InitialNodes[0]
+		root = common.NodeInfo{
+			Types:      1,
+			Status:     1,
+			Name:       "root",
+			PublicKey:  rootNode.ID.String(),
+			P2pPort:    int32(rootNode.UDP),
+			ExternalIP: rootNode.IP.String(),
+		}
 	}
 
-	root := common.NodeInfo{
-		Types:      1,
-		Status:     1,
-		Name:       "root",
-		PublicKey:  rootNode.ID.String(),
-		P2pPort:    int32(rootNode.UDP),
-		ExternalIP: rootNode.IP.String(),
-	}
 
 	innerCall := func(conAddr common.Address, data []byte) ([]byte, error) {
 		ctx := context.Background()
@@ -225,26 +224,29 @@ func InitInnerCallFunc(ethPtr *Ethereum) {
 				log.Debug("contract inner error", "code", tmp.RetCode, "msg", tmp.RetMsg)
 			} else {
 				sc.Nodes = tmp.Data
-				hasRoot := false
-
-				for _, node := range sc.Nodes {
-					if node.PublicKey == rootNode.ID.String() {
-						hasRoot = true
-						break
+				if _, ok := ethPtr.engine.(consensus.Istanbul); !ok {
+					hasRoot := false
+					for _, node := range sc.Nodes {
+						if node.PublicKey == rootNode.ID.String() {
+							hasRoot = true
+							break
+						}
 					}
-				}
-
-				if !hasRoot {
-					sc.Nodes = append(sc.Nodes, root)
+					if !hasRoot {
+						sc.Nodes = append(sc.Nodes, root)
+					}
 				}
 			}
 		}
-		return
 	}
 
-	common.InitSystemconfig(root)
 	common.SetSysContractCallFunc(sysContractCall)
 	common.SetInnerCallFunc(innerCall)
+	if _, ok := ethPtr.engine.(consensus.Istanbul); !ok{
+		common.InitSystemconfig(root)
+		return
+	}
+	common.InitSystemconfig(common.NodeInfo{})
 }
 
 type LesServer interface {
@@ -391,6 +393,7 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	eth.APIBackend.gpo = gasprice.NewOracle(eth.APIBackend, gpoParams)
 
 	// set init system param function, then reload cbft param before start up miner
+
 	InitInnerCallFunc(eth)
 	if common.SysCfg != nil {
 		common.SysCfg.UpdateSystemConfig()
@@ -452,14 +455,12 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	}
 
 	var rootNodes []discover.Node
-	if _, ok := eth.engine.(consensus.Istanbul); ok {
-		rootNodes = chainConfig.Istanbul.InitialNodes
-	} else {
+	if _, ok := eth.engine.(consensus.Istanbul); !ok {
 		rootNodes = chainConfig.Cbft.InitialNodes
-	}
-	if len(rootNodes) != 0 {
-		p2p.AddRootPeer(rootNodes[0])
-		p2p.SetRootNode(&rootNodes[0])
+		if len(rootNodes) != 0 {
+			p2p.AddRootPeer(rootNodes[0])
+			p2p.SetRootNode(&rootNodes[0])
+		}
 	}
 	return eth, nil
 }
@@ -774,7 +775,7 @@ func (s *Ethereum) Start(srvr *p2p.Server) error {
 	s.protocolManager.Start(maxPeers)
 
 	if _, ok := s.engine.(consensus.Istanbul); ok {
-		for _, n := range s.chainConfig.Istanbul.InitialNodes {
+		for _, n := range p2p.GetBootNodes(){
 			srvr.AddConsensusPeer(discover.NewNode(n.ID, n.IP, n.UDP, n.TCP))
 		}
 	} else if engine, ok := s.engine.(consensus.Bft); ok {

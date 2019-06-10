@@ -704,6 +704,7 @@ func setBootstrapNodes(ctx *cli.Context, cfg *p2p.Config) {
 			log.Crit("Bootstrap URL invalid", "enode", url, "err", err)
 		}
 		cfg.BootstrapNodes = append(cfg.BootstrapNodes, node)
+		p2p.SetBootNodes(cfg.BootstrapNodes)
 	}
 }
 
