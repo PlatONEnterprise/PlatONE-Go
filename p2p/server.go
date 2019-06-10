@@ -54,6 +54,7 @@ const (
 )
 
 var errServerStopped = errors.New("server stopped")
+var errServerSelfInDelList = errors.New("self in deleteList")
 
 // Config holds Server options.
 type Config struct {
@@ -301,6 +302,16 @@ func GetRootNode() (node *discover.Node) {
 	return rootNode
 }
 
+var bootNodes []*discover.Node
+
+func SetBootNodes(bn []*discover.Node) {
+	bootNodes = bn
+}
+
+func GetBootNodes() []*discover.Node {
+	return bootNodes
+}
+
 // Peers returns all connected peers.
 func (srv *Server) Peers() []*Peer {
 	var ps []*Peer
@@ -354,67 +365,84 @@ func UpdatePeer() {
 		log.Warn("srv is nil")
 		return
 	}
-	selfPublicKey := server.Self().ID.String()
-
-	// already join key
 	joinNodes := make([]string, 0)
-	peers := server.PeersInfo()
-	for i, peer := range peers {
-		curPeer := "enode://" + peer.ID + "@" + peer.Network.RemoteAddress
-		joinNodes = append(joinNodes, curPeer)
-		log.Info("joined peer", "index", i, "curPeer", curPeer)
+	for i, peer := range server.PeersInfo() {
+		en := fmt.Sprintf("enode://%s@%s", peer.ID, peer.Network.RemoteAddress)
+		joinNodes = append(joinNodes, en)
+		log.Info("joined peer", "index", i, "curPeer", en)
 	}
+	log.Info("********** current joinNodes length **********", "len", len(joinNodes))
+	if err := server.ExcludeDelNodes(joinNodes); err != nil {
+		log.Warn(err.Error())
+	}
+	server.AddExtraNormalNodes(joinNodes)
+}
 
+func (srv *Server) ExcludeDelNodes(joinNodes []string) (err error) {
 	delENodes := common.SysCfg.GetDeletedNodes()
 	for _, eNode := range delENodes {
-		eNodeStr := fmt.Sprintf("enode://%s@%s:%d", eNode.PublicKey, eNode.ExternalIP, eNode.P2pPort)
-		if node, err := discover.ParseNode(eNodeStr); err == nil {
+		delEn := fmt.Sprintf("enode://%s@%s:%d", eNode.PublicKey, eNode.ExternalIP, eNode.P2pPort)
+		if node, err := discover.ParseNode(delEn); err == nil {
+			if srv.Self().ID.String() == node.ID.String() {
+				log.Warn("to remove all node")
+				err = errServerSelfInDelList
+				for _, joinNode := range joinNodes {
+					if n, err := discover.ParseNode(joinNode); err == nil {
+						srv.RemovePeer(n)
+					}
+				}
+				break
+			}
 			for _, joinNode := range joinNodes {
 				if strings.Contains(joinNode, node.ID.String()) {
 					log.Info("remove del node", "nodePubKey", node.ID.String())
-					server.RemovePeer(node)
+					srv.RemovePeer(node)
 				}
 			}
 		}
 	}
+	return
+}
 
-	normalENodes := common.SysCfg.GetNormalNodes()
-	//if rootNode != nil {
-	//	hasRoot := false
-	//	for _, eNode := range normalENodes {
-	//		if eNode.PublicKey == rootNode.ID.String() {
-	//			hasRoot = true
-	//		}
-	//	}
-	//
-	//	if !hasRoot {
-	//		rootNodeInfo := common.NodeInfo{
-	//			PublicKey:  rootNode.ID.String(),
-	//			ExternalIP: rootNode.IP.String(),
-	//			P2pPort:    int32(uint32(rootNode.UDP)),
-	//		}
-	//		normalENodes = append(normalENodes, rootNodeInfo)
-	//	}
-	//}
+func (srv *Server) ExcludeSelfInDelList(joinNodes []string) (err error) {
+	for _, delNode := range common.SysCfg.GetDeletedNodes() {
+		en := fmt.Sprintf("enode://%s@%s:%d", delNode.PublicKey, delNode.ExternalIP, delNode.P2pPort)
+		if node, e := discover.ParseNode(en); e == nil && node.ID.String() == srv.Self().ID.String() {
+			err = errServerSelfInDelList
+			for _, joinNode := range joinNodes {
+				if n, err := discover.ParseNode(joinNode); err == nil {
+					srv.RemovePeer(n)
+				}
+			}
+			break
+		}
+	}
+	return
+}
 
-	for _, eNode := range normalENodes {
+func (srv *Server) AddExtraNormalNodes(joinNodes []string) (err error) {
+	nNodes := common.SysCfg.GetNormalNodes()
+next:
+	for _, eNode := range nNodes {
 		eNodeStr := fmt.Sprintf("enode://%s@%s:%d", eNode.PublicKey, eNode.ExternalIP, eNode.P2pPort)
 
-		if node, err := discover.ParseNode(eNodeStr); err == nil {
-			curPubKey := node.ID.String()
-			joined := false
-			for _, joinNode := range joinNodes {
-				if joined = strings.Contains(joinNode, curPubKey); joined {
-					break
-				}
-			}
-			// not connected and not myself
-			if !joined && selfPublicKey != curPubKey {
-				log.Info("Add new node", "PublicKey", curPubKey)
-				server.AddPeer(node)
+		var node *discover.Node
+		if node, err = discover.ParseNode(eNodeStr); err != nil {
+			continue
+		}
+		curPubKey := node.ID.String()
+		for _, joinNode := range joinNodes {
+			if ok := strings.Contains(joinNode, curPubKey); ok {
+				continue next
 			}
 		}
+		// not connected and not myself
+		if srv.Self().ID.String() != curPubKey {
+			log.Info("Add new node", "PublicKey", curPubKey)
+			srv.AddPeer(node)
+		}
 	}
+	return
 }
 
 // add root peer
@@ -1007,20 +1035,16 @@ func (srv *Server) SetupConn(fd net.Conn, flags connFlag, dialDest *discover.Nod
 		return errors.New("shutdown")
 	}
 
-	srv.log.Warn("to setupConnn", "dialDest", dialDest)
-	if dialDest != nil {
-		normalNodes := common.SysCfg.GetNormalNodes()
-		var isIn bool
-		for _, n := range normalNodes {
-			if dialDest.ID.String() == n.PublicKey {
-				isIn = true
-			}
-		}
-		if !isIn {
-			srv.log.Warn("dialDest is not in normalNode")
+	deleted := common.SysCfg.GetDeletedNodes()
+	for _, node := range deleted {
+		if node.PublicKey == srv.Self().ID.String() {
+			srv.log.Warn("setupConn: I am in block list: ", "pubKey", node.PublicKey)
 			return errors.New("shutdown")
 		}
-		srv.log.Warn("dialDest is in normalNode", "len", len(normalNodes), "normal", normalNodes)
+		if dialDest != nil && dialDest.ID.String() == node.PublicKey {
+			srv.log.Warn("setupConn: dialDest in block list: ", "pubKey", node.PublicKey)
+			return errors.New("shutdown")
+		}
 	}
 
 	c := &conn{fd: fd, transport: srv.newTransport(fd), flags: flags, cont: make(chan error)}

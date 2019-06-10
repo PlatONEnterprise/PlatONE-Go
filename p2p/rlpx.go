@@ -448,12 +448,12 @@ func receiverEncHandshake(conn io.ReadWriter, prv *ecdsa.PrivateKey) (s secrets,
 	}
 
 	pubStr := hex.EncodeToString(recoveredPub[1:])
-	if pubStr == GetRootNode().ID.String() || common.SysCfg.IsValidJoinNode(pubStr) {
+	//if pubStr == GetRootNode().ID.String() || common.SysCfg.IsValidJoinNode(pubStr) {
+	if common.SysCfg.IsValidJoinNode(pubStr) {
 		log.Info("receiverEncHandshake success", "PeerInfo_pubStr", pubStr)
 		return h.secrets(authPacket, authRespPacket)
 	}
-
-	log.Warn("joined node is a deleted node ", "pubStr", pubStr)
+	log.Warn("receiverEncHandshake fail: joined node is a invalid node ", "pubStr", pubStr)
 	return s, errors.New("join node is a invalid node")
 }
 
