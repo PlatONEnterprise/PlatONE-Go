@@ -74,7 +74,6 @@ func InitInnerCallFunc(ethPtr *Ethereum) {
 		}
 	}
 
-
 	innerCall := func(conAddr common.Address, data []byte) ([]byte, error) {
 		ctx := context.Background()
 
@@ -242,7 +241,7 @@ func InitInnerCallFunc(ethPtr *Ethereum) {
 
 	common.SetSysContractCallFunc(sysContractCall)
 	common.SetInnerCallFunc(innerCall)
-	if _, ok := ethPtr.engine.(consensus.Istanbul); !ok{
+	if _, ok := ethPtr.engine.(consensus.Istanbul); !ok {
 		common.InitSystemconfig(root)
 		return
 	}
@@ -775,8 +774,12 @@ func (s *Ethereum) Start(srvr *p2p.Server) error {
 	s.protocolManager.Start(maxPeers)
 
 	if _, ok := s.engine.(consensus.Istanbul); ok {
-		for _, n := range p2p.GetBootNodes(){
-			srvr.AddConsensusPeer(discover.NewNode(n.ID, n.IP, n.UDP, n.TCP))
+		for _, n := range p2p.GetBootNodes() {
+			for _, obNode := range s.chainConfig.Istanbul.ObserveNodes {
+				if obNode.ID == n.ID {
+					srvr.AddConsensusPeer(discover.NewNode(n.ID, n.IP, n.UDP, n.TCP))
+				}
+			}
 		}
 	} else if engine, ok := s.engine.(consensus.Bft); ok {
 		engine.SetPrivateKey(srvr.Config.PrivateKey)
