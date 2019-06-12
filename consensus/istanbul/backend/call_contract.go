@@ -72,8 +72,6 @@ func getConsensusNodesList(chain consensus.ChainReader, sb *backend, headers []*
 		log.Info("UpdateSystemConfig successful")
 	}
 
-
-	//tmp = common.SysCfg.GetConsensusNodes()
 	tmp = common.SysCfg.GetConsensusNodesFilterDelay(number)
 	nodeIDs := make([]discover.NodeID, 0, len(tmp))
 	for _, dataObj := range tmp {
