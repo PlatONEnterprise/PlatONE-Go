@@ -199,7 +199,6 @@ func (sc *SystemConfig) GetDeletedNodes() []NodeInfo {
 	defer sc.SystemConfigMu.RUnlock()
 
 	var deletedNodes = make([]NodeInfo, 0)
-
 	for _, node := range sc.Nodes {
 		if node.Status == 3 {
 			deletedNodes = append(deletedNodes, node)
