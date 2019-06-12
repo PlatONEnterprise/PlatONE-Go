@@ -62,7 +62,7 @@ type nodeInfo struct {
 
 // getInitialNodesList catch initial nodes List from paramManager contract when
 // new a dpos and miner a new block
-func getConsensusNodesList(chain consensus.ChainReader, sb *backend, headers []*types.Header) ([]discover.NodeID, error) {
+func getConsensusNodesList(chain consensus.ChainReader, sb *backend, headers []*types.Header, number uint64) ([]discover.NodeID, error) {
 	var tmp []common.NodeInfo
 	if common.SysCfg == nil {
 		log.Info("common.SysCfg == nil")
@@ -73,7 +73,8 @@ func getConsensusNodesList(chain consensus.ChainReader, sb *backend, headers []*
 	}
 
 
-	tmp = common.SysCfg.GetConsensusNodes()
+	//tmp = common.SysCfg.GetConsensusNodes()
+	tmp = common.SysCfg.GetConsensusNodesFilterDelay(number)
 	nodeIDs := make([]discover.NodeID, 0, len(tmp))
 	for _, dataObj := range tmp {
 		if pubKey := dataObj.PublicKey; len(pubKey) > 0 {
