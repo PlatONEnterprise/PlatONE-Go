@@ -34,16 +34,19 @@ type CommonResult struct {
 }
 
 type NodeInfo struct {
-	Name       string `json:"name,omitempty"`
-	Owner      string `json:"owner,omitempty"`
-	Desc       string `json:"desc,omitempty"`
-	Types      int32  `json:"type,omitempty"`
+	Name  string `json:"name,omitempty"`
+	Owner string `json:"owner,omitempty"`
+	Desc  string `json:"desc,omitempty"`
+	Types int32  `json:"type,omitempty"`
+	// status 1为正常节点, 3为删除节点
 	Status     int32  `json:"status,omitempty"`
 	ExternalIP string `json:"externalIP,omitempty"`
 	InternalIP string `json:"internalIP,omitempty"`
 	PublicKey  string `json:"publicKey,omitempty"`
 	RpcPort    int32  `json:"rpcPort,omitempty"`
 	P2pPort    int32  `json:"p2pPort,omitempty"`
+	// delay set validatorSet
+	DelayNum uint64 `json:"delay,omitempty"`
 }
 
 type SystemParameter struct {
@@ -64,7 +67,7 @@ type SystemConfig struct {
 
 var SysCfg *SystemConfig
 
-func InitSystemconfig(root  NodeInfo) {
+func InitSystemconfig(root NodeInfo) {
 	SysCfg = &SystemConfig{
 		SystemConfigMu: &sync.RWMutex{},
 		Nodes:          make([]NodeInfo, 0),
@@ -140,7 +143,8 @@ func (sc *SystemConfig) GetNormalNodes() []NodeInfo {
 	var normalNodes = make([]NodeInfo, 0)
 
 	for _, node := range sc.Nodes {
-		if node.Status <= 2 {
+		//if node.Status <= 2 {
+		if node.Status == 1 {
 			normalNodes = append(normalNodes, node)
 		}
 	}
@@ -153,7 +157,8 @@ func (sc *SystemConfig) IsValidJoinNode(publicKey string) bool {
 	var validNodes = make([]NodeInfo, 0)
 
 	for _, node := range sc.Nodes {
-		if (node.Status == 1 || node.Status == 2) && node.PublicKey == publicKey {
+		//if (node.Status == 1 || node.Status == 2) && node.PublicKey == publicKey {
+		if node.Status == 1 && node.PublicKey == publicKey {
 			validNodes = append(validNodes, node)
 		}
 	}
@@ -173,6 +178,19 @@ func (sc *SystemConfig) GetConsensusNodes() []NodeInfo {
 		}
 	}
 
+	return consensusNodes
+}
+
+func (sc *SystemConfig) GetConsensusNodesFilterDelay(number uint64) []NodeInfo {
+	sc.SystemConfigMu.RLock()
+	defer sc.SystemConfigMu.RUnlock()
+
+	consensusNodes := make([]NodeInfo, 0)
+	for _, node := range sc.Nodes {
+		if node.Status == 1 && node.Types == 1 && node.DelayNum <= number {
+			consensusNodes = append(consensusNodes, node)
+		}
+	}
 	return consensusNodes
 }
 

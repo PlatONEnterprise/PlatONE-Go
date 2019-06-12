@@ -28,7 +28,6 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
 )
 
 const (
@@ -259,9 +258,7 @@ func (s *Snapshot) apply(chain consensus.ChainReader, sb *backend, headers []*ty
 		}
 	*/
 
-	validatorNodesList, _ := getConsensusNodesList(chain, sb, headers)
-	// linqi
-	log.Info("getConsensusNodesList")
+	validatorNodesList, _ := getConsensusNodesList(chain, sb, headers, snap.Number+uint64(len(headers)))
 	if len(validatorNodesList) == 0 {
 		snap.Number += uint64(len(headers))
 		snap.Hash = headers[len(headers)-1].Hash()

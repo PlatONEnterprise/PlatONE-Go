@@ -422,6 +422,7 @@ func (srv *Server) ExcludeSelfInDelList(joinNodes []string) (err error) {
 
 func (srv *Server) AddExtraNormalNodes(joinNodes []string) (err error) {
 	nNodes := common.SysCfg.GetNormalNodes()
+	log.Info("********** GetNormalNodes Len **********", "len", len(nNodes))
 next:
 	for _, eNode := range nNodes {
 		eNodeStr := fmt.Sprintf("enode://%s@%s:%d", eNode.PublicKey, eNode.ExternalIP, eNode.P2pPort)

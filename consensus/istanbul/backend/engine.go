@@ -624,16 +624,16 @@ func (sb *backend) snapshot(chain consensus.ChainReader, number uint64, hash com
 	//}
 
 	// Previous snapshot found, apply any pending headers on top of it
+
 	for i := 0; i < len(headers)/2; i++ {
 		headers[i], headers[len(headers)-1-i] = headers[len(headers)-1-i], headers[i]
 	}
 	snap, err := snap.apply(chain, sb, headers)
-
 	if err != nil {
 		return nil, err
 	}
-	sb.recents.Add(snap.Hash, snap)
 
+	sb.recents.Add(snap.Hash, snap)
 	// If we've generated a new checkpoint snapshot, save to disk
 	if snap.Number%checkpointInterval == 0 && len(headers) > 0 {
 		if err = snap.store(sb.db); err != nil {
