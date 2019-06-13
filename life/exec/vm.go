@@ -302,7 +302,9 @@ func NewVirtualMachine(code []byte, context *VMContext, impResolver ImportResolv
 
 func ImportGasFunc(vm *VirtualMachine, frame *Frame) (uint64, error) {
 	importID := int(LE.Uint32(frame.Code[frame.IP : frame.IP+4]))
-	return vm.FunctionImports[importID].GasCost(vm)
+	gas,err := vm.FunctionImports[importID].GasCost(vm)
+	return gas+6, err
+
 }
 
 // Init initializes a frame. Must be called on `call` and `call_indirect`.
