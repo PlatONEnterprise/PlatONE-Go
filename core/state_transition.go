@@ -572,6 +572,11 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 			list = append(list, fwElem)
 		}
 
+	} else  if  funcName == "__sys_FwImport"{
+		if len(fwData) != 3 {
+			log.Debug("FW : error, wrong function parameters!")
+			return nil, 0, fwErr
+		}
 	} else {
 		log.Debug("FW : error, wrong function name!")
 		return nil, 0, fwErr
@@ -590,6 +595,8 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 		stateDb.FwDel(contractAddr, act, list)
 	case "__sys_FwSet":
 		stateDb.FwSet(contractAddr, act, list)
+	case "__sys_FwImport":
+		stateDb.FwImport(contractAddr,fwData[2])
 	default:
 		// "__sys_FwStatus"
 		fwStatus = stateDb.GetFwStatus(contractAddr)
@@ -671,7 +678,7 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 		// not assigned to err, except for insufficient balance
 		// error.
 		vmerr error
-
+		//conAddr common.Address
 		msg    = st.msg
 		sender = vm.AccountRef(msg.From())
 	)
@@ -725,6 +732,7 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 			return nil, 0, true, FirewallErr
 		}
 		ret, _, st.gas, vmerr = evm.Create(sender, st.data, st.gas, st.value)
+		//st.state.OpenFirewall(conAddr)
 	} else {
 		if msg.TxType() != types.CnsTxType {
 			st.state.SetNonce(msg.From(), st.state.GetNonce(sender.Address())+1)
