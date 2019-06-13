@@ -195,9 +195,9 @@ func newCfcSet() map[string]map[string]*exec.FunctionImport {
 			"bcwasmCall":               &exec.FunctionImport{Execute: envBCWasmCall, GasCost: envBCWasmCallGasCost},
 			"bcwasmCallInt64":          &exec.FunctionImport{Execute: envBCWasmCallInt64, GasCost: envBCWasmCallInt64GasCost},
 			"bcwasmCallString":         &exec.FunctionImport{Execute: envBCWasmCallString, GasCost: envBCWasmCallStringGasCost},
-			"bcwasmDelegateCall":       &exec.FunctionImport{Execute: envBCWasmDelegateCall, GasCost: envBCWasmDelegateCallCost},
-			"bcwasmDelegateCallInt64":  &exec.FunctionImport{Execute: envBCWasmDelegateCallInt64, GasCost: envBCWasmDelegateCallInt64Cost},
-			"bcwasmDelegateCallString": &exec.FunctionImport{Execute: envBCWasmDelegateCallString, GasCost: envBCWasmDelegateCallStringCost},
+			"bcwasmDelegateCall":       &exec.FunctionImport{Execute: envBCWasmDelegateCall, GasCost: envBCWasmDelegateCallGasCost},
+			"bcwasmDelegateCallInt64":  &exec.FunctionImport{Execute: envBCWasmDelegateCallInt64, GasCost: envBCWasmDelegateCallInt64GasCost},
+			"bcwasmDelegateCallString": &exec.FunctionImport{Execute: envBCWasmDelegateCallString, GasCost: envBCWasmDelegateCallStringGasCost},
 
 			//nizkpail
 			"pailEncrypt":     &exec.FunctionImport{Execute: envPailEncrypt, GasCost: envPailEncryptGasCost},
@@ -1110,14 +1110,14 @@ func envBCWasmCallInt64GasCost(vm *exec.VirtualMachine) (uint64, error) {
 func envBCWasmCallStringGasCost(vm *exec.VirtualMachine) (uint64, error) {
 	return 1283, nil
 }
-func envBCWasmDelegateCallStringCost(vm *exec.VirtualMachine) (uint64, error) {
+func envBCWasmDelegateCallStringGasCost(vm *exec.VirtualMachine) (uint64, error) {
 	return 3826, nil
 }
 
-func envBCWasmDelegateCallInt64Cost(vm *exec.VirtualMachine) (uint64, error) {
+func envBCWasmDelegateCallInt64GasCost(vm *exec.VirtualMachine) (uint64, error) {
 	return 3807, nil
 }
 
-func envBCWasmDelegateCallCost(vm *exec.VirtualMachine) (uint64, error) {
+func envBCWasmDelegateCallGasCost(vm *exec.VirtualMachine) (uint64, error) {
 	return 3469, nil
 }
