@@ -21,7 +21,6 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	inner "github.com/PlatONEnetwork/PlatONE-Go/common/math"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/life/compiler"
 	"github.com/PlatONEnetwork/PlatONE-Go/life/exec"
 )
 
@@ -144,25 +143,39 @@ func newCfcSet() map[string]map[string]*exec.FunctionImport {
 			"__negtf2":   &exec.FunctionImport{Execute: env__negtf2, GasCost: env__negtf2GasCost},
 
 			// for blockchain function
-			"gasPrice":     &exec.FunctionImport{Execute: envGasPrice, GasCost: constGasFunc(compiler.GasQuickStep)},
-			"blockHash":    &exec.FunctionImport{Execute: envBlockHash, GasCost: constGasFunc(compiler.GasQuickStep)},
-			"number":       &exec.FunctionImport{Execute: envNumber, GasCost: constGasFunc(compiler.GasQuickStep)},
-			"gasLimit":     &exec.FunctionImport{Execute: envGasLimit, GasCost: constGasFunc(compiler.GasQuickStep)},
-			"timestamp":    &exec.FunctionImport{Execute: envTimestamp, GasCost: constGasFunc(compiler.GasQuickStep)},
-			"coinbase":     &exec.FunctionImport{Execute: envCoinbase, GasCost: constGasFunc(compiler.GasQuickStep)},
-			"balance":      &exec.FunctionImport{Execute: envBalance, GasCost: constGasFunc(compiler.GasQuickStep)},
-			"origin":       &exec.FunctionImport{Execute: envOrigin, GasCost: constGasFunc(compiler.GasQuickStep)},
-			"caller":       &exec.FunctionImport{Execute: envCaller, GasCost: constGasFunc(compiler.GasQuickStep)},
-			"isOwner":       &exec.FunctionImport{Execute: envIsOwner, GasCost: constGasFunc(compiler.GasQuickStep)},
-			"isFromInit":   &exec.FunctionImport{Execute: envIsFromInit, GasCost: constGasFunc(compiler.GasQuickStep)},
-			"callValue":    &exec.FunctionImport{Execute: envCallValue, GasCost: constGasFunc(compiler.GasQuickStep)},
-			"address":      &exec.FunctionImport{Execute: envAddress, GasCost: constGasFunc(compiler.GasQuickStep)},
+			//"gasPrice":     &exec.FunctionImport{Execute: envGasPrice, GasCost: constGasFunc(compiler.GasQuickStep)},
+			//"blockHash":    &exec.FunctionImport{Execute: envBlockHash, GasCost: constGasFunc(compiler.GasQuickStep)},
+			//"number":       &exec.FunctionImport{Execute: envNumber, GasCost: constGasFunc(compiler.GasQuickStep)},
+			//"gasLimit":     &exec.FunctionImport{Execute: envGasLimit, GasCost: constGasFunc(compiler.GasQuickStep)},
+			//"timestamp":    &exec.FunctionImport{Execute: envTimestamp, GasCost: constGasFunc(compiler.GasQuickStep)},
+			//"coinbase":     &exec.FunctionImport{Execute: envCoinbase, GasCost: constGasFunc(compiler.GasQuickStep)},
+			//"balance":      &exec.FunctionImport{Execute: envBalance, GasCost: constGasFunc(compiler.GasQuickStep)},
+			//"origin":       &exec.FunctionImport{Execute: envOrigin, GasCost: constGasFunc(compiler.GasQuickStep)},
+			//"caller":       &exec.FunctionImport{Execute: envCaller, GasCost: constGasFunc(compiler.GasQuickStep)},
+			//"isOwner":      &exec.FunctionImport{Execute: envIsOwner, GasCost: constGasFunc(compiler.GasQuickStep)},
+			//"isFromInit":   &exec.FunctionImport{Execute: envIsFromInit, GasCost: constGasFunc(compiler.GasQuickStep)},
+			//"callValue":    &exec.FunctionImport{Execute: envCallValue, GasCost: constGasFunc(compiler.GasQuickStep)},
+			//"address":      &exec.FunctionImport{Execute: envAddress, GasCost: constGasFunc(compiler.GasQuickStep)},
+			"gasPrice":   &exec.FunctionImport{Execute: envGasPrice, GasCost: envGasPriceGasCost},
+			"blockHash":  &exec.FunctionImport{Execute: envBlockHash, GasCost: envBlockHashGasCost},
+			"number":     &exec.FunctionImport{Execute: envNumber, GasCost: envNumberGasCost},
+			"gasLimit":   &exec.FunctionImport{Execute: envGasLimit, GasCost: envGasLimitGasCost},
+			"timestamp":  &exec.FunctionImport{Execute: envTimestamp, GasCost: envTimestampGasCost},
+			"coinbase":   &exec.FunctionImport{Execute: envCoinbase, GasCost: envCoinbaseGasCost},
+			"balance":    &exec.FunctionImport{Execute: envBalance, GasCost: envBalanceGasCost},
+			"origin":     &exec.FunctionImport{Execute: envOrigin, GasCost: envOriginGasCost},
+			"caller":     &exec.FunctionImport{Execute: envCaller, GasCost: envCallerGasCost},
+			"isOwner":    &exec.FunctionImport{Execute: envIsOwner, GasCost: envIsOwnerGasCost},
+			"isFromInit": &exec.FunctionImport{Execute: envIsFromInit, GasCost: envIsFromInitGasCost},
+			"callValue":  &exec.FunctionImport{Execute: envCallValue, GasCost: envCallValueGasCost},
+			"address":    &exec.FunctionImport{Execute: envAddress, GasCost: envAddressGasCost},
+
 			"sha3":         &exec.FunctionImport{Execute: envSha3, GasCost: envSha3GasCost},
 			"emitEvent":    &exec.FunctionImport{Execute: envEmitEvent, GasCost: envEmitEventGasCost},
 			"setState":     &exec.FunctionImport{Execute: envSetState, GasCost: envSetStateGasCost},
 			"getState":     &exec.FunctionImport{Execute: envGetState, GasCost: envGetStateGasCost},
 			"getStateSize": &exec.FunctionImport{Execute: envGetStateSize, GasCost: envGetStateSizeGasCost},
-			"ecrecover": &exec.FunctionImport{Execute: envEcrecover, GasCost: envEcrecoverGasCost},
+			"ecrecover":    &exec.FunctionImport{Execute: envEcrecover, GasCost: envEcrecoverGasCost},
 
 			// support for vc
 			"vc_InitGadgetEnv":          &exec.FunctionImport{Execute: envInitGadgetEnv, GasCost: envInitGadgetEnvGasCost},
@@ -176,21 +189,21 @@ func newCfcSet() map[string]map[string]*exec.FunctionImport {
 			"vc_Verify":                 &exec.FunctionImport{Execute: envVerifyEnv, GasCost: envVerifyGasCost},
 
 			// supplement
-			"getCallerNonce": &exec.FunctionImport{Execute: envGetCallerNonce, GasCost: constGasFunc(compiler.GasQuickStep)},
-			"callTransfer":   &exec.FunctionImport{Execute: envCallTransfer, GasCost: constGasFunc(compiler.GasQuickStep)},
+			"getCallerNonce": &exec.FunctionImport{Execute: envGetCallerNonce, GasCost: envGetCallerNonceGasCost},
+			"callTransfer":   &exec.FunctionImport{Execute: envCallTransfer, GasCost: envCallTransferGasCost},
 
 			"bcwasmCall":               &exec.FunctionImport{Execute: envBCWasmCall, GasCost: envBCWasmCallGasCost},
 			"bcwasmCallInt64":          &exec.FunctionImport{Execute: envBCWasmCallInt64, GasCost: envBCWasmCallInt64GasCost},
 			"bcwasmCallString":         &exec.FunctionImport{Execute: envBCWasmCallString, GasCost: envBCWasmCallStringGasCost},
-			"bcwasmDelegateCall":       &exec.FunctionImport{Execute: envBCWasmDelegateCall, GasCost: envBCWasmCallStringGasCost},
-			"bcwasmDelegateCallInt64":  &exec.FunctionImport{Execute: envBCWasmDelegateCallInt64, GasCost: envBCWasmCallStringGasCost},
-			"bcwasmDelegateCallString": &exec.FunctionImport{Execute: envBCWasmDelegateCallString, GasCost: envBCWasmCallStringGasCost},
+			"bcwasmDelegateCall":       &exec.FunctionImport{Execute: envBCWasmDelegateCall, GasCost: envBCWasmDelegateCallCost},
+			"bcwasmDelegateCallInt64":  &exec.FunctionImport{Execute: envBCWasmDelegateCallInt64, GasCost: envBCWasmDelegateCallInt64Cost},
+			"bcwasmDelegateCallString": &exec.FunctionImport{Execute: envBCWasmDelegateCallString, GasCost: envBCWasmDelegateCallStringCost},
 
 			//nizkpail
-			"pailEncrypt": &exec.FunctionImport{Execute: envPailEncrypt, GasCost: constGasFunc(compiler.GasPailEncrypt)},
-			"pailHomAdd": &exec.FunctionImport{Execute: envPailHomAdd, GasCost: constGasFunc(compiler.GasPailHomAdd)},
-			"pailHomSub": &exec.FunctionImport{Execute: envPailHomSub, GasCost: constGasFunc(compiler.GasPailHomSub)},
-			"nizkVerifyProof": &exec.FunctionImport{Execute: envNizkVerifyProof, GasCost: constGasFunc(compiler.GasNizkVerifyProof)},
+			"pailEncrypt":     &exec.FunctionImport{Execute: envPailEncrypt, GasCost: envPailEncryptGasCost},
+			"pailHomAdd":      &exec.FunctionImport{Execute: envPailHomAdd, GasCost: envPailHomAddGasCost},
+			"pailHomSub":      &exec.FunctionImport{Execute: envPailHomSub, GasCost: envPailHomSubGasCost},
+			"nizkVerifyProof": &exec.FunctionImport{Execute: envNizkVerifyProof, GasCost: envNizkVerifyProofGasCost},
 		},
 	}
 }
@@ -216,8 +229,9 @@ func envMemcpy(vm *exec.VirtualMachine) int64 {
 }
 
 func envMemcpyGasCost(vm *exec.VirtualMachine) (uint64, error) {
-	len := int(uint32(vm.GetCurrentFrame().Locals[2]))
-	return uint64(len), nil
+	//len := int(uint32(vm.GetCurrentFrame().Locals[2]))
+	//return uint64(len), nil
+	return 23, nil
 }
 
 //void * memmove ( void * destination, const void * source, size_t num );
@@ -231,8 +245,10 @@ func envMemmove(vm *exec.VirtualMachine) int64 {
 }
 
 func envMemmoveGasCost(vm *exec.VirtualMachine) (uint64, error) {
-	len := int(uint32(vm.GetCurrentFrame().Locals[2]))
-	return uint64(len), nil
+	//len := int(uint32(vm.GetCurrentFrame().Locals[2]))
+	//return uint64(len), nil
+	return 22, nil
+
 }
 
 //int memcmp ( const void * ptr1, const void * ptr2, size_t num );
@@ -245,8 +261,9 @@ func envMemcmp(vm *exec.VirtualMachine) int64 {
 }
 
 func envMemcmpGasCost(vm *exec.VirtualMachine) (uint64, error) {
-	len := int(uint32(vm.GetCurrentFrame().Locals[2]))
-	return uint64(len), nil
+	//len := int(uint32(vm.GetCurrentFrame().Locals[2]))
+	//return uint64(len), nil
+	return 25, nil
 }
 
 //void * memset ( void * ptr, int value, size_t num );
@@ -264,8 +281,9 @@ func envMemset(vm *exec.VirtualMachine) int64 {
 }
 
 func envMemsetGasCost(vm *exec.VirtualMachine) (uint64, error) {
-	len := int(uint32(vm.GetCurrentFrame().Locals[2]))
-	return uint64(len), nil
+	//len := int(uint32(vm.GetCurrentFrame().Locals[2]))
+	//return uint64(len), nil
+	return 125, nil
 }
 
 //libc prints()
@@ -284,14 +302,15 @@ func envPrints(vm *exec.VirtualMachine) int64 {
 }
 
 func envPrintsGasCost(vm *exec.VirtualMachine) (uint64, error) {
-	start := int(uint32(vm.GetCurrentFrame().Locals[0]))
-	end := 0
-	for end = start; end < len(vm.Memory.Memory); end++ {
-		if vm.Memory.Memory[end] == 0 {
-			break
-		}
-	}
-	return uint64(end - start), nil
+	//start := int(uint32(vm.GetCurrentFrame().Locals[0]))
+	//end := 0
+	//for end = start; end < len(vm.Memory.Memory); end++ {
+	//	if vm.Memory.Memory[end] == 0 {
+	//		break
+	//	}
+	//}
+	//return uint64(end - start), nil
+	return 1597, nil
 }
 
 //libc prints_l
@@ -304,8 +323,10 @@ func envPrintsl(vm *exec.VirtualMachine) int64 {
 }
 
 func envPrintslGasCost(vm *exec.VirtualMachine) (uint64, error) {
-	msgLen := int(uint32(vm.GetCurrentFrame().Locals[1]))
-	return uint64(msgLen), nil
+	//msgLen := int(uint32(vm.GetCurrentFrame().Locals[1]))
+	//return uint64(msgLen), nil
+	return 1792, nil
+
 }
 
 //libc printi()
@@ -315,16 +336,16 @@ func envPrinti(vm *exec.VirtualMachine) int64 {
 }
 
 func envPrintiGasCost(vm *exec.VirtualMachine) (uint64, error) {
-	return 1, nil
+	return 1673, nil
 }
 
 func envPrintui(vm *exec.VirtualMachine) int64 {
-	vm.Context.Log.Debug(fmt.Sprintf("%d", vm.GetCurrentFrame().Locals[0]))
+	//vm.Context.Log.Debug(fmt.Sprintf("%d", vm.GetCurrentFrame().Locals[0]))
 	return 0
 }
 
 func envPrintuiGasCost(vm *exec.VirtualMachine) (uint64, error) {
-	return 1, nil
+	return 1468, nil
 }
 
 func envPrinti128(vm *exec.VirtualMachine) int64 {
@@ -338,7 +359,7 @@ func envPrinti128(vm *exec.VirtualMachine) int64 {
 }
 
 func envPrinti128GasCost(vm *exec.VirtualMachine) (uint64, error) {
-	return 1, nil
+	return 4627, nil
 }
 
 func envPrintui128(vm *exec.VirtualMachine) int64 {
@@ -352,7 +373,7 @@ func envPrintui128(vm *exec.VirtualMachine) int64 {
 }
 
 func envPrintui128GasCost(vm *exec.VirtualMachine) (uint64, error) {
-	return 1, nil
+	return 4465, nil
 }
 
 func envPrintsf(vm *exec.VirtualMachine) int64 {
@@ -363,7 +384,7 @@ func envPrintsf(vm *exec.VirtualMachine) int64 {
 }
 
 func envPrintsfGasCost(vm *exec.VirtualMachine) (uint64, error) {
-	return 1, nil
+	return 1604, nil
 }
 
 func envPrintdf(vm *exec.VirtualMachine) int64 {
@@ -374,7 +395,7 @@ func envPrintdf(vm *exec.VirtualMachine) int64 {
 }
 
 func envPrintdfGasCost(vm *exec.VirtualMachine) (uint64, error) {
-	return 1, nil
+	return 1618, nil
 }
 
 func envPrintqf(vm *exec.VirtualMachine) int64 {
@@ -390,7 +411,7 @@ func envPrintqf(vm *exec.VirtualMachine) int64 {
 }
 
 func envPrintqfGasCost(vm *exec.VirtualMachine) (uint64, error) {
-	return 1, nil
+	return 15305, nil
 }
 
 func envPrintn(vm *exec.VirtualMachine) int64 {
@@ -399,7 +420,7 @@ func envPrintn(vm *exec.VirtualMachine) int64 {
 }
 
 func envPrintnGasCost(vm *exec.VirtualMachine) (uint64, error) {
-	return 1, nil
+	return 1507, nil
 }
 
 func envPrinthex(vm *exec.VirtualMachine) int64 {
@@ -410,7 +431,7 @@ func envPrinthex(vm *exec.VirtualMachine) int64 {
 }
 
 func envPrinthexGasCost(vm *exec.VirtualMachine) (uint64, error) {
-	return 1, nil
+	return 1937, nil
 }
 
 //libc malloc()
@@ -427,7 +448,7 @@ func envMalloc(vm *exec.VirtualMachine) int64 {
 }
 
 func envMallocGasCost(vm *exec.VirtualMachine) (uint64, error) {
-	return 0, nil
+	return 40, nil
 }
 
 //libc free()
@@ -448,7 +469,7 @@ func envFree(vm *exec.VirtualMachine) int64 {
 }
 
 func envFreeGasCost(vm *exec.VirtualMachine) (uint64, error) {
-	return 0, nil
+	return 1424, nil
 }
 
 //libc calloc()
@@ -464,10 +485,11 @@ func envCalloc(vm *exec.VirtualMachine) int64 {
 }
 
 func envCallocGasCost(vm *exec.VirtualMachine) (uint64, error) {
-	num := int(int32(vm.GetCurrentFrame().Locals[0]))
-	size := int(int32(vm.GetCurrentFrame().Locals[1]))
-	total := num * size
-	return uint64(total), nil
+	//num := int(int32(vm.GetCurrentFrame().Locals[0]))
+	//size := int(int32(vm.GetCurrentFrame().Locals[1]))
+	//total := num * size
+	//return uint64(total), nil
+	return 251, nil
 }
 
 func envRealloc(vm *exec.VirtualMachine) int64 {
@@ -485,8 +507,9 @@ func envRealloc(vm *exec.VirtualMachine) int64 {
 }
 
 func envReallocGasCost(vm *exec.VirtualMachine) (uint64, error) {
-	size := int(int32(vm.GetCurrentFrame().Locals[1]))
-	return uint64(size), nil
+	//size := int(int32(vm.GetCurrentFrame().Locals[1]))
+	//return uint64(size), nil
+	return 161, nil
 }
 
 func envDisableFree(vm *exec.VirtualMachine) int64 {
@@ -495,7 +518,7 @@ func envDisableFree(vm *exec.VirtualMachine) int64 {
 }
 
 func envDisableFreeGasCost(vm *exec.VirtualMachine) (uint64, error) {
-	return 1, nil
+	return 0, nil
 }
 
 func envAbort(vm *exec.VirtualMachine) int64 {
@@ -647,24 +670,24 @@ func envSha3(vm *exec.VirtualMachine) int64 {
 	return 0
 }
 
-func envEcrecover(vm *exec.VirtualMachine)int64{
+func envEcrecover(vm *exec.VirtualMachine) int64 {
 	hashOffset := int(int32(vm.GetCurrentFrame().Locals[0]))
 	rsOffset := int(int32(vm.GetCurrentFrame().Locals[1]))
 	addrOffset := int(int32(vm.GetCurrentFrame().Locals[2]))
 
-	h:= vm.Memory.Memory[hashOffset : hashOffset+32]
+	h := vm.Memory.Memory[hashOffset : hashOffset+32]
 	rs := vm.Memory.Memory[rsOffset : rsOffset+65]
 
-	pubK , _:= crypto.SigToPub(h, rs)
+	pubK, _ := crypto.SigToPub(h, rs)
 
-	addr:= crypto.PubkeyToAddress(*pubK)
+	addr := crypto.PubkeyToAddress(*pubK)
 
 	copy(vm.Memory.Memory[addrOffset:], addr.Bytes())
 	return 0
 }
 
-func envEcrecoverGasCost(vm *exec.VirtualMachine)(uint64, error){
-	return 1, nil
+func envEcrecoverGasCost(vm *exec.VirtualMachine) (uint64, error) {
+	return 280738, nil
 }
 
 func envPailEncrypt(vm *exec.VirtualMachine) int64 {
@@ -674,28 +697,28 @@ func envPailEncrypt(vm *exec.VirtualMachine) int64 {
 	pubkeySize := int(int32(vm.GetCurrentFrame().Locals[3]))
 	resultOffset := int(int32(vm.GetCurrentFrame().Locals[4]))
 	resultSize := int(int32(vm.GetCurrentFrame().Locals[5]))
-	
-	number := vm.Memory.Memory[numberOffset : numberOffset + numberSize]
-	pubkey := vm.Memory.Memory[pubkeyOffset : pubkeyOffset + pubkeySize]
+
+	number := vm.Memory.Memory[numberOffset : numberOffset+numberSize]
+	pubkey := vm.Memory.Memory[pubkeyOffset : pubkeyOffset+pubkeySize]
 	number = append(number, 0)
 	pubkey = append(pubkey, 0)
-	
-    numberPtr := (*C.char)(unsafe.Pointer(&number[0]))
-    pubkeyPtr := (*C.char)(unsafe.Pointer(&pubkey[0]))
-    
-    resultPtr := C.pailEncrypt(numberPtr, pubkeyPtr);
-    resultStr := C.GoString(resultPtr);
-    C.free(unsafe.Pointer(resultPtr))
 
-    resultBts := []byte(resultStr)
-    resultBts = append(resultBts, 0)
-	
+	numberPtr := (*C.char)(unsafe.Pointer(&number[0]))
+	pubkeyPtr := (*C.char)(unsafe.Pointer(&pubkey[0]))
+
+	resultPtr := C.pailEncrypt(numberPtr, pubkeyPtr)
+	resultStr := C.GoString(resultPtr)
+	C.free(unsafe.Pointer(resultPtr))
+
+	resultBts := []byte(resultStr)
+	resultBts = append(resultBts, 0)
+
 	if resultSize < len(resultBts) {
 		return 0
 	}
-	
+
 	copy(vm.Memory.Memory[resultOffset:], resultBts)
-	
+
 	return 0
 }
 
@@ -708,31 +731,31 @@ func envPailHomAdd(vm *exec.VirtualMachine) int64 {
 	pubkeySize := int(int32(vm.GetCurrentFrame().Locals[5]))
 	resultOffset := int(int32(vm.GetCurrentFrame().Locals[6]))
 	resultSize := int(int32(vm.GetCurrentFrame().Locals[7]))
-	
-	cipher1 := vm.Memory.Memory[cipher1Offset : cipher1Offset + cipher1Size]
-	cipher2 := vm.Memory.Memory[cipher2Offset : cipher2Offset + cipher2Size]
-	pubkey := vm.Memory.Memory[pubkeyOffset : pubkeyOffset + pubkeySize]
+
+	cipher1 := vm.Memory.Memory[cipher1Offset : cipher1Offset+cipher1Size]
+	cipher2 := vm.Memory.Memory[cipher2Offset : cipher2Offset+cipher2Size]
+	pubkey := vm.Memory.Memory[pubkeyOffset : pubkeyOffset+pubkeySize]
 	cipher1 = append(cipher1, 0)
 	cipher2 = append(cipher2, 0)
 	pubkey = append(pubkey, 0)
-	
-    cipher1Ptr := (*C.char)(unsafe.Pointer(&cipher1[0]))
-    cipher2Ptr := (*C.char)(unsafe.Pointer(&cipher2[0]))
-    pubkeyPtr := (*C.char)(unsafe.Pointer(&pubkey[0]))
-    
-    resultPtr := C.pailHomAdd(cipher1Ptr, cipher2Ptr, pubkeyPtr);
-    resultStr := C.GoString(resultPtr);
-    C.free(unsafe.Pointer(resultPtr))
 
-    resultBts := []byte(resultStr)
-    resultBts = append(resultBts, 0)
-	
+	cipher1Ptr := (*C.char)(unsafe.Pointer(&cipher1[0]))
+	cipher2Ptr := (*C.char)(unsafe.Pointer(&cipher2[0]))
+	pubkeyPtr := (*C.char)(unsafe.Pointer(&pubkey[0]))
+
+	resultPtr := C.pailHomAdd(cipher1Ptr, cipher2Ptr, pubkeyPtr)
+	resultStr := C.GoString(resultPtr)
+	C.free(unsafe.Pointer(resultPtr))
+
+	resultBts := []byte(resultStr)
+	resultBts = append(resultBts, 0)
+
 	if resultSize < len(resultBts) {
 		return 0
 	}
-	
+
 	copy(vm.Memory.Memory[resultOffset:], resultBts)
-	
+
 	return 0
 }
 
@@ -745,31 +768,31 @@ func envPailHomSub(vm *exec.VirtualMachine) int64 {
 	pubkeySize := int(int32(vm.GetCurrentFrame().Locals[5]))
 	resultOffset := int(int32(vm.GetCurrentFrame().Locals[6]))
 	resultSize := int(int32(vm.GetCurrentFrame().Locals[7]))
-	
-	cipher1 := vm.Memory.Memory[cipher1Offset : cipher1Offset + cipher1Size]
-	cipher2 := vm.Memory.Memory[cipher2Offset : cipher2Offset + cipher2Size]
-	pubkey := vm.Memory.Memory[pubkeyOffset : pubkeyOffset + pubkeySize]
+
+	cipher1 := vm.Memory.Memory[cipher1Offset : cipher1Offset+cipher1Size]
+	cipher2 := vm.Memory.Memory[cipher2Offset : cipher2Offset+cipher2Size]
+	pubkey := vm.Memory.Memory[pubkeyOffset : pubkeyOffset+pubkeySize]
 	cipher1 = append(cipher1, 0)
 	cipher2 = append(cipher2, 0)
 	pubkey = append(pubkey, 0)
-	
-    cipher1Ptr := (*C.char)(unsafe.Pointer(&cipher1[0]))
-    cipher2Ptr := (*C.char)(unsafe.Pointer(&cipher2[0]))
-    pubkeyPtr := (*C.char)(unsafe.Pointer(&pubkey[0]))
-    
-    resultPtr := C.pailHomSub(cipher1Ptr, cipher2Ptr, pubkeyPtr);
-    resultStr := C.GoString(resultPtr);
-    C.free(unsafe.Pointer(resultPtr))
 
-    resultBts := []byte(resultStr)
-    resultBts = append(resultBts, 0)
-	
+	cipher1Ptr := (*C.char)(unsafe.Pointer(&cipher1[0]))
+	cipher2Ptr := (*C.char)(unsafe.Pointer(&cipher2[0]))
+	pubkeyPtr := (*C.char)(unsafe.Pointer(&pubkey[0]))
+
+	resultPtr := C.pailHomSub(cipher1Ptr, cipher2Ptr, pubkeyPtr)
+	resultStr := C.GoString(resultPtr)
+	C.free(unsafe.Pointer(resultPtr))
+
+	resultBts := []byte(resultStr)
+	resultBts = append(resultBts, 0)
+
 	if resultSize < len(resultBts) {
 		return 0
 	}
-	
+
 	copy(vm.Memory.Memory[resultOffset:], resultBts)
-	
+
 	return 0
 }
 
@@ -788,51 +811,117 @@ func envNizkVerifyProof(vm *exec.VirtualMachine) int64 {
 	toPubkeySize := int(int32(vm.GetCurrentFrame().Locals[11]))
 	resultOffset := int(int32(vm.GetCurrentFrame().Locals[12]))
 	resultSize := int(int32(vm.GetCurrentFrame().Locals[13]))
-	
-	pai := vm.Memory.Memory[paiOffset : paiOffset + paiSize]
-	fromBalCipher := vm.Memory.Memory[fromBalCipherOffset : fromBalCipherOffset + fromBalCipherSize]
-	fromAmountCipher := vm.Memory.Memory[fromAmountCipherOffset : fromAmountCipherOffset + fromAmountCipherSize]
-	toAmountCipher := vm.Memory.Memory[toAmountCipherOffset : toAmountCipherOffset + toAmountCipherSize]
-	fromPubkey := vm.Memory.Memory[fromPubkeyOffset : fromPubkeyOffset + fromPubkeySize]
-	toPubkey := vm.Memory.Memory[toPubkeyOffset : toPubkeyOffset + toPubkeySize]
+
+	pai := vm.Memory.Memory[paiOffset : paiOffset+paiSize]
+	fromBalCipher := vm.Memory.Memory[fromBalCipherOffset : fromBalCipherOffset+fromBalCipherSize]
+	fromAmountCipher := vm.Memory.Memory[fromAmountCipherOffset : fromAmountCipherOffset+fromAmountCipherSize]
+	toAmountCipher := vm.Memory.Memory[toAmountCipherOffset : toAmountCipherOffset+toAmountCipherSize]
+	fromPubkey := vm.Memory.Memory[fromPubkeyOffset : fromPubkeyOffset+fromPubkeySize]
+	toPubkey := vm.Memory.Memory[toPubkeyOffset : toPubkeyOffset+toPubkeySize]
 	pai = append(pai, 0)
 	fromBalCipher = append(fromBalCipher, 0)
 	fromAmountCipher = append(fromAmountCipher, 0)
 	toAmountCipher = append(toAmountCipher, 0)
 	fromPubkey = append(fromPubkey, 0)
 	toPubkey = append(toPubkey, 0)
-	
-    paiPtr := (*C.char)(unsafe.Pointer(&pai[0]))
-    fromBalCipherPtr := (*C.char)(unsafe.Pointer(&fromBalCipher[0]))
-    fromAmountCipherPtr := (*C.char)(unsafe.Pointer(&fromAmountCipher[0]))
-    toAmountCipherPtr := (*C.char)(unsafe.Pointer(&toAmountCipher[0]))
-    fromPubkeyPtr := (*C.char)(unsafe.Pointer(&fromPubkey[0]))
-    toPubkeyPtr := (*C.char)(unsafe.Pointer(&toPubkey[0]))
-    
-    resultPtr := C.nizkVerifyProof(paiPtr, fromBalCipherPtr, fromAmountCipherPtr, toAmountCipherPtr, fromPubkeyPtr, toPubkeyPtr);
-    resultStr := C.GoString(resultPtr);
-    C.free(unsafe.Pointer(resultPtr))
 
-    resultBts := []byte(resultStr)
-    resultBts = append(resultBts, 0)
-	
+	paiPtr := (*C.char)(unsafe.Pointer(&pai[0]))
+	fromBalCipherPtr := (*C.char)(unsafe.Pointer(&fromBalCipher[0]))
+	fromAmountCipherPtr := (*C.char)(unsafe.Pointer(&fromAmountCipher[0]))
+	toAmountCipherPtr := (*C.char)(unsafe.Pointer(&toAmountCipher[0]))
+	fromPubkeyPtr := (*C.char)(unsafe.Pointer(&fromPubkey[0]))
+	toPubkeyPtr := (*C.char)(unsafe.Pointer(&toPubkey[0]))
+
+	resultPtr := C.nizkVerifyProof(paiPtr, fromBalCipherPtr, fromAmountCipherPtr, toAmountCipherPtr, fromPubkeyPtr, toPubkeyPtr)
+	resultStr := C.GoString(resultPtr)
+	C.free(unsafe.Pointer(resultPtr))
+
+	resultBts := []byte(resultStr)
+	resultBts = append(resultBts, 0)
+
 	if resultSize < len(resultBts) {
 		return 0
 	}
-	
+
 	copy(vm.Memory.Memory[resultOffset:], resultBts)
-	
+
 	return 0
 }
 
 func envSha3GasCost(vm *exec.VirtualMachine) (uint64, error) {
-	return 1, nil
+	return 1310, nil
+}
+
+func envGasPriceGasCost(vm *exec.VirtualMachine) (uint64, error) {
+	return 9, nil
+}
+func envBlockHashGasCost(vm *exec.VirtualMachine) (uint64, error) {
+	return 25, nil
+}
+func envNumberGasCost(vm *exec.VirtualMachine) (uint64, error) {
+	return 8, nil
+}
+func envGasLimitGasCost(vm *exec.VirtualMachine) (uint64, error) {
+	return 7, nil
+}
+
+func envTimestampGasCost(vm *exec.VirtualMachine) (uint64, error) {
+	return 8096, nil
+}
+
+func envCoinbaseGasCost(vm *exec.VirtualMachine) (uint64, error) {
+	return 27, nil
+}
+
+func envBalanceGasCost(vm *exec.VirtualMachine) (uint64, error) {
+	return 1609, nil
+}
+
+func envOriginGasCost(vm *exec.VirtualMachine) (uint64, error) {
+	return 28, nil
+}
+
+func envCallerGasCost(vm *exec.VirtualMachine) (uint64, error) {
+	return 35, nil
+}
+
+func envIsOwnerGasCost(vm *exec.VirtualMachine) (uint64, error) {
+	return 5077, nil
+}
+
+func envIsFromInitGasCost(vm *exec.VirtualMachine) (uint64, error) {
+	return 4, nil
+}
+func envCallValueGasCost(vm *exec.VirtualMachine) (uint64, error) {
+	return 215, nil
+}
+func envAddressGasCost(vm *exec.VirtualMachine) (uint64, error) {
+	return 79, nil
 }
 
 func constGasFunc(gas uint64) exec.GasCost {
 	return func(vm *exec.VirtualMachine) (uint64, error) {
 		return gas, nil
 	}
+}
+
+func envPailEncryptGasCost(vm *exec.VirtualMachine) (uint64, error) {
+	return 16371977, nil
+}
+func envPailHomAddGasCost(vm *exec.VirtualMachine) (uint64, error) {
+	return 2936, nil
+}
+func envPailHomSubGasCost(vm *exec.VirtualMachine) (uint64, error) {
+	return 2848, nil
+}
+func envNizkVerifyProofGasCost(vm *exec.VirtualMachine) (uint64, error) {
+	return 23188, nil
+}
+func envGetCallerNonceGasCost(vm *exec.VirtualMachine) (uint64, error) {
+	return 1358, nil
+}
+func envCallTransferGasCost(vm *exec.VirtualMachine) (uint64, error) {
+	return 1349, nil
 }
 
 //void emitEvent(const char *topic, size_t topicLen, const uint8_t *data, size_t dataLen);
@@ -855,7 +944,7 @@ func envEmitEvent(vm *exec.VirtualMachine) int64 {
 }
 
 func envEmitEventGasCost(vm *exec.VirtualMachine) (uint64, error) {
-	return 1, nil
+	return 2117, nil
 }
 
 func envSetState(vm *exec.VirtualMachine) int64 {
@@ -873,7 +962,7 @@ func envSetState(vm *exec.VirtualMachine) int64 {
 }
 
 func envSetStateGasCost(vm *exec.VirtualMachine) (uint64, error) {
-	return 1, nil
+	return 5132, nil
 }
 
 func envGetState(vm *exec.VirtualMachine) int64 {
@@ -893,7 +982,7 @@ func envGetState(vm *exec.VirtualMachine) int64 {
 }
 
 func envGetStateGasCost(vm *exec.VirtualMachine) (uint64, error) {
-	return 1, nil
+	return 4503, nil
 }
 
 func envGetStateSize(vm *exec.VirtualMachine) int64 {
@@ -905,7 +994,7 @@ func envGetStateSize(vm *exec.VirtualMachine) int64 {
 }
 
 func envGetStateSizeGasCost(vm *exec.VirtualMachine) (uint64, error) {
-	return 1, nil
+	return 4573, nil
 }
 
 // define: int64_t getNonce();
@@ -927,6 +1016,7 @@ func envCallTransfer(vm *exec.VirtualMachine) int64 {
 
 	vm.Context.GasUsed -= returnGas
 	if err != nil {
+
 		return 1
 	} else {
 		return 0
@@ -1010,13 +1100,24 @@ func envBCWasmDelegateCallString(vm *exec.VirtualMachine) int64 {
 }
 
 func envBCWasmCallGasCost(vm *exec.VirtualMachine) (uint64, error) {
-	return 1, nil
+	return 1231, nil
 }
 
 func envBCWasmCallInt64GasCost(vm *exec.VirtualMachine) (uint64, error) {
-	return 1, nil
+	return 1282, nil
 }
 
 func envBCWasmCallStringGasCost(vm *exec.VirtualMachine) (uint64, error) {
-	return 1, nil
+	return 1283, nil
+}
+func envBCWasmDelegateCallStringCost(vm *exec.VirtualMachine) (uint64, error) {
+	return 3826, nil
+}
+
+func envBCWasmDelegateCallInt64Cost(vm *exec.VirtualMachine) (uint64, error) {
+	return 3807, nil
+}
+
+func envBCWasmDelegateCallCost(vm *exec.VirtualMachine) (uint64, error) {
+	return 3469, nil
 }
