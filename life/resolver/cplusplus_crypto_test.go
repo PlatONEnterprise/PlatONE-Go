@@ -1,4 +1,4 @@
-//package resolver
+package resolver
 //
 //// #cgo CFLAGS: -I../softfloat/source/include
 //// #define SOFTFLOAT_FAST_INT64
