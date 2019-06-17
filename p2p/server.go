@@ -1039,11 +1039,11 @@ func (srv *Server) SetupConn(fd net.Conn, flags connFlag, dialDest *discover.Nod
 	deleted := common.SysCfg.GetDeletedNodes()
 	for _, node := range deleted {
 		if node.PublicKey == srv.Self().ID.String() {
-			srv.log.Warn("setupConn: I am in block list: ", "pubKey", node.PublicKey)
+			srv.log.Warn("setupConn: I am in blacklist: ", "pubKey", node.PublicKey)
 			return errors.New("shutdown")
 		}
 		if dialDest != nil && dialDest.ID.String() == node.PublicKey {
-			srv.log.Warn("setupConn: dialDest in block list: ", "pubKey", node.PublicKey)
+			srv.log.Warn("setupConn: dialDest in blacklist: ", "pubKey", node.PublicKey)
 			return errors.New("shutdown")
 		}
 	}

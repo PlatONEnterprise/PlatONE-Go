@@ -121,7 +121,7 @@ func (sb *backend) verifyHeader(chain consensus.ChainReader, header *types.Heade
 	}
 	//log.Info("VerifyHeader has pro2")
 	// Don't waste time checking blocks from the future
-	if header.Time.Cmp(big.NewInt(now().Unix() + 30)) > 0 {
+	if header.Time.Cmp(big.NewInt(now().Unix()+30)) > 0 {
 		return consensus.ErrFutureBlock
 	}
 
@@ -572,7 +572,7 @@ func (sb *backend) snapshot(chain consensus.ChainReader, number uint64, hash com
 			//}
 
 			addrs := make([]common.Address, 0)
-			for _, nodeId := range sb.config.InitialNodes {
+			for _, nodeId := range sb.config.ValidatorNodes {
 
 				prefix := make([]byte, 1)
 				prefix[0] = 4
