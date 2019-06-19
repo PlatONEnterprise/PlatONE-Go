@@ -62,6 +62,47 @@ func NewWASMInterpreter(evm *EVM, cfg Config) *WASMInterpreter {
 	}
 }
 
+// check if the called functin in the abi
+func  (in *WASMInterpreter) preCheckFunction(contract *Contract, input []byte, abi []byte) (bool,  *common.Address,error){
+
+	var txData [][]byte
+	containFunc := false
+
+	if err := rlp.DecodeBytes(input, &txData); err != nil {
+		return containFunc,nil,err
+	}
+	if len(txData) < 2{
+		return containFunc,nil,errors.New("Too few elements in tx.data")
+	}
+
+	funcName := string(txData[1])
+	wasmabi := new(utils.WasmAbi)
+
+	err := wasmabi.FromJson(abi)
+	if err != nil {
+		return containFunc, nil,err
+	}
+
+	for _,obj := range wasmabi.AbiArr{
+		if obj.Name == funcName{
+			containFunc = true
+			break
+		}
+	}
+	if !containFunc{
+		statedb := NewWasmStateDB(in.wasmStateDB, contract)
+		key :=[]byte("currentManagerName")
+		key = append(key,byte(0))
+		key = append([]byte{byte(len(key))}, key...)
+
+		cnsManagerAddr := common.HexToAddress(string(statedb.GetState(key)[1:]))
+
+		return false, &cnsManagerAddr,nil
+	}
+
+	return containFunc,nil,nil
+}
+
 // Run loops and evaluates the contract's code with the given input data and returns.
 // the return byte-slice and an error if one occurred
 //
@@ -93,6 +134,22 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 		return nil, er
 	}
 
+	if contract.self.Address() == common.HexToAddress("0x0000000000000000000000000000000000000011"){
+		containFunction,addr,err :=  in.preCheckFunction(contract,input,abi)
+		if err != nil{
+			return nil,err
+		}
+
+		if !containFunction{
+			contract.self = ContractRef(AccountRef(*addr))
+			contract.SetCallCode(addr, in.evm.StateDB.GetCodeHash(*addr), in.evm.StateDB.GetCode(*addr))
+
+			_, abi, code, er = parseRlpData(contract.Code)
+			if er != nil {
+				return nil, er
+			}
+		}
+	}
 	context := &exec.VMContext{
 		Config:   DEFAULT_VM_CONFIG,
 		Addr:     contract.Address(),
