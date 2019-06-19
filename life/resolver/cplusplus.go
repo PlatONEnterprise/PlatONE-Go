@@ -859,14 +859,14 @@ func envBlockHashGasCost(vm *exec.VirtualMachine) (uint64, error) {
 	return 25, nil
 }
 func envNumberGasCost(vm *exec.VirtualMachine) (uint64, error) {
-	return 8, nil
+	return 9, nil
 }
 func envGasLimitGasCost(vm *exec.VirtualMachine) (uint64, error) {
 	return 7, nil
 }
 
 func envTimestampGasCost(vm *exec.VirtualMachine) (uint64, error) {
-	return 8096, nil
+	return 9, nil
 }
 
 func envCoinbaseGasCost(vm *exec.VirtualMachine) (uint64, error) {
