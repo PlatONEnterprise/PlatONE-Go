@@ -541,7 +541,7 @@ func (sb *backend) snapshot(chain consensus.ChainReader, number uint64, hash com
 	for snap == nil {
 		// If an in-memory snapshot was found, use that
 		if s, ok := sb.recents.Get(hash); ok {
-			log.Info("get snap with this hash", "hash", hash)
+			//log.Info("get snap with this hash", "hash", hash)
 			snap = s.(*Snapshot)
 			break
 		}
