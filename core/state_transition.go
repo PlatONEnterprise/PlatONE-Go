@@ -17,21 +17,21 @@
 package core
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/life/utils"
-	"math"
-	"math/big"
-	"strings"
-
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
+	"github.com/PlatONEnetwork/PlatONE-Go/life/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"math"
+	"math/big"
+	"strings"
 )
 
 var (
@@ -571,6 +571,11 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 			list = append(list, fwElem)
 		}
 
+	} else  if  funcName == "__sys_FwImport"{
+		if len(fwData) != 3 {
+			log.Debug("FW : error, wrong function parameters!")
+			return nil, 0, fwErr
+		}
 	} else {
 		log.Debug("FW : error, wrong function name!")
 		return nil, 0, fwErr
@@ -589,6 +594,8 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 		stateDb.FwDel(contractAddr, act, list)
 	case "__sys_FwSet":
 		stateDb.FwSet(contractAddr, act, list)
+	case "__sys_FwImport":
+		stateDb.FwImport(contractAddr,fwData[2])
 	default:
 		// "__sys_FwStatus"
 		fwStatus = stateDb.GetFwStatus(contractAddr)
@@ -670,7 +677,7 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 		// not assigned to err, except for insufficient balance
 		// error.
 		vmerr error
-
+		//conAddr common.Address
 		msg    = st.msg
 		sender = vm.AccountRef(msg.From())
 	)
@@ -711,9 +718,20 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 	if err = st.useGas(gas); err != nil {
 		return nil, 0, false, err
 	}
-
 	if contractCreation {
+		//check sender permisson
+		res, err := checkSenderPermission(sender.Address(), evm)
+		if err != nil {
+			st.state.SetNonce(msg.From(), st.state.GetNonce(sender.Address())+1)
+			log.Debug("VM returned with error", "err", vmerr)
+			return nil, 0, true, nil
+		}
+		if !res {
+			st.state.SetNonce(msg.From(), st.state.GetNonce(sender.Address())+1)
+			return nil, 0, true, FirewallErr
+		}
 		ret, _, st.gas, vmerr = evm.Create(sender, st.data, st.gas, st.value)
+		//st.state.OpenFirewall(conAddr)
 	} else {
 		if msg.TxType() != types.CnsTxType {
 			st.state.SetNonce(msg.From(), st.state.GetNonce(sender.Address())+1)
@@ -833,3 +851,67 @@ func (st *StateTransition) refundGas() {
 func (st *StateTransition) gasUsed() uint64 {
 	return st.initialGas - st.gas
 }
+
+
+func checkSenderPermission(sender common.Address, evm *vm.EVM) (bool, error){
+	valid, err := isValidUser(sender, evm)
+	if err != nil {
+		return false, err
+	}
+	if !valid {
+		return false, nil
+	}
+	conAddr, found := getContractAddr("__sys_RoleManager")
+	if !found {
+		return true, nil
+	}
+	res, err := callContractByFw(conAddr, "getRolesByAddress", sender, evm)
+	if err != nil {
+		return false, err
+	}
+	roles := string(res[:])
+	if  strings.Contains(roles, "contractAdmin")  || strings.Contains(roles, "chainCreator") ||
+		strings.Contains(roles, "chainAdmin") || strings.Contains(roles, "contractDeployer") {
+		return true, nil
+	}
+	return false, nil
+
+}
+
+
+
+func isValidUser(sender common.Address, evm *vm.EVM) (bool, error) {
+
+	conAddr, found := getContractAddr("__sys_UserManager")
+	if !found {
+		return true, nil
+	}
+	res, err := callContractByFw(conAddr, "isValidUser", sender, evm)
+	if err != nil {
+		return false, err
+	}
+	valid := common.CallResAsInt64(res)
+	if valid > 0 {
+		return true, nil
+	}
+	return false, nil
+}
+
+func getContractAddr(cn string)(common.Address, bool) {
+	conAddr := common.SysCfg.GetContractAddress(cn)
+	if constr := conAddr.String(); strings.Compare(constr,"0x0000000000000000000000000000000000000000") == 0 {
+		return  common.Address{}, false
+	}
+	return conAddr, true
+
+}
+
+func callContractByFw(conAddr common.Address, fn string, sender common.Address, evm *vm.EVM) ([]byte, error) {
+	useraddr := hex.EncodeToString(sender[:])
+	callParams := []interface{}{useraddr}
+	data := common.GenCallData(fn, callParams)
+	res, _, err := evm.Call(vm.AccountRef(common.Address{}), conAddr, data, uint64(0xffffffffff), big.NewInt(0))
+	return res, err
+
+}
+

@@ -110,20 +110,23 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	vmenv := vm.NewEVM(context, statedb, config, cfg)
 	// Apply the transaction to the current state (included in the env)
 	_, gas, failed, err := ApplyMessage(vmenv, msg, gp)
+
 	if err != nil {
-		if err == FirewallErr{
-			errLog := &types.Log{
-				Address:*msg.To(),
-				Topics: make([]common.Hash,1),
-				Data:	[]byte(err.Error()),
-				BlockNumber:context.BlockNumber.Uint64(),
+		switch err {
+		case FirewallErr:
+			topics := []common.Hash{common.BytesToHash(crypto.Keccak256([]byte("contract creation")))}
+			log := &types.Log{
+				Address:     msg.From(),
+				Topics:      topics,
+				Data:        []byte(err.Error()),
+				BlockNumber: vmenv.BlockNumber.Uint64(),
 			}
-			statedb.AddLog(errLog)
-			err = nil
-		}else{
+			statedb.AddLog(log)
+		default:
 			return nil, 0, err
 		}
 	}
+
 	// Update the state with pending changes
 	var root []byte
 	if config.IsByzantium(header.Number) {
@@ -146,5 +149,5 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	receipt.Logs = statedb.GetLogs(tx.Hash())
 	receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
 
-	return receipt, gas, err
+	return receipt, gas, nil
 }
