@@ -25,6 +25,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"fmt"
@@ -114,11 +115,14 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	if err != nil {
 		switch err {
 		case FirewallErr:
-			topics := []common.Hash{common.BytesToHash(crypto.Keccak256([]byte("contract creation")))}
+			data :=[][]byte{}
+			data = append(data, []byte(err.Error()))
+			encodeData,_:= rlp.EncodeToBytes(data)
+			topics := []common.Hash{common.BytesToHash(crypto.Keccak256([]byte("contract permission")))}
 			log := &types.Log{
 				Address:     msg.From(),
 				Topics:      topics,
-				Data:        []byte(err.Error()),
+				Data:        encodeData,
 				BlockNumber: vmenv.BlockNumber.Uint64(),
 			}
 			statedb.AddLog(log)

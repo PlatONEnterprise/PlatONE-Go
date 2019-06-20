@@ -41,7 +41,7 @@ var (
 const CnsManagerAddr string = "0x0000000000000000000000000000000000000011"
 
 var fwErr = errors.New("firewall error!")
-var FirewallErr = errors.New("Refused by the firewall!")
+var FirewallErr = errors.New("Permission Denied!")
 
 /*
 A state transition is a change made when a transaction is applied to the current world state
@@ -854,6 +854,19 @@ func (st *StateTransition) gasUsed() uint64 {
 
 
 func checkSenderPermission(sender common.Address, evm *vm.EVM) (bool, error){
+	conAddr, found := getContractAddr("__sys_ParamManager")
+	if !found || (conAddr == common.Address{}) {
+		return true, nil
+	}
+	res, err := callContractByFw(conAddr, "getAllowAnyAccountDeployContract", sender, evm)
+	if err != nil {
+		return true, nil
+	}
+	allowAny := common.CallResAsInt64(res)
+	if allowAny == 0{
+		return true, nil
+	}
+
 	valid, err := isValidUser(sender, evm)
 	if err != nil {
 		return false, err
@@ -861,11 +874,11 @@ func checkSenderPermission(sender common.Address, evm *vm.EVM) (bool, error){
 	if !valid {
 		return false, nil
 	}
-	conAddr, found := getContractAddr("__sys_RoleManager")
+	conAddr, found = getContractAddr("__sys_RoleManager")
 	if !found {
 		return true, nil
 	}
-	res, err := callContractByFw(conAddr, "getRolesByAddress", sender, evm)
+	res, err = callContractByFw(conAddr, "getRolesByAddress", sender, evm)
 	if err != nil {
 		return false, err
 	}
@@ -899,11 +912,10 @@ func isValidUser(sender common.Address, evm *vm.EVM) (bool, error) {
 
 func getContractAddr(cn string)(common.Address, bool) {
 	conAddr := common.SysCfg.GetContractAddress(cn)
-	if constr := conAddr.String(); strings.Compare(constr,"0x0000000000000000000000000000000000000000") == 0 {
+	if (conAddr == common.Address{}){
 		return  common.Address{}, false
 	}
 	return conAddr, true
-
 }
 
 func callContractByFw(conAddr common.Address, fn string, sender common.Address, evm *vm.EVM) ([]byte, error) {

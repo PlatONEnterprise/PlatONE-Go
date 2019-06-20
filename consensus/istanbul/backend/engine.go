@@ -546,17 +546,17 @@ func (sb *backend) snapshot(chain consensus.ChainReader, number uint64, hash com
 			break
 		}
 		// If an on-disk checkpoint snapshot can be found, use that
-		//if number%checkpointInterval == 0 {
-		//	if s, err := loadSnapshot(sb.config.Epoch, sb.db, hash); err == nil {
-		//		log.Trace("Loaded voting snapshot form disk", "number", number, "hash", hash)
-		//		snap = s
-		//		break
-		//	}
-		//}
+		if number%checkpointInterval == 0 {
+			if s, err := loadSnapshot(sb.config.Epoch, sb.db, hash); err == nil {
+				log.Trace("Loaded voting snapshot form disk", "number", number, "hash", hash)
+				snap = s
+				break
+			}
+		}
 		// If we're at block zero, make a snapshot
 		if number == 0 {
 			// linqi
-			log.Info("when block is zero")
+
 			genesis := chain.GetHeaderByNumber(0)
 
 			if err := sb.VerifyHeader(chain, genesis, false); err != nil {
@@ -612,13 +612,7 @@ func (sb *backend) snapshot(chain consensus.ChainReader, number uint64, hash com
 		}
 		headers = append(headers, header)
 		number, hash = number-1, header.ParentHash
-
-		log.Info("end make nil snap")
 	}
-
-	//if sb.chain == nil{
-	//	return nil, errors.New("chain not ready")
-	//}
 
 	// Previous snapshot found, apply any pending headers on top of it
 	for i := 0; i < len(headers)/2; i++ {

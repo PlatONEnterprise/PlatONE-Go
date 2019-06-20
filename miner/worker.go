@@ -666,7 +666,6 @@ func (w *worker) taskLoop() {
 				w.newTaskHook(task)
 			}
 			// Reject duplicate sealing work due to resubmitting.
-			//todo: SealHash()做了神码
 			sealHash := w.engine.SealHash(task.block.Header())
 			if sealHash == prev {
 				continue
@@ -725,7 +724,7 @@ func (w *worker) resultLoop() {
 		select {
 		case block := <-w.resultCh:
 			// Short circuit when receiving empty result.
-			log.Info("^********************resultCh blockNumber is ", "number", block.Number())
+			log.Info("ResultCh Block", "number", block.Number())
 			if block == nil {
 				continue
 			}
@@ -1214,9 +1213,8 @@ func (w *worker) commitNewWork(interrupt *int32, noempty bool, timestamp int64, 
 		parent = commitBlock
 		//timestamp = time.Now().UnixNano() / 1e6
 	} else if _, ok := w.engine.(consensus.Istanbul); ok{
-		//TODO: 父区块如何选择, 目前按照Istanbul协议，选取当前最高区块
 		parent = w.chain.CurrentBlock()
-		log.Info("parentBlock Number: " + parent.Number().String())
+		//log.Info("parentBlock Number: " + parent.Number().String())
 	} else {
 		parent = w.chain.CurrentBlock()
 		if parent.Time().Cmp(new(big.Int).SetInt64(timestamp)) >= 0 {
@@ -1303,7 +1301,6 @@ func (w *worker) commitNewWork(interrupt *int32, noempty bool, timestamp int64, 
 
 	// Short circuit if there is no available pending transactions
 	if len(pending) == 0 {
-		// todo No empty block 是否出空块开关.目前默认出空块
 		if "off" == w.EmptyBlock {
 			//return
 		}
