@@ -52,6 +52,7 @@ type SystemParameter struct {
 	CBFTTime        CBFTProduceBlockCfg
 	GasContractName string
 	GasContractAddr Address
+	AllowAnyAccoutDeploy int64
 }
 
 type SystemConfig struct {
@@ -93,6 +94,12 @@ func (sc *SystemConfig) UpdateSystemConfig() {
 	}
 
 	sysContractCall(sc)
+}
+
+func (sc *SystemConfig) GetIfAllowAnyoneDeploy() int64{
+	sc.SystemConfigMu.RLock()
+	defer sc.SystemConfigMu.RUnlock()
+	return sc.SysParam.AllowAnyAccoutDeploy
 }
 
 func (sc *SystemConfig) GetBlockGasLimit() int64 {

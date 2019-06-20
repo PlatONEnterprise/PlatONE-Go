@@ -854,15 +854,7 @@ func (st *StateTransition) gasUsed() uint64 {
 
 
 func checkSenderPermission(sender common.Address, evm *vm.EVM) (bool, error){
-	conAddr, found := getContractAddr("__sys_ParamManager")
-	if !found || (conAddr == common.Address{}) {
-		return true, nil
-	}
-	res, err := callContractByFw(conAddr, "getAllowAnyAccountDeployContract", sender, evm)
-	if err != nil {
-		return true, nil
-	}
-	allowAny := common.CallResAsInt64(res)
+	allowAny := common.SysCfg.GetIfAllowAnyoneDeploy()
 	if allowAny == 0{
 		return true, nil
 	}
@@ -874,11 +866,11 @@ func checkSenderPermission(sender common.Address, evm *vm.EVM) (bool, error){
 	if !valid {
 		return false, nil
 	}
-	conAddr, found = getContractAddr("__sys_RoleManager")
+	conAddr, found := getContractAddr("__sys_RoleManager")
 	if !found {
 		return true, nil
 	}
-	res, err = callContractByFw(conAddr, "getRolesByAddress", sender, evm)
+	res, err := callContractByFw(conAddr, "getRolesByAddress", sender, evm)
 	if err != nil {
 		return false, err
 	}
