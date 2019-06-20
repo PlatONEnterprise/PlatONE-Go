@@ -813,7 +813,7 @@ func (pool *TxPool) validateTx(tx *types.Transaction, local bool) error {
 	strRes := common.CallResAsString(btsRes)
 	*/
 
-	txGasLimit := int64(10000000000000)
+	//txGasLimit := int64(10000000000000)
 	/*
 	if len(strRes) == 0 {
 		log.Trace("contract not exist", "name", "__sys_ParamManager")
@@ -825,11 +825,11 @@ func (pool *TxPool) validateTx(tx *types.Transaction, local bool) error {
 		}
 	}
 	*/
-	if common.SysCfg != nil{
-	    txGasLimit = common.SysCfg.GetTxGasLimit()
-	}
+	//if common.SysCfg != nil{
+	//    txGasLimit = common.SysCfg.GetTxGasLimit()
+	//}
 
-	log.Debug("validateTx test", "txslimit", txGasLimit)
+	//log.Debug("validateTx test", "txslimit", txGasLimit)
 	//if uint64(txGasLimit) < tx.Gas() {
 	//	return ErrTransactionGasLimit
 	//}

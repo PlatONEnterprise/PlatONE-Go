@@ -31,7 +31,7 @@ func (c *core) sendPreprepare(request *istanbul.Request) {
 	logger := c.logger.New("state", c.state)
 	// If I'm the proposer and I have the same sequence with the proposal
 	if c.current.Sequence().Cmp(request.Proposal.Number()) == 0 && c.IsProposer() {
-		logger.Info("*****************sendPreprepare**************")
+		//logger.Info("*****************sendPreprepare**************")
 		curView := c.currentView()
 		preprepare := &istanbul.Preprepare{
 			View:           curView,
@@ -63,7 +63,7 @@ func (c *core) sendPreprepare(request *istanbul.Request) {
 
 func (c *core) handlePreprepare(msg *message, src istanbul.Validator) error {
 	logger := c.logger.New("from", src, "state", c.state)
-	logger.Info("*********************handlePreprepare*****************************")
+	//logger.Info("*********************handlePreprepare*****************************")
 	// Decode PRE-PREPARE
 	var preprepare *istanbul.Preprepare
 	err := msg.Decode(&preprepare)
@@ -147,7 +147,7 @@ func (c *core) handlePreprepare(msg *message, src istanbul.Validator) error {
 
 func (c *core) handlePOLPreprepare(src istanbul.Validator, preprepare *istanbul.Preprepare) error {
 	logger := c.logger.New("from", src, "state", c.state)
-	logger.Info("*********************handlePOLPreprepare*****************************")
+	logger.Info("handlePOLPreprepare")
 
 	_, r, err := rlp.EncodeToReader(preprepare.LockedPrepares)
 	if nil != err {

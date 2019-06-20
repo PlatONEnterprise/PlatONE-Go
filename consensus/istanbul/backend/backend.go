@@ -157,13 +157,10 @@ func (sb *backend) Gossip(valSet istanbul.ValidatorSet, payload []byte) error {
 			targets[val.Address()] = true
 		}
 	}
-	/*if sb.broadcaster == nil{
-		log.Error("^^^^^^^^^^^^^^^     sb.broadcaster == nil")
-	}*/
+
 	if sb.broadcaster != nil && len(targets) > 0 {
 		ps := sb.broadcaster.FindPeers(targets)
 		for addr, p := range ps {
-			//log.Info(fmt.Sprintf("^^^^^^^^^^^^^^^^^^^^     FindPeers address: %s", addr.String()))
 			ms, ok := sb.recentMessages.Get(addr)
 			var m *lru.ARCCache
 			if ok {

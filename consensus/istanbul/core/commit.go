@@ -39,7 +39,7 @@ func (c *core) sendCommitForOldBlock(view *istanbul.View, digest common.Hash) {
 
 func (c *core) broadcastCommit(sub *istanbul.Subject) {
 	logger := c.logger.New("state", c.state)
-	logger.Info("*********************sendCommit*****************************")
+	// logger.Info("*********************sendCommit*****************************")
 	encodedSubject, err := Encode(sub)
 	if err != nil {
 		logger.Error("Failed to encode", "subject", sub)
@@ -53,7 +53,7 @@ func (c *core) broadcastCommit(sub *istanbul.Subject) {
 
 func (c *core) handleCommit(msg *message, src istanbul.Validator) error {
 	logger := c.logger.New("from", src, "state", c.state)
-	logger.Debug("*********************handleCommit*****************************")
+	// logger.Debug("*********************handleCommit*****************************")
 	// Decode COMMIT message
 	var commit *istanbul.Subject
 	err := msg.Decode(&commit)
@@ -68,16 +68,16 @@ func (c *core) handleCommit(msg *message, src istanbul.Validator) error {
 	if err := c.verifyCommit(commit, src); err != nil {
 		return err
 	}
-	log.Debug("handleCommit", "c.current.Commits.Size()", c.current.Commits.Size(), "c.valSet.Size()", c.valSet.Size(), "c.valSet.F()", c.valSet.F())
+	// log.Debug("handleCommit", "c.current.Commits.Size()", c.current.Commits.Size(), "c.valSet.Size()", c.valSet.Size(), "c.valSet.F()", c.valSet.F())
 	c.acceptCommit(msg, src)
 
 	// Commit the proposal once we have enough COMMIT messages and we are not in the Committed state.
 	//
 	// If we already have a proposal, we may have chance to speed up the consensus process
 	// by committing the proposal without PREPARE messages.
-	log.Debug("handleCommit", "c.current.Commits.Size()", c.current.Commits.Size(), "c.valSet.Size()", c.valSet.Size(), "c.valSet.F()", c.valSet.F())
+	log.Debug("handleCommit", "commit_counts", c.current.Commits.Size(), "valSet_counts", c.valSet.Size(), "valSet_F", c.valSet.F())
 	if c.current.Commits.Size() >= /*2*c.valSet.F()*/ c.valSet.Size()-c.valSet.F() && c.state.Cmp(StateCommitted) < 0 {
-		logger.Info("*********************get Enough 2/3 handleCommit*****************************")
+		logger.Debug("Get enough 2/3 commit messages")
 		// Still need to call LockHash here since state can skip Prepared state and jump directly to the Committed state.
 		c.current.LockHash()
 		c.commit()
