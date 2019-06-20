@@ -120,6 +120,7 @@ func (sc *SystemConfig) GetTxGasLimit() int64 {
 		return 10000000000000
 	}
 	return sc.SysParam.TxGasLimit
+	//return 10000000000
 }
 
 func (sc *SystemConfig) GetHighsetNumber() *big.Int {
