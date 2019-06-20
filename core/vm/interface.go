@@ -87,6 +87,8 @@ type StateDB interface {
 	OpenFirewall(contractAddr common.Address)
 	CloseFirewall(contractAddr common.Address)
 	IsFwOpened(contractAddr common.Address) bool
+
+	FwImport(contractAddr common.Address, data []byte) error
 }
 
 // CallContext provides a basic interface for the EVM calling conventions. The EVM
