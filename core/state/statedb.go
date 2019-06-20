@@ -19,6 +19,8 @@ package state
 
 import (
 	"bytes"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"math/big"
 	"sort"
@@ -828,7 +830,9 @@ func (s *StateDB) SetFwStatus(addr common.Address, status FwStatus) {
 	s.FwSet(addr, REJECT, denied)
 }
 
-func (s *StateDB) GetFwStatus(addr common.Address) (FwStatus) {
+
+
+func (s *StateDB) GetFwStatus(addr common.Address) FwStatus {
 	stateObject := s.getStateObject(addr)
 	if stateObject == nil{
 		return FwStatus{
@@ -886,6 +890,20 @@ func (s *StateDB) GetFwStatus(addr common.Address) (FwStatus) {
 		AcceptedList:acceptedList,
 	}
 }
+
+
+func (s *StateDB) FwImport(addr common.Address, data []byte) error {
+		status := FwStatus{}
+		err := json.Unmarshal(data, &status)
+		if err != nil{
+			return errors.New("Firewall import failed")
+		}
+		s.SetFwStatus(addr,status)
+		return nil
+}
+
+
+
 func (s *StateDB) SetContractCreator(addr, creator common.Address)  {
 	stateObject := s.GetOrNewStateObject(addr)
 	stateObject.SetContractCreator(creator)

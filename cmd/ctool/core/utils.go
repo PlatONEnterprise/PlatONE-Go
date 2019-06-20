@@ -3,13 +3,12 @@ package core
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )
 
 const (
@@ -167,14 +166,69 @@ func GetFuncNameAndParams(funcAndParams string) (string, []string) {
 		return funcName, []string{}
 	}
 
-	params := strings.Split(paramString, ",")
+	symStack := []rune{}
+	splitPos := []int{}
+
+	for i,s:= range paramString{
+		switch s {
+		case ',':
+			if len(symStack) == 0{
+				splitPos = append(splitPos,i)
+			}
+		case '{':
+			symStack = append(symStack, '{')
+		case '}':
+			if len(symStack) < 1{
+				panic("parameter's format is not write!!!")
+			}
+			if symStack[len(symStack) - 1] == '{'{
+				symStack = symStack[:len(symStack) - 1]
+			}
+		case '[':
+			symStack = append(symStack, '[')
+		case ']':
+			if len(symStack) < 1{
+				panic("parameter's format is not write!!!")
+			}
+			if symStack[len(symStack) - 1] == '['{
+				symStack = symStack[:len(symStack) - 1]
+			}
+		case '(':
+			symStack = append(symStack, '(')
+		case ')':
+			if len(symStack) < 1{
+				panic("parameter's format is not write!!!")
+			}
+			if symStack[len(symStack) - 1] == '('{
+				symStack = symStack[:len(symStack) - 1]
+			}
+		case '"':
+			if len(symStack) < 1{
+				symStack = append(symStack, '"')
+			}else{
+				if symStack[len(symStack) - 1] == '"'{
+					symStack = symStack[:len(symStack) - 1]
+				}else{
+					symStack = append(symStack, '"')
+				}
+			}
+		}
+	}
+	params := []string{}
+	lastPos := 0
+	for _,i:=range splitPos{
+		params = append(params, paramString[lastPos:i])
+		lastPos = i+1
+	}
+	params = append(params, paramString[lastPos:])
+
+	//params := strings.Split(paramString, ",")
 	for index, param := range params {
 		if strings.HasPrefix(param, "\"") {
 			params[index] = param[strings.Index(param, "\"")+1 : strings.LastIndex(param, "\"")]
 		}
 	}
 	return funcName, params
-
 }
 
 /**
