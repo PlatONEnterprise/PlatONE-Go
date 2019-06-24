@@ -175,12 +175,12 @@ func InitInnerCallFunc(ethPtr *Ethereum) {
 					sc.SysParam.BlockGasLimit = ret
 				}
 			}
-			funcName = "getAllowAnyAccountDeployContract"
+			funcName = "getCheckContractDeployPermission"
 			funcParams = []interface{}{}
 			res = callContract(paramAddr, common.GenCallData(funcName, funcParams))
 			if res != nil {
 				ret := common.CallResAsInt64(res)
-				sc.SysParam.AllowAnyAccoutDeploy = ret
+				sc.SysParam.CheckContractDeployPermission = ret
 			}
 
 			funcName = "getCBFTTimeParam"
