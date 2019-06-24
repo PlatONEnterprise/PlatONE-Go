@@ -854,7 +854,7 @@ func (st *StateTransition) gasUsed() uint64 {
 
 
 func checkSenderPermission(sender common.Address, evm *vm.EVM) (bool, error){
-	allowAny := common.SysCfg.GetIfAllowAnyoneDeploy()
+	allowAny := common.SysCfg.IfCheckContractDeployPermission()
 	if allowAny == 0{
 		return true, nil
 	}
