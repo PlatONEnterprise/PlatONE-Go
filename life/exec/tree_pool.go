@@ -2,7 +2,6 @@ package exec
 
 import (
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"math"
 	"sync"
 )
@@ -106,7 +105,7 @@ func (tp *TreePool) PutTree(tree []int) {
 	key := int(math.Log2(float64(pages)))
 
 	if tree[0] != size {
-		log.Debug("reset memory tree...")
+		//log.Debug("reset memory tree...")
 		reset(tree, tp.trees[key], tp.emptyTree[key])
 	}
 	treeArr, ok := tp.trees[key]
