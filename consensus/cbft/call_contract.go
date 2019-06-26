@@ -4,7 +4,6 @@ import (
 	//"encoding/json"
 	"errors"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 )
@@ -77,7 +76,7 @@ func getConsensusNodesList() ([]discover.NodeID, error) {
 	nodeIDs := make([]discover.NodeID, 0, len(tmp))
 	for _, dataObj := range tmp {
 		if pubKey := dataObj.PublicKey; len(pubKey) > 0 {
-			log.Debug("Consensus node", "PublicKey", pubKey)
+			//log.Debug("Consensus node", "PublicKey", pubKey)
 			if nodeID, err := discover.HexID(pubKey); err == nil {
 				nodeIDs = append(nodeIDs, nodeID)
 			}
