@@ -436,7 +436,7 @@ func (m *Message) Data() []byte         { return m.data }
 func (m *Message) CheckNonce() bool     { return m.checkNonce }
 func (m *Message) TxType() uint64       { return m.txType }
 
-func (m *Message) SetTo(to common.Address) { m.to.SetBytes(to.Bytes()) }
+func (m *Message) SetTo(to common.Address) { m.to=&to }
 func (m *Message) SetData(b []byte)        { m.data = b }
 func (m *Message) SetTxType(src uint64)    { m.txType = src }
 func (m *Message) SetNonce(n uint64)       { m.nonce = n }
