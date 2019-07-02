@@ -42,7 +42,7 @@ var (
 	// MainnetChainConfig is the chain parameters to run a node on the main network.
 	MainnetChainConfig = &ChainConfig{
 		ChainID:             big.NewInt(1),
-		EmptyBlock:			 "on",
+		EmptyBlock:          "on",
 		HomesteadBlock:      big.NewInt(1150000),
 		DAOForkBlock:        big.NewInt(1920000),
 		DAOForkSupport:      true,
@@ -70,7 +70,7 @@ var (
 	// TestnetChainConfig contains the chain parameters to run a node on the Ropsten test network.
 	TestnetChainConfig = &ChainConfig{
 		ChainID:             big.NewInt(3),
-		EmptyBlock:			 "on",
+		EmptyBlock:          "on",
 		HomesteadBlock:      big.NewInt(0),
 		DAOForkBlock:        nil,
 		DAOForkSupport:      true,
@@ -94,7 +94,7 @@ var (
 	// RinkebyChainConfig contains the chain parameters to run a node on the Rinkeby test network.
 	RinkebyChainConfig = &ChainConfig{
 		ChainID:             big.NewInt(4),
-		EmptyBlock:			 "on",
+		EmptyBlock:          "on",
 		HomesteadBlock:      big.NewInt(1),
 		DAOForkBlock:        nil,
 		DAOForkSupport:      true,
@@ -112,7 +112,7 @@ var (
 
 	GrapeChainConfig = &ChainConfig{
 		ChainID:             big.NewInt(304),
-		EmptyBlock:			 "on",
+		EmptyBlock:          "on",
 		HomesteadBlock:      big.NewInt(1),
 		DAOForkBlock:        nil,
 		DAOForkSupport:      true,
@@ -123,9 +123,9 @@ var (
 		ByzantiumBlock:      big.NewInt(1035301),
 		ConstantinopleBlock: nil,
 		Cbft: &CbftConfig{
-			Period: 3,
-			Epoch:  30000,
-			Duration:  30,
+			Period:   3,
+			Epoch:    30000,
+			Duration: 30,
 		},
 	}
 	// RinkebyTrustedCheckpoint contains the light client trusted checkpoint for the Rinkeby test network.
@@ -142,18 +142,18 @@ var (
 	//
 	// This configuration is intentionally not using keyed fields to force anyone
 	// adding flags to the config to also have to set these fields.
-	AllEthashProtocolChanges = &ChainConfig{big.NewInt(1337), "",big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil,  nil, nil, nil,""}
+	AllEthashProtocolChanges = &ChainConfig{big.NewInt(1337), "", big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, nil, nil, nil, ""}
 
 	// AllCliqueProtocolChanges contains every protocol change (EIPs) introduced
 	// and accepted by the Ethereum core developers into the Clique consensus.
 	//
 	// This configuration is intentionally not using keyed fields to force anyone
 	// adding flags to the config to also have to set these fields.
-	AllCliqueProtocolChanges = &ChainConfig{big.NewInt(1337), "",big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil,  &CliqueConfig{Period: 0, Epoch: 30000}, nil, nil,""}
+	AllCliqueProtocolChanges = &ChainConfig{big.NewInt(1337), "", big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, &CliqueConfig{Period: 0, Epoch: 30000}, nil, nil, ""}
 
-	TestChainConfig = &ChainConfig{big.NewInt(1), "",big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil,  nil, nil, nil,""}
+	TestChainConfig = &ChainConfig{big.NewInt(1), "", big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, nil, nil, nil, ""}
 
-	AllCbftProtocolChanges = &ChainConfig{big.NewInt(1337), "",big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, nil, new(CbftConfig), nil,""}
+	AllCbftProtocolChanges = &ChainConfig{big.NewInt(1337), "", big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, nil, new(CbftConfig), nil, ""}
 	TestRules              = TestChainConfig.Rules(new(big.Int))
 )
 
@@ -174,9 +174,9 @@ type TrustedCheckpoint struct {
 // ChainConfig is stored in the database on a per block basis. This means
 // that any network, identified by its genesis block, can have its own
 // set of configuration options.
-type 	ChainConfig struct {
-	ChainID *big.Int `json:"chainId"` // chainId identifies the current chain and is used for replay protection
-	EmptyBlock string `json:"emptyBlock"`
+type ChainConfig struct {
+	ChainID        *big.Int `json:"chainId"` // chainId identifies the current chain and is used for replay protection
+	EmptyBlock     string   `json:"emptyBlock"`
 	HomesteadBlock *big.Int `json:"homesteadBlock,omitempty"` // Homestead switch block (nil = no fork, 0 = already homestead)
 
 	DAOForkBlock   *big.Int `json:"daoForkBlock,omitempty"`   // TheDAO hard-fork switch block (nil = no fork)
@@ -194,9 +194,9 @@ type 	ChainConfig struct {
 	EWASMBlock          *big.Int `json:"ewasmBlock,omitempty"`          // EWASM switch block (nil = no fork, 0 = already activated)
 
 	// Various consensus engines
-	Clique *CliqueConfig `json:"clique,omitempty"`
-	Cbft   *CbftConfig   `json:"cbft,omitempty"`
-	Istanbul   *IstanbulConfig `json:istanbul,omitempty`
+	Clique   *CliqueConfig   `json:"clique,omitempty"`
+	Cbft     *CbftConfig     `json:"cbft,omitempty"`
+	Istanbul *IstanbulConfig `json:"istanbul,omitempty"`
 
 	// Various vm interpreter
 	VMInterpreter string `json:"interpreter,omitempty"`
@@ -224,11 +224,13 @@ type CbftConfig struct {
 type ProposerPolicy uint64
 
 type IstanbulConfig struct {
-	RequestTimeout uint64         `json:"timeout,omitempty"` // The timeout for each Istanbul round in milliseconds.
-	BlockPeriod    uint64         `json:"period,omitempty"` // Default minimum difference between two consecutive block's timestamps in second
-	ProposerPolicy ProposerPolicy `json:"policy,omitempty"` // The policy for proposer selection
-	Epoch          uint64         `json:"epoch,omitempty"` // The number of blocks after which to checkpoint and reset the pending votes
-	InitialNodes []discover.Node  `json:"initialNodes,omitempty"`
+	RequestTimeout uint64          `json:"timeout,omitempty"` // The timeout for each Istanbul round in milliseconds.
+	BlockPeriod    uint64          `json:"period,omitempty"`  // Default minimum difference between two consecutive block's timestamps in second
+	ProposerPolicy ProposerPolicy  `json:"policy,omitempty"`  // The policy for proposer selection
+	Epoch          uint64          `json:"epoch,omitempty"`   // The number of blocks after which to checkpoint and reset the pending votes
+	InitialNodes   []discover.Node `json:"initialNodes,omitempty"`
+	ValidatorNodes []discover.Node `json:"validatorNodes,omitempty"`
+	ObserveNodes   []discover.Node `json:"observeNodes,omitempty"`
 }
 
 // CliqueConfig is the consensus engine configs for proof-of-authority based sealing.
@@ -248,7 +250,7 @@ func (c *ChainConfig) String() string {
 	switch {
 	case c.Clique != nil:
 		engine = c.Clique
-	// joey.lyu
+		// joey.lyu
 	case c.Cbft != nil:
 		engine = c.Cbft
 	default:

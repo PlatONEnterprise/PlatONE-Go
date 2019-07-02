@@ -121,7 +121,7 @@ func (sb *backend) verifyHeader(chain consensus.ChainReader, header *types.Heade
 	}
 	//log.Info("VerifyHeader has pro2")
 	// Don't waste time checking blocks from the future
-	if header.Time.Cmp(big.NewInt(now().Unix() + 30)) > 0 {
+	if header.Time.Cmp(big.NewInt(now().Unix()+30)) > 0 {
 		return consensus.ErrFutureBlock
 	}
 
@@ -569,7 +569,7 @@ func (sb *backend) snapshot(chain consensus.ChainReader, number uint64, hash com
 			//}
 
 			addrs := make([]common.Address, 0)
-			for _, nodeId := range sb.config.InitialNodes {
+			for _, nodeId := range sb.config.ValidatorNodes {
 
 				prefix := make([]byte, 1)
 				prefix[0] = 4
@@ -615,16 +615,16 @@ func (sb *backend) snapshot(chain consensus.ChainReader, number uint64, hash com
 	}
 
 	// Previous snapshot found, apply any pending headers on top of it
+
 	for i := 0; i < len(headers)/2; i++ {
 		headers[i], headers[len(headers)-1-i] = headers[len(headers)-1-i], headers[i]
 	}
 	snap, err := snap.apply(chain, sb, headers)
-
 	if err != nil {
 		return nil, err
 	}
-	sb.recents.Add(snap.Hash, snap)
 
+	sb.recents.Add(snap.Hash, snap)
 	// If we've generated a new checkpoint snapshot, save to disk
 	if snap.Number%checkpointInterval == 0 && len(headers) > 0 {
 		if err = snap.store(sb.db); err != nil {
