@@ -46,7 +46,7 @@ func (c *core) sendPreprepare(request *istanbul.Request) {
 			preprepare.LockedHash = c.current.lockedHash
 			preprepare.LockedPrepares = c.current.lockedPrepares
 		}
-		logger.Debug("sendPreprepare", "preprepare", preprepare)
+		logger.Debug("sendPreprepare", "proposal", preprepare.Proposal.Hash())
 
 		encodedPreprepare, err := Encode(preprepare)
 		if err != nil {
@@ -97,7 +97,8 @@ func (c *core) handlePreprepare(msg *message, src istanbul.Validator) error {
 	}
 
 	// Verify the proposal we received
-	if duration, err := c.backend.Verify(preprepare.Proposal); err != nil {
+	c.roundChangeTimer.Reset(time.Millisecond * time.Duration(c.config.RequestTimeout))
+	if duration, err := c.backend.Verify(preprepare.Proposal , c.valSet.IsProposer(c.address)); err != nil {
 		logger.Warn("Failed to verify proposal", "err", err, "duration", duration)
 		// if it's a future block, we will handle it again after the duration
 		if err == consensus.ErrFutureBlock {
