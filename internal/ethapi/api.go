@@ -575,6 +575,31 @@ func (s *PublicBlockChainAPI) GetBalance(ctx context.Context, address common.Add
 	return (*hexutil.Big)(state.GetBalance(address)), state.Error()
 }
 
+// GetAccountBaseInfo returns the account Information for the given address in the state of the
+// given block number. The rpc.LatestBlockNumber and rpc.PendingBlockNumber meta
+// block numbers are also allowed.
+type AccountBaseInfo struct{
+	Address common.Address
+	Creator common.Address
+	IsContract bool
+	Nonce uint64
+	Balance *big.Int
+}
+func (s *PublicBlockChainAPI) GetAccountBaseInfo(ctx context.Context, address common.Address, blockNr rpc.BlockNumber) (*AccountBaseInfo, error) {
+	state, _, err := s.b.StateAndHeaderByNumber(ctx, blockNr)
+	if state == nil || err != nil {
+		return nil, err
+	}
+	acc := &AccountBaseInfo{}
+	acc.Address = address
+	acc.IsContract = state.GetCode(address) != nil
+	acc.Creator = state.GetContractCreator(address)
+	acc.Nonce = state.GetNonce(address)
+	acc.Balance = state.GetBalance(address)
+
+	return acc, state.Error()
+}
+
 // GetBlockByNumber returns the requested block. When blockNr is -1 the chain head is returned. When fullTx is true all
 // transactions in the block are returned in full detail, otherwise only the transaction hash is returned.
 func (s *PublicBlockChainAPI) GetBlockByNumber(ctx context.Context, blockNr rpc.BlockNumber, fullTx bool) (map[string]interface{}, error) {
