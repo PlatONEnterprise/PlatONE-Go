@@ -54,6 +54,7 @@ const (
 )
 
 var errServerStopped = errors.New("server stopped")
+var errServerSelfInDelList = errors.New("self in deleteList")
 
 // Config holds Server options.
 type Config struct {
@@ -168,20 +169,21 @@ type Server struct {
 	peerOp     chan peerOpFunc
 	peerOpDone chan struct{}
 
-	quit          chan struct{}
-	addstatic     chan *discover.Node
-	removestatic  chan *discover.Node
-	addconsensus	chan *discover.Node
-	removeconsensus	chan *discover.Node
-	addtrusted    chan *discover.Node
-	removetrusted chan *discover.Node
-	posthandshake chan *conn
-	addpeer       chan *conn
-	delpeer       chan peerDrop
-	loopWG        sync.WaitGroup // loop, listenLoop
-	peerFeed      event.Feed
-	log           log.Logger
+	quit            chan struct{}
+	addstatic       chan *discover.Node
+	removestatic    chan *discover.Node
+	addconsensus    chan *discover.Node
+	removeconsensus chan *discover.Node
+	addtrusted      chan *discover.Node
+	removetrusted   chan *discover.Node
+	posthandshake   chan *conn
+	addpeer         chan *conn
+	delpeer         chan peerDrop
+	loopWG          sync.WaitGroup // loop, listenLoop
+	peerFeed        event.Feed
+	log             log.Logger
 }
+
 var server *Server
 var rootNode *discover.Node
 
@@ -196,7 +198,7 @@ type peerDrop struct {
 type connFlag int32
 
 const (
-	dynDialedConn connFlag = 1 << iota
+	dynDialedConn       connFlag = 1 << iota
 	staticDialedConn
 	inboundConn
 	trustedConn
@@ -206,7 +208,7 @@ const (
 // conn wraps a network connection with information gathered
 // during the two handshakes.
 type conn struct {
-	fd net.Conn
+	fd    net.Conn
 	transport
 	flags connFlag
 	cont  chan error      // The run loop uses cont to signal errors to SetupConn.
@@ -300,6 +302,16 @@ func GetRootNode() (node *discover.Node) {
 	return rootNode
 }
 
+var bootNodes []*discover.Node
+
+func SetBootNodes(bn []*discover.Node) {
+	bootNodes = bn
+}
+
+func GetBootNodes() []*discover.Node {
+	return bootNodes
+}
+
 // Peers returns all connected peers.
 func (srv *Server) Peers() []*Peer {
 	var ps []*Peer
@@ -350,118 +362,98 @@ func (srv *Server) RemovePeer(node *discover.Node) {
 // UpdatePeer by nodeManager contract
 func UpdatePeer() {
 	if server == nil {
-		log.Warn("srv is nil")
+		log.Warn("updatePeer: srv is nil")
 		return
 	}
-	// myself
-	selfId := server.Self().ID;
-	selfPublicKey := selfId.String()
-
-	// already join key
-	joinNodes := []string{}
-	peers := server.PeersInfo()
-	for _, peer := range peers {
-		curPeer := "enode://" + peer.ID + "@" + peer.Network.RemoteAddress
-		joinNodes = append(joinNodes, curPeer)
-		log.Info("joined peer", "curPeer", curPeer)
+	joinNodes := make([]string, 0)
+	for i, peer := range server.PeersInfo() {
+		en := fmt.Sprintf("enode://%s@%s", peer.ID, peer.Network.RemoteAddress)
+		joinNodes = append(joinNodes, en)
+		log.Info("joined peer", "index", i, "curPeer", en)
 	}
-	/*
-		cnsAddress := common.HexToAddress("0x0000000000000000000000000000000000000011")
-		nodeAddressRes := common.InnerCall(cnsAddress, "getContractAddress", []interface{}{ "__sys_NodeManager", "latest"})
-		nodeManagerAddress := common.HexToAddress(common.CallResAsString(nodeAddressRes))
+	log.Info("********** current joinNodes length **********", "len", len(joinNodes))
+	if err := server.ExcludeDelNodes(joinNodes); err != nil {
+		log.Warn(err.Error())
+	}
+	server.AddExtraNormalNodes(joinNodes)
+}
 
-		// if I am in blockList, disconnect all connected peers.
-
-		enodeNodesRes := common.InnerCall(nodeManagerAddress, "getDeletedEnodeNodes", []interface{}{}) // need disconnect
-		enodeNodesStr := common.CallResAsString(enodeNodesRes)
-		log.Info("delete enodeNodesStr = ", enodeNodesStr)
-		enodeNodes := strings.Split(enodeNodesStr, "|")
-		*/
-	enodeNodes := common.SysCfg.GetDeletedNodes()
-	blacked := false
-	for _, ennodeNode := range enodeNodes {
-		enodeNodeStr := fmt.Sprintf("enode://%s@%s:%d",ennodeNode.PublicKey,ennodeNode.ExternalIP,ennodeNode.P2pPort )
-		if node, error := discover.ParseNode(enodeNodeStr); error == nil {
-			curPubKey := node.ID.String()
-			blacked = curPubKey == selfPublicKey
-			if blacked {
+func (srv *Server) ExcludeDelNodes(joinNodes []string) (err error) {
+	delENodes := common.SysCfg.GetDeletedNodes()
+	for _, eNode := range delENodes {
+		delEn := fmt.Sprintf("enode://%s@%s:%d", eNode.PublicKey, eNode.ExternalIP, eNode.P2pPort)
+		if node, err := discover.ParseNode(delEn); err == nil {
+			if srv.Self().ID.String() == node.ID.String() {
+				log.Warn("to remove all node")
+				err = errServerSelfInDelList
 				for _, joinNode := range joinNodes {
-					curNode, _ := discover.ParseNode(joinNode)
-					log.Info("delete node: ", curPubKey)
-					server.RemovePeer(curNode)
+					if n, err := discover.ParseNode(joinNode); err == nil {
+						srv.RemovePeer(n)
+					}
 				}
 				break
 			}
-		}
-	}
-
-	// need to connect node
-	if blacked {
-		log.Warn("I am in blacklist, wuwuwu...")
-		return
-	}
-
-	// enodeNodesRes = common.InnerCall(nodeManagerAddress, "getNormalEnodeNodes", []interface{}{}) // need connect
-	// enodeNodesStr = common.CallResAsString(enodeNodesRes)
-	// log.Info("connect enodeNodesStr = ", enodeNodesStr)
-	// enodeNodes = strings.Split(enodeNodesStr, "|")
-	enodeNodes = common.SysCfg.GetNormalNodes()
-
-	// if root node not in contract node list, join to node list
-	// if rootNode != nil {
-	// 	rootPublicKeyroot := rootNode.ID.String()
-	// 	if (!strings.Contains(enodeNodesStr, rootPublicKeyroot)) {
-	// 		enodeNodes = append(enodeNodes, rootNode.String())
-	// 	}
-	// }
-
-	if rootNode != nil{
-		hasRoot := false
-		for _, enodeNode := range enodeNodes{
-			if enodeNode.PublicKey == rootNode.ID.String(){
-				hasRoot = true
-			}
-		}
-
-		if(!hasRoot){
-			rootNodeInfo := common.NodeInfo{
-				PublicKey:rootNode.ID.String(),
-				ExternalIP:rootNode.IP.String(),
-				P2pPort:int32(uint32(rootNode.UDP)),
-			}
-			enodeNodes = append(enodeNodes, rootNodeInfo)
-		}
-	}
-
-	for _, enodeNode := range enodeNodes {
-		enodeNodeStr := fmt.Sprintf("enode://%s@%s:%d",enodeNode.PublicKey,enodeNode.ExternalIP,enodeNode.P2pPort )
-
-		if node, error := discover.ParseNode(enodeNodeStr); error == nil {
-			curPubKey := node.ID.String()
-			joined := false
 			for _, joinNode := range joinNodes {
-				joined = strings.Contains(joinNode, curPubKey)
-				if joined {
-					break
+				if strings.Contains(joinNode, node.ID.String()) {
+					log.Info("remove del node", "nodePubKey", node.ID.String())
+					srv.RemovePeer(node)
 				}
 			}
-			// oh, not connected and not myself
-			if (!joined) && (selfPublicKey != curPubKey) {
-				log.Info("Add node", "PublicKey",curPubKey)
-				server.AddPeer(node)
-			}
 		}
 	}
+	return
+}
+
+func (srv *Server) ExcludeSelfInDelList(joinNodes []string) (err error) {
+	for _, delNode := range common.SysCfg.GetDeletedNodes() {
+		en := fmt.Sprintf("enode://%s@%s:%d", delNode.PublicKey, delNode.ExternalIP, delNode.P2pPort)
+		if node, e := discover.ParseNode(en); e == nil && node.ID.String() == srv.Self().ID.String() {
+			err = errServerSelfInDelList
+			for _, joinNode := range joinNodes {
+				if n, err := discover.ParseNode(joinNode); err == nil {
+					srv.RemovePeer(n)
+				}
+			}
+			break
+		}
+	}
+	return
+}
+
+func (srv *Server) AddExtraNormalNodes(joinNodes []string) (err error) {
+	nNodes := common.SysCfg.GetNormalNodes()
+	log.Info("********** GetNormalNodes Len **********", "len", len(nNodes))
+next:
+	for _, eNode := range nNodes {
+		eNodeStr := fmt.Sprintf("enode://%s@%s:%d", eNode.PublicKey, eNode.ExternalIP, eNode.P2pPort)
+
+		var node *discover.Node
+		if node, err = discover.ParseNode(eNodeStr); err != nil {
+			continue
+		}
+		curPubKey := node.ID.String()
+		for _, joinNode := range joinNodes {
+			if ok := strings.Contains(joinNode, curPubKey); ok {
+				continue next
+			}
+		}
+		// not connected and not myself
+		if srv.Self().ID.String() != curPubKey {
+			log.Info("Add new node", "PublicKey", curPubKey)
+			srv.AddPeer(node)
+		}
+	}
+	return
 }
 
 // add root peer
-func AddPeer(node discover.Node) {
-	time.Sleep(time.Duration(100)*time.Millisecond )
+func AddRootPeer(node discover.Node) {
+	time.Sleep(time.Duration(100) * time.Millisecond)
 	go func() {
 		for {
 			if server == nil {
-				log.Warn("srv is nil")
-				time.Sleep(time.Duration(100)*time.Millisecond )
+				log.Warn("addRootPeer: srv is nil")
+				time.Sleep(time.Duration(100) * time.Millisecond)
 			} else {
 				break
 			}
@@ -473,7 +465,7 @@ func AddPeer(node discover.Node) {
 		if strings.Contains(selfPublicKey, nodePublicKey) {
 			log.Warn("can not add myself")
 		} else {
-			log.Info("add peer", nodePublicKey)
+			log.Info("add peer", "pubKey", nodePublicKey)
 			server.AddPeer(&node)
 		}
 	}()
@@ -949,9 +941,9 @@ func (srv *Server) protoHandshakeChecks(peers map[discover.NodeID]*Peer, inbound
 
 func (srv *Server) encHandshakeChecks(peers map[discover.NodeID]*Peer, inboundCount int, c *conn) error {
 	switch {
-	case !c.is(trustedConn|staticDialedConn|consensusDialedConn) && len(peers) >= srv.MaxPeers:
+	case !c.is(trustedConn | staticDialedConn | consensusDialedConn) && len(peers) >= srv.MaxPeers:
 		return DiscTooManyPeers
-	case !c.is(trustedConn|consensusDialedConn) && c.is(inboundConn) && inboundCount >= srv.maxInboundConns():
+	case !c.is(trustedConn | consensusDialedConn) && c.is(inboundConn) && inboundCount >= srv.maxInboundConns():
 		return DiscTooManyPeers
 	case peers[c.id] != nil:
 		return DiscAlreadyConnected
@@ -1044,23 +1036,14 @@ func (srv *Server) SetupConn(fd net.Conn, flags connFlag, dialDest *discover.Nod
 		return errors.New("shutdown")
 	}
 
-	// if I am in blockList, forbid to connect
-	/*
-	cnsAddress := common.HexToAddress("0x0000000000000000000000000000000000000011")
-	nodeAddressRes := common.InnerCall(cnsAddress, "getContractAddress", []interface{}{ "__sys_NodeManager", "latest"})
-	nodeManagerAddress := common.HexToAddress(common.CallResAsString(nodeAddressRes))
-	selfPublicKey := srv.Self().ID.String()
-	enodeNodesRes := common.InnerCall(nodeManagerAddress, "getDeletedEnodeNodes", []interface{}{}) // need disconnect
-	enodeNodesStr := common.CallResAsString(enodeNodesRes)
-	if strings.Contains(enodeNodesStr, selfPublicKey) {
-		srv.log.Warn("I am in block list: ", selfPublicKey)
-		return errors.New("shutdown")
-	}
-	*/
 	deleted := common.SysCfg.GetDeletedNodes()
-	for _, node := range deleted{
-		if node.PublicKey == srv.Self().ID.String(){
-			srv.log.Warn("I am in block list: ", node.PublicKey)
+	for _, node := range deleted {
+		if node.PublicKey == srv.Self().ID.String() {
+			srv.log.Warn("setupConn: I am in blacklist: ", "pubKey", node.PublicKey)
+			return errors.New("shutdown")
+		}
+		if dialDest != nil && dialDest.ID.String() == node.PublicKey {
+			srv.log.Warn("setupConn: dialDest in blacklist: ", "pubKey", node.PublicKey)
 			return errors.New("shutdown")
 		}
 	}
