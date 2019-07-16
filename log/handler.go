@@ -8,12 +8,10 @@ import (
 	"reflect"
 	"sync"
 
+	"github.com/go-stack/stack"
 	"io/ioutil"
 	"path/filepath"
 	"regexp"
-	"strings"
-
-	"github.com/go-stack/stack"
 )
 
 // Handler defines where and how log records are written.
@@ -158,15 +156,18 @@ func RotatingFileHandler(path string, limit uint, formatter Format) (Handler, er
 		counter = new(countingWriter)
 	}
 	h := StreamHandler(counter, formatter)
+	mu := sync.Mutex{}
 
 	return FuncHandler(func(r *Record) error {
+		mu.Lock()
+		defer mu.Unlock()
 		if counter.count > limit {
 			counter.Close()
 			counter.w = nil
 		}
 		if counter.w == nil {
 			f, err := os.OpenFile(
-				filepath.Join(path, fmt.Sprintf("%s.log", strings.Replace(r.Time.Format("060102150405.00"), ".", "", 1))),
+				filepath.Join(path, fmt.Sprintf("%s.log", r.Time.Format("06_01_02_15_04_05.00"))),
 				os.O_CREATE|os.O_APPEND|os.O_WRONLY,
 				0600,
 			)
