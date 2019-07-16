@@ -1,14 +1,24 @@
 package resolver
 
-// #cgo CFLAGS: -I../softfloat/source/include
-// #define SOFTFLOAT_FAST_INT64
-// #include "softfloat.h"
-//
-// #cgo CXXFLAGS: -std=c++14
-// #include "printqf.h"
-// #include "print128.h"
-// #cgo LDFLAGS: -L ./nizkpail/ -lnizkpail -lmiracl
-// #include "./nizkpail/nizkpail.h"
+
+/*
+#cgo CFLAGS: -I../softfloat/source/include
+#define SOFTFLOAT_FAST_INT64
+#include "softfloat.h"
+#cgo CXXFLAGS: -std=c++14
+#include "printqf.h"
+#include "print128.h"
+#cgo LDFLAGS: -L ./sm2/ -lsm2 -lcrypto -lssl -ldl -lpthread
+#cgo LDFLAGS: -L ./nizkpail/ -lnizkpail -lmiracl
+#include "./sm2/sm.h"
+#include "./nizkpail/nizkpail.h"
+
+*/
+import "C"
+
+
+
+
 import "C"
 import "unsafe"
 import (
@@ -204,6 +214,9 @@ func newCfcSet() map[string]map[string]*exec.FunctionImport {
 			"pailHomAdd":      &exec.FunctionImport{Execute: envPailHomAdd, GasCost: envPailHomAddGasCost},
 			"pailHomSub":      &exec.FunctionImport{Execute: envPailHomSub, GasCost: envPailHomSubGasCost},
 			"nizkVerifyProof": &exec.FunctionImport{Execute: envNizkVerifyProof, GasCost: envNizkVerifyProofGasCost},
+
+			//sm2
+			"smSigVerify":	&exec.FunctionImport{Execute: envSmSigVerify, GasCost: envNizkVerifyProofGasCost},
 		},
 	}
 }
@@ -689,6 +702,52 @@ func envEcrecover(vm *exec.VirtualMachine) int64 {
 func envEcrecoverGasCost(vm *exec.VirtualMachine) (uint64, error) {
 	return 280738, nil
 }
+
+
+func envSmSigVerify(vm *exec.VirtualMachine) int64 {
+	msgOffset := int(int32(vm.GetCurrentFrame().Locals[0]))
+	msgSize := int(int32(vm.GetCurrentFrame().Locals[1]))
+	useridOffset := int(int32(vm.GetCurrentFrame().Locals[2]))
+	useridSize := int(int32(vm.GetCurrentFrame().Locals[3]))
+	pubkeyOffset := int(int32(vm.GetCurrentFrame().Locals[4]))
+	pubkeySize := int(int32(vm.GetCurrentFrame().Locals[5]))
+	sigOffset := int(int32(vm.GetCurrentFrame().Locals[6]))
+	sigSize := int(int32(vm.GetCurrentFrame().Locals[7]))
+	resultOffset := int(int32(vm.GetCurrentFrame().Locals[8]))
+	resultSize := int(int32(vm.GetCurrentFrame().Locals[9]))
+
+	msg := vm.Memory.Memory[msgOffset : msgOffset + msgSize]
+	userid := vm.Memory.Memory[useridOffset: useridOffset + useridSize]
+	pubkey := vm.Memory.Memory[pubkeyOffset : pubkeyOffset+pubkeySize]
+	sig := vm.Memory.Memory[sigOffset: sigOffset + sigSize]
+	msg = append(msg, 0)
+	userid = append(userid, 0)
+	pubkey = append(pubkey, 0)
+	sig = append(sig, 0)
+
+	msgPtr := (*C.char)(unsafe.Pointer(&msg[0]))
+	//useridPtr := (*C.char)(unsafe.Pointer(&userid[0]))
+	pubkeyPtr := (*C.char)(unsafe.Pointer(&pubkey[0]))
+	sigPtr := (*C.char)(unsafe.Pointer(&sig[0]))
+
+	//result := C.smSigVerify(msgPtr, useridPtr, pubkeyPtr, sigPtr)
+	result := C.sm_verify_sig(msgPtr, pubkeyPtr, sigPtr)
+	ret := "0"
+	if result == 1{
+		ret = "1"
+	}
+	resultBts := []byte(ret)
+	resultBts = append(resultBts, 0)
+
+	if resultSize < len(resultBts) {
+		return 0
+	}
+
+	copy(vm.Memory.Memory[resultOffset:], resultBts)
+
+	return 0
+}
+
 
 func envPailEncrypt(vm *exec.VirtualMachine) int64 {
 	numberOffset := int(int32(vm.GetCurrentFrame().Locals[0]))
