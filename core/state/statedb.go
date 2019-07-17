@@ -488,6 +488,20 @@ func (self *StateDB) CreateAccount(addr common.Address) {
 	}
 }
 
+func (self *StateDB) CloneAccount(dest common.Address, src common.Address) {
+	srcObject := self.getStateObject(src)
+	if srcObject == nil {
+		return
+	}
+	it := trie.NewIterator(srcObject.getTrie(self.db).NodeIterator(nil))
+	for it.Next() {
+		keyTrie := string(self.trie.GetKey(it.Key))
+		key := []byte(keyTrie[20:])
+		value := it.Value
+		self.SetState(dest, key, value)
+	}
+}
+
 func (db *StateDB) ForEachStorage(addr common.Address, cb func(key, value common.Hash) bool) {
 	so := db.getStateObject(addr)
 	if so == nil {

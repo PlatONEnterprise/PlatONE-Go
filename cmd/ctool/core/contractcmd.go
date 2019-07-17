@@ -19,6 +19,13 @@ var (
 		Flags:  deployCmdFlags,
 	}
 
+	MigrateCmd = cli.Command{
+		Name:   "migDeploy",
+		Usage:  "deploy a system contract with previous data",
+		Action: migdeploy,
+		Flags:  migDeployCmdFlags,
+	}
+
 	InvokeCmd = cli.Command{
 		Name:    "invoke",
 		Aliases: []string{"i"},
@@ -180,6 +187,34 @@ func fwInvoke(c *cli.Context) error {
 	}
 	return nil
 }
+
+func migeploy(c *cli.Context) error {
+	addr := c.String("addr")
+	funcParams := c.String("func")
+	// txType := c.Int("type")
+	txType := migrateContractDataType
+
+	if addr == "" {
+		fmt.Printf("addr can't be empty!")
+		return nil
+	}
+
+	if funcParams == "" {
+		fmt.Printf("funcParams can't be empty!")
+		return nil
+	}
+
+	parseConfigJson(c.String(ConfigPathFlag.Name))
+
+	err := migDeployContract(addr, funcParams, txType)
+	if err != nil {
+		panic(fmt.Errorf("MigInvokeContract contract error,%s", err.Error()))
+	}
+	return nil
+}
+
+
+
 
 func cnsInvoke(c *cli.Context) error {
 	//addr := c.String("addr")

@@ -95,6 +95,50 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 	return receipts, allLogs, *usedGas, nil
 }
 
+
+func migProcess(stateDb *state.StateDB, contractAddr common.Address, caller common.Address, input []byte) ([]byte, uint64, error) {
+	var err error
+	var migData [][]byte
+	var funcName string
+	var sourceAddr common.Address
+
+	if !addressCompare(stateDb.GetContractCreator(contractAddr), caller) {
+		log.Error("MIG : error, only contract owner can set migrate data from old contract!")
+		return nil, 0, migErr
+	}
+
+	if err = rlp.DecodeBytes(input, &migData); err != nil {
+		log.Debug("MIG : error, fwData decoded failure!")
+		return nil, 0, migErr
+	}
+
+	// check parameters
+	if len(migData) < 2 {
+		log.Debug("MIG : error, require function name!")
+		return nil, 0, fwErr
+	}
+	funcName = string(migData[1])
+	if funcName == "migrate" {
+		if len(migData) != 2 {
+			log.Debug("MIG : error, wrong function parameters!")
+			return nil, 0, migErr
+		}
+		sourceAddr = common.BytesToAddress(migData[2])
+	} else {
+		log.Debug("MIG : error, wrong function name!")
+		return nil, 0, fwErr
+	}
+
+	switch funcName {
+	case "migrate":
+		stateDb.CloneAccount(contractAddr, sourceAddr)
+	default:
+	}
+
+	var returnBytes []byte
+	return makeReturnBytes(returnBytes), 0, nil
+}
+
 // ApplyTransaction attempts to apply a transaction to the given state database
 // and uses the input parameters for its environment. It returns the receipt
 // for the transaction, gas used and an error if the transaction failed,
@@ -104,6 +148,11 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	if err != nil {
 		return nil, 0, err
 	}
+
+	if(msg.TxType() == types.MigTxType) {
+		migProcess(statedb, *msg.To(), msg.From(), msg.Data())
+	}
+
 	// Create a new context to be used in the EVM environment
 	context := NewEVMContext(msg, header, bc, author)
 	// Create a new environment which holds all relevant information
