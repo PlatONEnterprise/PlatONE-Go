@@ -22,7 +22,7 @@ var (
 	MigrateCmd = cli.Command{
 		Name:   "migDeploy",
 		Usage:  "deploy a system contract with previous data",
-		Action: migdeploy,
+		Action: migDeploy,
 		Flags:  migDeployCmdFlags,
 	}
 
@@ -188,11 +188,11 @@ func fwInvoke(c *cli.Context) error {
 	return nil
 }
 
-func migeploy(c *cli.Context) error {
+func migDeploy(c *cli.Context) error {
 	addr := c.String("addr")
 	funcParams := c.String("func")
 	// txType := c.Int("type")
-	txType := migrateContractDataType
+	txType := MigTxType
 
 	if addr == "" {
 		fmt.Printf("addr can't be empty!")
@@ -282,6 +282,72 @@ func invoke(c *cli.Context) error {
 // FwInvokeContract function
 // set firewall rules for contract
 func FwInvokeContract(contractAddr string, funcParams string, txType int) error {
+
+	//parse the function and param
+	funcName, inputParams := GetFuncNameAndParams(funcParams)
+
+	paramArr := [][]byte{
+		Int64ToBytes(int64(txType)),
+		[]byte(funcName),
+	}
+
+	for _, input := range inputParams {
+		paramArr = append(paramArr, []byte(input))
+	}
+
+	paramBytes, e := rlp.EncodeToBytes(paramArr)
+	if e != nil {
+		return fmt.Errorf("rlp encode error,%s", e.Error())
+	}
+
+	txParams := TxParams{
+		From:     config.From,
+		To:       contractAddr,
+		GasPrice: config.GasPrice,
+		Gas:      config.Gas,
+		Data:     hexutil.Encode(paramBytes),
+		TxType:   txType,
+	}
+
+	var r string
+	var err error
+	if funcName == "__sys_FwStatus" {
+		params := make([]interface{}, 2)
+		params[0] = txParams
+		params[1] = "latest"
+
+		paramJson, _ := json.Marshal(params)
+		fmt.Printf("\n request json data：%s \n", string(paramJson))
+		r, err = Send(params, "eth_call")
+	} else {
+		params := make([]interface{}, 1)
+		params[0] = txParams
+
+		paramJson, _ := json.Marshal(params)
+		fmt.Printf("\n request json data：%s \n", string(paramJson))
+		r, err = Send(params, "eth_sendTransaction")
+	}
+
+	fmt.Printf("\n response json：%s \n", r)
+
+	if err != nil {
+		return fmt.Errorf("send http post to invokeContract contract error,%s", e.Error())
+	}
+	resp := parseResponse(r)
+
+	//parse the return type through adi
+	if funcName == "__sys_FwStatus" {
+		bytes, _ := hexutil.Decode(resp.Result)
+		fmt.Printf("\nresult: %v\n", BytesConverter(bytes, "string"))
+		return nil
+	} else {
+		fmt.Printf("\n trasaction hash: %s\n", resp.Result)
+	}
+	return nil
+}
+
+// migerateContract function
+func migDeployContract(contractAddr string, funcParams string, txType int) error {
 
 	//parse the function and param
 	funcName, inputParams := GetFuncNameAndParams(funcParams)
