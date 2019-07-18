@@ -32,7 +32,6 @@ import (
 	"math"
 	"math/big"
 	"strings"
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/core"
 )
 
 var (

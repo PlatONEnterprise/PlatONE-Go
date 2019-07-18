@@ -17,6 +17,7 @@
 package core
 
 import (
+	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus/misc"
@@ -24,11 +25,10 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
-	"fmt"
 )
 
 func init() {
@@ -115,23 +115,23 @@ func migProcess(stateDb *state.StateDB, contractAddr common.Address, caller comm
 	// check parameters
 	if len(migData) < 2 {
 		log.Debug("MIG : error, require function name!")
-		return nil, 0, fwErr
+		return nil, 0, migErr
 	}
 	funcName = string(migData[1])
 	if funcName == "migrate" {
-		if len(migData) != 2 {
+		if len(migData) != 3 {
 			log.Debug("MIG : error, wrong function parameters!")
 			return nil, 0, migErr
 		}
-		sourceAddr = common.BytesToAddress(migData[2])
+		sourceAddr = common.HexToAddress(string(migData[2]))
 	} else {
 		log.Debug("MIG : error, wrong function name!")
-		return nil, 0, fwErr
+		return nil, 0, migErr
 	}
 
 	switch funcName {
 	case "migrate":
-		stateDb.CloneAccount(contractAddr, sourceAddr)
+		return stateDb.CloneAccount(sourceAddr, contractAddr)
 	default:
 	}
 

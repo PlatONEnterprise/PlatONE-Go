@@ -51,6 +51,8 @@ var (
 	emptyCode = crypto.Keccak256Hash(nil)
 
 	emptyStorage = crypto.Keccak256Hash([]byte(storagePrefix))
+
+	cloneErr = errors.New("clone account error!")
 )
 
 // StateDBs within the ethereum protocol are used to store anything
@@ -488,18 +490,22 @@ func (self *StateDB) CreateAccount(addr common.Address) {
 	}
 }
 
-func (self *StateDB) CloneAccount(dest common.Address, src common.Address) {
+func (self *StateDB) CloneAccount(src common.Address, dest common.Address) ([]byte, uint64, error) {
+
 	srcObject := self.getStateObject(src)
 	if srcObject == nil {
-		return
+		return nil, 0, cloneErr
 	}
 	it := trie.NewIterator(srcObject.getTrie(self.db).NodeIterator(nil))
 	for it.Next() {
 		keyTrie := string(self.trie.GetKey(it.Key))
-		key := []byte(keyTrie[20:])
+		key := []byte(keyTrie[42:])
+		log.Debug("mig322222", keyTrie[42:])
+		log.Debug("mig333333", keyTrie)
 		value := it.Value
 		self.SetState(dest, key, value)
 	}
+	return nil, 0, cloneErr
 }
 
 func (db *StateDB) ForEachStorage(addr common.Address, cb func(key, value common.Hash) bool) {
