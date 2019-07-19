@@ -61,7 +61,7 @@ type txdata struct {
 	Amount       *big.Int        `json:"value"    gencodec:"required"`
 	Payload      []byte          `json:"input"    gencodec:"required"`
 	//CnsData      []byte          `json:"cnsData"`
-	TxType uint64 `json:"txType"`
+	TxType uint64 `json:"txType" gencodec:"required"`
 
 	// Signature values
 	V *big.Int `json:"v" gencodec:"required"`
@@ -79,7 +79,7 @@ type txdataMarshaling struct {
 	Amount       *hexutil.Big
 	Payload      hexutil.Bytes
 	//CnsData	     hexutil.Bytes
-	TxType uint64
+	TxType  hexutil.Uint64
 	V      *hexutil.Big
 	R      *hexutil.Big
 	S      *hexutil.Big

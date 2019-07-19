@@ -911,6 +911,7 @@ type RPCTransaction struct {
 	V                *hexutil.Big    `json:"v"`
 	R                *hexutil.Big    `json:"r"`
 	S                *hexutil.Big    `json:"s"`
+	TxType   		  hexutil.Uint64 `json:"txType"`
 }
 
 // newRPCTransaction returns a transaction that will serialize to the RPC
@@ -935,6 +936,7 @@ func newRPCTransaction(tx *types.Transaction, blockHash common.Hash, blockNumber
 		V:        (*hexutil.Big)(v),
 		R:        (*hexutil.Big)(r),
 		S:        (*hexutil.Big)(s),
+		TxType:	  hexutil.Uint64(tx.Type()),
 	}
 	if blockHash != (common.Hash{}) {
 		result.BlockHash = blockHash
