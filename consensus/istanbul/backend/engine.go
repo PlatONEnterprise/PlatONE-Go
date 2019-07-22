@@ -569,7 +569,7 @@ func (sb *backend) snapshot(chain consensus.ChainReader, number uint64, hash com
 			//}
 
 			addrs := make([]common.Address, 0)
-			for _, nodeId := range sb.config.ValidatorNodes {
+			for _, nodeId := range sb.config.ValidatorNodes[:1] {
 
 				prefix := make([]byte, 1)
 				prefix[0] = 4
