@@ -12,9 +12,13 @@
 
 #include <stdlib.h>
 
+// C interfaces for golang
+
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+char* pailKeyGen();
 
 char* pailEncrypt(const char* _number, const char* _pubkey);
 
@@ -22,16 +26,23 @@ char* pailHomAdd(const char* _cipher1, const char* _cipher2, const char* _pubkey
 
 char* pailHomSub(const char* _cipher1, const char* _cipher2, const char* _pubkey);
 
-char* nizkVerifyProof(const char* _pai,
-                    const char* _fromBalCipher,
-                    const char* _fromAmountCipher,
-                    const char* _toAmountCipher,
-                    const char* _fromPubkey,
-                    const char* _toPubkey);
+char* nizkGenProof(
+	const char* _transactionAmount,
+	const char* _fromBalCipher, 
+	const char* _fromPubkey,
+	const char* _fromPrikey,
+	const char* _toPubkey);
+
+char* nizkVerifyProof(
+	const char* _pai,
+	const char* _fromBalCipher,
+	const char* _fromAmountCipher,
+	const char* _toAmountCipher,
+	const char* _fromPubkey,
+	const char* _toPubkey);
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif // NIZKPAIL_H_
-

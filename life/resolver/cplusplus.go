@@ -8,8 +8,8 @@ package resolver
 #cgo CXXFLAGS: -std=c++14
 #include "printqf.h"
 #include "print128.h"
-#cgo LDFLAGS: -L ./sm2/ -lsm2 -lcrypto -lssl -ldl -lpthread
-#cgo LDFLAGS: -L ./nizkpail/ -lnizkpail -lmiracl
+#cgo LDFLAGS: -L ./sm2/ -lsm -lcrypto -lssl -ldl -lpthread
+#cgo LDFLAGS: -L ./nizkpail/ -lnizkpail -lpthread
 #include "./sm2/sm.h"
 #include "./nizkpail/nizkpail.h"
 
@@ -210,7 +210,7 @@ func newCfcSet() map[string]map[string]*exec.FunctionImport {
 			"bcwasmDelegateCallString": &exec.FunctionImport{Execute: envBCWasmDelegateCallString, GasCost: envBCWasmDelegateCallStringGasCost},
 
 			//nizkpail
-			"pailEncrypt":     &exec.FunctionImport{Execute: envPailEncrypt, GasCost: envPailEncryptGasCost},
+			//"pailEncrypt":     &exec.FunctionImport{Execute: envPailEncrypt, GasCost: envPailEncryptGasCost},
 			"pailHomAdd":      &exec.FunctionImport{Execute: envPailHomAdd, GasCost: envPailHomAddGasCost},
 			"pailHomSub":      &exec.FunctionImport{Execute: envPailHomSub, GasCost: envPailHomSubGasCost},
 			"nizkVerifyProof": &exec.FunctionImport{Execute: envNizkVerifyProof, GasCost: envNizkVerifyProofGasCost},
@@ -749,38 +749,6 @@ func envSmSigVerify(vm *exec.VirtualMachine) int64 {
 }
 
 
-func envPailEncrypt(vm *exec.VirtualMachine) int64 {
-	numberOffset := int(int32(vm.GetCurrentFrame().Locals[0]))
-	numberSize := int(int32(vm.GetCurrentFrame().Locals[1]))
-	pubkeyOffset := int(int32(vm.GetCurrentFrame().Locals[2]))
-	pubkeySize := int(int32(vm.GetCurrentFrame().Locals[3]))
-	resultOffset := int(int32(vm.GetCurrentFrame().Locals[4]))
-	resultSize := int(int32(vm.GetCurrentFrame().Locals[5]))
-
-	number := vm.Memory.Memory[numberOffset : numberOffset+numberSize]
-	pubkey := vm.Memory.Memory[pubkeyOffset : pubkeyOffset+pubkeySize]
-	number = append(number, 0)
-	pubkey = append(pubkey, 0)
-
-	numberPtr := (*C.char)(unsafe.Pointer(&number[0]))
-	pubkeyPtr := (*C.char)(unsafe.Pointer(&pubkey[0]))
-
-	resultPtr := C.pailEncrypt(numberPtr, pubkeyPtr)
-	resultStr := C.GoString(resultPtr)
-	C.free(unsafe.Pointer(resultPtr))
-
-	resultBts := []byte(resultStr)
-	resultBts = append(resultBts, 0)
-
-	if resultSize < len(resultBts) {
-		return 0
-	}
-
-	copy(vm.Memory.Memory[resultOffset:], resultBts)
-
-	return 0
-}
-
 func envPailHomAdd(vm *exec.VirtualMachine) int64 {
 	cipher1Offset := int(int32(vm.GetCurrentFrame().Locals[0]))
 	cipher1Size := int(int32(vm.GetCurrentFrame().Locals[1]))
@@ -801,6 +769,7 @@ func envPailHomAdd(vm *exec.VirtualMachine) int64 {
 	cipher1Ptr := (*C.char)(unsafe.Pointer(&cipher1[0]))
 	cipher2Ptr := (*C.char)(unsafe.Pointer(&cipher2[0]))
 	pubkeyPtr := (*C.char)(unsafe.Pointer(&pubkey[0]))
+
 
 	resultPtr := C.pailHomAdd(cipher1Ptr, cipher2Ptr, pubkeyPtr)
 	resultStr := C.GoString(resultPtr)
@@ -838,6 +807,7 @@ func envPailHomSub(vm *exec.VirtualMachine) int64 {
 	cipher1Ptr := (*C.char)(unsafe.Pointer(&cipher1[0]))
 	cipher2Ptr := (*C.char)(unsafe.Pointer(&cipher2[0]))
 	pubkeyPtr := (*C.char)(unsafe.Pointer(&pubkey[0]))
+
 
 	resultPtr := C.pailHomSub(cipher1Ptr, cipher2Ptr, pubkeyPtr)
 	resultStr := C.GoString(resultPtr)
@@ -891,11 +861,12 @@ func envNizkVerifyProof(vm *exec.VirtualMachine) int64 {
 	fromPubkeyPtr := (*C.char)(unsafe.Pointer(&fromPubkey[0]))
 	toPubkeyPtr := (*C.char)(unsafe.Pointer(&toPubkey[0]))
 
+
 	resultPtr := C.nizkVerifyProof(paiPtr, fromBalCipherPtr, fromAmountCipherPtr, toAmountCipherPtr, fromPubkeyPtr, toPubkeyPtr)
 	resultStr := C.GoString(resultPtr)
 	C.free(unsafe.Pointer(resultPtr))
 
-	resultBts := []byte(resultStr)
+	resultBts := []byte(resultStr) 	
 	resultBts = append(resultBts, 0)
 
 	if resultSize < len(resultBts) {
@@ -964,9 +935,6 @@ func constGasFunc(gas uint64) exec.GasCost {
 	}
 }
 
-func envPailEncryptGasCost(vm *exec.VirtualMachine) (uint64, error) {
-	return 16371977, nil
-}
 func envPailHomAddGasCost(vm *exec.VirtualMachine) (uint64, error) {
 	return 2936, nil
 }
