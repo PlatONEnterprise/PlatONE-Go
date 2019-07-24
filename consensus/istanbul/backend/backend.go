@@ -271,8 +271,8 @@ func (sb *backend) Commit(proposal istanbul.Proposal, seals [][]byte) error {
 		sb.commitCh <- block
 		return nil
 	}
-
-	if sb.current.block.Hash() == block.Hash() {
+	//
+	if sb.current != nil && sb.current.block != nil && sb.current.block.Hash() == block.Hash() {
 		if err:= sb.writeCommitedBlockWithState(block); err!= nil{
 			return err
 		}

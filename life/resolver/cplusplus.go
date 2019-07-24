@@ -216,7 +216,7 @@ func newCfcSet() map[string]map[string]*exec.FunctionImport {
 			"nizkVerifyProof": &exec.FunctionImport{Execute: envNizkVerifyProof, GasCost: envNizkVerifyProofGasCost},
 
 			//sm2
-			"smSigVerify":	&exec.FunctionImport{Execute: envSmSigVerify, GasCost: envNizkVerifyProofGasCost},
+			"smSigVerify":	&exec.FunctionImport{Execute: envSmSigVerify, GasCost: envSMVerifyGasCost},
 		},
 	}
 }
@@ -944,9 +944,13 @@ func envPailHomSubGasCost(vm *exec.VirtualMachine) (uint64, error) {
 func envNizkVerifyProofGasCost(vm *exec.VirtualMachine) (uint64, error) {
 	return 23188, nil
 }
+func envSMVerifyGasCost(vm *exec.VirtualMachine) (uint64, error) {
+	return 2936, nil
+}
 func envGetCallerNonceGasCost(vm *exec.VirtualMachine) (uint64, error) {
 	return 1358, nil
 }
+
 func envCallTransferGasCost(vm *exec.VirtualMachine) (uint64, error) {
 	return 1349, nil
 }
