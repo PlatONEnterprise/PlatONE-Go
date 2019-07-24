@@ -95,7 +95,11 @@ func  (in *WASMInterpreter) preCheckFunction(contract *Contract, input []byte, a
 		key = append(key,byte(0))
 		key = append([]byte{byte(len(key))}, key...)
 
-		cnsManagerAddr := common.HexToAddress(string(statedb.GetState(key)[1:]))
+		cnsManagerBytes := statedb.GetState(key)
+		if len(cnsManagerBytes)<=1{
+			return false, &common.Address{},nil
+		}
+		cnsManagerAddr := common.HexToAddress(string(cnsManagerBytes[1:]))
 
 		return false, &cnsManagerAddr,nil
 	}

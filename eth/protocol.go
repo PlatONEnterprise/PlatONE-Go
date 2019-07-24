@@ -69,8 +69,8 @@ const (
 	NodeDataMsg    = 0x0e
 	GetReceiptsMsg = 0x0f
 	ReceiptsMsg    = 0x10
-	// protocol message belonging to NewBFT
-	NewBftMsg      = 0x11
+	// protocol message belonging to Istanbul
+	IstanbulMsg      = 0x11
 )
 
 type errCode int
