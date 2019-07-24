@@ -246,7 +246,7 @@ func (sb *backend) Commit(proposal istanbul.Proposal, seals [][]byte) error {
 	block := &types.Block{}
 	block, ok := proposal.(*types.Block)
 	if !ok {
-		sb.logger.Error("Invalid proposal, %v", proposal)
+		sb.logger.Error("Invalid proposal",  "proposal", proposal)
 		return errInvalidProposal
 	}
 
@@ -396,7 +396,7 @@ func (sb *backend) Verify(proposal istanbul.Proposal, isProposer bool) (time.Dur
 	block := &types.Block{}
 	block, ok := proposal.(*types.Block)
 	if !ok {
-		sb.logger.Error("Invalid proposal, %v", proposal)
+		sb.logger.Error("Invalid proposal", "proposal", proposal)
 		return 0, errInvalidProposal
 	}
 

@@ -30,7 +30,6 @@ extern int notify_security_calculation(const char* taskid, const char* pubkey, c
 import (
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
-	"fmt"
 	"unsafe"
 )
 
@@ -53,7 +52,6 @@ func InitVM(icepath string, httpEndpoint string) {
 		C.free(unsafe.Pointer(cUrl))
 	}()
 	C.notify_security_init(cCfg, cUrl)
-	fmt.Println("mpc_process initVM method...")
 	log.Info("Init mpc processor success", "osType", "window", "icepath", icepath, "httpEndpoint", httpEndpoint)
 }
 
@@ -85,12 +83,12 @@ func ExecuteMPCTxForRedis(params MPCParams) (err error) {
 
 	err = myRedis.RPush(MPC_TASK_KEY_ALICE, jsonMap)
 	if err != nil {
-		fmt.Println("add mpc task to queue fail : -> to Alice")
+		log.Error("add mpc task to queue fail : -> to Alice")
 		return err
 	}
 	myRedis.RPush(MPC_TASK_KEY_BOB, jsonMap)
 	if err != nil {
-		fmt.Println("add mpc task to queue fail : -> to Bob")
+		log.Error("add mpc task to queue fail : -> to Bob")
 		return err
 	}
 
@@ -124,9 +122,6 @@ func ExecuteMPCTx(params MPCParams) error {
 		C.free(unsafe.Pointer(cMethod))
 		C.free(unsafe.Pointer(cExtra))
 	}()
-
-	fmt.Printf("02->Received param, the taskId: %v, the pubkey: %v, the from: %v, the irAddr: %v, the method: %v, the extra: %v \n",
-		params.TaskId, params.Pubkey, params.From.Hex(), params.IRAddr.Hex(), params.Method, params.Extra)
 
 	log.Trace("Notify mvm success, ExecuteMPCTx method invoke success.",
 		"taskId", params.TaskId,

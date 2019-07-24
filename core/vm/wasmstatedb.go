@@ -2,7 +2,6 @@ package vm
 
 import (
 	"encoding/hex"
-	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
@@ -114,8 +113,6 @@ func (self *WasmStateDB) Transfer(toAddr common.Address, value *big.Int) (ret []
 	if value.Sign() != 0 {
 		gas += params.CallStipend
 	}
-	fmt.Println("Transfer to:", toAddr.String())
-	fmt.Println("Transfer caller:", caller.self.Address().Hex())
 	ret, returnGas, err := self.evm.Call(caller, toAddr, nil, gas, value)
 	return ret, returnGas, err
 }

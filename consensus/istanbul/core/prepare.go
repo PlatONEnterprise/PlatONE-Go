@@ -24,7 +24,6 @@ import (
 
 func (c *core) sendPrepare() {
 	logger := c.logger.New("state", c.state)
-	//logger.Debug("*********************sendPrepare*****************************")
 	sub := c.current.Subject()
 	encodedSubject, err := Encode(sub)
 	if err != nil {
@@ -39,7 +38,7 @@ func (c *core) sendPrepare() {
 
 func (c *core) handlePrepare(msg *message, src istanbul.Validator) error {
 	logger := c.logger.New("from", src, "state", c.state)
-	logger.Debug("handlePrepare")
+	logger.Trace("handlePrepare")
 	// Decode PREPARE message
 	var prepare *istanbul.Subject
 	err := msg.Decode(&prepare)
@@ -63,7 +62,7 @@ func (c *core) handlePrepare(msg *message, src istanbul.Validator) error {
 	// and we are in earlier state before Prepared state.
 	if ((c.current.IsHashLocked() && prepare.Digest == c.current.GetLockedHash()) || c.current.GetPrepareOrCommitSize() >= /*2*c.valSet.F()*/c.valSet.Size() - c.valSet.F() ) &&
 		c.state.Cmp(StatePrepared) < 0 {
-		logger.Debug("Get Enough 2/3 prepare messages")
+		logger.Info("Get Enough 2/3 prepare messages")
 		c.current.LockHash()
 		c.setState(StatePrepared)
 		c.sendCommit()

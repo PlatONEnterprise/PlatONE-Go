@@ -194,7 +194,6 @@ func (pool *VCPool) real_compute(tx *types.TransactionWrap) error {
 	}
 	pool.mu.Unlock()
 
-	//fmt.Println(ret)
 	//TODO rm 64 bytes messy code
 	if len(ret) < 64 {
 		log.Error("ApplyMessage real_compute return error ")
@@ -202,14 +201,8 @@ func (pool *VCPool) real_compute(tx *types.TransactionWrap) error {
 	}
 
 	res := ret[64:len(ret)]
-	//fmt.Println(string(res))
-	//var a accounts.Account
 	fmt.Println("unlock: ", pool.config.VcActor.Hex())
-	//fmt.Println("password ", pool.config.VcPassword)
 	data := genSetResultInput(tx.TaskId, bytes.TrimLeft(res, "\x00"))
-	//a.Address = pool.config.VcActor
-	//ks := keystore.NewKeyStore(filepath.Join("./build/bin/data/", "keystore"), keystore.StandardScryptN, keystore.StandardScryptP)
-	//ks.Unlock(a, pool.config.VcPassword)
 
 	vc_data := make(map[string]interface{})
 	vc_data["jsonrpc"] = "2.0"
@@ -432,7 +425,7 @@ func (pool *VCPool) InjectTxs(block *types.Block, receipts types.Receipts, bc *B
 
 			// basic validatel
 			if err := pool.validateTx(wrap); err != nil {
-				log.Trace("God ~ Discarding invalid VC transaction", "hash", wrap.Hash(), "err", err)
+				log.Info("God ~ Discarding invalid VC transaction", "hash", wrap.Hash(), "err", err)
 				return
 			}
 			// actor validate
@@ -456,7 +449,7 @@ func (pool *VCPool) add(tx *types.TransactionWrap) (bool, error) {
 
 	// If the transaction fails basic validation, discard it
 	if err := pool.validateTx(tx); err != nil {
-		log.Trace("God ~ Discarding invalid VC transaction", "hash", hash, "err", err)
+		log.Info("God ~ Discarding invalid VC transaction", "hash", hash, "err", err)
 		return false, err
 	}
 
@@ -557,7 +550,6 @@ func vc_verifyStartCalcLogs(logs []*types.Log) (string, error) {
 		if len(log.Topics) == 0 {
 			return "", fmt.Errorf("Reason: %v", "No topic found")
 		}
-		//log.Trace(("start evm call")
 		for _, top := range log.Topics {
 			if bytes.EqualFold(topic, top.Bytes()) {
 				// found valid log

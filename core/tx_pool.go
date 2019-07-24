@@ -539,7 +539,9 @@ func (pool *TxPool) reset(oldHead, newHead *types.Header) {
 		return
 	}
 
-	log.Debug("reset txpool", "RoutineID", common.CurrentGoRoutineID(), "oldHash", oldHash, "oldNumber", oldNumber, "newHash", newHead.Hash(), "newNumber", newHead.Number.Uint64())
+	if newHead != nil{
+		log.Debug("reset txpool", "RoutineID", common.CurrentGoRoutineID(), "oldHash", oldHash, "oldNumber", oldNumber, "newHash", newHead.Hash(), "newNumber", newHead.Number.Uint64())
+	}
 	// If we're reorging an old state, reinject all dropped transactions
 	var reinject types.Transactions
 
@@ -798,42 +800,6 @@ func (pool *TxPool) validateTx(tx *types.Transaction, local bool) error {
 	if tx.Value().Sign() < 0 {
 		return ErrNegativeValue
 	}
-/*
-	// Ensure the transaction doesn't exceed the current block limit gas.
-	if pool.currentMaxGas < tx.Gas() {
-		return ErrGasLimit
-	}
-*/
-	// Ensure the transaction doesn't exceed the current txansaction limit gas
-	// which stored in the system contract
-	/*
-	callParams := []interface{} {"__sys_ParamManager", "latest"}
-	cnsContractAddr := common.HexToAddress("0x0000000000000000000000000000000000000011")
-	btsRes := common.InnerCall(cnsContractAddr, "getContractAddress", callParams)
-	strRes := common.CallResAsString(btsRes)
-	*/
-
-	//txGasLimit := int64(10000000000000)
-	/*
-	if len(strRes) == 0 {
-		log.Trace("contract not exist", "name", "__sys_ParamManager")
-	} else {
-		if !common.IsHexZeroAddress(strRes) {
-			paramContractAddr := common.HexToAddress(strRes)
-			btsRes = common.InnerCall(paramContractAddr, "getTxGasLimit", []interface{}{})
-			txGasLimit = common.CallResAsInt64(btsRes)
-		}
-	}
-	*/
-	//if common.SysCfg != nil{
-	//    txGasLimit = common.SysCfg.GetTxGasLimit()
-	//}
-
-	//log.Debug("validateTx test", "txslimit", txGasLimit)
-	//if uint64(txGasLimit) < tx.Gas() {
-	//	return ErrTransactionGasLimit
-	//}
-
 	// Make sure the transaction is signed properly
 	from, err := types.Sender(pool.signer, tx)
 	if err != nil {
@@ -841,12 +807,8 @@ func (pool *TxPool) validateTx(tx *types.Transaction, local bool) error {
 	}
 	// Drop non-local transactions under our own minimal accepted gas price
 	local = local || pool.locals.contains(from) // account may be local even if the transaction arrived from the network
-/*	if !local && pool.gasPrice.Cmp(tx.GasPrice()) > 0 {
-		return ErrUnderpriced
-	}*/
 
 	if tx, _, _, _ := rawdb.ReadTransaction(pool.db, tx.Hash()); tx != nil {
-		fmt.Println("Transaction Repeat.....................")
 		return ErrTransactionRepeat
 	}
 
@@ -859,13 +821,6 @@ func (pool *TxPool) validateTx(tx *types.Transaction, local bool) error {
 	if pool.currentState.GetBalance(from).Cmp(tx.Value()) < 0 {
 		return ErrInsufficientFunds
 	}
-	/*intrGas, err := IntrinsicGas(tx.Data(), tx.To() == nil, pool.homestead)
-	if err != nil {
-		return err
-	}
-	if tx.Gas() < intrGas {
-		return ErrIntrinsicGas
-	}*/
 
 	return nil
 }
