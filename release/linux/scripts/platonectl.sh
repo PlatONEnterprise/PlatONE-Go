@@ -2,11 +2,11 @@
 
 SCRIPT_NAME="$(basename ${0})"
 CURRENT_PATH=`pwd`
-WORKSPACE_PATH=`cd ${CURRENT_PATH}/../../.. && echo ${PWD}`
-BIN_PATH=${WORKSPACE_PATH}/chain/PlatONE_linux/bin
-CONF_PATH=${WORKSPACE_PATH}/chain/PlatONE_linux/conf
-SCRIPT_PATH=${WORKSPACE_PATH}/chain/PlatONE_linux/script
-DATA_PATH=${WORKSPACE_PATH}/chain/PlatONE_linux/data
+WORKSPACE_PATH=`cd ${CURRENT_PATH}/.. && echo ${PWD}`
+BIN_PATH=${WORKSPACE_PATH}/bin
+CONF_PATH=${WORKSPACE_PATH}/conf
+SCRIPT_PATH=${WORKSPACE_PATH}/script
+DATA_PATH=${WORKSPACE_PATH}/data
 ENABLE=""
 DISENABLE=""
 NODE_ID=0
@@ -508,14 +508,14 @@ function clear() {
         shiftOption2 $#
         stop -n $2
         echo "[INFO]: clear node id: ${2}"
-        NODE_DIR=${WORKSPACE_PATH}/chain/PlatONE_linux/data/node-${2}
+        NODE_DIR=${WORKSPACE_PATH}/data/node-${2}
         echo "[INFO]: clean NODE_DIR: ${NODE_DIR}"
         rm -rf ${NODE_DIR}
         ;;
     --all | -a)
         stop -a
         echo "[INFO]: clear all nodes data"
-        data=${WORKSPACE_PATH}/chain/PlatONE_linux/data
+        data=${WORKSPACE_PATH}/data
         rm -rf ${data}/*
         clearConf ctool.json
         clearConf genesis.json

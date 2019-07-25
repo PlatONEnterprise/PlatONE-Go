@@ -181,25 +181,20 @@ function compile_system_contracts() {
     fi
 
     # recompile the system contracts
-    echo "[INFO]: Do You What To Recompile The System Contracts ? (Make sure to put the source code of the system contract in ${WORKSPACE_PATH}/contracts)"
+    echo "[INFO]: Do You What To Recompile The System Contracts ? (Make sure to put the source code of the system contract in ${SYS_CONTRACTS_PATH})"
     yes_or_no
     if [ $? -eq 0 ]; then
         return
     fi
 
     # Recompile system contract
-    cd ${WORKSPACE_PATH}/contracts
-    echo `pwd`
+    cd ${SYS_CONTRACTS_PATH}
 
-    rm -rf ${WORKSPACE_PATH}/contracts/build
-
-    ${WORKSPACE_PATH}/contracts/script/autoproject.sh .
-
-    # Copy the compiled contracts to the directory ../conf/contracts 
-    cp ${WORKSPACE_PATH}/contracts/build/systemContract/*/*json ${WORKSPACE_PATH}/contracts/build/systemContract/*/*wasm  ${WORKSPACE_PATH}/chain/PlatONE_linux/conf/contracts
+    rm -rf ${SYS_CONTRACTS_PATH}/build
+    ./script/autoproject.sh .
+    cp ${SYS_CONTRACTS_PATH}/build/systemContract/*/*json ${SYS_CONTRACTS_PATH}/build/systemContract/*/*wasm  ${WORKSPACE_PATH}/conf/contracts
 
     cd ${CURRENT_PATH}
-    echo `pwd`
 }
 
 
@@ -227,14 +222,9 @@ USAGE: platonectl.sh setupgen [options]
 }
 
 # variables
-SCRIPT_NAME=$0
-SCRIPT_DIR_R=`dirname "${SCRIPT_NAME}"`
 CURRENT_PATH=`pwd`
-cd ${SCRIPT_DIR_R}
-SCRIPT_DIR=`pwd`
 cd ${CURRENT_PATH}
 NODE_ID=0
-#SCRIPT_DIR="$( cd -P "$( dirname "${SCRIPT_NAME}" )" >/dev/null 2>&1 && pwd )"NODE_ID=0
 IP=127.0.0.1
 P2P_PORT=16791
 OBSERVE_NODES=""
@@ -242,13 +232,18 @@ VALIDATOR_NODES=""
 AUTO=false
 
 CURRENT_PATH=`pwd`
-cd ${SCRIPT_DIR}/../../..
+cd ${CURRENT_PATH}/..
 WORKSPACE_PATH=`pwd`
 cd ${CURRENT_PATH}
 
-BIN_PATH=${WORKSPACE_PATH}/chain/PlatONE_linux/bin
-CONF_PATH=${WORKSPACE_PATH}/chain/PlatONE_linux/conf
-SCRIPT_PATH=${WORKSPACE_PATH}/chain/PlatONE_linux/scripts
+BIN_PATH=${WORKSPACE_PATH}/bin
+CONF_PATH=${WORKSPACE_PATH}/conf
+SCRIPT_PATH=${WORKSPACE_PATH}/scripts
+mkdir ${WORKSPACE_PATH}/conf/contracts
+
+cd ${WORKSPACE_PATH}/../../cmd/SysContracts
+SYS_CONTRACTS_PATH=`pwd`
+cd -
 
 while [ ! $# -eq 0 ]
 do
@@ -286,7 +281,7 @@ do
     shift 2
 done
 
-NODE_DIR=${WORKSPACE_PATH}/chain/PlatONE_linux/data/node-${NODE_ID}
+NODE_DIR=${WORKSPACE_PATH}/data/node-${NODE_ID}
 
 if [ -d ${NODE_DIR} ]; then
     echo "root node datadir: ${NODE_DIR}"

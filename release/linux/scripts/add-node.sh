@@ -37,10 +37,7 @@ function shiftOption2() {
 
 # variables
 SCRIPT_NAME=$0
-SCRIPT_DIR_R=`dirname "${SCRIPT_NAME}"`
 CURRENT_PATH=`pwd`
-cd ${SCRIPT_DIR_R}
-SCRIPT_DIR=`pwd`
 cd ${CURRENT_PATH}
 NODE_ID=0
 
@@ -54,13 +51,13 @@ IS_ROOT=false
 ACCOUNT=""
 DESC=""
 CURRENT_PATH=`pwd`
-cd ${SCRIPT_DIR}/../../..
+cd ${CURRENT_PATH}/..
 WORKSPACE_PATH=`pwd`
 cd ${CURRENT_PATH}
 
-BIN_PATH=${WORKSPACE_PATH}/chain/PlatONE_linux/bin
-CONF_PATH=${WORKSPACE_PATH}/chain/PlatONE_linux/conf
-SCRIPT_PATH=${WORKSPACE_PATH}/chain/PlatONE_linux/scripts
+BIN_PATH=${WORKSPACE_PATH}/bin
+CONF_PATH=${WORKSPACE_PATH}/conf
+SCRIPT_PATH=${WORKSPACE_PATH}/scripts
 
 while [ ! $# -eq 0 ]
 do
@@ -185,7 +182,7 @@ function replace() {
     fi
 }
 
-NODE_DIR=${WORKSPACE_PATH}/chain/PlatONE_linux/data/node-${NODE_ID}
+NODE_DIR=${WORKSPACE_PATH}/data/node-${NODE_ID}
 readEnv
 replace
 check

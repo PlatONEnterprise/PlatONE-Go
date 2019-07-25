@@ -35,13 +35,13 @@ IP=127.0.0.1
 PUBKEY=""
 
 CURRENT_PATH=`pwd`
-cd ${SCRIPT_DIR}/../../..
+cd ${SCRIPT_DIR}/..
 WORKSPACE_PATH=`pwd`
 cd ${CURRENT_PATH}
 
-BIN_PATH=${WORKSPACE_PATH}/chain/PlatONE_linux/bin
-CONF_PATH=${WORKSPACE_PATH}/chain/PlatONE_linux/conf
-SCRIPT_PATH=${WORKSPACE_PATH}/chain/PlatONE_linux/scripts
+BIN_PATH=${WORKSPACE_PATH}/bin
+CONF_PATH=${WORKSPACE_PATH}/conf
+SCRIPT_PATH=${WORKSPACE_PATH}/scripts
 
 while [ ! $# -eq 0 ]
 do
@@ -63,7 +63,7 @@ do
     shift 2
 done
 
-NODE_DIR=${WORKSPACE_PATH}/chain/PlatONE_linux/data/node-${NODE_ID}
+NODE_DIR=${WORKSPACE_PATH}/data/node-${NODE_ID}
 
 if [ -d ${NODE_DIR} ]; then
     echo "NODE_DIR: ${NODE_DIR}"

@@ -31,14 +31,14 @@ BOOTNODES=""
 LOG_SIZE=67108864
 
 CURRENT_PATH=`pwd`
-cd ${SCRIPT_DIR}/../../..
+cd ${SCRIPT_DIR}/..
 WORKSPACE_PATH=`pwd`
 cd ${CURRENT_PATH}
 
-BIN_PATH=${WORKSPACE_PATH}/chain/PlatONE_linux/bin
-CONF_PATH=${WORKSPACE_PATH}/chain/PlatONE_linux/conf
-SCRIPT_PATH=${WORKSPACE_PATH}/chain/PlatONE_linux/scripts
-DATA_PATH=${WORKSPACE_PATH}/chain/PlatONE_linux/data
+BIN_PATH=${WORKSPACE_PATH}/bin
+CONF_PATH=${WORKSPACE_PATH}/conf
+SCRIPT_PATH=${WORKSPACE_PATH}/scripts
+DATA_PATH=${WORKSPACE_PATH}/data
 
 function shiftOption2() {
     if [[ $1 -lt 2 ]];then
@@ -89,7 +89,7 @@ if [[ $NODE_ID == "" ]];then
     exit
 fi
 
-NODE_DIR=${WORKSPACE_PATH}/chain/PlatONE_linux/data/node-${NODE_ID}
+NODE_DIR=${WORKSPACE_PATH}/data/node-${NODE_ID}
 LOG_DIR=${NODE_DIR}/logs
 
 function readFile() {
