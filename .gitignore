@@ -59,3 +59,18 @@ go.sum
 
 life/resolver/builtins/build
 life/resolver/softfloat/*
+
+# SysContracts
+
+cmd/SysContracts/build/
+md/SysContracts/buildTest/
+cmd/SysContracts/cmake-build-debug/
+cmd/SysContracts/buildUnitTest/
+cmd/SysContracts/database/
+cmd/SysContracts/*.cmake
+cmd/SysContracts/*.bc
+cmd/SysContracts/*.cpp.abi.json
+cmd/SysContracts/*.s
+cmd/SysContracts/*.wasm
+cmd/SysContracts/*.wast
+c
