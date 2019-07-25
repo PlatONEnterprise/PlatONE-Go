@@ -11,9 +11,13 @@
 GOBIN = $(shell pwd)/build/bin
 GO ?= latest
 
+syscontracts:
+	build/build_syscontracts.sh
+
 platone:
 	build/build_deps.sh
 	build/env.sh go run build/ci.go install ./cmd/platone
+	@cp $(GOBIN)/platone $(shell pwd)/release/linux/bin/
 	@echo "Done building."
 	@echo "Run \"$(GOBIN)/platone\" to launch platone."
 
@@ -36,7 +40,9 @@ swarm:
 
 all:
 	build/build_deps.sh
+	build/build_syscontracts.sh
 	build/env.sh go run build/ci.go install
+	build/move_bin_to_release.sh
 
 all-with-mpc:
 	build/build_deps.sh
