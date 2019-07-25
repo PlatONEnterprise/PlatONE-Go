@@ -96,6 +96,7 @@ release/linux/bin/test_runner
 release/linux/bin/wagon_run
 release/linux/bin/wasm
 release/linux/bin/wnode
-
-
+release/linux/conf/ctool.json
+release/linux/conf/genesis.json
+release/linux/data/
 
