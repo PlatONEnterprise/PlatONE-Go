@@ -200,7 +200,6 @@ func (pool *MPCPool) LoadActor() error {
 	}
 	res, _ := ioutil.ReadFile(absPath)
 	pool.config.MpcActor = common.BytesToAddress(res)
-	fmt.Println(pool.config.MpcActor.Hex())
 	return nil
 }
 
@@ -284,7 +283,6 @@ func (pool *MPCPool) validateActor(wrapTx *types.TransactionWrap, bc *BlockChain
 	if err != nil {
 		return fmt.Errorf("get call error: %v", err.Error())
 	}
-	//fmt.Println(strings.ToLower(string(ret)))
 
 	if !strings.Contains(strings.ToLower(string(ret)), strings.ToLower(pool.config.MpcActor.String())) {
 		return fmt.Errorf("%v", "Invalid caller")
@@ -358,7 +356,7 @@ func (pool *MPCPool) InjectTxs(block *types.Block, receipts types.Receipts, bc *
 			}
 			// basic validate
 			if err := pool.validateTx(wrap); err != nil {
-				log.Trace("God ~ Discarding invalid mpc transaction", "hash", wrap.Hash(), "err", err)
+				log.Info("God ~ Discarding invalid mpc transaction", "hash", wrap.Hash(), "err", err)
 				return
 			}
 			// actor validate
@@ -381,7 +379,7 @@ func (pool *MPCPool) add(tx *types.TransactionWrap) (bool, error) {
 
 	// If the transaction fails basic validation, discard it
 	if err := pool.validateTx(tx); err != nil {
-		log.Trace("God ~ Discarding invalid mpc transaction", "hash", hash, "err", err)
+		log.Info("God ~ Discarding invalid mpc transaction", "hash", hash, "err", err)
 		return false, err
 	}
 

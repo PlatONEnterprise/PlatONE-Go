@@ -114,7 +114,7 @@ func (sb *backend) HandleMsg(addr common.Address, msg p2p.Msg) (bool, error) {
 				//TD    *big.Int
 			}
 			if err := msg.Decode(&request); err != nil {
-				log.Debug("Proposer was unable to decode the NewBlockMsg", "error", err)
+				log.Warn("Proposer was unable to decode the NewBlockMsg", "error", err)
 				return false, nil
 			}
 			newRequestedBlock := request.Block

@@ -128,7 +128,6 @@ func (c *Config) Run(cfgPath string) error {
 					fmt.Sscanf(arg.Value, "%d", &val)
 					args = append(args, int64(val))
 				}
-				fmt.Printf("Entry = %d\n", entryID)
 				ret, err := localVM.Run(entryID, args...)
 				if err != nil {
 					panic(err)

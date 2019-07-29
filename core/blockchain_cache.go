@@ -46,11 +46,11 @@ func (pbc *BlockChainCache) CurrentBlock() *types.Block {
 func (pbc *BlockChainCache) GetBlock(hash common.Hash, number uint64) *types.Block {
 	var block *types.Block
 	if cbft, ok := pbc.Engine().(consensus.Bft); ok {
-		log.Trace("find block in cbft", "RoutineID", common.CurrentGoRoutineID(), "hash", hash, "number", number)
+		log.Trace("find block on cbft engine", "RoutineID", common.CurrentGoRoutineID(), "hash", hash, "number", number)
 		block = cbft.GetBlock(hash, number)
 	}
 	if block == nil {
-		log.Trace("cannot find block in cbft, try to find it in chain", "RoutineID", common.CurrentGoRoutineID(), "hash", hash, "number", number)
+		log.Trace("cannot find block on cbft engine , try to find it in chain", "RoutineID", common.CurrentGoRoutineID(), "hash", hash, "number", number)
 		block = pbc.getBlock(hash, number)
 		if block == nil {
 			log.Trace("cannot find block in chain", "RoutineID", common.CurrentGoRoutineID(), "hash", hash, "number", number)

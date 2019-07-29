@@ -9,7 +9,7 @@ type Memory struct {
 	Memory []byte
 	Start  int //start position for malloc
 	Size   int //memory size for malloc
-	tree   []int
+	tree   tree
 }
 
 func (m *Memory) Malloc(size int) int {

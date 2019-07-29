@@ -64,7 +64,7 @@ func NewWasmCache(size int) (*WasmLDBCache, error) {
 				buffer := new(bytes.Buffer)
 				enc := gob.NewEncoder(buffer)
 				if err := enc.Encode(module); err != nil {
-					log.Error("encode module err:", err)
+					log.Error("encode module", "err", err)
 					return
 				}
 				w.db.Put(addr.Bytes(), buffer.Bytes(), nil)
@@ -121,7 +121,7 @@ func (w *WasmLDBCache) Get(key common.Address) (*WasmModule, bool) {
 				buffer := bytes.NewReader(value)
 				dec := gob.NewDecoder(buffer)
 				if err := dec.Decode(&module); err != nil {
-					log.Error("decode module err:", err)
+					log.Error("decode module", "err", err)
 					return nil, false
 				}
 				w.lru.Add(key, &module)

@@ -95,7 +95,11 @@ func  (in *WASMInterpreter) preCheckFunction(contract *Contract, input []byte, a
 		key = append(key,byte(0))
 		key = append([]byte{byte(len(key))}, key...)
 
-		cnsManagerAddr := common.HexToAddress(string(statedb.GetState(key)[1:]))
+		cnsManagerBytes := statedb.GetState(key)
+		if len(cnsManagerBytes)<=1{
+			return false, &common.Address{},nil
+		}
+		cnsManagerAddr := common.HexToAddress(string(cnsManagerBytes[1:]))
 
 		return false, &cnsManagerAddr,nil
 	}
@@ -213,7 +217,7 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 
 	res, err := lvm.RunWithGasLimit(entryID, int(context.GasLimit), params...)
 	if err != nil {
-		fmt.Println("throw exception:", err.Error())
+		log.Error("RunWithGasLimit error", "err", err.Error())
 		return nil, err
 	}
 	if contract.Gas > context.GasUsed {
@@ -268,7 +272,6 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 		finalData = append(finalData, sizeHash.Bytes()...)
 		finalData = append(finalData, dataByt...)
 
-		//fmt.Println("CallReturn:", string(returnBytes))
 		return finalData, nil
 	}
 	return nil, nil
@@ -421,11 +424,9 @@ func parseRlpData(rlpData []byte) (int64, []byte, []byte, error) {
 	}
 	if v, ok := iRlpList[1].([]byte); ok {
 		code = v
-		//fmt.Println("dstCode: ", common.Bytes2Hex(code))
 	}
 	if v, ok := iRlpList[2].([]byte); ok {
 		abi = v
-		//fmt.Println("dstAbi:", common.Bytes2Hex(abi))
 	}
 	return txType, abi, code, nil
 }

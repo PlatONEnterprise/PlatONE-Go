@@ -25,7 +25,7 @@ func (c *core) handleRequest(request *istanbul.Request) error {
 
 	if err := c.checkRequestMsg(request); err != nil {
 		if err == errInvalidMessage {
-			logger.Warn("invalid request")
+			logger.Warn("handleRequest: invalid request")
 			return err
 		}
 		logger.Warn("unexpected request", "err", err, "number", request.Proposal.Number(), "hash", request.Proposal.Hash())

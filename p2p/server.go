@@ -366,10 +366,10 @@ func UpdatePeer() {
 		return
 	}
 	joinNodes := make([]string, 0)
-	for i, peer := range server.PeersInfo() {
+	for _, peer := range server.PeersInfo() {
 		en := fmt.Sprintf("enode://%s@%s", peer.ID, peer.Network.RemoteAddress)
 		joinNodes = append(joinNodes, en)
-		log.Info("joined peer", "index", i, "curPeer", en)
+		//log.Info("joined peer", "index", i, "curPeer", en)
 	}
 	log.Info("********** current joinNodes length **********", "len", len(joinNodes))
 	if err := server.ExcludeDelNodes(joinNodes); err != nil {
@@ -1052,7 +1052,7 @@ func (srv *Server) SetupConn(fd net.Conn, flags connFlag, dialDest *discover.Nod
 	err := srv.setupConn(c, flags, dialDest)
 	if err != nil {
 		c.close(err)
-		srv.log.Trace("Setting up connection failed", "id", c.id, "err", err)
+		srv.log.Info("Setting up connection failed", "id", c.id, "err", err)
 	}
 	return err
 }

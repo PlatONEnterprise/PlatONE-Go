@@ -107,7 +107,6 @@ func (sb *backend) Author(header *types.Header) (common.Address, error) {
 // given engine. Verifying the seal may be done optionally here, or explicitly
 // via the VerifySeal method.
 func (sb *backend) VerifyHeader(chain consensus.ChainReader, header *types.Header, seal bool) error {
-	//log.Info("VerifyHeader has pro")
 	return sb.verifyHeader(chain, header, nil)
 }
 
@@ -119,7 +118,6 @@ func (sb *backend) verifyHeader(chain consensus.ChainReader, header *types.Heade
 	if header.Number == nil {
 		return errUnknownBlock
 	}
-	//log.Info("VerifyHeader has pro2")
 	// Don't waste time checking blocks from the future
 	if header.Time.Cmp(big.NewInt(now().Unix()+30)) > 0 {
 		return consensus.ErrFutureBlock
@@ -162,7 +160,6 @@ func (sb *backend) verifyCascadingFields(chain consensus.ChainReader, header *ty
 		return nil
 	}
 
-	log.Info("verifyCascadingFields")
 	// Ensure that the block's timestamp isn't too close to it's parent
 	var parent *types.Header
 	if len(parents) > 0 {
@@ -177,14 +174,12 @@ func (sb *backend) verifyCascadingFields(chain consensus.ChainReader, header *ty
 		return errInvalidTimestamp
 	}
 	// Verify validators in extraData. Validators in snapshot and extraData should be the same.
-	log.Info("getSnapShot")
 	snap, err := sb.snapshot(chain, number-1, header.ParentHash, parents)
 	if err != nil {
 		return err
 	}
 	validators := make([]byte, len(snap.validators())*common.AddressLength)
 	for i, validator := range snap.validators() {
-		//log.Info("validator is: ", "address", validator)
 		copy(validators[i*common.AddressLength:], validator[:])
 	}
 	if err := sb.verifySigner(chain, header, parents); err != nil {
@@ -259,7 +254,6 @@ func (sb *backend) verifyCommittedSeals(chain consensus.ChainReader, header *typ
 	if number == 0 {
 		return nil
 	}
-	log.Info("verifyCommittedSeals")
 	// Retrieve the snapshot needed to verify this header and cache it
 	snap, err := sb.snapshot(chain, number-1, header.ParentHash, parents)
 	if err != nil {
@@ -410,7 +404,7 @@ func (sb *backend) Seal(chain consensus.ChainReader, block *types.Block, sealRes
 		return nil, err
 	}
 	if _, v := snap.ValSet.GetByAddress(sb.address); v == nil {
-			return nil, errUnauthorized
+		return nil, errUnauthorized
 	}
 
 	parent := chain.GetHeader(header.ParentHash, number-1)
@@ -569,7 +563,7 @@ func (sb *backend) snapshot(chain consensus.ChainReader, number uint64, hash com
 			//}
 
 			addrs := make([]common.Address, 0)
-			for _, nodeId := range sb.config.ValidatorNodes {
+			for _, nodeId := range sb.config.ValidatorNodes[:1] {
 
 				prefix := make([]byte, 1)
 				prefix[0] = 4

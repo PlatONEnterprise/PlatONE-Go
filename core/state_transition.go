@@ -221,20 +221,19 @@ func ApplyMessage(evm *vm.EVM, msg Message, gp *GasPool) ([]byte, uint64, bool, 
 		var cnsData [][]byte
 
 		if err := rlp.DecodeBytes(cnsRawData, &cnsData); err != nil {
-			log.Debug("Decode cnsRawData failed, ", err)
+			log.Warn("Decode cnsRawData failed", "err", err)
 			evm.StateDB.SetNonce(msg.From(), evm.StateDB.GetNonce(msg.From())+1)
 			return nil, 0, true, nil
 		}
 
 		if len(cnsData) < 3 {
-			log.Debug("cnsData < 3 ")
 			evm.StateDB.SetNonce(msg.From(), evm.StateDB.GetNonce(msg.From())+1)
 			return nil, 0, true, nil
 		}
 
 		addr, err := GetCnsAddr(evm, msg, string(cnsData[1]))
 		if err != nil {
-			log.Debug("GetCnsAddr failed, ", err)
+			log.Warn("GetCnsAddr failed", "err", err)
 			evm.StateDB.SetNonce(msg.From(), evm.StateDB.GetNonce(msg.From())+1)
 			return nil, 0, true, nil
 		}
@@ -244,7 +243,7 @@ func ApplyMessage(evm *vm.EVM, msg Message, gp *GasPool) ([]byte, uint64, bool, 
 		cnsData = append(cnsData[:1], cnsData[2:]...)
 		cnsRawData, err = rlp.EncodeToBytes(cnsData)
 		if err != nil {
-			log.Debug("Encode Cns Data failed, ", err)
+			log.Warn("Encode Cns Data failed", "err", err)
 			evm.StateDB.SetNonce(msg.From(), evm.StateDB.GetNonce(msg.From())+1)
 			return nil, 0, true, nil
 		}
@@ -302,7 +301,7 @@ func (st *StateTransition) buyContractGas(contractAddr string) error {
 	params := []interface{}{addr}
 	ret, _, err := st.doCallContract(contractAddr, "getBalance", params)
 	if nil != err {
-		fmt.Println(err)
+		log.Warn("buyContractGas error", "err", err.Error())
 		return err
 	}
 
@@ -504,29 +503,29 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 	var list []state.FwElem
 
 	if !addressCompare(stateDb.GetContractCreator(contractAddr), caller) {
-		log.Error("FW : error, only contract owner can set firewall setting!")
+		log.Warn("FW : error, only contract owner can set firewall setting!")
 		return nil, 0, fwErr
 	}
 
 	if err = rlp.DecodeBytes(input, &fwData); err != nil {
-		log.Debug("FW : error, fwData decoded failure!")
+		log.Warn("FW : error, fwData decoded failure!")
 		return nil, 0, fwErr
 	}
 
 	// check parameters
 	if len(fwData) < 2 {
-		log.Debug("FW : error, require function name!")
+		log.Warn("FW : error, require function name!")
 		return nil, 0, fwErr
 	}
 	funcName = string(fwData[1])
 	if funcName == "__sys_FwOpen" || funcName == "__sys_FwClose" || funcName == "__sys_FwStatus" {
 		if len(fwData) != 2 {
-			log.Debug("FW : error, wrong function parameters!")
+			log.Warn("FW : error, wrong function parameters!")
 			return nil, 0, fwErr
 		}
 	} else if funcName == "__sys_FwClear" {
 		if len(fwData) != 3 {
-			log.Debug("FW : error, wrong function parameters!")
+			log.Warn("FW : error, wrong function parameters!")
 			return nil, 0, fwErr
 		}
 
@@ -536,13 +535,13 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 		} else if listName == "Reject" {
 			act = state.REJECT
 		} else {
-			log.Debug("FW : error, action is invalid!")
+			log.Warn("FW : error, action is invalid!")
 			return nil, 0, fwErr
 		}
 
 	} else if funcName == "__sys_FwAdd" || funcName == "__sys_FwDel" || funcName == "__sys_FwSet" {
 		if len(fwData) != 4 {
-			log.Debug("FW : error, wrong function parameters!")
+			log.Warn("FW : error, wrong function parameters!")
 			return nil, 0, fwErr
 		}
 
@@ -553,7 +552,7 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 		} else if listName == "Reject" {
 			act = state.REJECT
 		} else {
-			log.Debug("FW : error, action is invalid!")
+			log.Warn("FW : error, action is invalid!")
 			return nil, 0, fwErr
 		}
 
@@ -561,7 +560,7 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 		for _, e := range elements {
 			tmp := strings.Split(e, ":")
 			if len(tmp) != 2 {
-				log.Debug("FW : error, wrong function parameters!")
+				log.Warn("FW : error, wrong function parameters!")
 				return nil, 0, fwErr
 			}
 
@@ -574,13 +573,13 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 			list = append(list, fwElem)
 		}
 
-	} else  if  funcName == "__sys_FwImport"{
+	} else if funcName == "__sys_FwImport" {
 		if len(fwData) != 3 {
-			log.Debug("FW : error, wrong function parameters!")
+			log.Warn("FW : error, wrong function parameters!")
 			return nil, 0, fwErr
 		}
 	} else {
-		log.Debug("FW : error, wrong function name!")
+		log.Warn("FW : error, wrong function name!")
 		return nil, 0, fwErr
 	}
 
@@ -598,7 +597,7 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 	case "__sys_FwSet":
 		stateDb.FwSet(contractAddr, act, list)
 	case "__sys_FwImport":
-		stateDb.FwImport(contractAddr,fwData[2])
+		stateDb.FwImport(contractAddr, fwData[2])
 	default:
 		// "__sys_FwStatus"
 		fwStatus = stateDb.GetFwStatus(contractAddr)
@@ -607,7 +606,7 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 	var returnBytes []byte
 	returnBytes, err = json.Marshal(fwStatus)
 	if err != nil {
-		log.Debug("FW : fwStatus Marshal error:", err)
+		log.Warn("FW : fwStatus Marshal error", "err", err)
 		return nil, 0, fwErr
 	}
 	return makeReturnBytes(returnBytes), 0, nil
@@ -617,11 +616,10 @@ func (st *StateTransition) ifUseContractTokenAsFee() (string, bool, error) {
 	params := []interface{}{"__sys_ParamManager", "latest"}
 	binParamMangerAddr, _, err := st.doCallContract(CnsManagerAddr, "getContractAddress", params)
 	if nil != err {
-		fmt.Println(err)
+		log.Warn("ifUseContractTokenAsFee error", "err", err.Error())
 		return "", false, err
 	}
 	paramMangerAddr := utils.Bytes2string(binParamMangerAddr)
-	//fmt.Println("paramManagerAddr:",paramMangerAddr)
 
 	if "0x0000000000000000000000000000000000000000" == paramMangerAddr {
 		//fmt.Println("paramManager contract address not found")//TODO
@@ -631,11 +629,10 @@ func (st *StateTransition) ifUseContractTokenAsFee() (string, bool, error) {
 	params = []interface{}{}
 	binContractName, _, err := st.doCallContract(paramMangerAddr, "getGasContractName", params)
 	if nil != err {
-		fmt.Println(err)
+		log.Warn("st.doCallContract error", "err", err.Error())
 		return "", false, err
 	}
 	contractName := utils.Bytes2string(binContractName)
-	//fmt.Println("contractName: ",contractName)
 
 	var isUseContractToken bool = ("" != contractName)
 
@@ -643,7 +640,7 @@ func (st *StateTransition) ifUseContractTokenAsFee() (string, bool, error) {
 	if isUseContractToken {
 		contractAddr, err = st.getContractAddr(contractName)
 		if nil != err {
-			fmt.Println(err)
+			log.Warn("getContractAddr error", "err", err.Error())
 			return "", false, err
 		}
 	}
@@ -656,14 +653,13 @@ func (st *StateTransition) getContractAddr(contractName string) (feeContractAddr
 	var binFeeContractAddr []byte
 	binFeeContractAddr, _, err = st.doCallContract(CnsManagerAddr, "getContractAddress", params)
 	if nil != err {
-		fmt.Println(err)
+		log.Warn("getContractAddr fail", "err", err.Error())
 		return
 	}
 	feeContractAddr = utils.Bytes2string(binFeeContractAddr)
 
 	if "0x0000000000000000000000000000000000000000" == feeContractAddr {
 		err := errors.New("fee contract address not found")
-		fmt.Println(err)
 		return "", err
 	}
 
@@ -795,7 +791,7 @@ func (st *StateTransition) doCallContract(address, funcName string, funcParams [
 		p, e := common.ToBytes(v)
 		if e != nil {
 			err := fmt.Errorf("convert %v to string failed", v)
-			fmt.Println(err) //TODO modify log format
+			log.Error(err.Error())
 			return nil, gas, err
 		}
 		paramArr = append(paramArr, p)
@@ -804,7 +800,7 @@ func (st *StateTransition) doCallContract(address, funcName string, funcParams [
 	paramBytes, e := rlp.EncodeToBytes(paramArr)
 	if e != nil {
 		err := fmt.Errorf("rpl encode error,%s", e.Error())
-		fmt.Println(err) //TODO modify log format
+		log.Error(err.Error())
 		return nil, gas, err
 	}
 
@@ -828,7 +824,7 @@ func (st *StateTransition) refundContractGas(contractAddr string) error {
 	params := []interface{}{addr, remaining.Uint64()}
 	_, _, err := st.doCallContract(contractAddr, "addBalance", params)
 	if nil != err {
-		fmt.Println(err) //TODO format
+		log.Warn("refundContractGas error", "err", err.Error()) //TODO format
 		return err
 	}
 
@@ -860,10 +856,9 @@ func (st *StateTransition) gasUsed() uint64 {
 	return st.initialGas - st.gas
 }
 
-
-func checkSenderPermission(sender common.Address, evm *vm.EVM) (bool, error){
+func checkSenderPermission(sender common.Address, evm *vm.EVM) (bool, error) {
 	allowAny := common.SysCfg.IfCheckContractDeployPermission()
-	if allowAny == 0{
+	if allowAny == 0 {
 		return true, nil
 	}
 
@@ -883,15 +878,13 @@ func checkSenderPermission(sender common.Address, evm *vm.EVM) (bool, error){
 		return false, err
 	}
 	roles := string(res[:])
-	if  strings.Contains(roles, "contractAdmin")  || strings.Contains(roles, "chainCreator") ||
+	if strings.Contains(roles, "contractAdmin") || strings.Contains(roles, "chainCreator") ||
 		strings.Contains(roles, "chainAdmin") || strings.Contains(roles, "contractDeployer") {
 		return true, nil
 	}
 	return false, nil
 
 }
-
-
 
 func isValidUser(sender common.Address, evm *vm.EVM) (bool, error) {
 
@@ -910,10 +903,10 @@ func isValidUser(sender common.Address, evm *vm.EVM) (bool, error) {
 	return false, nil
 }
 
-func getContractAddr(cn string)(common.Address, bool) {
+func getContractAddr(cn string) (common.Address, bool) {
 	conAddr := common.SysCfg.GetContractAddress(cn)
-	if (conAddr == common.Address{}){
-		return  common.Address{}, false
+	if (conAddr == common.Address{}) {
+		return common.Address{}, false
 	}
 	return conAddr, true
 }
@@ -926,4 +919,3 @@ func callContractByFw(conAddr common.Address, fn string, sender common.Address, 
 	return res, err
 
 }
-

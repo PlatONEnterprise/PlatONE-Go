@@ -28,7 +28,6 @@ func main() {
 	// Read WebAssembly *.wasm file.
 	//input, err := ioutil.ReadFile(flag.Arg(0))
 	input, err := ioutil.ReadFile("D:\\repos\\PlatONE-contract\\build\\hello\\hello.wasm")
-	//fmt.Println(common.ToHex(input))
 	if err != nil {
 		panic(err)
 	}
@@ -58,7 +57,6 @@ func main() {
 	// Get the function ID of the entry function to be executed.
 	entryID, ok := vm.GetFunctionExport(*entryFunctionFlag)
 	if !ok {
-		fmt.Printf("Entry function %s not found; starting from 0.\n", *entryFunctionFlag)
 		entryID = 0
 	}
 
@@ -83,5 +81,5 @@ func main() {
 	}
 	end := time.Now()
 
-	fmt.Printf("return value = %d, duration = %v  gasUsed:%d \n", ret, end.Sub(start), vm.Context.GasUsed)
+	rootLog.Info(fmt.Sprintf("return value = %d, duration = %v  gasUsed:%d \n", ret, end.Sub(start), vm.Context.GasUsed))
 }

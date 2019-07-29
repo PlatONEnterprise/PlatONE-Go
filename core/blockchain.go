@@ -1230,7 +1230,6 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		stats.report(chain, i, cache)
 
 		if _, ok := bc.engine.(consensus.Bft); ok {
-			log.Info("load config as insert chain success")
 			bc.syncCBFTParam()
 		}
 	}

@@ -29,12 +29,10 @@ func (t *TransactionWrap) DecodeRLP(s *rlp.Stream) error {
 		return err
 	}
 	t.Transaction, t.Bn, t.FuncName, t.TaskId = ew.Transaction, ew.Bn, ew.FuncName, ew.TaskId
-	//fmt.Println("Decode RLP, bn:", t.Bn)
 	return nil
 }
 
 func (b *TransactionWrap) EncodeRLP(w io.Writer) error {
-	//fmt.Println("EncodeRlp, bn:", b.Bn)
 	return rlp.Encode(w, extwrapper{
 		Transaction: b.Transaction,
 		Bn: b.Bn,

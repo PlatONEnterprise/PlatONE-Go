@@ -97,7 +97,7 @@ func (tp *TreePool) GetTree(pages int) tree {
 	}
 }
 
-func (tp *TreePool) PutTree(tree []int) {
+func (tp *TreePool) PutTree(tree tree) {
 	tp.l.Lock()
 	defer tp.l.Unlock()
 	size := (len(tree) + 1) / 2
