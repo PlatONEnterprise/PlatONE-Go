@@ -149,8 +149,9 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 		return nil, 0, err
 	}
 
-	if(msg.TxType() == types.MigTxType) {
-		migProcess(statedb, *msg.To(), msg.From(), msg.Data())
+	if msg.TxType() == types.MigTxType {
+		_, ret, err :=  migProcess(statedb, *msg.To(), msg.From(), msg.Data())
+		return nil, ret, err
 	}
 
 	// Create a new context to be used in the EVM environment
