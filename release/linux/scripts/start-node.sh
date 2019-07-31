@@ -28,7 +28,7 @@ RPC_PORT=6791
 P2P_PORT=16791
 WS_PORT=26791
 BOOTNODES=""
-EXTRA_OPTIONS=""
+EXTRA_OPTIONS="--debug"
 LOG_SIZE=67108864
 
 CURRENT_PATH=`pwd`
@@ -172,7 +172,7 @@ flag_datadir="--datadir ${NODE_DIR}"
 flag_nodekey="--nodekey ${NODE_DIR}/node.prikey"
 flag_rpc="--rpc --rpcaddr 0.0.0.0 --rpcport ${RPC_PORT}  --rpcapi db,eth,net,web3,admin,personal "
 flag_ws="--ws --wsaddr 0.0.0.0 --wsport ${WS_PORT} "
-flag_logs="--verbosity 3 --wasmlog  ${LOG_DIR}/wasm.log"
+flag_logs=" --wasmlog  ${LOG_DIR}/wasm.log"
 flag_ipc="--ipcpath ${NODE_DIR}/node-${NODE_ID}.ipc "
 flag_pprof=" --pprof --pprofaddr 0.0.0.0 "
 
@@ -182,7 +182,6 @@ nohup ${BIN_PATH}/platone --identity platone ${flag_datadir}  --nodiscover \
         --wsorigins "*" ${flag_logs} ${flag_ipc} \
         --bootnodes ${BOOTNODES} \
         --moduleLogParams {\"platone\": [\"/\"], \"__dir__\": [\"${LOG_DIR}\"], \"__size__\": [\"${LOG_SIZE}\"]} ${EXTRA_OPTIONS}\
-        --debug \
         > /dev/null 2>&1 &
 "
 
@@ -198,6 +197,5 @@ nohup ${BIN_PATH}/platone --identity platone ${flag_datadir}  --nodiscover \
         --wsorigins "*" ${flag_logs} ${flag_ipc} \
         --bootnodes ${BOOTNODES} \
         --moduleLogParams '{"platone_log": ["/"], "__dir__": ["'${LOG_DIR}'"], "__size__": ["'${LOG_SIZE}'"]}' ${EXTRA_OPTIONS} \
-        --debug \
         > /dev/null 2>&1 &
 sleep 3

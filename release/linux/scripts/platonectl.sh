@@ -53,6 +53,7 @@ cat <<EOF
 #c4            --logsize, -s                Log block size (default: 67108864)
 #c4            --logdir, -d                 log dir (default: ../data/node_dir/logs/)
 #c4            --extraoptions, -e           extra platone command options when platone starts
+#c4                                         (default: --debug)
 #c4            --all, -a                    start all node
 #c4            --help, -h                   show help
 #c0        stop                             try to stop the specified node
@@ -228,8 +229,9 @@ function saveConf() {
     if [[ $3 == "" ]];then
         return
     fi
-    if [[ `cat $node_conf | grep $2` != "" ]];then
-        cat $node_conf | sed "s/$2=.*/$2=$3/g" | cat > $node_conf_tmp
+    res=`cat ${node_conf} | grep "$2"`
+    if [[ ${res} != "" ]];then
+        cat $node_conf | sed "s/${2}=.*/${2}=${3}/g" | cat > $node_conf_tmp
         mv $node_conf_tmp $node_conf
     else
         echo "${2}=${3}" >> ${node_conf}
