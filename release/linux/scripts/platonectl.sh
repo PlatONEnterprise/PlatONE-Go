@@ -52,6 +52,8 @@ cat <<EOF
 #c4                                         in genesis.json
 #c4            --logsize, -s                Log block size (default: 67108864)
 #c4            --logdir, -d                 log dir (default: ../data/node_dir/logs/)
+#c4                                         The path connector '/' needs to be escaped
+#c4                                         when set: eg ".\/logs"
 #c4            --extraoptions, -e           extra platone command options when platone starts
 #c4                                         (default: --debug)
 #c4            --all, -a                    start all node
