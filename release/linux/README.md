@@ -65,6 +65,6 @@
 wasm日志默认位置如下，主要打印合约调用中的输出：
 
 ```
-./data/node-[x]/wasm.log
+./data/node-[x]/logs/wasm.log
 ```
 
