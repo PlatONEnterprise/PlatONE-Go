@@ -332,7 +332,7 @@ function stop() {
         pid=`ps -ef | grep "platone --identity platone --datadir ${DATA_PATH}/node-${2} " | grep -v grep | awk '{print $2}'`
         if [[ $pid != "" ]]; then
             echo "[INFO]: stop node: ${2}"
-            kill -9 $pid
+            kill $pid
         fi
         ;;
     --all | -a)

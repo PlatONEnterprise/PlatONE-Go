@@ -175,13 +175,14 @@ flag_ws="--ws --wsaddr 0.0.0.0 --wsport ${WS_PORT} "
 flag_logs=" --wasmlog  ${LOG_DIR}/wasm.log"
 flag_ipc="--ipcpath ${NODE_DIR}/node-${NODE_ID}.ipc "
 flag_pprof=" --pprof --pprofaddr 0.0.0.0 "
+flag_gcmode=" --gcmode  archive "
 
 echo "
 nohup ${BIN_PATH}/platone --identity platone ${flag_datadir}  --nodiscover \
         --port ${P2P_PORT}  ${flag_nodekey} ${flag_rpc} --rpccorsdomain "*" ${flag_ws} \
         --wsorigins "*" ${flag_logs} ${flag_ipc} \
         --bootnodes ${BOOTNODES} \
-        --moduleLogParams {\"platone\": [\"/\"], \"__dir__\": [\"${LOG_DIR}\"], \"__size__\": [\"${LOG_SIZE}\"]} ${EXTRA_OPTIONS}\
+        --moduleLogParams {\"platone\": [\"/\"], \"__dir__\": [\"${LOG_DIR}\"], \"__size__\": [\"${LOG_SIZE}\"]} ${flag_gcmode} ${EXTRA_OPTIONS} \
         > /dev/null 2>&1 &
 "
 
@@ -196,6 +197,6 @@ nohup ${BIN_PATH}/platone --identity platone ${flag_datadir}  --nodiscover \
         --port ${P2P_PORT}  ${flag_nodekey} ${flag_rpc} --rpccorsdomain "*" ${flag_ws} \
         --wsorigins "*" ${flag_logs} ${flag_ipc} \
         --bootnodes ${BOOTNODES} \
-        --moduleLogParams '{"platone_log": ["/"], "__dir__": ["'${LOG_DIR}'"], "__size__": ["'${LOG_SIZE}'"]}' ${EXTRA_OPTIONS} \
+        --moduleLogParams '{"platone_log": ["/"], "__dir__": ["'${LOG_DIR}'"], "__size__": ["'${LOG_SIZE}'"]}'  ${flag_gcmode}  ${EXTRA_OPTIONS} \
         > /dev/null 2>&1 &
 sleep 3
