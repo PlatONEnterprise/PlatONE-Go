@@ -98,6 +98,7 @@ function create_genesis() {
     fi
 
      ${BIN_PATH}/repstr ${CONF_PATH}/genesis.json "DEFAULT-ACCOUNT" 0000000000000000000000000000000000000001
+     ${BIN_PATH}/repstr ${CONF_PATH}/genesis.json "__INTERPRETER__" ${INTERPRETER}
 
     ${BIN_PATH}/ctool codegen --abi ${CONF_PATH}/contracts/cnsProxy.cpp.abi.json --code ${CONF_PATH}/contracts/cnsProxy.wasm > ${CONF_PATH}/cns-code.hex
     
@@ -171,8 +172,7 @@ function setup_genesis() {
     create_genesis $IP ${P2P_PORT}
 }
 
-function compile_system_contracts() {    
-
+function compile_system_contracts() {
     if [ "${AUTO}" = "true" ]; then 
         echo "[INFO]: auto skip compile sys contract, Use existing"
         return
@@ -187,14 +187,18 @@ function compile_system_contracts() {
         return
     fi
 
-    # Recompile system contract
-    cd ${SYS_CONTRACTS_PATH}
+    if [[ -d ${SYS_CONTRACTS_PATH} ]]; then
+        # Recompile system contract
+        cd ${SYS_CONTRACTS_PATH}
 
-    rm -rf ${SYS_CONTRACTS_PATH}/build
-    ./script/autoproject.sh .
-    cp ${SYS_CONTRACTS_PATH}/build/systemContract/*/*json ${SYS_CONTRACTS_PATH}/build/systemContract/*/*wasm  ${WORKSPACE_PATH}/conf/contracts
+        rm -rf ${SYS_CONTRACTS_PATH}/build
+        ./script/autoproject.sh .
+        cp ${SYS_CONTRACTS_PATH}/build/systemContract/*/*json ${SYS_CONTRACTS_PATH}/build/systemContract/*/*wasm  ${WORKSPACE_PATH}/conf/contracts
 
-    cd ${CURRENT_PATH}
+        cd ${CURRENT_PATH}
+    else
+        echo "[ERROR]: not found the source code of the system contract; check the source code path: ${SYS_CONTRACTS_PATH}"
+    fi
 }
 
 
@@ -230,6 +234,7 @@ P2P_PORT=16791
 OBSERVE_NODES=""
 VALIDATOR_NODES=""
 AUTO=false
+INTERPRETER="wasm"
 
 CURRENT_PATH=`pwd`
 cd ${CURRENT_PATH}/..
@@ -239,11 +244,14 @@ cd ${CURRENT_PATH}
 BIN_PATH=${WORKSPACE_PATH}/bin
 CONF_PATH=${WORKSPACE_PATH}/conf
 SCRIPT_PATH=${WORKSPACE_PATH}/scripts
-mkdir ${WORKSPACE_PATH}/conf/contracts
 
-cd ${WORKSPACE_PATH}/../../cmd/SysContracts
-SYS_CONTRACTS_PATH=`pwd`
-cd -
+if [[ ! -d ${WORKSPACE_PATH}/conf/contracts ]];then
+    echo "[INFO]: create contracts dir in: ${WORKSPACE_PATH}/conf/contracts"
+    echo "[WARN]: Please compile the system contract next, will auto put the bytecode and abi in this directory: ${WORKSPACE_PATH}/conf/contracts"
+    mkdir ${WORKSPACE_PATH}/conf/contracts
+fi
+
+SYS_CONTRACTS_PATH=${WORKSPACE_PATH}/../../cmd/SysContracts
 
 while [ ! $# -eq 0 ]
 do
@@ -271,6 +279,10 @@ do
         --validatorNodes | -v)
             echo "bootnodes: $2"
             VALIDATOR_NODES=$2
+            ;;
+        --interpreter | -i)
+            echo "interpreter: #${2}#"
+            INTERPRETER=${2}
             ;;
         *)
             help
