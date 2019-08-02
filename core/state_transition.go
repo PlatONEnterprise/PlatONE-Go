@@ -380,6 +380,11 @@ func makeReturnBytes(ret []byte) []byte {
 //  2. 如果账户data字段为空，pass
 // 	3. 黑名单优先于白名单，后续只有不在黑名单列表，同时在白名单列表里的账户才能pass
 func fwCheck(stateDb vm.StateDB, contractAddr common.Address, caller common.Address, input []byte) ([]byte, bool) {
+
+	if stateDb.IsFwOpened(contractAddr) == false {
+		return nil, true
+	}
+
 	var data [][]byte
 	// 如果账户结构体code字段为空，pass
 	if len(stateDb.GetCode(contractAddr)) == 0 {
@@ -403,10 +408,6 @@ func fwCheck(stateDb vm.StateDB, contractAddr common.Address, caller common.Addr
 
 	var fwStatus state.FwStatus
 	if addressCompare(stateDb.GetContractCreator(contractAddr), caller) {
-		return nil, true
-	}
-
-	if stateDb.IsFwOpened(contractAddr) == false {
 		return nil, true
 	}
 

@@ -18,15 +18,16 @@ package vm
 
 import (
 	"crypto/sha256"
+	"encoding/json"
 	"errors"
-	"math/big"
-
+	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/math"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto/bn256"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"golang.org/x/crypto/ripemd160"
+	"math/big"
 )
 
 // PrecompiledContract is the basic interface for native Go contracts. The implementation
@@ -57,6 +58,7 @@ var PrecompiledContractsByzantium = map[common.Address]PrecompiledContract{
 	common.BytesToAddress([]byte{6}): &bn256Add{},
 	common.BytesToAddress([]byte{7}): &bn256ScalarMul{},
 	common.BytesToAddress([]byte{8}): &bn256Pairing{},
+	common.BytesToAddress([]byte{9}): &ContractTypeInputParsing{},
 }
 
 // RunPrecompiledContract runs and evaluates the output of a precompiled contract.
@@ -358,3 +360,73 @@ func (c *bn256Pairing) Run(input []byte) ([]byte, error) {
 	}
 	return false32Byte, nil
 }
+
+type ContractTypeInputParsing struct{}
+
+func (c *ContractTypeInputParsing) RequiredGas(input []byte) uint64 {
+	return 0
+}
+func (c *ContractTypeInputParsing) Run(input []byte) ([]byte, error) {
+	type inputParsing struct {
+		CT string `json:"contract_type"`
+	}
+	var ip inputParsing
+	if err := json.Unmarshal(input, &ip); err != nil {
+		return nil, err
+	}
+	switch ip.CT {
+	case "wasm":
+		return common.GenerateInputData(&common.WasmInput{}, []byte(input))
+	default:
+		return nil, fmt.Errorf("Dont has this Contract Type: %s\n", ip.CT)
+	}
+}
+
+/*
+func (c *callWasmContract) Run(input []byte) ([]byte, error) {
+	logger := log.New()
+	logger.SetHandler(log.StdoutHandler)
+
+	var wi WasmInput
+	if err := json.Unmarshal(input, &wi); err != nil {
+		log.Warn("unmarshal wasm input error", "input", string(input))
+	}
+	//var abiFunc FuncDesc
+	//for _, value := range wasmInput.Abi {
+	//	if value.Name == string(wasmInput.FuncName) {
+	//		abiFunc = value
+	//	}
+	//}
+	//if abiFunc.Name == ""{
+	//	log.Warn("abi has not the func name")
+	//	return nil, errors.New("abi has not the fun name")
+	//}
+
+	if len(wi.FuncParams)
+
+	if len(abiFunc.Inputs) != len(wasmInput.FuncParams) {
+		return nil, fmt.Errorf("incorrect number of parameters ,request=%d,get=%d\n",
+			len(abiFunc.Inputs), len(wasmInput.FuncParams))
+	}
+
+
+
+	for i, v := range wasmInput.FuncParams {
+		input := abiFunc.Inputs[i]
+		p, e := StringConverter(v, input.Type)
+		if e != nil {
+			return nil, fmt.Errorf("incorrect param type: %s,index:%d", v, i)
+		}
+		paramArr = append(paramArr, p)
+	}
+
+	paramBytes, e := rlp.EncodeToBytes(paramArr)
+	if e != nil {
+		log.Warn("EncodeToBytes(paramArr), error", "err", e.Error())
+		return nil, fmt.Errorf("rpl encode error,%s", e.Error())
+	}
+
+	return paramBytes, nil
+}
+
+*/

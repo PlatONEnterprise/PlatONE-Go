@@ -149,6 +149,8 @@ func NewEVM(ctx Context, statedb StateDB, chainConfig *params.ChainConfig, vmCon
 	// todo: replace the evm to wasm for the interpreter.
 	if strings.EqualFold("evm", chainConfig.VMInterpreter) {
 		evm.interpreters = append(evm.interpreters, NewEVMInterpreter(evm, vmConfig))
+	} else if strings.EqualFold("all", chainConfig.VMInterpreter) {
+		evm.interpreters = append(evm.interpreters, NewWASMInterpreter(evm, vmConfig), NewEVMInterpreter(evm, vmConfig))
 	} else {
 		evm.interpreters = append(evm.interpreters, NewWASMInterpreter(evm, vmConfig))
 	}
