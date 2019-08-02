@@ -37,6 +37,7 @@ type SecureTrie struct {
 	trie             Trie
 	hashKeyBuf       [common.HashLength]byte
 	secKeyCache      map[string][]byte
+	newSecKeyCache      map[string][]byte
 	secKeyCacheOwner *SecureTrie // Pointer to self, replace the key cache on mismatch
 }
 
@@ -106,12 +107,12 @@ func (t *SecureTrie) TryUpdate(key, value []byte) error {
 	if err != nil {
 		return err
 	}
-	t.getSecKeyCache()[string(hk)] = common.CopyBytes(key)
+  	t.getNewSecKeyCache()[string(hk)] = common.CopyBytes(key)
 	return nil
 }
 
 func (t *SecureTrie) TryUpdateValue(key, value []byte) error {
-	t.getSecKeyCache()[string(key)] = common.CopyBytes(value)
+	t.getNewSecKeyCache()[string(key)] = common.CopyBytes(value)
 	return nil
 }
 
@@ -157,6 +158,17 @@ func (t *SecureTrie) Commit(onleaf LeafCallback) (root common.Hash, err error) {
 
 		t.secKeyCache = make(map[string][]byte)
 	}
+
+	if len(t.getNewSecKeyCache()) > 0 {
+		t.trie.db.lock.Lock()
+		for hk, key := range t.newSecKeyCache {
+			t.trie.db.insertPreimage(common.BytesToHash([]byte(hk)), key)
+		}
+		t.trie.db.lock.Unlock()
+
+		t.newSecKeyCache = make(map[string][]byte)
+	}
+
 	// Commit the trie to its intermediate node database
 	return t.trie.Commit(onleaf)
 }
@@ -206,4 +218,11 @@ func (t *SecureTrie) getSecKeyCache() map[string][]byte {
 		t.secKeyCache = make(map[string][]byte)
 	}
 	return t.secKeyCache
+}
+
+func (t *SecureTrie) getNewSecKeyCache() map[string][]byte {
+	if t.newSecKeyCache == nil {
+		t.newSecKeyCache = make(map[string][]byte)
+	}
+	return t.newSecKeyCache
 }

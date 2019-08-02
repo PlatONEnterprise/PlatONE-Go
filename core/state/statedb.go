@@ -498,14 +498,26 @@ func (self *StateDB) CloneAccount(src common.Address, dest common.Address) ([]by
 	}
 	it := trie.NewIterator(srcObject.getTrie(self.db).NodeIterator(nil))
 	for it.Next() {
-		keyTrie := string(self.trie.GetKey(it.Key))
+
+		var value []byte
+		
+		keyTrieCode := self.trie.GetKey(it.Key)
+		if keyTrieCode == nil {
+			log.Warn("CloneAccount Iterator: unable to get keyTrie from hashKey.")
+			continue
+		}
+		keyTrie := string(keyTrieCode)
+
+		value = self.trie.GetKey(it.Value)
+
+		if len(keyTrie) <= 42 {
+			log.Warn("Invalid keyTrie length.")
+			continue
+		}
 		key := []byte(keyTrie[42:])
-		log.Debug("mig322222", keyTrie[42:])
-		log.Debug("mig333333", keyTrie)
-		value := it.Value
 		self.SetState(dest, key, value)
 	}
-	return nil, 0, cloneErr
+	return nil, 0, nil
 }
 
 func (db *StateDB) ForEachStorage(addr common.Address, cb func(key, value common.Hash) bool) {

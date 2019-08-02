@@ -391,18 +391,18 @@ func (self *stateObject) updateTrie(db Database) Trie {
 		self.originStorage[key] = valueKey
 
 		if valueKey == emptyStorage {
-			self.setError(tr.TryDelete([]byte(key)))
+			self.setError(self.trie.TryDelete([]byte(key)))
 			continue
 		}
 
 		v, _ := rlp.EncodeToBytes(bytes.TrimLeft(valueKey[:], "\x00"))
-		self.setError(tr.TryUpdate([]byte(key), v))
+		self.setError(self.trie.TryUpdate([]byte(key), v))
 
 		//flush dirty value
 		if value, ok := self.dirtyValueStorage[valueKey]; ok {
 			delete(self.originValueStorage, valueKey)
 			self.originValueStorage[valueKey] = value
-			self.setError(tr.TryUpdateValue(valueKey.Bytes(), v))
+			self.setError(self.trie.TryUpdateValue(valueKey.Bytes(), v))
 		}
 	}
 

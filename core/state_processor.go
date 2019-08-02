@@ -150,8 +150,29 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	}
 
 	if msg.TxType() == types.MigTxType {
-		_, ret, err :=  migProcess(statedb, *msg.To(), msg.From(), msg.Data())
-		return nil, ret, err
+		_, _, err :=  migProcess(statedb, *msg.To(), msg.From(), msg.Data())
+
+		statedb.SetNonce(msg.From(), statedb.GetNonce(msg.From())+1)
+
+		// Update the state with pending changes
+		var root []byte
+		if config.IsByzantium(header.Number) {
+			statedb.Finalise(true)
+		} else {
+			root = statedb.IntermediateRoot(config.IsEIP158(header.Number)).Bytes()
+		}
+		*usedGas += 0
+
+		// Create a new receipt for the transaction, storing the intermediate root and gas used by the tx
+		// based on the eip phase, we're passing whether the root touch-delete accounts.
+		receipt := types.NewReceipt(root, false, *usedGas)
+		receipt.TxHash = tx.Hash()
+		receipt.GasUsed = 0
+		// Set the receipt logs and create a bloom for filtering
+		receipt.Logs = statedb.GetLogs(tx.Hash())
+		receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
+
+		return receipt, 0, err
 	}
 
 	// Create a new context to be used in the EVM environment

@@ -192,7 +192,7 @@ func migDeploy(c *cli.Context) error {
 	addr := c.String("addr")
 	funcParams := c.String("func")
 	// txType := c.Int("type")
-	txType := MigTxType
+	txType := migTxType
 
 	if addr == "" {
 		fmt.Printf("addr can't be empty!")
@@ -346,7 +346,7 @@ func FwInvokeContract(contractAddr string, funcParams string, txType int) error 
 	return nil
 }
 
-// migerateContract function
+// migrateContract function
 func migDeployContract(contractAddr string, funcParams string, txType int) error {
 
 	//parse the function and param
