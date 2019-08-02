@@ -52,6 +52,10 @@ cat <<EOF
 #c4                                         in genesis.json
 #c4            --logsize, -s                Log block size (default: 67108864)
 #c4            --logdir, -d                 log dir (default: ../data/node_dir/logs/)
+#c4                                         The path connector '/' needs to be escaped
+#c4                                         when set: eg ".\/logs"
+#c4            --extraoptions, -e           extra platone command options when platone starts
+#c4                                         (default: --debug)
 #c4            --all, -a                    start all node
 #c4            --help, -h                   show help
 #c0        stop                             try to stop the specified node
@@ -166,7 +170,7 @@ function shiftOption2() {
 }
 
 function helpOption() {
-    for op in $@
+    for op in "$@"
     do
         if [[ $op == "--help" ]] || [[ $op == "-h" ]]; then
             return 1
@@ -175,12 +179,12 @@ function helpOption() {
 }
 
 function init() {
-    helpOption $@
+    helpOption "$@"
     if [[ $? -ne 0 ]];then
         showUsage 1
         return
     fi
-    ./init-node.sh $@
+    ./init-node.sh "$@"
 }
 
 function one() {
@@ -191,7 +195,7 @@ function one() {
 }
 
 function four() {
-    ./build-4-nodes-chain.sh $@
+    ./build-4-nodes-chain.sh "$@"
 }
 
 function nodeIsRunning() {
@@ -227,8 +231,9 @@ function saveConf() {
     if [[ $3 == "" ]];then
         return
     fi
-    if [[ `cat $node_conf | grep $2` != "" ]];then
-        cat $node_conf | sed "s/$2=.*/$2=$3/g" | cat > $node_conf_tmp
+    res=`cat ${node_conf} | grep "$2"`
+    if [[ ${res} != "" ]];then
+        cat $node_conf | sed "s/${2}=.*/${2}=${3}/g" | cat > $node_conf_tmp
         mv $node_conf_tmp $node_conf
     else
         echo "${2}=${3}" >> ${node_conf}
@@ -240,6 +245,7 @@ function start() {
     bns=""
     logsize=""
     logdir=""
+    extraoptions=""
     all="false"
     if [[ $# -eq 0 ]];then
          showUsage 4
@@ -274,6 +280,11 @@ function start() {
             logdir=$2
             shift 2
             ;;
+        --extraoptions | -e)
+            shiftOption2 $#
+            extraoptions=$2
+            shift 2
+            ;;
         --all | -a)
             echo "[INFO]: start all nodes"
              all=true
@@ -287,16 +298,18 @@ function start() {
         checkAllNodeStatus
         for d in ${DISENABLE};do
             echo "[INFO]: start all disable nodes"
-            saveConf $d bootnodes ${bns}
-            saveConf $d logsize ${logsize}
-            saveConf $d logdir ${logdir}
+            saveConf $d bootnodes "${bns}"
+            saveConf $d logsize "${logsize}"
+            saveConf $d logdir "${logdir}"
+            saveConf $d extraoptions "${extraoptions}"
             ./start-node.sh -n $d
         done
         exit
     fi
-    saveConf $nid bootnodes ${bns}
-    saveConf $nid logsize ${logsize}
-    saveConf $nid logdir ${logdir}
+    saveConf $nid bootnodes "${bns}"
+    saveConf $nid logsize "${logsize}"
+    saveConf $nid logdir "${logdir}"
+    saveConf $nid extraoptions "${extraoptions}"
     ./start-node.sh -n $nid
 }
 
@@ -319,7 +332,7 @@ function stop() {
         pid=`ps -ef | grep "platone --identity platone --datadir ${DATA_PATH}/node-${2} " | grep -v grep | awk '{print $2}'`
         if [[ $pid != "" ]]; then
             echo "[INFO]: stop node: ${2}"
-            kill -9 $pid
+            kill $pid
         fi
         ;;
     --all | -a)
@@ -357,30 +370,30 @@ function console() {
 }
 
 function deploySys() {
-    helpOption $@
+    helpOption "$@"
     if [[ $? -ne 0 ]];then
         showUsage 8
         return
     fi
-    ./deploy-system-contract.sh $@
+    ./deploy-system-contract.sh "$@"
 }
 
 function updateSys() {
-    helpOption $@
+    helpOption "$@"
     if [[ $? -ne 0 ]];then
         showUsage 9
         return
     fi
-    ./update_to_consensus_node.sh $@
+    ./update_to_consensus_node.sh "$@"
 }
 
 function addNode() {
-    helpOption $@
+    helpOption "$@"
     if [[ $? -ne 0 ]];then
         showUsage 10
         return
     fi
-    ./add-node.sh $@
+    ./add-node.sh "$@"
 }
 
 function getInformation() {
@@ -562,12 +575,12 @@ function unlock() {
 }
 
 function setupGenesis() {
-    helpOption $@
+    helpOption "$@"
     if [[ $? -ne 0 ]];then
         showUsage 13
         return
     fi
-    ./setup-genesis.sh $@
+    ./setup-genesis.sh "$@"
 }
 
 function create_account() {
@@ -603,21 +616,21 @@ function createAcc() {
 }
 
 case $1 in
-init) shift; init $@;;
+init) shift; init "$@";;
 one) shift; one;;
-four) shift; four $@;;
-stop) shift; stop $@;;
-start) shift; start $@;;
-restart) shift; restart $@;;
-console) shift; console $@;;
-deploysys) shift; deploySys $@;;
-updatesys) shift; updateSys $@;;
-createacc) shift; createAcc $@;;
-setupgen) shift; setupGenesis $@;;
-addnode) shift; addNode $@;;
-unlock) shift; unlock $@;;
-status) shift; show $@;;
-clear) shift; clear $@;;
+four) shift; four "$@";;
+stop) shift; stop "$@";;
+start) shift; start "$@";;
+restart) shift; restart "$@";;
+console) shift; console "$@";;
+deploysys) shift; deploySys "$@";;
+updatesys) shift; updateSys "$@";;
+createacc) shift; createAcc "$@";;
+setupgen) shift; setupGenesis "$@";;
+addnode) shift; addNode "$@";;
+unlock) shift; unlock "$@";;
+status) shift; show "$@";;
+clear) shift; clear "$@";;
 get) shift; getAllNodes;;
 *) shift; showUsage;;
 esac
