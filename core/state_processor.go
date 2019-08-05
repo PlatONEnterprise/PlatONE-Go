@@ -118,19 +118,25 @@ func migProcess(stateDb *state.StateDB, contractAddr common.Address, caller comm
 		return nil, 0, migErr
 	}
 	funcName = string(migData[1])
-	if funcName == "migrate" {
+	if funcName == "migrateFrom" {
 		if len(migData) != 3 {
 			log.Debug("MIG : error, wrong function parameters!")
 			return nil, 0, migErr
 		}
 		sourceAddr = common.HexToAddress(string(migData[2]))
+
+		if !addressCompare(stateDb.GetContractCreator(sourceAddr), caller) {
+			log.Error("MIG : error, the owner of the contract where data is migrate from should be the caller!")
+			return nil, 0, migErr
+		}
+
 	} else {
 		log.Debug("MIG : error, wrong function name!")
 		return nil, 0, migErr
 	}
 
 	switch funcName {
-	case "migrate":
+	case "migrateFrom":
 		return stateDb.CloneAccount(sourceAddr, contractAddr)
 	default:
 	}
@@ -172,7 +178,27 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 		receipt.Logs = statedb.GetLogs(tx.Hash())
 		receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
 
-		return receipt, 0, err
+		if err != nil {
+			switch err {
+
+			case migErr:
+				//data :=[][]byte{}
+				//data = append(data, []byte(err.Error()))
+				//encodeData,_:= rlp.EncodeToBytes(data)
+				//topics := []common.Hash{common.BytesToHash(crypto.Keccak256([]byte("contract permission")))}
+				//log := &types.Log{
+				//	Address:     msg.From(),
+				//	Topics:      topics,
+				//	Data:        encodeData,
+				//	BlockNumber: vmenv.BlockNumber.Uint64(),
+				//}
+				//statedb.AddLog(log)
+			default:
+				return nil, 0, err
+			}
+		}
+
+		return receipt, 0, nil
 	}
 
 	// Create a new context to be used in the EVM environment

@@ -21,10 +21,10 @@ var (
 	}
 
 	MigrateCmd = cli.Command{
-		Name:   "migDeploy",
+		Name:   "migInvoke",
 		Usage:  "deploy a system contract with previous data",
-		Action: migDeploy,
-		Flags:  migDeployCmdFlags,
+		Action: migInvoke,
+		Flags:  migInvokeCmdFlags,
 	}
 
 	InvokeCmd = cli.Command{
@@ -192,9 +192,10 @@ func fwInvoke(c *cli.Context) error {
 	return nil
 }
 
-func migDeploy(c *cli.Context) error {
+func migInvoke(c *cli.Context) error {
 	addr := c.String("addr")
-	funcParams := c.String("func")
+	funcName := c.String("func")
+	funcParams := c.StringSlice("param")
 	// txType := c.Int("type")
 	txType := migTxType
 
@@ -203,14 +204,17 @@ func migDeploy(c *cli.Context) error {
 		return nil
 	}
 
-	if funcParams == "" {
+	if funcName == "" {
 		fmt.Printf("funcParams can't be empty!")
 		return nil
 	}
 
+	hasBracket := strings.Contains(funcName, "(") && strings.Contains(funcName, ")")
+
+
 	parseConfigJson(c.String(ConfigPathFlag.Name))
 
-	err := migDeployContract(addr, funcParams, txType)
+	err := migInvokeContract(addr, funcName, funcParams, txType, hasBracket)
 	if err != nil {
 		panic(fmt.Errorf("MigInvokeContract contract error,%s", err.Error()))
 	}
@@ -356,10 +360,13 @@ func FwInvokeContract(contractAddr string, funcName string, inputParams []string
 }
 
 // migrateContract function
-func migDeployContract(contractAddr string, funcParams string, txType int) error {
+func migInvokeContract(contractAddr string, funcName string, inputParams []string, txType int, hasBracket bool) error {
 
 	//parse the function and param
-	funcName, inputParams := GetFuncNameAndParams(funcParams)
+	if hasBracket{
+		funcName, inputParams = GetFuncNameAndParams(funcName)
+	}
+
 
 	paramArr := [][]byte{
 		Int64ToBytes(int64(txType)),
@@ -386,15 +393,7 @@ func migDeployContract(contractAddr string, funcParams string, txType int) error
 
 	var r string
 	var err error
-	if funcName == "__sys_FwStatus" {
-		params := make([]interface{}, 2)
-		params[0] = txParams
-		params[1] = "latest"
-
-		paramJson, _ := json.Marshal(params)
-		fmt.Printf("\n request json data：%s \n", string(paramJson))
-		r, err = Send(params, "eth_call")
-	} else {
+	if funcName == "migrateFrom" {
 		params := make([]interface{}, 1)
 		params[0] = txParams
 
@@ -410,14 +409,8 @@ func migDeployContract(contractAddr string, funcParams string, txType int) error
 	}
 	resp := parseResponse(r)
 
-	//parse the return type through adi
-	if funcName == "__sys_FwStatus" {
-		bytes, _ := hexutil.Decode(resp.Result)
-		fmt.Printf("\nresult: %v\n", BytesConverter(bytes, "string"))
-		return nil
-	} else {
-		fmt.Printf("\n trasaction hash: %s\n", resp.Result)
-	}
+	fmt.Printf("\n trasaction hash: %s\n", resp.Result)
+
 	return nil
 }
 
