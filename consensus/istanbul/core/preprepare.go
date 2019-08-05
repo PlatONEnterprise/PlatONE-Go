@@ -31,7 +31,6 @@ func (c *core) sendPreprepare(request *istanbul.Request) {
 	logger := c.logger.New("state", c.state)
 	// If I'm the proposer and I have the same sequence with the proposal
 	if c.current.Sequence().Cmp(request.Proposal.Number()) == 0 && c.IsProposer() {
-		//logger.Info("*****************sendPreprepare**************")
 		curView := c.currentView()
 		preprepare := &istanbul.Preprepare{
 			View:           curView,
@@ -63,7 +62,6 @@ func (c *core) sendPreprepare(request *istanbul.Request) {
 
 func (c *core) handlePreprepare(msg *message, src istanbul.Validator) error {
 	logger := c.logger.New("from", src, "state", c.state)
-	//logger.Info("*********************handlePreprepare*****************************")
 	// Decode PRE-PREPARE
 	var preprepare *istanbul.Preprepare
 	err := msg.Decode(&preprepare)
@@ -174,8 +172,8 @@ func (c *core) handlePOLPreprepare(src istanbul.Validator, preprepare *istanbul.
 	}
 	
 	if prepares.Size() < c.valSet.Size()-c.valSet.F(){
-		logger.Error("POLprepprepare is invalid, lockedprepares vote -2/3")
-		return errors.New("POLprepprepare is invalid, lockedprepares vote -2/3")
+		logger.Error("POLPrePrepare is invalid, lockedprepares vote -2/3")
+		return errors.New("POLPrePrepare is invalid, lockedprepares vote -2/3")
 	}
 
 	c.current.UnlockHash()

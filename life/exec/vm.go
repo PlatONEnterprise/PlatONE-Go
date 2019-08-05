@@ -288,7 +288,7 @@ func NewVirtualMachineWithModule(m *compiler.Module, functionCode []compiler.Int
 // resolver.
 func NewVirtualMachine(code []byte, context *VMContext, impResolver ImportResolver, gasPolicy compiler.GasPolicy) (_retVM *VirtualMachine, retErr error) {
 	if context.Config.EnableJIT {
-		fmt.Println("Warning: JIT support is incomplete and the internals are likely to change in the future.")
+		log.Warn("Warning: JIT support is incomplete and the internals are likely to change in the future.")
 	}
 
 	m, functionCode, err := ParseModuleAndFunc(code, gasPolicy)
@@ -302,8 +302,8 @@ func NewVirtualMachine(code []byte, context *VMContext, impResolver ImportResolv
 
 func ImportGasFunc(vm *VirtualMachine, frame *Frame) (uint64, error) {
 	importID := int(LE.Uint32(frame.Code[frame.IP : frame.IP+4]))
-	gas,err := vm.FunctionImports[importID].GasCost(vm)
-	return gas+6, err
+	gas, err := vm.FunctionImports[importID].GasCost(vm)
+	return gas + 6, err
 
 }
 
@@ -324,15 +324,14 @@ func (f *Frame) Init(vm *VirtualMachine, functionID int, code compiler.Interpret
 	f.IP = 0
 	f.Continuation = 0
 
-	//fmt.Printf("Enter function %d (%s)\n", functionID, vm.Module.FunctionNames[functionID])
 	if vm.Context.Config.EnableJIT {
 		code := &vm.FunctionCode[functionID]
 		if !code.JITDone {
 			if len(code.Bytes) > JITCodeSizeThreshold {
 				if !vm.GenerateCodeForFunction(functionID) {
-					fmt.Printf("codegen for function %d failed\n", functionID)
+					log.Warn("codegen for function %d failed\n", "functionID", functionID)
 				} else {
-					fmt.Printf("codegen for function %d succeeded\n", functionID)
+					log.Debug("codegen for function %d succeeded\n", "functionID", functionID)
 				}
 			}
 			code.JITDone = true
@@ -345,8 +344,6 @@ func (f *Frame) Init(vm *VirtualMachine, functionID int, code compiler.Interpret
 func (f *Frame) Destroy(vm *VirtualMachine) {
 	numValueSlots := len(f.Regs) + len(f.Locals)
 	vm.NumValueSlots -= numValueSlots
-
-	//fmt.Printf("Leave function %d (%s)\n", f.FunctionID, vm.Module.FunctionNames[f.FunctionID])
 }
 
 // GetCurrentFrame returns the current frame.
@@ -391,12 +388,10 @@ func (vm *VirtualMachine) GetFunctionExport(key string) (int, bool) {
 
 // PrintStackTrace prints the entire VM stack trace for debugging.
 func (vm *VirtualMachine) PrintStackTrace() {
-	fmt.Println("--- Begin stack trace ---")
 	for i := vm.CurrentFrame; i >= 0; i-- {
 		functionID := vm.CallStack[i].FunctionID
-		fmt.Printf("<%d> [%d] %s\n", i, functionID, vm.Module.FunctionNames[functionID])
+		log.Debug(fmt.Sprintf("<%d> [%d] %s\n", i, functionID, vm.Module.FunctionNames[functionID]))
 	}
-	fmt.Println("--- End stack trace ---")
 }
 
 // Ignite initializes the first call frame.
@@ -473,7 +468,6 @@ func (vm *VirtualMachine) Execute() {
 			if status < 0 {
 				panic(fmt.Errorf("status = %d", status))
 			}
-			//fmt.Printf("JIT: continuation = %d, ip = %d\n", status, int(fRetVal))
 			frame.Continuation = status
 			frame.IP = int(fRetVal)
 		}
@@ -487,8 +481,6 @@ func (vm *VirtualMachine) Execute() {
 			panic(fmt.Sprintf("out of gas  cost:%d GasUsed:%d GasLimit:%d", cost, vm.Context.GasUsed, vm.Context.GasLimit))
 		}
 		vm.Context.GasUsed += cost
-
-		//fmt.Printf("INS: [%d] %s\n", valueID, ins.String())
 
 		switch ins {
 		case opcodes.Nop:
@@ -1441,7 +1433,6 @@ func (vm *VirtualMachine) Execute() {
 			} else {
 				frame = vm.GetCurrentFrame()
 				frame.Regs[frame.ReturnReg] = val
-				//fmt.Printf("Return value %d\n", val)
 			}
 		case opcodes.ReturnVoid:
 			frame.Destroy(vm)
@@ -1458,13 +1449,11 @@ func (vm *VirtualMachine) Execute() {
 			val := frame.Locals[id]
 			frame.IP += 4
 			frame.Regs[valueID] = val
-			//fmt.Printf("GetLocal %d = %d\n", id, val)
 		case opcodes.SetLocal:
 			id := int(LE.Uint32(frame.Code[frame.IP : frame.IP+4]))
 			val := frame.Regs[int(LE.Uint32(frame.Code[frame.IP+4:frame.IP+8]))]
 			frame.IP += 8
 			frame.Locals[id] = val
-			//fmt.Printf("SetLocal %d = %d\n", id, val)
 		case opcodes.GetGlobal:
 			frame.Regs[valueID] = vm.Globals[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]
 			frame.IP += 4
@@ -1491,7 +1480,6 @@ func (vm *VirtualMachine) Execute() {
 			for i := 0; i < argCount; i++ {
 				frame.Locals[i] = oldRegs[int(LE.Uint32(argsRaw[i*4:i*4+4]))]
 			}
-			//fmt.Println("Call params =", frame.Locals[:argCount])
 
 		case opcodes.CallIndirect:
 			typeID := int(LE.Uint32(frame.Code[frame.IP : frame.IP+4]))

@@ -206,7 +206,7 @@ func (c *core) startNewRound(round *big.Int) {
 	// Try to get last proposal
 	lastProposal, lastProposer := c.backend.LastProposal()
 	if c.current == nil {
-		logger.Trace("Start to the initial round")
+		logger.Trace("Start the initial round")
 	} else if lastProposal.Number().Cmp(c.current.Sequence()) >= 0 {
 		diff := new(big.Int).Sub(lastProposal.Number(), c.current.Sequence())
 		c.sequenceMeter.Mark(new(big.Int).Add(diff, common.Big1).Int64())

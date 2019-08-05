@@ -137,7 +137,6 @@ func (c *SSAFunctionCompiler) Compile(importTypeIDs []int) {
 	unreachableDepth := 0
 
 	for _, ins := range c.Source.Code {
-		//fmt.Printf("%s %d\n", ins.Op.Name, len(c.Stack))
 		wasUnreachable := false
 
 		if unreachableDepth != 0 {

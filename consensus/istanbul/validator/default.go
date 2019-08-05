@@ -88,9 +88,6 @@ func (valSet *defaultSet) List() []istanbul.Validator {
 func (valSet *defaultSet) GetByIndex(i uint64) istanbul.Validator {
 	valSet.validatorMu.RLock()
 	defer valSet.validatorMu.RUnlock()
-	/*for i, v := range valSet.validators{
-		log.Info(fmt.Sprintf("^^^^^^^^^^^^^^^^^^^^^    Validatorset[%d]-> %s",i, v.Address().String()))
-	}*/
 	if i < uint64(valSet.Size()) {
 		return valSet.validators[i]
 	}
@@ -107,7 +104,6 @@ func (valSet *defaultSet) GetByAddress(addr common.Address) (int, istanbul.Valid
 }
 
 func (valSet *defaultSet) GetProposer() istanbul.Validator {
-	//log.Info("^^^^^^^^^^^^^^^^^^^^^    GetProposer() ->  " + valSet.proposer.Address().String())
 	return valSet.proposer
 }
 

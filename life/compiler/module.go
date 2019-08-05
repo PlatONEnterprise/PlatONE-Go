@@ -90,12 +90,10 @@ func LoadModule(raw []byte) (*Module, error) {
 								panic("len mismatch")
 							}
 							functionNames[int(index)] = string(name)
-							//fmt.Printf("%d -> %s\n", int(index), string(name))
 						}
 					}
 				}
 			}
-			//fmt.Printf("%d function names written\n", len(functionNames))
 		}
 	}
 
@@ -151,7 +149,6 @@ func (m *Module) CompileForInterpreter(gp GasPolicy) (_retCode []InterpreterCode
 	ret = append(ret, make([]InterpreterCode, len(m.Base.FunctionIndexSpace))...)
 
 	for i, f := range m.Base.FunctionIndexSpace {
-		//fmt.Printf("Compiling function %d (%+v) with %d locals\n", i, f.Sig, len(f.Body.Locals))
 		d, err := disasm.Disassemble(f, m.Base)
 		if err != nil {
 			panic(err)
@@ -162,10 +159,7 @@ func (m *Module) CompileForInterpreter(gp GasPolicy) (_retCode []InterpreterCode
 		if gp != nil {
 			compiler.InsertGasCounters(gp)
 		}
-		//fmt.Println(compiler.Code)
-		//fmt.Printf("%+v\n", compiler.NewCFGraph())
 		numRegs := compiler.RegAlloc()
-		//fmt.Println(compiler.Code)
 		numLocals := 0
 		for _, v := range f.Body.Locals {
 			numLocals += int(v.Count)
