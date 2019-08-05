@@ -213,6 +213,16 @@ func GetFuncNameAndParams(funcAndParams string) (string, []string) {
 					symStack = append(symStack, '"')
 				}
 			}
+		case '\'':
+			if len(symStack) < 1{
+				symStack = append(symStack, '\'')
+			}else{
+				if symStack[len(symStack) - 1] == '\''{
+					symStack = symStack[:len(symStack) - 1]
+				}else{
+					symStack = append(symStack, '\'')
+				}
+			}
 		}
 	}
 	params := []string{}
@@ -227,6 +237,9 @@ func GetFuncNameAndParams(funcAndParams string) (string, []string) {
 	for index, param := range params {
 		if strings.HasPrefix(param, "\"") {
 			params[index] = param[strings.Index(param, "\"")+1 : strings.LastIndex(param, "\"")]
+		}
+		if strings.HasPrefix(param, "'") {
+			params[index] = param[strings.Index(param, "'")+1 : strings.LastIndex(param, "'")]
 		}
 	}
 	return funcName, params

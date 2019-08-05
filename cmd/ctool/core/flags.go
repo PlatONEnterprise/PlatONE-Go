@@ -95,6 +95,7 @@ var (
 	cnsInvokeCmdFlags = []cli.Flag{
 		ContractCnsNameFlag,
 		ContractFuncNameFlag,
+		ContractParamFlag,
 		ContractAbiFilePathFlag,
 		ConfigPathFlag,
 		TransactionTypeFlag,
@@ -103,6 +104,7 @@ var (
 	fwInvokeCmdFlags = []cli.Flag{
 		ContractAddrFlag,
 		ContractFuncNameFlag,
+		ContractParamFlag,
 		TransactionTypeFlag,
 		ConfigPathFlag,
 	}
