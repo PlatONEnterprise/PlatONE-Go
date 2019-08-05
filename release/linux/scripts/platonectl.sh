@@ -334,6 +334,7 @@ function stop() {
         if [[ $pid != "" ]]; then
             echo "[INFO]: stop node: ${2}"
             kill $pid
+            sleep 1
         fi
         ;;
     --all | -a)

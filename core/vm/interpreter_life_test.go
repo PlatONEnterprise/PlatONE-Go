@@ -16,7 +16,7 @@ import (
 	"testing"
 )
 
-var abi = `{
+var abi_ = `{
 	"version": "0.01",
 	"abi": [{
 			"method": "transfer",
@@ -65,7 +65,7 @@ func TestWasmInterpreter(t *testing.T) {
 		self:          ContractRefSelf{},
 		Code:          code,
 		Gas:           1000000,
-		ABI:           []byte(abi),
+		ABI:           []byte(abi_),
 	}
 	// build input, {1}{transfer}{from}{to}{asset}
 	input := genInput()
@@ -185,7 +185,7 @@ func wasmRun(bench *testing.B, statedb stateDBer, inputKind string, prepareCount
 		self:          ContractRefSelf{},
 		Code:          code,
 		Gas:           99999999999999999,
-		ABI:           []byte(abi),
+		ABI:           []byte(abi_),
 	}
 
 	for i := 0; i < prepareCount; i++ {

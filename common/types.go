@@ -20,14 +20,10 @@ import (
 	"database/sql/driver"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"math/big"
 	"math/rand"
 	"reflect"
-	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
@@ -399,101 +395,4 @@ func NewBlockConfirmSign(signSlice []byte) *BlockConfirmSign {
 	var sign BlockConfirmSign
 	copy(sign[:], signSlice[:])
 	return &sign
-}
-
-const InvokeContract = 2
-
-type ContractType interface {
-	GenerateInputData([]byte) ([]byte, error)
-}
-
-func GenerateInputData(ct ContractType, input []byte) ([]byte, error) {
-	return ct.GenerateInputData(input)
-}
-
-type WasmInput struct {
-	TxType     int      `json:"tx_type"`
-	FuncName   string   `json:"func_name"`
-	FuncParams []string `json:"func_params"`
-}
-
-func (c *WasmInput) GenerateInputData(input []byte) ([]byte, error) {
-	if err := json.Unmarshal(input, c); err != nil {
-		return nil, err
-	}
-
-	if c.FuncName == "" {
-		return nil, errors.New("Miss wasm func name")
-	}
-
-	if c.TxType == 0 {
-		c.TxType = InvokeContract
-	}
-	paramArr := [][]byte{
-		Int64ToBytes(int64(c.TxType)),
-		[]byte(c.FuncName),
-	}
-
-	for _, param := range c.FuncParams {
-		paramType, paramValue, err := c.spliceParam(param)
-		if err != nil {
-			return nil, err
-		}
-		p, err := StringConverter(paramValue, paramType)
-		if err != nil {
-			return nil, err
-		}
-		paramArr = append(paramArr, p)
-	}
-
-	paramBytes, e := rlp.EncodeToBytes(paramArr)
-	if e != nil {
-		return nil, fmt.Errorf("rpl encode error,%s", e.Error())
-	}
-	return paramBytes, nil
-}
-
-func (c *WasmInput) spliceParam(param string) (paramType string, paramValue string, err error) {
-	var (
-		errMissParamValueType = errors.New("func param miss param value type")
-		errParamFormat        = errors.New("func param format error")
-	)
-
-	if param == "" {
-		err = errMissParamValueType
-		return
-	}
-	reg := regexp.MustCompile(`(.*)\((.*)\)`)
-	if p := reg.FindStringSubmatch(param); len(p) == 2 {
-		paramType = p[0]
-		paramValue = p[1]
-		return
-	}
-	err = errParamFormat
-	return
-}
-
-func StringConverter(source string, t string) ([]byte, error) {
-	switch t {
-	case "int32", "uint32", "uint", "int":
-		dest, err := strconv.Atoi(source)
-		return Int32ToBytes(int32(dest)), err
-	case "int64", "uint64":
-		dest, err := strconv.ParseInt(source, 10, 64)
-		return Int64ToBytes(dest), err
-	case "float32":
-		dest, err := strconv.ParseFloat(source, 32)
-		return Float32ToBytes(float32(dest)), err
-	case "float64":
-		dest, err := strconv.ParseFloat(source, 64)
-		return Float64ToBytes(dest), err
-	case "bool":
-		if "true" == source || "false" == source {
-			return BoolToBytes("true" == source), nil
-		} else {
-			return []byte{}, errors.New("invalid boolean param")
-		}
-	default:
-		return []byte(source), nil
-	}
 }

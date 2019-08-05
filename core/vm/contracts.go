@@ -366,6 +366,7 @@ type ContractTypeInputParsing struct{}
 func (c *ContractTypeInputParsing) RequiredGas(input []byte) uint64 {
 	return 0
 }
+
 func (c *ContractTypeInputParsing) Run(input []byte) ([]byte, error) {
 	type inputParsing struct {
 		CT string `json:"contract_type"`
@@ -375,8 +376,10 @@ func (c *ContractTypeInputParsing) Run(input []byte) ([]byte, error) {
 		return nil, err
 	}
 	switch ip.CT {
-	case "wasm":
-		return common.GenerateInputData(&common.WasmInput{}, []byte(input))
+	case ContractTypeWasm:
+		return GenerateInputData(&WasmInput{}, []byte(input))
+	case ContractTypeSolidity:
+		return GenerateInputData(&SolInput{}, []byte(input))
 	default:
 		return nil, fmt.Errorf("Dont has this Contract Type: %s\n", ip.CT)
 	}

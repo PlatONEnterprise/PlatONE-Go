@@ -482,9 +482,9 @@ func BenchmarkPrecompiledBn256Pairing(bench *testing.B) {
 	}
 }
 
-func TestPrecompile9(t *testing.T)  {
+func TestPrecompile9(t *testing.T) {
 	var call ContractTypeInputParsing
-	input := `{"contract_type": "wasm", "tx_type": 0, "func_name": "getName", "func_params": ["int(0)", "uint64(20)"]}`
+	input := `{"contract_type": "sol",  "func_name": "setNum", "func_params": ["uint256(100)"]}`
 	bytes, e := call.Run([]byte(input))
 	fmt.Println(string(bytes), e)
 }
