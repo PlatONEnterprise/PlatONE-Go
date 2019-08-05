@@ -183,7 +183,7 @@ nohup ${BIN_PATH}/platone --identity platone ${flag_datadir}  --nodiscover \
         --wsorigins "*" ${flag_logs} ${flag_ipc} \
         --bootnodes ${BOOTNODES} \
         --moduleLogParams {\"platone\": [\"/\"], \"__dir__\": [\"${LOG_DIR}\"], \"__size__\": [\"${LOG_SIZE}\"]} ${flag_gcmode} ${EXTRA_OPTIONS} \
-        > /dev/null 2>&1 &
+        1 > /dev/null 2> ${LOG_DIR}/platone_error.log &
 "
 
 
@@ -198,5 +198,5 @@ nohup ${BIN_PATH}/platone --identity platone ${flag_datadir}  --nodiscover \
         --wsorigins "*" ${flag_logs} ${flag_ipc} \
         --bootnodes ${BOOTNODES} \
         --moduleLogParams '{"platone_log": ["/"], "__dir__": ["'${LOG_DIR}'"], "__size__": ["'${LOG_SIZE}'"]}'  ${flag_gcmode}  ${EXTRA_OPTIONS} \
-        > /dev/null 2>&1 &
+        1 > /dev/null 2> ${LOG_DIR}/platone_error.log &
 sleep 3
