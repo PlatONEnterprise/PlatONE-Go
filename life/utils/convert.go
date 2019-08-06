@@ -26,6 +26,12 @@ func Int64ToBytes(i int64) []byte {
 	return buf.Bytes()
 }
 
+func Int32ToBytes(i int32) []byte {
+	buf := bytes.NewBuffer([]byte{})
+	binary.Write(buf, binary.BigEndian, &i)
+	return buf.Bytes()
+}
+
 func BytesToInt64(bys []byte) int64 {
 	buf := bytes.NewBuffer(bys)
 	var res int64
