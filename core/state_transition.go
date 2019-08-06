@@ -141,16 +141,16 @@ func GetCnsAddr(evm *vm.EVM, msg Message, cnsName string) (*common.Address, erro
 	var contractName, contractVer string
 	var ToAddr common.Address
 
-	if contractName == "cnsManager" {
-		return &addrProxy, nil
-	}
-
 	posOfColon := strings.Index(cnsName, ":")
 
 	// The cnsName must be the format "Name:Version"
 	if posOfColon == -1 {
 		contractName = cnsName
 		contractVer = "latest"
+
+		if contractName == "cnsManager" {
+			return &addrProxy, nil
+		}
 
 		var isSystemcontract bool = false
 		for _, v := range common.SystemContractList {
@@ -186,6 +186,10 @@ func GetCnsAddr(evm *vm.EVM, msg Message, cnsName string) (*common.Address, erro
 		contractVer = cnsName[posOfColon+1:]
 		if contractName == "" || contractVer == "" {
 			return nil, errors.New("cns name do not has the right format")
+		}
+
+		if contractName == "cnsManager" {
+			return &addrProxy, nil
 		}
 
 		params := []interface{}{contractName, contractVer}
