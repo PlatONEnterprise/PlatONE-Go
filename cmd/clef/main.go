@@ -298,7 +298,7 @@ func initialize(c *cli.Context) error {
 	// Set up the logger to print everything
 	logOutput := os.Stdout
 	if c.Bool(stdiouiFlag.Name) {
-		logOutput = os.Stderr
+		logOutput = os.Stdout
 		// If using the stdioui, we can't do the 'confirm'-flow
 		fmt.Fprintf(logOutput, legalWarning)
 	} else {
