@@ -331,27 +331,27 @@ func (st *StateTransition) preCheck() error {
 	st.gasPrice = new(big.Int).SetInt64(0)
 
 	// Make sure this transaction's nonce is correct.
-	if st.msg.CheckNonce() {
-		nonce := st.state.GetNonce(st.msg.From())
-		if nonce < st.msg.Nonce() {
-			return ErrNonceTooHigh
-		} else if nonce > st.msg.Nonce() {
-			return ErrNonceTooLow
-		}
-	}
+	//if st.msg.CheckNonce() {
+	//	nonce := st.state.GetNonce(st.msg.From())
+	//	if nonce < st.msg.Nonce() {
+	//		return ErrNonceTooHigh
+	//	} else if nonce > st.msg.Nonce() {
+	//		return ErrNonceTooLow
+	//	}
+	//}
 	return st.buyGas()
 }
 
 func (st *StateTransition) preContractGasCheck(contractAddr string) error {
 	// Make sure this transaction's nonce is correct.
-	if st.msg.CheckNonce() {
-		nonce := st.state.GetNonce(st.msg.From())
-		if nonce < st.msg.Nonce() {
-			return ErrNonceTooHigh
-		} else if nonce > st.msg.Nonce() {
-			return ErrNonceTooLow
-		}
-	}
+	//if st.msg.CheckNonce() {
+	//	nonce := st.state.GetNonce(st.msg.From())
+	//	if nonce < st.msg.Nonce() {
+	//		return ErrNonceTooHigh
+	//	} else if nonce > st.msg.Nonce() {
+	//		return ErrNonceTooLow
+	//	}
+	//}
 
 	return st.buyContractGas(contractAddr)
 }
