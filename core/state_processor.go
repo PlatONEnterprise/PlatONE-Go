@@ -182,17 +182,17 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 			switch err {
 
 			case migErr:
-				//data :=[][]byte{}
-				//data = append(data, []byte(err.Error()))
-				//encodeData,_:= rlp.EncodeToBytes(data)
-				//topics := []common.Hash{common.BytesToHash(crypto.Keccak256([]byte("contract permission")))}
-				//log := &types.Log{
-				//	Address:     msg.From(),
-				//	Topics:      topics,
-				//	Data:        encodeData,
-				//	BlockNumber: vmenv.BlockNumber.Uint64(),
-				//}
-				//statedb.AddLog(log)
+				data :=[][]byte{}
+				data = append(data, []byte(err.Error()))
+				encodeData,_:= rlp.EncodeToBytes(data)
+				topics := []common.Hash{common.BytesToHash(crypto.Keccak256([]byte("contract permission")))}
+				log := &types.Log{
+					Address:     msg.From(),
+					Topics:      topics,
+					Data:        encodeData,
+					BlockNumber: header.Number.Uint64(),
+				}
+				statedb.AddLog(log)
 			default:
 				return nil, 0, err
 			}
