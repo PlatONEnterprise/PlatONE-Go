@@ -108,6 +108,7 @@ type WasmInput struct {
 	FuncParams []string `json:"func_params"`
 }
 
+// Generate the input data of the wasm contract
 func (c *WasmInput) GenerateInputData(input []byte) ([]byte, error) {
 	if err := json.Unmarshal(input, c); err != nil {
 		return nil, err
@@ -194,8 +195,10 @@ type SolInput struct {
 	FuncParams []string `json:"func_params"`
 }
 
+// Generate input data for solidity contract
 func (s *SolInput) GenerateInputData(input []byte) ([]byte, error) {
 	if err := json.Unmarshal(input, s); err != nil {
+		common.ErrPrintln("GenerateInputData sol json unmarshal error: ", err)
 		return nil, err
 	}
 	var arguments abi.Arguments
@@ -205,16 +208,19 @@ func (s *SolInput) GenerateInputData(input []byte) ([]byte, error) {
 	for _, param := range s.FuncParams {
 		paramType, paramValue, err := SpliceParam(param)
 		if err != nil {
+			common.ErrPrintln("sol SpliceParam error: ", err)
 			return nil, err
 		}
 		var argument abi.Argument
 		if argument.Type, err = abi.NewType(paramType); err != nil {
+			common.ErrPrintln("sol NewType error: ", err)
 			return nil, err
 		}
 		arguments = append(arguments, argument)
 
 		arg, err := SolInputTypeConversion(paramType, paramValue)
 		if err != nil {
+			common.ErrPrintln("sol SolInputTypeConversion error: ", err)
 			return nil, err
 		}
 		args = append(args, arg)
@@ -222,6 +228,7 @@ func (s *SolInput) GenerateInputData(input []byte) ([]byte, error) {
 	}
 	paramsBytes, err := arguments.Pack(args...)
 	if err != nil {
+		common.ErrPrintln("pack args error: ", err)
 		return nil, err
 	}
 	inputBytes := crypto.Keccak256([]byte(Sig(s.FuncName, paramTypes)))[:4]
@@ -301,6 +308,11 @@ func SolInputTypeConversion(t string, v string) (interface{}, error) {
 		case "32":
 			return SolInputStringTOInt(v, 32, parts[1] == "")
 		case "64":
+			return SolInputStringTOInt(v, 64, parts[1] == "")
+		case "128":
+			// TODO 大数类型转换
+			return SolInputStringTOInt(v, 64, parts[1] == "")
+		case "256":
 			return SolInputStringTOInt(v, 64, parts[1] == "")
 		}
 		return nil, errors.New("parse input type int has err bitsize")

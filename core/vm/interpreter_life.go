@@ -280,6 +280,9 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 // CanRun tells if the contract, passed as an argument, can be run
 // by the current interpreter
 func (in *WASMInterpreter) CanRun(code []byte) bool {
+	if !strings.EqualFold(common.GetCurrentInterpreterType(), "all"){
+		return true
+	}
 	_, _, bytecode, err := parseRlpData(code)
 	if err != nil {
 		return false

@@ -396,3 +396,13 @@ func NewBlockConfirmSign(signSlice []byte) *BlockConfirmSign {
 	copy(sign[:], signSlice[:])
 	return &sign
 }
+
+var currentInterpreterType string
+
+func SetCurrentInterpreterType(cit string) {
+	currentInterpreterType = cit
+}
+
+func GetCurrentInterpreterType() string {
+	return currentInterpreterType
+}

@@ -10,7 +10,9 @@ package resolver
 // #cgo LDFLAGS: -L ./nizkpail/ -lnizkpail -lmiracl
 // #include "./nizkpail/nizkpail.h"
 import "C"
-import "unsafe"
+import (
+	"unsafe"
+)
 import (
 	"bytes"
 	"encoding/binary"
@@ -1020,6 +1022,7 @@ func envBCWasmCall(vm *exec.VirtualMachine) int64 {
 	addr := int(int32(vm.GetCurrentFrame().Locals[0]))
 	params := int(int32(vm.GetCurrentFrame().Locals[1]))
 	paramsLen := int(int32(vm.GetCurrentFrame().Locals[2]))
+
 	_, err := vm.Context.StateDB.Call(vm.Memory.Memory[addr:addr+20], vm.Memory.Memory[params:params+paramsLen])
 	if err != nil {
 		fmt.Printf("call error,%s", err.Error())
@@ -1050,6 +1053,7 @@ func envBCWasmCallInt64(vm *exec.VirtualMachine) int64 {
 		fmt.Printf("call error,%s", err.Error())
 		return 0
 	}
+	ret = common.WasmCallResultCompatibleSolInt64(ret)
 	return common.BytesToInt64(ret)
 }
 
@@ -1076,6 +1080,7 @@ func envBCWasmCallString(vm *exec.VirtualMachine) int64 {
 		fmt.Printf("call error,%s", err.Error())
 		return 0
 	}
+	ret = common.WasmCallResultCompatibleSolString(ret)
 	return MallocString(vm, string(ret))
 }
 

@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 )
 
 // LoadJSON reads the given file and unmarshals its content.
@@ -50,4 +51,8 @@ func findLine(data []byte, offset int64) (line int) {
 		}
 	}
 	return
+}
+
+func ErrPrintln(a ...interface{}) {
+	_, _ = fmt.Fprintln(os.Stderr, a...)
 }
