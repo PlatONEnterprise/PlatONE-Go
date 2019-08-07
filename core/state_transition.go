@@ -734,7 +734,7 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 			return nil, 0, true, FirewallErr
 		}
 
-		if msg.TxType() == types.MigTxType {
+		if msg.TxType() == types.MigDpType {
 			ret, _, st.gas, vmerr = evm.MigCreate(sender, st.data, st.gas, st.value)
 		} else {
 			ret, _, st.gas, vmerr = evm.Create(sender, st.data, st.gas, st.value)

@@ -425,6 +425,7 @@ func (evm *EVM) create(caller ContractRef, code []byte, gas uint64, value *big.I
 }
 
 func (evm *EVM) migcreate(caller ContractRef, code []byte, gas uint64, value *big.Int, address common.Address) ([]byte, common.Address, uint64, error) {
+	//TODO: Implement  "Deploy contract with previous data"
 	// Depth check execution. Fail if we're trying to execute above the
 	// limit.
 	if evm.depth > int(params.CallCreateDepth) {

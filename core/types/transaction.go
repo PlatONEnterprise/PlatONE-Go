@@ -44,6 +44,8 @@ const (
 	CnsTxType uint64 = 0x11	// Used for sending transactions without address
 	FwTxType  uint64 = 0x12 // Used fot sending transactions about firewall
 	MigTxType uint64 = 0x13 //Used for update system contract.
+	MigDpType uint64 = 0x14 //Used for update system contract.
+
 )
 
 type Transaction struct {

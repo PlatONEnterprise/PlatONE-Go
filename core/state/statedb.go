@@ -508,13 +508,12 @@ func (self *StateDB) CloneAccount(src common.Address, dest common.Address) ([]by
 		}
 		keyTrie := string(keyTrieCode)
 
-		value = self.trie.GetKey(it.Value)
-
 		if len(keyTrie) <= 42 {
 			log.Warn("Invalid keyTrie length.")
 			continue
 		}
 		key := []byte(keyTrie[42:])
+		value = self.trie.GetKey(it.Value)
 		self.SetState(dest, key, value)
 	}
 	return nil, 0, nil
