@@ -58,6 +58,12 @@ func New(backend istanbul.Backend, config *params.IstanbulConfig) Engine {
 	r.Register("consensus/istanbul/core/consensus", c.consensusTimer)
 
 	c.validateFn = c.checkValidatorSignature
+	// initialize lastView
+	c.lastView = &istanbul.View{
+		Sequence: new(big.Int),
+		Round:    new(big.Int),
+	}
+
 	return c
 }
 
@@ -67,6 +73,8 @@ type core struct {
 	config  *params.IstanbulConfig
 	address common.Address
 	state   State
+	// last view, to be used by miner to check if to seal by the moment
+	lastView *istanbul.View
 	logger  log.Logger
 
 	backend               istanbul.Backend
@@ -167,7 +175,38 @@ func (c *core) IsProposer() bool {
 }
 
 func (c *core) CanPropose() bool {
-	return c.IsProposer() && c.state == StateAcceptRequest
+	//return c.IsProposer() && c.state == StateAcceptRequest
+	furtherCheck := c.IsProposer() && c.state == StateAcceptRequest
+	if furtherCheck {
+		// To check whether last proposed/sealed block has finished consensus process
+		// if it hasn't, then we should wait until it finishes
+		if c.LastConsensusFinish() {
+			c.UpdateLastView()
+
+			return true
+		} else {
+			return false
+		}
+	} else {
+		return furtherCheck
+	}
+
+}
+
+// LastConsensusFinish checks if consensus has finished for last proposal
+// if lastView is not equal to current view,it means consensus has finished or timed out for last proposal
+// i.e., startNewRound has executed once again
+func (c *core) LastConsensusFinish() bool {
+	if 0 != c.lastView.Cmp(c.currentView()) {
+		return true
+	}
+
+	return false
+}
+
+// UpdateLastView updates lastView to current view
+func (c *core) UpdateLastView() {
+	c.lastView = c.currentView()
 }
 
 func (c *core) IsCurrentProposal(blockHash common.Hash) bool {
