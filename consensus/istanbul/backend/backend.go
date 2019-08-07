@@ -361,9 +361,18 @@ func (sb *backend) excuteBlock(proposal istanbul.Proposal) error{
 		statedb := sb.current.state
 
 		// Iterate over and process the individual transactios
+		txsMap := make(map[common.Hash]struct{})
 		for _, tx := range block.Transactions() {
 			sb.current.state.Prepare(tx.Hash(), common.Hash{}, sb.current.tcount)
 			snap := sb.current.state.Snapshot()
+			if r :=  chain.GetReceiptsByHash(tx.Hash()); r!=nil{
+				return errors.New("Already executed tx")
+			}
+			if _,ok := txsMap[tx.Hash()]; ok{
+				return errors.New("Repeated tx in one block")
+			}else{
+				txsMap[tx.Hash()] = struct{}{}
+			}
 
 			receipt, _, err := core.ApplyTransaction(chain.Config(), chain, &sb.address, sb.current.gasPool, statedb, sb.current.header, tx, &sb.current.header.GasUsed, vm.Config{})
 			if err != nil {

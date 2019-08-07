@@ -115,7 +115,7 @@ var (
 
 func init() {
 	usecolor := term.IsTty(os.Stderr.Fd()) && os.Getenv("TERM") != "dumb"
-	output := io.Writer(os.Stderr)
+	output := io.Writer(os.Stdout)
 	if usecolor {
 		output = colorable.NewColorableStderr()
 	}

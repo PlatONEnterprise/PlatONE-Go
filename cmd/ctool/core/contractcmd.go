@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"strings"
 	"time"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
@@ -158,7 +159,8 @@ func parseFileToBytes(file string) []byte {
 
 func fwInvoke(c *cli.Context) error {
 	addr := c.String("addr")
-	funcParams := c.String("func")
+	funcName := c.String("func")
+	funcParams := c.StringSlice("param")
 	// txType := c.Int("type")
 	txType := fwTxType
 
@@ -167,14 +169,16 @@ func fwInvoke(c *cli.Context) error {
 		return nil
 	}
 
-	if funcParams == "" {
+	if funcName == "" {
 		fmt.Printf("funcParams can't be empty!")
 		return nil
 	}
 
+	hasBracket := strings.Contains(funcName, "(") && strings.Contains(funcName, ")")
+
 	parseConfigJson(c.String(ConfigPathFlag.Name))
 
-	err := FwInvokeContract(addr, funcParams, txType)
+	err := FwInvokeContract(addr,funcName, funcParams, txType, hasBracket)
 	if err != nil {
 		panic(fmt.Errorf("FwInvokeContract contract error,%s", err.Error()))
 	}
@@ -185,7 +189,8 @@ func cnsInvoke(c *cli.Context) error {
 	//addr := c.String("addr")
 	cnsName := c.String("cns")
 	abiPath := c.String("abi")
-	funcParams := c.String("func")
+	funcName := c.String("func")
+	funcParams := c.StringSlice("param")
 	txType := cnsTxType
 
 	//param check
@@ -199,13 +204,15 @@ func cnsInvoke(c *cli.Context) error {
 		return nil
 	}
 
-	if funcParams == "" {
+	if funcName == "" {
 		fmt.Printf("func can't be empty!")
 		return nil
 	}
+	hasBracket := strings.Contains(funcName, "(") && strings.Contains(funcName, ")")
+
 	parseConfigJson(c.String(ConfigPathFlag.Name))
 
-	err := CnsInvokeContract(cnsName, abiPath, funcParams, txType)
+	err := CnsInvokeContract(cnsName, abiPath, funcName,funcParams, txType, hasBracket)
 	if err != nil {
 		panic(fmt.Errorf("invokeContract contract error,%s", err.Error()))
 	}
@@ -234,10 +241,10 @@ func invoke(c *cli.Context) error {
 		fmt.Printf("func can't be empty!")
 		return nil
 	}
-
+	hasBracket := strings.Contains(funcName, "(") && strings.Contains(funcName,")")
 	parseConfigJson(c.String(ConfigPathFlag.Name))
 
-	err := InvokeContract(addr, abiPath, funcName, funcParams, txType)
+	err := InvokeContract(addr, abiPath, funcName, funcParams, txType,hasBracket)
 	if err != nil {
 		panic(fmt.Errorf("invokeContract contract error,%s", err.Error()))
 	}
@@ -246,10 +253,12 @@ func invoke(c *cli.Context) error {
 
 // FwInvokeContract function
 // set firewall rules for contract
-func FwInvokeContract(contractAddr string, funcParams string, txType int) error {
+func FwInvokeContract(contractAddr string, funcName string, inputParams []string, txType int, hasBracket bool) error {
 
 	//parse the function and param
-	funcName, inputParams := GetFuncNameAndParams(funcParams)
+	if hasBracket{
+		funcName, inputParams = GetFuncNameAndParams(funcName)
+	}
 
 	paramArr := [][]byte{
 		Int64ToBytes(int64(txType)),
@@ -314,10 +323,12 @@ func FwInvokeContract(contractAddr string, funcParams string, txType int) error 
 // CnsInvokeContract function
 // invoke a contract with contract name
 // TODO: cnsInvoke相关方法合并到invoke相关方法中
-func CnsInvokeContract(contractName string, abiPath string, funcParams string, txType int) error {
+func CnsInvokeContract(contractName string, abiPath string, funcName string,inputParams []string, txType int, hasBracket bool) error {
 
 	//parse the function and param
-	funcName, inputParams := GetFuncNameAndParams(funcParams)
+	if hasBracket{
+		funcName, inputParams = GetFuncNameAndParams(funcName)
+	}
 
 	//Judging whether this method exists or not
 	abiFunc, err := parseFuncFromAbi(abiPath, funcName)
@@ -402,8 +413,12 @@ func CnsInvokeContract(contractName string, abiPath string, funcParams string, t
 
  */
 func InvokeContract(contractAddr string, abiPath string, funcName string,
-	funcParams []string, txType int) error {
+	funcParams []string, txType int, hasBracket bool) error {
 
+	//parse the function and param
+	if hasBracket{
+		funcName, funcParams = GetFuncNameAndParams(funcName)
+	}
 	//Judging whether this contract exists or not
 	if !getContractByAddress(contractAddr) {
 		return fmt.Errorf("the contract address is not exist ...")
