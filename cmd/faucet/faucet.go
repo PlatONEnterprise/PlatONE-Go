@@ -91,7 +91,7 @@ var (
 func main() {
 	// Parse the flags and set up the logger to print everything requested
 	flag.Parse()
-	log.Root().SetHandler(log.LvlFilterHandler(log.Lvl(*logFlag), log.StreamHandler(os.Stderr, log.TerminalFormat(true))))
+	log.Root().SetHandler(log.LvlFilterHandler(log.Lvl(*logFlag), log.StreamHandler(os.Stdout, log.TerminalFormat(true))))
 
 	// Construct the payout tiers
 	amounts := make([]string, *tiersFlag)
