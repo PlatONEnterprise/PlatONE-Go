@@ -25,7 +25,7 @@ import (
 	"fmt"
 	"math"
 	"math/big"
-	"os"
+	"strings"
 )
 
 // ToHex returns the hex representation of b, prefixed with '0x'.
@@ -302,7 +302,7 @@ func ToBytes(source interface{}) ([]byte, error) {
 
 func WasmCallResultCompatibleSolString(res []byte) []byte {
 	rl := len(res)
-	if rl >= 64 && res[0] == byte(0) {
+	if rl >= 64 && res[0] == byte(0) && strings.EqualFold(GetCurrentInterpreterType(), "all") {
 		lengthBytes := bytes.TrimLeft(res[32:64], "\x00")
 		length := 0
 		for i := 0; i < len(lengthBytes); i++ {
@@ -318,13 +318,20 @@ func WasmCallResultCompatibleSolString(res []byte) []byte {
 }
 
 func WasmCallResultCompatibleSolInt64(res []byte) []byte {
+	if !strings.EqualFold(GetCurrentInterpreterType(), "all") {
+		return res
+	}
 	defer func() {
 		if err := recover(); err != nil {
-			fmt.Fprintln(os.Stderr, "############# WasmCallResultCompatibleSolInt64 error:", err)
+			ErrPrintln("############# WasmCallResultCompatibleSolInt64 error:", err)
 		}
 	}()
 	if len(res) != 32 {
 		return res
+	}
+	// filter int64 out of bounds solidity return value
+	if !(bytes.Equal(res[:24], make([]byte, 24)) && res[24] <= 127){
+		return []byte{}
 	}
 	valueBytes := bytes.TrimLeft(res, "\x00")
 	value := int64(0)

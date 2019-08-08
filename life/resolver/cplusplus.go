@@ -1067,6 +1067,7 @@ func envBCWasmDelegateCallInt64(vm *exec.VirtualMachine) int64 {
 		fmt.Printf("call error,%s", err.Error())
 		return 0
 	}
+	ret = common.WasmCallResultCompatibleSolInt64(ret)
 	return common.BytesToInt64(ret)
 }
 
@@ -1094,6 +1095,7 @@ func envBCWasmDelegateCallString(vm *exec.VirtualMachine) int64 {
 		fmt.Printf("call error,%s", err.Error())
 		return 0
 	}
+	ret = common.WasmCallResultCompatibleSolString(ret)
 	return MallocString(vm, string(ret))
 }
 
