@@ -32,7 +32,7 @@ struct ContractInfo
 };
 
 char cnsMapName[] = "bcwasmCnsMap";
-char historyMapName[] = "historyMap";
+//char historyMapName[] = "historyMap";
 char currentManagerKey[] = "currentManagerName";
 char currentVersionKey[] = "currentVersion";
 
@@ -155,15 +155,15 @@ class CnsProxy : public bcwasm::Contract
         int count = 0;
         int begin = pageNum * pageSize;
         int end = (pageNum + 1) * pageSize;
-        const std::set<string>& keys = cnsMap.getKeys();
-        for(auto it = keys.begin(); it != keys.end(); ++it)
+        //const std::set<string>& keys = cnsMap.getKeys();
+        for(auto it = cnsMap.begin(); it != cnsMap.end(); ++it)
         {
             count++;
             if (count > end)
                 break;
             if (count >= begin && count <= end)
             {
-                ContractInfo info = *(cnsMap.find(*it));
+                ContractInfo info = it->second();
                 list.push_back(info);
             }
         }
@@ -364,10 +364,10 @@ class CnsProxy : public bcwasm::Contract
         // if (name == nullptr || strlen(name) == 0 || !checkNameFormat(name)) {
         //     RETURN_CHARARRAY(latest.c_str(), latest.size() + 1);
         // }
-        const std::set<string>& keys = cnsMap.getKeys();
-        for(auto it = keys.begin(); it != keys.end(); ++it)
+        //const std::set<string>& keys = cnsMap.getKeys();
+        for(auto it = cnsMap.begin(); it != cnsMap.end(); ++it)
         {
-            ContractInfo info = *(cnsMap.find(*it));
+            ContractInfo info = it->second();
             if (compareVersion(info.version.c_str(), latest.c_str()) == 1)
             {
                 latest = info.version;
@@ -454,7 +454,7 @@ class CnsProxy : public bcwasm::Contract
 
   private:
     cnsMap_t cnsMap;
-    cnsMap_t historyMap;
+    //cnsMap_t historyMap;
     std::map<int, std::string> errCodes;
 };
 } // namespace SystemContract

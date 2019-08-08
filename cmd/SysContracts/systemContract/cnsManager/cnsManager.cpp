@@ -47,7 +47,7 @@ class CnsManager : public bcwasm::Contract
     /// 实现父类: bcwasm::Contract 的虚函数
     /// 该函数在合约首次发布时执行，仅调用一次
     void init()
-    {
+    {        
         bcwasm::DeployedContract regManagerContract("0x0000000000000000000000000000000000000011");
         std::string addr = bcwasm::address().toString();
         regManagerContract.call("updateCnsManager", addr, "1.0.0.1");
@@ -156,7 +156,7 @@ class CnsManager : public bcwasm::Contract
             bcwasm::println("ERR : [CNS] Latest version is empty.");
             return FAILURE;
         }
-
+        
         ContractInfo *cnsInfoPtr = cnsMap.find(std::string(name) + ver);
         if (nullptr != cnsInfoPtr)
         {
@@ -170,10 +170,9 @@ class CnsManager : public bcwasm::Contract
                 bcwasm::println("ERR : [CNS] Not owner of registered contract.");
                 return FAILURE;
             }
-            //
-            cnsInfoPtr->enabled = false;
             //cnsMap[std::string(name) + ver] = *cnsInfoPtr;
-            cnsMap.insert(std::string(name) + ver, *cnsInfoPtr);
+            cnsInfoPtr->enabled = false;
+            cnsMap.update(std::string(name) + ver, *cnsInfoPtr);
             BCWASM_EMIT_EVENT(Notify, SUCCESS, "cnsUnregister succeed!");
             bcwasm::println("OK : [CNS] cnsUnregister succeed!");
             return SUCCESS;
@@ -221,7 +220,7 @@ class CnsManager : public bcwasm::Contract
         RETURN_CHARARRAY(addr.c_str(), addr.size() + 1);
     }
 
-    // 获取所有已注册合约
+    //获取所有已注册合约
     char *getRegisteredContracts(int pageNum, int pageSize) const
     {
         std::vector<ContractInfo> list;
@@ -234,23 +233,25 @@ class CnsManager : public bcwasm::Contract
         int count = 0;
         int begin = pageNum * pageSize;
         int end = (pageNum + 1) * pageSize;
-        const std::set<string>& keys = cnsMap.getKeys();
-        for(auto it = keys.begin(); it != keys.end(); ++it)
+        //const std::set<string>& keys = cnsMap.getKeys();
+
+        for(auto it = cnsMap.begin(); it != cnsMap.end(); ++it)
         {
             count++;
             if (count > end)
                 break;
             if (count >= begin && count <= end)
             {
-                ContractInfo info = *(cnsMap.find(*it));
-                list.push_back(info);
+                ContractInfo info = it->second();
+                if(info.enabled == true)
+                {list.push_back(info);}
             }
         }
 
         return serializeContractsInfo(0, errCodes.at(0).c_str(), list);
     }
 
-    // 获取某人已注册合约
+    //获取某人已注册合约
     char *getRegisteredContractsByAddress(char *origin, int pageNum, int pageSize) const
     {
         std::vector<ContractInfo> list;
@@ -266,21 +267,21 @@ class CnsManager : public bcwasm::Contract
         int count = 0;
         int begin = pageNum * pageSize;
         int end = (pageNum + 1) * pageSize;
-        const std::set<string>& keys = cnsMap.getKeys();
-        for(auto it = keys.begin(); it != keys.end(); ++it)
+        for(auto it = cnsMap.begin(); it != cnsMap.end(); ++it)
         {
-            ContractInfo info = *(cnsMap.find(*it));
+            ContractInfo info = it->second();
             if (info.origin.compare(ori) == 0)
             {
                 count++;
-            }
-            if (count > end)
+                if (count > end)
                 break;
-            if (count >= begin && count <= end)
-            {
-                list.push_back(info);
-            }
+                if (count >= begin && count <= end)
+                {
+                    list.push_back(info);
+                }
         }
+            }
+           
 
         return serializeContractsInfo(0, errCodes.at(0).c_str(), list);
     }
@@ -297,12 +298,12 @@ class CnsManager : public bcwasm::Contract
         {
             return activatedFlag;
         }
-        const std::set<string>& keys = cnsMap.getKeys();
-        for(auto it = keys.begin(); it != keys.end(); ++it)
+        for(auto it = cnsMap.begin(); it != cnsMap.end(); ++it)
         {
-            ContractInfo info = *(cnsMap.find(*it));
+            ContractInfo info = it->second();
             if (info.name.compare(name) == 0 && info.enabled)
             {
+                
                 activatedFlag = 1;
                 break;
             }
@@ -317,6 +318,7 @@ class CnsManager : public bcwasm::Contract
     //  1 已注册
     int ifRegisteredByAddress(char *address) const
     {
+        
         int activatedFlag = 0;
         std::string addr = address;
         util::formatAddress(addr);
@@ -325,10 +327,9 @@ class CnsManager : public bcwasm::Contract
         {
             return activatedFlag;
         }
-        const std::set<string>& keys = cnsMap.getKeys();
-        for(auto it = keys.begin(); it != keys.end(); ++it)
+        for(auto it = cnsMap.begin(); it != cnsMap.end(); ++it)
         {
-            ContractInfo info = *(cnsMap.find(*it));
+            ContractInfo info =it->second();
             if (info.address.compare(addr) == 0 && info.enabled)
             {
                 activatedFlag = 1;
@@ -353,10 +354,9 @@ class CnsManager : public bcwasm::Contract
         {
             return serializeContractsInfo(1, errCodes.at(1).c_str(), list);
         }
-        const std::set<string>& keys = cnsMap.getKeys();
-        for(auto it = keys.begin(); it != keys.end(); ++it)
+        for(auto it = cnsMap.begin(); it != cnsMap.end(); ++it)
         {
-            ContractInfo info = *(cnsMap.find(*it));
+            ContractInfo info = it->second();
             if (info.address.compare(addr) == 0 && info.enabled)
             {
                 activatedFlag = 1;
@@ -379,10 +379,9 @@ class CnsManager : public bcwasm::Contract
         {
             return serializeContractsInfo(1, errCodes.at(1).c_str(), list);
         }
-        const std::set<string>& keys = cnsMap.getKeys();
-        for(auto it = keys.begin(); it != keys.end(); ++it)
+        for(auto it = cnsMap.begin(); it != cnsMap.end(); ++it)
         {
-            ContractInfo info = *(cnsMap.find(*it));
+            ContractInfo info = it->second();
             if (info.name.compare(std::string(name)) == 0)
             {
                 list.push_back(info);
@@ -433,7 +432,7 @@ class CnsManager : public bcwasm::Contract
             contra.AddMember("enabled", it->enabled, allocator);
             contractArray.PushBack(contra, allocator); //添加到数组
         }
-
+    
         int total = (int)list.size();
         data->AddMember("total", total, allocator);
         data->AddMember("contract", contractArray, allocator);
@@ -546,19 +545,16 @@ class CnsManager : public bcwasm::Contract
         }
         return 0;
     }
-
     char *getLatestVersion(const char *name) const
     {
         std::string latest = "0.0.0.0";
         if (name == nullptr || strlen(name) == 0 || !checkNameFormat(name)) {
             RETURN_CHARARRAY(latest.c_str(), latest.size() + 1);
         }
-        const std::set<string>& keys = cnsMap.getKeys();
-        for(auto it = keys.begin(); it != keys.end(); ++it)
+        for(auto it = cnsMap.begin(); it != cnsMap.end(); ++it)
         {
-            ContractInfo info = *(cnsMap.find(*it));
-            if (info.name.compare(std::string(name)) == 0 &&
-                compareVersion(info.version.c_str(), latest.c_str()) == 1)
+            ContractInfo info = it->second();
+            if (info.name.compare(std::string(name)) == 0 && compareVersion(info.version.c_str(), latest.c_str()) == 1)
             {
                 latest = info.version;
             }
@@ -621,6 +617,7 @@ class CnsManager : public bcwasm::Contract
     int doCnsRegister(const char *name, const char *version, const char *address)
     {
         // parameters check
+        // bcwasm::getState(TOTAL,total);
         if (!checkNameFormat(name))
         {
             BCWASM_EMIT_EVENT(Notify, FAILURE, "ERR : [CNS] Name format is invalid.");
@@ -655,10 +652,9 @@ class CnsManager : public bcwasm::Contract
         info.origin = ori;
         info.create_time = timestamp();
         info.enabled = true;
-
-        std::map<std::string, ContractInfo>::iterator it;
-        ContractInfo *cnsInfoPtr = cnsMap.find(std::string(name) + version);
-        if (nullptr != cnsInfoPtr && cnsInfoPtr->enabled)
+        ContractInfo *cnsInfoPtr;
+        cnsInfoPtr = cnsMap.find(std::string(name) + version);
+        if (nullptr != cnsInfoPtr)
         {
             // this (name + version) already registered and activated in CNS, skip!
             BCWASM_EMIT_EVENT(Notify, FAILURE, "ERR : [CNS] Name and version is already registered and activated in CNS.");
@@ -667,10 +663,9 @@ class CnsManager : public bcwasm::Contract
         }
         else
         { 
-            const std::set<string>& keys = cnsMap.getKeys();
-            for (auto it = keys.begin(); it != keys.end(); ++it)
+            for (auto it = cnsMap.begin(); it != cnsMap.end(); ++it)
             {
-                ContractInfo tmp = *(cnsMap.find(*it));
+                ContractInfo tmp = it->second();
                 if (tmp.name == std::string(name) && tmp.origin.compare(ori) != 0)
                 {
                     BCWASM_EMIT_EVENT(Notify, FAILURE, "ERR : [CNS] Name is already registered");
@@ -683,7 +678,6 @@ class CnsManager : public bcwasm::Contract
             if (compareVersion(version, curLatestVersion) == 1)
             {
                 // Monotonically increasing version
-                // cnsMap[std::string(name) + std::string(version)] = info;
                 cnsMap.insert(std::string(name) + std::string(version),info);
                 BCWASM_EMIT_EVENT(Notify, SUCCESS, "cnsRegister succeed!");
                 return SUCCESS;

@@ -17,27 +17,16 @@
  */
 namespace bcwasm {
     namespace db {
-        /**
-         * @brief Traverse is a variable that can be made, NoTraverse is an immutable
-         * 
-         */
-    enum class MapType {
-        Traverse = 0,
-        NoTraverse = 1
-    };
-
     /**
      * @brief Implement map operations, Map templates
      * 
      * @tparam *Name The name of the Map, the name of the Map should be unique within each contract.
      * @tparam Key key的类型
      * @tparam Value value的类型
-     * @tparam MapType::Traverse The default is Traverse, when Traverse needs extra data structure to operate, set to NoTraverse when no traversal operation is needed. 
      */
-    template <const char *Name, typename Key, typename Value, MapType type = MapType::Traverse>
+    template <const char *Name, typename Key, typename Value>
     class Map{
     public:
-        //template <const char *Name, typename Key, typename Value>
 
         class Pair {
         public:
@@ -93,18 +82,19 @@ namespace bcwasm {
              */
             const Value& second() const {
                 BCWasmAssert(second_ != nullptr, "second is nullptr");
-                return *second_;
-            }
+                return *second_;           }
         private:
             const Key *first_;
             const Value *second_;
         };
 
         /**
-         * @brief KeyWrapper
-         * 
+         * @brief Wrapper
+         * @param name first name
+         * @param key key
          */
-        class KeyWrapper {
+        template <typename WrapKey>
+        class Wrapper {
         public:
             /**
              * @brief Construct a new Key Wrapper object
@@ -112,19 +102,19 @@ namespace bcwasm {
              * @param name first name
              * @param key key
              */
-            KeyWrapper(const std::string &name, const Key &key) :name_(name), key_(key) {
+            Wrapper(const std::string &name, const WrapKey &key) :name_(name), key_(key) {
             }
             /**
              * @brief Construct a new bcwasm serialize object
              * 
              * @param name_ 
              */
-            BCWASM_SERIALIZE(KeyWrapper, (name_)(key_))
+            BCWASM_SERIALIZE(Wrapper, (name_)(key_))
         private:
             const std::string &name_;
-            const Key& key_;
+            const WrapKey& key_;
         };
-
+        
         /**
          * @brief Constant Pair
          * 
@@ -188,29 +178,28 @@ namespace bcwasm {
          * 
          * @tparam ItemIterator 
          */
-        template <typename ItemIterator>
+        //template <typename ItemIterator>
         class IteratorType : public std::iterator<std::bidirectional_iterator_tag, Pair> {
         public:
             friend bool operator == ( const IteratorType& a, const IteratorType& b ) {
-                return a.map_ == b.map_ && a.iter_ == b.iter_;
+                return a.map_ == b.map_ && a.index_ == b.index_;
             }
             friend bool operator != ( const IteratorType& a, const IteratorType& b ) {
-                bool res =  a.map_ != b.map_ || a.iter_ != b.iter_;
+                bool res =  a.map_ != b.map_ || a.index_ != b.index_;
                 return res;
             }
+        
         public:
-
-
             IteratorType() = default;
 
             /**
              * @brief Construct a new Iterator Type object
              * 
              * @param map 
-             * @param iter 
+             * @param index
              */
-            IteratorType(Map<Name, Key, Value, type> *map, ItemIterator iter)
-                :map_(map), iter_(iter){
+            IteratorType(Map<Name, Key, Value> *map, int index)
+                :map_(map), index_(index){
             }
 
             /**
@@ -219,55 +208,139 @@ namespace bcwasm {
              * @return Pair& 
              */
             Pair& operator*() {
-                pair_ = Pair(*iter_, (*map_)[*iter_]);
+                Key k;
+                Value v;
+                getState(IndexWrapper(wrapperName_, index_), k);
+                getState(KeyWrapper(wrapperName_, k), v);
+                pair_ = Pair(k,v);
                 return pair_;
             }
 
             Pair* operator->() {
-                pair_ = Pair(*iter_, (*map_)[*iter_]);
+                Key k;
+                Value v;
+                getState(IndexWrapper(wrapperName_,index_),k);
+                getState(KeyWrapper(wrapperName_,k),v);
+                pair_ = Pair(k,v);
                 return &pair_;
             }
 
             IteratorType& operator--(){
-                --iter_;
+                --index_;
                 return *this;
             }
 
             IteratorType operator --(int) {
-                IteratorType tmp(map_, iter_--);
-                --tmp;
+                IteratorType tmp(map_, index_--);
+                //--tmp;
                 return tmp;
             }
-
+            
             IteratorType& operator ++() {
-                ++iter_;
+                ++index_;
                 return *this;
             }
-
+    
             IteratorType operator ++(int) {
-                IteratorType tmp(map_, iter_++);
-                ++tmp;
+                IteratorType tmp(map_, index_++);
+                //++tmp;
                 return tmp;
             }
         private:
             Pair pair_;
-            Map<Name, Key, Value, type> *map_;
-            ItemIterator iter_;
+            const std::string wrapperName_ = kType + Name;
+            Map<Name, Key, Value> *map_;
+            int  index_;
         };
 
         /**
+         * @brief ReverseIterator
+         * 
+         */
+        class ReverseIteratorType : public std::iterator<std::bidirectional_iterator_tag, Pair> {
+        public:
+            friend bool operator == ( const ReverseIteratorType& a, const ReverseIteratorType& b ) {
+                return a.map_ == b.map_ && a.index_ == b.index_;
+            }
+            friend bool operator != ( const ReverseIteratorType& a, const ReverseIteratorType& b ) {
+                bool res =  a.map_ != b.map_ || a.index_ != b.index_;
+                return res;
+            }
+        
+        public:
+            ReverseIteratorType() = default;
+
+            /**
+             * @brief Construct a new ReverseIterator Type object
+             * 
+             * @param map 
+             * @param index
+             */
+            ReverseIteratorType(Map<Name, Key, Value> *map, int index)
+                :map_(map), index_(index){
+            }
+
+            /**
+             * @brief The obvious operators
+             * 
+             * @return Pair& 
+             */
+            Pair& operator*() {
+                Key k;
+                Value v;
+                getState(IndexWrapper(wrapperName_, index_), k);
+                getState(KeyWrapper(wrapperName_, k), v);
+                pair_ = Pair(k,v);
+                return pair_;
+            }
+
+            Pair* operator->() {
+                Key k;
+                Value v;
+                getState(IndexWrapper(wrapperName_,index_),k);
+                getState(KeyWrapper(wrapperName_,k),v);
+                pair_ = Pair(k,v);
+                return &pair_;
+            }
+
+            IteratorType& operator--(){
+                ++index_;
+                return *this;
+            }
+
+            IteratorType operator --(int) {
+                IteratorType tmp(map_, index_++);
+                //--tmp;
+                return tmp;
+            }
+
+            IteratorType& operator ++() {
+                --index_;
+                return *this;
+            }
+
+            IteratorType operator ++(int) {
+                IteratorType tmp(map_, index_--);
+                //++tmp;
+                return tmp;
+            }
+        private:
+            Pair pair_;
+            const std::string wrapperName_ = kType + Name;
+            Map<Name, Key, Value> *map_;
+            int  index_;
+        };
+        /**
          * @brief Constant iterator
          * 
-         * @tparam ItemIterator 
          */
-        template <typename ItemIterator>
         class ConstIteratorType : public std::iterator<std::bidirectional_iterator_tag, ConstPair> {
         public:
             friend bool operator == ( const ConstIteratorType& a, const ConstIteratorType& b ) {
-                return a.map_ == b.map_ && a.iter_ == b.iter_;
+                return a.map_ == b.map_ && a.index_ == b.index_;
             }
             friend bool operator != ( const ConstIteratorType& a, const ConstIteratorType& b ) {
-                bool res =  a.map_ != b.map_ || a.iter_ != b.iter_;
+                bool res =  a.map_ != b.map_ || a.index_ != b.index_;
                 return res;
             }
         public:
@@ -278,10 +351,10 @@ namespace bcwasm {
              * @brief Construct a new Const Iterator Type object
              * 
              * @param map 
-             * @param iter 
+             * @param index
              */
-            ConstIteratorType(const Map<Name, Key, Value, type> *map, ItemIterator iter)
-                    :map_(map), iter_(iter){
+            ConstIteratorType(const Map<Name, Key, Value> *map, int index)
+                    :map_(map), index_(index){
             }
 
             /**
@@ -290,64 +363,157 @@ namespace bcwasm {
              * @return Pair& 
              */
             ConstPair& operator*() {
-                pair_ = ConstPair(*iter_, map_->find(*iter_));
+                Key k;
+                Value v;
+                getState(IndexWrapper(wrapperName_,index_),k);
+                getState(KeyWrapper(wrapperName_,k),v);
+                pair_ = ConstPair(k,v);
                 return pair_;
             }
 
             ConstPair* operator->() {
-                pair_ = ConstPair(*iter_, *(map_->find(*iter_)));
+                Key k;
+                Value v;
+                getState(IndexWrapper(wrapperName_,index_),k);
+                getState(KeyWrapper(wrapperName_,k),v);
+                pair_ = ConstPair(k,v);
                 return &pair_;
             }
 
             ConstIteratorType& operator--(){
-                --iter_;
+                --index_;
                 return *this;
             }
 
             ConstIteratorType operator --(int) {
-                ConstIteratorType tmp(map_, iter_--);
-                --tmp;
+                IteratorType tmp(map_, index_--);
+                //--tmp;
                 return tmp;
             }
 
             ConstIteratorType& operator ++() {
-                ++iter_;
+                ++index_;
+                return *this;
+            }
+            ConstIteratorType operator ++(int) {
+                ConstIteratorType tmp(map_, index_++);
+                //++tmp;
+                return tmp;
+            }
+
+        private:
+            ConstPair pair_;
+            const Map<Name, Key, Value> *map_;
+            const std::string wrapperName_ = kType + Name;
+            int index_;
+        };
+
+        /**
+         * @brief Constant iterator
+         * 
+         * @tparam ItemIterator 
+         */
+        // template <typename ItemIterator>
+        class ConstReverseIteratorType : public std::iterator<std::bidirectional_iterator_tag, ConstPair> {
+        public:
+            friend bool operator == ( const ConstReverseIteratorType& a, const ConstReverseIteratorType& b ) {
+                return a.map_ == b.map_ && a.index_ == b.index_;
+            }
+            friend bool operator != ( const ConstReverseIteratorType& a, const ConstReverseIteratorType& b ) {
+                bool res =  a.map_ != b.map_ || a.index_ != b.index_;
+                return res;
+            }
+        public:
+
+            ConstReverseIteratorType() = default;
+
+            /**
+             * @brief Construct a new Const ReverseIterator Type object
+             * 
+             * @param map 
+             * @param index
+             */
+            ConstReverseIteratorType(const Map<Name, Key, Value> *map, int index)
+                    :map_(map), index_(index){
+            }
+
+            /**
+             * @brief The obvious operators
+             * 
+             * @return Pair& 
+             */
+            ConstPair& operator*() {
+                Key k;
+                Value v;
+                getState(IndexWrapper(wrapperName_,index_),k);
+                getState(KeyWrapper(wrapperName_,k),v);
+                pair_ = ConstPair(k,v);
+                return pair_;
+            }
+
+            ConstPair* operator->() {
+                Key k;
+                Value v;
+                getState(IndexWrapper(wrapperName_,index_),k);
+                getState(KeyWrapper(wrapperName_,k),v);
+                pair_ = ConstPair(k,v);
+                return &pair_;
+            }
+
+            ConstIteratorType& operator--(){
+                ++index_;
                 return *this;
             }
 
-            ConstIteratorType operator ++(int) {
-                ConstIteratorType tmp(map_, iter_++);
-                ++tmp;
+            ConstIteratorType operator --(int) {
+                IteratorType tmp(map_, index_++);
                 return tmp;
             }
+
+            ConstIteratorType& operator ++() {
+                --index_;
+                return *this;
+            }
+            ConstIteratorType operator ++(int) {
+                ConstIteratorType tmp(map_, index_--);
+                return tmp;
+            }
+
         private:
             ConstPair pair_;
-            const Map<Name, Key, Value, type> *map_;
-            ItemIterator iter_;
+            const Map<Name, Key, Value> *map_;
+            const std::string wrapperName_ = kType + Name;
+            int index_;
         };
+        /**
+        * @define three Wrapper type here
+        *
+        */
+        typedef class Wrapper<Key> KeyWrapper;
+        typedef class Wrapper<int> IndexWrapper;
+        typedef class Wrapper<std::string> StrWrapper;
+        typedef class IteratorType Iterator;
+        typedef class ReverseIteratorType ReverseIterator;
+        typedef class ConstIteratorType ConstIterator;
+        typedef class ConstReverseIteratorType ConstReverseIterator;
 
-        typedef class IteratorType<typename std::set<Key>::iterator> Iterator;
-        typedef class IteratorType<typename std::set<Key>::reverse_iterator> ReverseIterator;
-        typedef class ConstIteratorType<typename std::set<Key>::iterator> ConstIterator;
-        typedef class ConstIteratorType<typename std::set<Key>::reverse_iterator> ConstReverseIterator;
     public:
 
         Map(){init();}
-        Map(const Map<Name, Key, Value, type> &) = delete;
-        Map(const Map<Name, Key, Value, type> &&) = delete;
-        Map<Name, Key, Value, type>& operator=(const Map<Name, Key, Value, type> &) = delete;
+        Map(const Map<Name, Key, Value> &) = delete;
+        Map(const Map<Name, Key, Value> &&) = delete;
+        Map<Name, Key, Value>& operator=(const Map<Name, Key, Value> &) = delete;
         /**
          * @brief Destroy the Map object Refresh data to the blockchain
          * 
          */
         ~Map(){
-            flush();
             free(v_ptr);
         }
 
 
         /**
-         * @brief Insert a new key-value pair, Update to cache
+         * @brief Insert a new key-value pair, Update to leveldb
          * 
          * @param k Key
          * @param v Value
@@ -356,40 +522,37 @@ namespace bcwasm {
          */
         bool insert(const Key &k, const Value &v) {
             init();
-            map_[k] = v;             
-            modify_.insert(k);
-
-            if (type == MapType::Traverse) {
-                keySet_.insert(k);             
+    
+            Value v_;
+            size_t len = bcwasm::getState(KeyWrapper(wrapperName_, k), v_);
+            if(0 != len){
+                    return false;
             }
-            // setState(curIndex, k);
-            // setState(k, v);
-            // total += 1;
-            // setState(TOTAL, total);
+            setState(IndexWrapper(wrapperName_, total),k);          
+            total += 1;
+            setState(KeyWrapper(wrapperName_, k),v);
+            setState(StrWrapper(wrapperName_, TOTAL),total);
             return true;
         }
-
         /**
-         * @brief Insert a new key-value pair that will not be updated to the cache. Suitable for large number of inserts, no updates after insertion
+         * @brief Update a new key-value pair, Update to leveldb
          * 
          * @param k Key
          * @param v Value
-         * @return true Inserted successfully
-         * @return false Insert failed
+         * @return true Updated successfully
+         * @return false Update failed
          */
-        bool insertConst(const Key &k, const Value &v) {
+         bool update(const Key &k, const Value &v) {
             init();
-            if (type == MapType::Traverse) {
-                keySet_.insert(k);
+            Value v_;
+            size_t len = bcwasm::getState(KeyWrapper(wrapperName_, k), v_);
+            if(0 == len){
+                return false;
             }
-
-            if (map_.find(k) != map_.end()) {
-                map_[k] = v;
-            }
-
-            setState(KeyWrapper(keySetName_, k), v);
+            setState(KeyWrapper(wrapperName_, k), v);
             return true;
         }
+        
 
         /**
          * @brief Get const value Ptr
@@ -399,23 +562,23 @@ namespace bcwasm {
          */
         const Value* find(const Key &k) const {
             BCWasmAssert(v_ptr != nullptr, "v_ptr is null.");
-            size_t len = bcwasm::getState(k, *v_ptr);
+            size_t len = bcwasm::getState(KeyWrapper(wrapperName_, k), *v_ptr);
             if (0 != len) {
                 return (const Value*)v_ptr;
             }
             return nullptr;
         }
-
+        /**
+         * @brief Get value Ptr
+         * 
+         * @param k Key
+         * @return Value* 
+         */
         Value* find(const Key &k) {
             init();
-            auto iter = map_.find(k);
-            if (iter != map_.end()) {
-                return &iter->second;
-            }
-            size_t len = bcwasm::getState(k, *v_ptr);
+            BCWasmAssert(v_ptr != nullptr, "v_ptr is null.");
+            size_t len = bcwasm::getState(KeyWrapper(wrapperName_, k), *v_ptr);
             if (0 != len) {
-                map_[k] = *v_ptr;
-                keySet_.insert(k);
                 return v_ptr;
             }
             return nullptr;
@@ -428,99 +591,41 @@ namespace bcwasm {
          */
         void del(const Key &k) {
             init();
-            auto iter = map_.find(k);
-            if (iter != map_.end()) {
-                map_.erase(iter);
+            Key k1;
+            Value v1;
+            Key lastKey;
+            Value lastValue;
+            if(find(k)==nullptr){
+                return;
             }
-            if (type == MapType::Traverse) {
-                //0424: 删除元素的处理，将total-1位置的key放入删除的位置
-                auto it = keySet_.find(k);
-                if (it == keySet_.end()) {
-                    //elem to delete is not found.
-                    return;
+            bcwasm::delState(KeyWrapper(wrapperName_,k));
+            for(int i=0; i<total;i++)
+            {
+                getState(IndexWrapper(wrapperName_,i),k1);  
+                size_t len_1 = getState(KeyWrapper(wrapperName_,k1),v1);
+                if(0 == len_1)
+                {
+                    getState(IndexWrapper(wrapperName_, total-1),lastKey);
+                    setState(IndexWrapper(wrapperName_,i),lastKey);
+                    bcwasm::delState(IndexWrapper(wrapperName_, total-1));
+                    setState(StrWrapper(wrapperName_, TOTAL),total-1);        
+                    break;
                 }
-                const int keyIndex = std::distance(keySet_.begin(),it);
-                Key lastKey;
-                getState(total-1, lastKey);
-                setState(keyIndex, lastKey);
 
-                bcwasm::delState(total-1);
-                bcwasm::delState(k);
-
-                bcwasm::setState(TOTAL, total-1);
-
-                keySet_.erase(k);
-            }
-            modify_.insert(k);
+            }                                              
         }
-
-        /**
-         * @brief Bracket operator
+         /**
+         * @brief Get the length of the map
          * 
-         * @param k Key
-         * @return Value& Get Value 
+         * @return int length
          */
-        Value& operator[](const Key& k) {
+        int size() {
             init();
-            return *find(k);
+            return total;
         }
 
-        const Value& operator[](const Key& k) const{
-            return *find(k);
-        }
-
-        /**
-         * @brief Get the length of the map, only allowed when the MapType is Traverse
-         * 
-         * @return size_t length
-         */
-        size_t size() {
-            init();
-            BCWasmAssert(type == MapType::Traverse, "NoTraverse of Map", keySetName_);
-            return keySet_.size();
-        }
-
-        size_t getSize() const 
-        {
-            BCWasmAssert(type == MapType::Traverse, "NoTraverse of Map", keySetName_);
-            return keySet_.size();
-        }
-
-        const std::set<Key>& getKeys() const
-        {
-            BCWasmAssert(type == MapType::Traverse, "NoTraverse of Map", keySetName_);
-            return keySet_;
-        }
-
-        /**
-         * @brief Refresh the modified data in memory to the blockchain
-         * 
-         */
-        void flush() {
-            std::for_each(
-                    modify_.begin(),
-                    modify_.end(),
-                    [this](const Key &k) {
-                        auto iter = map_.find(k);
-                        if (iter != map_.end()) {
-                            Value v;
-                            if (0 == getState(k, v)) {
-                                int curIndex = total;
-                                setState(curIndex, k);
-                                setState(k, iter->second);
-                                setState(TOTAL, ++total);
-                            }
-                            else {
-                                bcwasm::setState(k, iter->second);
-                            }
-                        } else {
-                            bcwasm::delState(k);
-                            if (type == MapType::Traverse) {
-                                keySet_.erase(k);
-                            }
-                        }
-                    }
-            );
+        int size() const {
+            return total;
         }
 
         /**
@@ -528,13 +633,37 @@ namespace bcwasm {
          * 
          * @return Iterator 
          */
+        //Iterator 
         Iterator begin() {
-            BCWasmAssert(type == MapType::Traverse, "NoTraverse of Map", keySetName_);
-            return Iterator(this, keySet_.begin());
+            int begin = 0;
+            return Iterator(this, begin);
         }
-
+        /**
+         * @brief const Iterator start position
+         * 
+         * @return cbegin()
+         */ 
         ConstIterator begin() const {
             return cbegin();
+        }
+          /**
+         * @brief ReverseIterator start position
+         * 
+         * @return ReverseIterator 
+         */
+        //Iterator 
+        ReverseIterator rbegin() {
+            int rbegin = total-1;
+            return ReverseIterator(this, rbegin);
+        }
+          /**
+         * @brief const ReverseIterator start position
+         * 
+         * @return crbegin()
+         */
+        //Iterator 
+        ConstReverseIterator rbegin() const {
+            return crbegin();
         }
 
         /**
@@ -542,74 +671,76 @@ namespace bcwasm {
          * 
          * @return Iterator 
          */
-        Iterator end() {
-            BCWasmAssert(type == MapType::Traverse, "NoTraverse of Map", keySetName_);
-            return Iterator(this, keySet_.end());
+        /*Iterator*/
+        Iterator  end() {
+            return Iterator(this,total);
         }
-
+        /**
+         * @brief const Iterator end position
+         * 
+         * @return cend() 
+         */
+        /*Iterator*/
         ConstIterator end() const {
             return cend();
         }
-
         /**
-         * @brief Reverse iterator start position
+         * @brief Reverse Iterator end position
          * 
          * @return ReverseIterator 
          */
-        ReverseIterator rbegin() {
-            BCWasmAssert(type == MapType::Traverse, "NoTraverse of Map", keySetName_);
-            return ReverseIterator(this, keySet_.rbegin());
+        /*Iterator*/
+        ReverseIterator  rend() {
+            return ReverseIterator(this,rend_);
         }
-
         /**
-         * @brief Reverse iterator end position
+         * @brief const ReverseIterator end position
          * 
-         * @return ReverseIterator 
+         * @return crend
          */
-        ReverseIterator rend() {
-            BCWasmAssert(type == MapType::Traverse, "NoTraverse of Map", keySetName_);
-            return ReverseIterator(this, keySet_.rend());
+        /*Iterator*/
+        ConstReverseIterator rend() const {
+            return crend();
         }
-
         /**
-         * @brief Constant iterator start position
+         * @brief const Iterator end position
          * 
-         * @return ConstIterator 
+         * @return const Iterator 
          */
+        /*Iterator*/
         ConstIterator cbegin() const {
-            BCWasmAssert(type == MapType::Traverse, "NoTraverse of Map", keySetName_);
-            return ConstIterator(this, keySet_.begin());
+            int begin = 0;
+            return ConstIterator(this, begin);
         }
-
         /**
-         * @brief Constant iterator end position
+         * @brief const ReverseIterator end position
          * 
-         * @return ConstIterator 
+         * @return ConstReverseIterator 
          */
+        /*Iterator*/
+        ConstReverseIterator crbegin() const {
+            int rbegin = total-1;
+            return ConstReverseIterator(this, rbegin);
+        }
+        /**
+         * @brief const Iterator end position
+         * 
+         * @return const Iterator 
+         */
+        /*Iterator*/
         ConstIterator cend() const {
-            BCWasmAssert(type == MapType::Traverse, "NoTraverse of Map", keySetName_);
-            return ConstIterator(this, keySet_.end());
+            return ConstIterator(this, total);
         }
-
         /**
-         * @brief Inverse constant iterator start position
+         * @brief const ReverseIterator end position
          * 
          * @return ConstReverseIterator 
          */
-        ConstReverseIterator crbegin() {
-            BCWasmAssert(type == MapType::Traverse, "NoTraverse of Map", keySetName_);
-            return ConstReverseIterator(this, keySet_.crbegin());
+        /*Iterator*/
+        ConstReverseIterator crend() const {
+            return ConstReverseIterator(this, rend_);
         }
 
-        /**
-         * @brief Inverse constant iterator end position
-         * 
-         * @return ConstReverseIterator 
-         */
-        ConstReverseIterator crend() {
-            BCWasmAssert(type == MapType::Traverse, "NoTraverse of Map", keySetName_);
-            return ConstReverseIterator(this, keySet_.crend());
-        }
 
     public:
         static const std::string kType;
@@ -619,37 +750,23 @@ namespace bcwasm {
          * 
          */
         void init() {
-            if (!init_ && type == MapType::Traverse) {
-
+            if (!init_) {
             v_ptr = (Value *)malloc(sizeof(Value));
             BCWasmAssert(v_ptr != nullptr, "unable to allocate memory for v_ptr.");
-
-            bcwasm::getState(TOTAL, total);
-
-            if (!keySet_.empty()) {
-                keySet_.clear();
-            }
-            for (int i=0; i<total;i++) {
-                Key k;
-                Value v;
-                getState(i, k);
-                keySet_.insert(k);
-            }
+            bcwasm::getState(StrWrapper(wrapperName_, TOTAL), total);
             init_ = true;
             }
         }
 
         int total = 0;
-        std::map<Key, Value> map_;
-        std::set<Key> keySet_;
-        std::set<Key> modify_;
-        const std::string keySetName_ = kType + Name;
+        const std::string wrapperName_ = kType + Name;
         const std::string TOTAL = "total";
         bool init_ = false;
         Value *v_ptr;
+        const int rend_= -1; 
     };
-
-    template <const char *Name, typename Key, typename Value, MapType type>
-    const std::string Map<Name, Key, Value, type>::kType = "__map__";
+    
+    template <const char *Name, typename Key, typename Value>
+    const std::string Map<Name, Key, Value>::kType = "__map__";
 }
 }

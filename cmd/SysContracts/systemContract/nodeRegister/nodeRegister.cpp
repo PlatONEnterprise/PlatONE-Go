@@ -218,7 +218,7 @@ class NodeRegister : public bcwasm::Contract
         const RegisterInfo *InfoPtr = registerInfos.find(pk);
         if(nullptr != InfoPtr) 
         {
-            info = registerInfos[pk];
+            info = *(registerInfos.find(pk));
             if (info.status != UN_APPROVE)
             {
                 bcwasm::println("approve: status already set.");
@@ -301,7 +301,7 @@ class NodeRegister : public bcwasm::Contract
         for(auto it = registerInfos.begin(); it != registerInfos.end(); ++it)
         {
 
-            if (it->second().status == status)
+            if ((it->second()).status == status)
             {
                 count++;
                 if (count >= begin && count <= end)
@@ -345,7 +345,7 @@ class NodeRegister : public bcwasm::Contract
         const RegisterInfo *InfoPtr = registerInfos.find(pk);
         if(nullptr != InfoPtr)
         {
-            info = registerInfos[pk];
+            info = *(registerInfos.find(pk));
             list.push_back(info);
         }
 
@@ -377,7 +377,7 @@ class NodeRegister : public bcwasm::Contract
 
         for(auto it = registerInfos.begin(); it != registerInfos.end(); ++it)
         {
-            if (it->second().owner.compare(own) == 0)
+            if ((it->second()).owner.compare(own) == 0)
                 list.push_back(it->second());
         }
 
@@ -460,9 +460,9 @@ class NodeRegister : public bcwasm::Contract
     {
         for(auto it = registerInfos.begin(); it != registerInfos.end(); ++it)
         {
-            if (it->second().status == 1)
+            if ((it->second()).status == 1)
             {
-                if (it->second().name == name)
+                if ((it->second()).name == name)
                 {
                     return true;
                 }
@@ -479,12 +479,12 @@ class NodeRegister : public bcwasm::Contract
     {
         for(auto it = registerInfos.begin(); it != registerInfos.end(); ++it) 
         {
-            if (it->second().status == 1)
+            if ((it->second()).status == 1)
             {
-                int rpcPort = it->second().rpcPort;
-                int p2pPort = it->second().p2pPort;
-                std::string externalIP = it->second().externalIP;
-                std::string internalIP = it->second().internalIP;
+                int rpcPort = (it->second()).rpcPort;
+                int p2pPort = (it->second()).p2pPort;
+                std::string externalIP = (it->second()).externalIP;
+                std::string internalIP = (it->second()).internalIP;
 
                 if (externalIP == eIP || externalIP == iIP || internalIP == eIP || internalIP == iIP)
                 {

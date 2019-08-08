@@ -154,7 +154,7 @@ namespace SystemContract
                 //     return 5;
                 // }
 
-                vector<string> callerRoles = mapUserRoles[callerAddrss].roles;
+                vector<string> callerRoles = (*(mapUserRoles.find(callerAddrss))).roles;
                 if ( !util::ifHavePermission(callerRoles,  urole.roles))
                 {
                     string err = "ERR: [RoleManager] [addRole] No permission to addrole for roles: " + string(roles);
@@ -186,7 +186,7 @@ namespace SystemContract
                     return A_SUCCESS;
                 } else{
                     //存在并用户名一样，则更新
-                    userRole urole2 = mapUserRoles[addr];
+                    userRole urole2 = *(mapUserRoles.find(addr));
                     if(strcmp(urole2.name.c_str(), name) == 0)
                     {
                         for (Value::ConstValueIterator itr = doc.Begin(); itr != doc.End(); ++itr)
@@ -307,7 +307,7 @@ namespace SystemContract
                 //     return 3;
                 // }
 
-                userRole urole = mapUserRoles[addr];
+                userRole urole = *(mapUserRoles.find(addr));
 
                 Document doc;
                 doc.Parse(roles);
@@ -349,7 +349,7 @@ namespace SystemContract
                 //     return 5;
                 // }
 
-                vector<string> callerRoles = mapUserRoles[callerAddrss].roles;
+                vector<string> callerRoles = (*(mapUserRoles.find(callerAddrss))).roles;
                 if ( !util::ifHavePermission(callerRoles, rls))
                 {
                     string err = "ERR: [RoleManager] [removeRole] No permission to remove for roles: " + string(roles);
@@ -405,7 +405,7 @@ namespace SystemContract
                 //     return util::errorResultToString(2, "Not Found");
                 // }
 
-                userRole urole = mapUserRoles[addr];
+                userRole urole = *(mapUserRoles.find(addr));
 
                 return  util::vectorResultToString(urole.roles);
             }
@@ -435,10 +435,10 @@ namespace SystemContract
                 Document::AllocatorType& allocator = doc.GetAllocator();
                 Value array(kArrayType);
 
-                const std::set<string>& keys = mapUserRoles.getKeys();
+                //const std::set<string>& keys = mapUserRoles.getKeys();
 
-                for(auto iter = keys.begin(); iter != keys.end(); ++iter) {
-                    userRole uRole = *(mapUserRoles.find(*iter));
+                for(auto iter = mapUserRoles.begin(); iter != mapUserRoles.end(); ++iter) {
+                    userRole uRole = iter->second();
                     vector<string> roles = uRole.roles;
                     for(auto const& r : roles)
                     {
@@ -501,8 +501,8 @@ namespace SystemContract
                 string strAddr = addr;
                 util::formatAddress(strAddr);
                 
-                const std::set<string>& keys = mapUserRoles.getKeys();
-                if (keys.count(strAddr) == 0)
+                //const std::set<string>& keys = mapUserRoles.getKeys();
+                if (mapUserRoles.getSize() == 0)
                 {
                     return 0;
                 }
@@ -512,7 +512,7 @@ namespace SystemContract
                 //     return 0;
                 // }
 
-                userRole urole = mapUserRoles[strAddr];
+                userRole urole = *(mapUserRoles.find(strAddr));
 
                 for (auto const& r : urole.roles)
                 {
@@ -528,10 +528,10 @@ namespace SystemContract
             {
                 //必须有这一步，把得到的map放到一个临时变量，不然就无法获取里面struct中的vector数据
                 
-                const std::set<string>& keys = mapUserRoles.getKeys();
+                //const std::set<string>& keys = mapUserRoles.getKeys();
 
-                for(auto iter = keys.begin(); iter != keys.end(); ++iter) {
-                    userRole uRole = *(mapUserRoles.find(*iter));
+                for(auto iter = mapUserRoles.begin(); iter != mapUserRoles.end(); ++iter) {
+                    userRole uRole = iter->second();
                     if (string(name) == uRole.name)
                     {
                         urole.roles.assign(uRole.roles.begin(),uRole.roles.end());
@@ -565,10 +565,10 @@ namespace SystemContract
             vector<string> doGetRolesByName(const char *name)const
             {
                 //必须有这一步，把得到的map放到一个临时变量，不然就无法获取里面struct中的vector数据
-                const std::set<string>& keys = mapUserRoles.getKeys();
+                //const std::set<string>& keys = mapUserRoles.getKeys();
 
-                for(auto iter = keys.begin(); iter != keys.end(); ++iter) {
-                    userRole uRole = *(mapUserRoles.find(*iter));
+                for(auto iter = mapUserRoles.begin(); iter != mapUserRoles.end(); ++iter) {
+                    userRole uRole = iter->second();
                     if (string(name) == uRole.name)
                     {
                         return uRole.roles;

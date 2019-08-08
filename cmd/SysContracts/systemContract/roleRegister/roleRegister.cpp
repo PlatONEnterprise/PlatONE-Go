@@ -218,8 +218,12 @@ namespace SystemContract
                 }
 
                 if (3 == status) {
-                    AddressInfoMap[addStr].roleRequireStatus = 3;
-                    AddressInfoMap[addStr].approver = approverAddr;
+                    RegisterUserInfo tmp =  *(AddressInfoMap.find(addStr));
+                    tmp.roleRequireStatus = 3;
+                    tmp.approver = approverAddr;
+                    AddressInfoMap.update(addStr,tmp);
+                    // AddressInfoMap[addStr].roleRequireStatus = 3;
+                    // AddressInfoMap[addStr].approver = approverAddr;
                     string ok = "OK: [userRoleManger] [addRole] Registration rejected. ";
                     BCWASM_EMIT_EVENT(Notify, A_SUCCESS, ok.c_str());
                     bcwasm::println(ok);
@@ -238,7 +242,7 @@ namespace SystemContract
                         roles.PushBack(v, allocator);
                     }
                     std::string roleString = jsonToString(roles);
-                    std::string userName = AddressInfoMap[addStr].userName;
+                    std::string userName = (*(AddressInfoMap.find(addStr))).userName;
                         
                     //调用角色管理合约
                     bcwasm::DeployedContract regManagerContract(regManagerAddr);
@@ -260,9 +264,12 @@ namespace SystemContract
                         bcwasm::println(err);
                         return A_ADD_ROLE_ERROR; //未找到角色管理合约
                     }
-
-                    AddressInfoMap[addStr].roleRequireStatus = 2;
-                    AddressInfoMap[addStr].approver = approverAddr;
+                    RegisterUserInfo tmp =  *(AddressInfoMap.find(addStr));
+                    tmp.roleRequireStatus = 3;
+                    tmp.approver = approverAddr;
+                    AddressInfoMap.update(addStr,tmp);
+                    // AddressInfoMap[addStr].roleRequireStatus = 2;
+                    // AddressInfoMap[addStr].approver = approverAddr;
                     string ok = "OK: [RoleRegister] [approve] Registration approved. ";
                     BCWASM_EMIT_EVENT(Notify, A_SUCCESS, ok.c_str());
                     bcwasm::println(ok);
@@ -309,8 +316,7 @@ namespace SystemContract
                     dataObject.AddMember(keyUserAddress, valAddress, allocator);
                     dataObject.AddMember(keyUserName, valName, allocator);
                     dataObject.AddMember(keyStatus, userInfoPtr->roleRequireStatus, allocator);
-                    vector<std::string> roleVector = AddressInfoMap[addStr].requireRoles;
-
+                    vector<std::string> roleVector = (*(AddressInfoMap.find(addStr))).requireRoles;
                     Value roles(kArrayType);
                     for (auto it = roleVector.begin();it != roleVector.end(); ++it) {                                              
                         Value v(it->c_str(), allocator);
