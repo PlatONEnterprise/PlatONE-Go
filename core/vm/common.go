@@ -111,10 +111,12 @@ type WasmInput struct {
 // Generate the input data of the wasm contract
 func (c *WasmInput) GenerateInputData(input []byte) ([]byte, error) {
 	if err := json.Unmarshal(input, c); err != nil {
+		common.ErrPrintln("Unmarshal wasm input error: ", err)
 		return nil, err
 	}
 
 	if c.FuncName == "" {
+		common.ErrPrintln("miss wasm func name")
 		return nil, errors.New("miss wasm func name")
 	}
 
@@ -129,10 +131,12 @@ func (c *WasmInput) GenerateInputData(input []byte) ([]byte, error) {
 	for _, param := range c.FuncParams {
 		paramType, paramValue, err := SpliceParam(param)
 		if err != nil {
+			common.ErrPrintln("SpliceParam wasm param err: ", err)
 			return nil, err
 		}
 		p, err := StringConverter(paramValue, paramType)
 		if err != nil {
+			common.ErrPrintln("StringConverter wasm param err: ", err)
 			return nil, err
 		}
 		paramArr = append(paramArr, p)
@@ -140,6 +144,7 @@ func (c *WasmInput) GenerateInputData(input []byte) ([]byte, error) {
 
 	paramBytes, e := rlp.EncodeToBytes(paramArr)
 	if e != nil {
+		common.ErrPrintln("rlp.EncodeToBytes wasm param err: ", e)
 		return nil, fmt.Errorf("rpl encode error,%s", e.Error())
 	}
 	return paramBytes, nil
@@ -309,11 +314,19 @@ func SolInputTypeConversion(t string, v string) (interface{}, error) {
 			return SolInputStringTOInt(v, 32, parts[1] == "")
 		case "64":
 			return SolInputStringTOInt(v, 64, parts[1] == "")
-		case "128":
-			// TODO 大数类型转换
-			return SolInputStringTOInt(v, 64, parts[1] == "")
-		case "256":
-			return SolInputStringTOInt(v, 64, parts[1] == "")
+		case "128", "256":
+			if parts[1] == "" {
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return nil, err
+				}
+				return big.NewInt(0).SetInt64(value), nil
+			}
+			value, err := strconv.ParseUint(v, 10, 64)
+			if err != nil {
+				return nil, err
+			}
+			return big.NewInt(0).SetUint64(value), nil
 		}
 		return nil, errors.New("parse input type int has err bitsize")
 	case strings.HasPrefix(t, "bool"):
@@ -333,7 +346,37 @@ func SolInputTypeConversion(t string, v string) (interface{}, error) {
 
 func SolInputStringTOInt(v string, bitSize int, hasNotPrefixU bool) (interface{}, error) {
 	if hasNotPrefixU {
-		return strconv.ParseInt(v, 10, bitSize)
+		res, err := strconv.ParseInt(v, 10, bitSize)
+		if err != nil {
+			return nil, err
+		}
+		switch strconv.Itoa(bitSize) {
+		case "8":
+			return int8(res), nil
+		case "16":
+			return int16(res), nil
+		case "32":
+			return int32(res), nil
+		case "64":
+			return int64(res), nil
+		default:
+			return nil, fmt.Errorf("SolInputStringTOInt parsing int error. res: %d", res)
+		}
 	}
-	return strconv.ParseUint(v, 10, bitSize)
+	res, err := strconv.ParseUint(v, 10, bitSize)
+	if err != nil {
+		return nil, err
+	}
+	switch strconv.Itoa(bitSize) {
+	case "8":
+		return uint8(res), nil
+	case "16":
+		return uint16(res), nil
+	case "32":
+		return uint32(res), nil
+	case "64":
+		return uint64(res), nil
+	default:
+		return nil, fmt.Errorf("SolInputStringTOInt parsing uint error. res: %d", res)
+	}
 }
