@@ -93,6 +93,18 @@ func CallResAsInt64(bts []byte) (int64) {
 	return n
 }
 
+func CallResAsInt32(bts []byte) (int32) {
+	if len(bts) < 32 {
+		return 0
+	}
+
+	var n int32 = 0
+	for _, b := range bts[:32] {
+		n = n * 256 + int32(b)
+	}
+	return n
+}
+
 func CallResAsBool(bts []byte) (bool) {
 	if len(bts) < 32 {
 		return false
