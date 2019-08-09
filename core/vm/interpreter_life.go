@@ -287,7 +287,7 @@ func (in *WASMInterpreter) CanRun(code []byte) bool {
 	if err != nil {
 		return false
 	}
-	if bytes.Equal(bytecode[:9], []byte{0, 97, 115, 109, 1, 0, 0, 0, 1}){
+	if bytes.Equal(bytecode[:8], []byte{0, 97, 115, 109, 1, 0, 0, 0}){
 		return true
 	}
 	return false
