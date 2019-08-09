@@ -129,6 +129,7 @@ cat <<EOF
 #c13                                        (default is the first node enode code)
 #c13           --validatorNodes, -v         set the genesis validatorNodes
 #c13                                        (default is the first node enode code)
+#c13           --interpreter, -i            Select virtual machine interpreter in wasm, evm, all (default: wasm)
 #c13           --help, -h                   show help
 #c0        status                           show all node status
 #c14       status OPTIONS                   show all node status
