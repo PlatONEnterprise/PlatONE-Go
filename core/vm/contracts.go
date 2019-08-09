@@ -18,15 +18,16 @@ package vm
 
 import (
 	"crypto/sha256"
+	"encoding/json"
 	"errors"
-	"math/big"
-
+	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/math"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto/bn256"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"golang.org/x/crypto/ripemd160"
+	"math/big"
 )
 
 // PrecompiledContract is the basic interface for native Go contracts. The implementation
@@ -57,6 +58,7 @@ var PrecompiledContractsByzantium = map[common.Address]PrecompiledContract{
 	common.BytesToAddress([]byte{6}): &bn256Add{},
 	common.BytesToAddress([]byte{7}): &bn256ScalarMul{},
 	common.BytesToAddress([]byte{8}): &bn256Pairing{},
+	common.BytesToAddress([]byte{9}): &ContractTypeInputParsing{},
 }
 
 // RunPrecompiledContract runs and evaluates the output of a precompiled contract.
@@ -357,4 +359,28 @@ func (c *bn256Pairing) Run(input []byte) ([]byte, error) {
 		return true32Byte, nil
 	}
 	return false32Byte, nil
+}
+
+type ContractTypeInputParsing struct{}
+
+func (c *ContractTypeInputParsing) RequiredGas(input []byte) uint64 {
+	return 0
+}
+
+func (c *ContractTypeInputParsing) Run(input []byte) ([]byte, error) {
+	type inputParsing struct {
+		CT string `json:"contract_type"`
+	}
+	var ip inputParsing
+	if err := json.Unmarshal(input, &ip); err != nil {
+		return nil, err
+	}
+	switch ip.CT {
+	case ContractTypeWasm:
+		return GenerateInputData(&WasmInput{}, []byte(input))
+	case ContractTypeSolidity:
+		return GenerateInputData(&SolInput{}, []byte(input))
+	default:
+		return nil, fmt.Errorf("Dont has this Contract Type: %s\n", ip.CT)
+	}
 }

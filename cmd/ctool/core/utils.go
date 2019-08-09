@@ -12,14 +12,14 @@ import (
 )
 
 const (
-	transfer = 0
+	transfer       = 0
 	deployContract = 1
 	invokeContract = 2
-	vote = 3
-	permission = 4
+	vote           = 3
+	permission     = 4
 
-	cnsTxType  = 0x11	// Used for sending transactions without address
-	fwTxType   = 0x12 // Used for sending transactions  about firewall
+	cnsTxType = 0x11 // Used for sending transactions without address
+	fwTxType  = 0x12 // Used fot sending transactions  about firewall
 	migTxType = 0x13 //Used for update system contract.
 
 	DefaultConfigFilePath = "/config.json"
@@ -157,8 +157,8 @@ func parseFuncFromAbi(fileName string, funcName string) (*FuncDesc, error) {
   Find the method called by parsing abi
 */
 func GetFuncNameAndParams(funcAndParams string) (string, []string) {
-	strNoSpace := strings.Split(funcAndParams," ")
-	f := strings.Join(strNoSpace,"")
+	strNoSpace := strings.Split(funcAndParams, " ")
+	f := strings.Join(strNoSpace, "")
 
 	funcName := string(f[0:strings.Index(f, "(")])
 
@@ -170,46 +170,46 @@ func GetFuncNameAndParams(funcAndParams string) (string, []string) {
 	symStack := []rune{}
 	splitPos := []int{}
 
-	for i,s:= range paramString{
+	for i, s := range paramString {
 		switch s {
 		case ',':
-			if len(symStack) == 0{
-				splitPos = append(splitPos,i)
+			if len(symStack) == 0 {
+				splitPos = append(splitPos, i)
 			}
 		case '{':
 			symStack = append(symStack, '{')
 		case '}':
-			if len(symStack) < 1{
+			if len(symStack) < 1 {
 				panic("parameter's format is not write!!!")
 			}
-			if symStack[len(symStack) - 1] == '{'{
-				symStack = symStack[:len(symStack) - 1]
+			if symStack[len(symStack)-1] == '{' {
+				symStack = symStack[:len(symStack)-1]
 			}
 		case '[':
 			symStack = append(symStack, '[')
 		case ']':
-			if len(symStack) < 1{
+			if len(symStack) < 1 {
 				panic("parameter's format is not write!!!")
 			}
-			if symStack[len(symStack) - 1] == '['{
-				symStack = symStack[:len(symStack) - 1]
+			if symStack[len(symStack)-1] == '[' {
+				symStack = symStack[:len(symStack)-1]
 			}
 		case '(':
 			symStack = append(symStack, '(')
 		case ')':
-			if len(symStack) < 1{
+			if len(symStack) < 1 {
 				panic("parameter's format is not write!!!")
 			}
-			if symStack[len(symStack) - 1] == '('{
-				symStack = symStack[:len(symStack) - 1]
+			if symStack[len(symStack)-1] == '(' {
+				symStack = symStack[:len(symStack)-1]
 			}
 		case '"':
-			if len(symStack) < 1{
+			if len(symStack) < 1 {
 				symStack = append(symStack, '"')
-			}else{
-				if symStack[len(symStack) - 1] == '"'{
-					symStack = symStack[:len(symStack) - 1]
-				}else{
+			} else {
+				if symStack[len(symStack)-1] == '"' {
+					symStack = symStack[:len(symStack)-1]
+				} else {
 					symStack = append(symStack, '"')
 				}
 			}
@@ -227,9 +227,9 @@ func GetFuncNameAndParams(funcAndParams string) (string, []string) {
 	}
 	params := []string{}
 	lastPos := 0
-	for _,i:=range splitPos{
+	for _, i := range splitPos {
 		params = append(params, paramString[lastPos:i])
-		lastPos = i+1
+		lastPos = i + 1
 	}
 	params = append(params, paramString[lastPos:])
 

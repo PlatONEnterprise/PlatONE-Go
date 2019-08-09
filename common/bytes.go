@@ -21,10 +21,11 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"math"
-	"errors"
 	"math/big"
+	"strings"
 )
 
 // ToHex returns the hex representation of b, prefixed with '0x'.
@@ -258,7 +259,7 @@ func PaddingLeft(src []byte, bytes int) []byte {
 }
 
 func reverse(s []byte) []byte {
-	for i, j := 0, len(s) - 1; i < j; i, j = i + 1, j - 1 {
+	for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
 		s[i], s[j] = s[j], s[i]
 	}
 	return s
@@ -297,4 +298,48 @@ func ToBytes(source interface{}) ([]byte, error) {
 	}
 
 	return nil, errors.New(fmt.Sprintf("ToBytes function not support %v", source))
+}
+
+func WasmCallResultCompatibleSolString(res []byte) []byte {
+	rl := len(res)
+	if rl >= 64 && res[0] == byte(0) && strings.EqualFold(GetCurrentInterpreterType(), "all") {
+		lengthBytes := bytes.TrimLeft(res[32:64], "\x00")
+		length := 0
+		for i := 0; i < len(lengthBytes); i++ {
+			length += int(lengthBytes[i]) * int(math.Pow(256, float64(len(lengthBytes)-1-i)))
+		}
+		if rl < 64+length {
+			return res
+		}
+		res = res[64 : 64+length]
+		res = append(res, byte(0))
+	}
+	return res
+}
+
+func WasmCallResultCompatibleSolInt64(res []byte) []byte {
+	if !strings.EqualFold(GetCurrentInterpreterType(), "all") {
+		return res
+	}
+	defer func() {
+		if err := recover(); err != nil {
+			ErrPrintln("############# WasmCallResultCompatibleSolInt64 error:", err)
+		}
+	}()
+	if len(res) != 32 {
+		return res
+	}
+	// filter int64 out of bounds solidity return value
+	if !(bytes.Equal(res[:24], make([]byte, 24)) && res[24] <= 127){
+		return []byte{}
+	}
+	valueBytes := bytes.TrimLeft(res, "\x00")
+	value := int64(0)
+	for i := 0; i < len(valueBytes); i++ {
+		value += int64(valueBytes[i]) * int64(math.Pow(256, float64(len(valueBytes)-1-i)))
+	}
+	if value > int64(math.MaxInt64) {
+		return res
+	}
+	return Int64ToBytes(value)
 }
