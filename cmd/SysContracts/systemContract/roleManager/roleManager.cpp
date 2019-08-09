@@ -502,7 +502,7 @@ namespace SystemContract
                 util::formatAddress(strAddr);
                 
                 //const std::set<string>& keys = mapUserRoles.getKeys();
-                if (mapUserRoles.getSize() == 0)
+                if (mapUserRoles.size() == 0)
                 {
                     return 0;
                 }
