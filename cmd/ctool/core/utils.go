@@ -19,7 +19,8 @@ const (
 	permission = 4
 
 	cnsTxType  = 0x11	// Used for sending transactions without address
-	fwTxType   = 0x12 // Used fot sending transactions  about firewall
+	fwTxType   = 0x12 // Used for sending transactions  about firewall
+	migTxType = 0x13 //Used for update system contract.
 
 	DefaultConfigFilePath = "/config.json"
 )

@@ -28,6 +28,7 @@ func init() {
 		core.StabilityCmd,
 		core.StabPrepareCmd,
 		core.FwInvokeCmd,
+		core.MigrateCmd,
 	}
 	sort.Sort(cli.CommandsByName(app.Commands))
 	app.After = func(ctx *cli.Context) error {

@@ -43,6 +43,9 @@ const CnsManagerAddr string = "0x0000000000000000000000000000000000000011"
 var fwErr = errors.New("firewall error!")
 var FirewallErr = errors.New("Permission Denied!")
 
+var migErr = errors.New("migration error!")
+
+
 /*
 A state transition is a change made when a transaction is applied to the current world state
 The state transitioning model does all the necessary work to work out a valid new state root.
@@ -730,7 +733,12 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 			st.state.SetNonce(msg.From(), st.state.GetNonce(sender.Address())+1)
 			return nil, 0, true, FirewallErr
 		}
-		ret, _, st.gas, vmerr = evm.Create(sender, st.data, st.gas, st.value)
+
+		if msg.TxType() == types.MigDpType {
+			ret, _, st.gas, vmerr = evm.MigCreate(sender, st.data, st.gas, st.value)
+		} else {
+			ret, _, st.gas, vmerr = evm.Create(sender, st.data, st.gas, st.value)
+		}
 		//st.state.OpenFirewall(conAddr)
 	} else {
 		if msg.TxType() != types.CnsTxType {

@@ -20,6 +20,13 @@ var (
 		Flags:  deployCmdFlags,
 	}
 
+	MigrateCmd = cli.Command{
+		Name:   "migInvoke",
+		Usage:  "deploy a system contract with previous data",
+		Action: migInvoke,
+		Flags:  migInvokeCmdFlags,
+	}
+
 	InvokeCmd = cli.Command{
 		Name:    "invoke",
 		Aliases: []string{"i"},
@@ -185,6 +192,38 @@ func fwInvoke(c *cli.Context) error {
 	return nil
 }
 
+func migInvoke(c *cli.Context) error {
+	addr := c.String("addr")
+	funcName := c.String("func")
+	funcParams := c.StringSlice("param")
+	// txType := c.Int("type")
+	txType := migTxType
+
+	if addr == "" {
+		fmt.Printf("addr can't be empty!")
+		return nil
+	}
+
+	if funcName == "" {
+		fmt.Printf("funcParams can't be empty!")
+		return nil
+	}
+
+	hasBracket := strings.Contains(funcName, "(") && strings.Contains(funcName, ")")
+
+
+	parseConfigJson(c.String(ConfigPathFlag.Name))
+
+	err := migInvokeContract(addr, funcName, funcParams, txType, hasBracket)
+	if err != nil {
+		panic(fmt.Errorf("MigInvokeContract contract error,%s", err.Error()))
+	}
+	return nil
+}
+
+
+
+
 func cnsInvoke(c *cli.Context) error {
 	//addr := c.String("addr")
 	cnsName := c.String("cns")
@@ -317,6 +356,61 @@ func FwInvokeContract(contractAddr string, funcName string, inputParams []string
 	} else {
 		fmt.Printf("\n trasaction hash: %s\n", resp.Result)
 	}
+	return nil
+}
+
+// migrateContract function
+func migInvokeContract(contractAddr string, funcName string, inputParams []string, txType int, hasBracket bool) error {
+
+	//parse the function and param
+	if hasBracket{
+		funcName, inputParams = GetFuncNameAndParams(funcName)
+	}
+
+
+	paramArr := [][]byte{
+		Int64ToBytes(int64(txType)),
+		[]byte(funcName),
+	}
+
+	for _, input := range inputParams {
+		paramArr = append(paramArr, []byte(input))
+	}
+
+	paramBytes, e := rlp.EncodeToBytes(paramArr)
+	if e != nil {
+		return fmt.Errorf("rlp encode error,%s", e.Error())
+	}
+
+	txParams := TxParams{
+		From:     config.From,
+		To:       contractAddr,
+		GasPrice: config.GasPrice,
+		Gas:      config.Gas,
+		Data:     hexutil.Encode(paramBytes),
+		TxType:   txType,
+	}
+
+	var r string
+	var err error
+	if funcName == "migrateFrom" {
+		params := make([]interface{}, 1)
+		params[0] = txParams
+
+		paramJson, _ := json.Marshal(params)
+		fmt.Printf("\n request json data：%s \n", string(paramJson))
+		r, err = Send(params, "eth_sendTransaction")
+	}
+
+	fmt.Printf("\n response json：%s \n", r)
+
+	if err != nil {
+		return fmt.Errorf("send http post to invokeContract contract error,%s", e.Error())
+	}
+	resp := parseResponse(r)
+
+	fmt.Printf("\n trasaction hash: %s\n", resp.Result)
+
 	return nil
 }
 

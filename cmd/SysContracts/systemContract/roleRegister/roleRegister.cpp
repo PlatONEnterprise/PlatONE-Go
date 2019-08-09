@@ -51,6 +51,14 @@ namespace SystemContract
         A_ADD_ROLE_ERROR,
     };
 
+    enum Approve
+    {
+        S_APPROVING = 1,
+        S_APPROVED,
+        S_REJECTED,
+
+    };
+
     class RoleRegister : public bcwasm::Contract
     {
         public:
@@ -122,7 +130,7 @@ namespace SystemContract
                 std::vector<std::string> requireRoles;
                 for (auto const& it : rolestoRegister) {                     
                     std::string role = it;
-                    if(!isValidRole(role) || role == "chainCreator") {
+                    if(!isValidRole(role) || role == gdef::chainCreator) {
                         string err = "ERR: [RoleRegister] [registerRole] not valid role name, and cannot register chainCreator.";
                         BCWASM_EMIT_EVENT(Notify, R_INVAID_ROLE_ERROR, err.c_str());
                         bcwasm::println(err);
@@ -210,26 +218,25 @@ namespace SystemContract
 
                 int statusOwned = userInfoPtr->roleRequireStatus;
 
-                if(1 != statusOwned) {
+                if(S_APPROVING != statusOwned) {
                     string err = "ERR: [RoleRegister] [approve] the address is not waiting for approving now.";
                     BCWASM_EMIT_EVENT(Notify, A_APPROVE_STATUS_ERROR, err.c_str());
                     bcwasm::println(err);
-                    return A_APPROVE_STATUS_ERROR; //当前不是非审批状态   
+                    return A_APPROVE_STATUS_ERROR; //当前是非审批状态
                 }
 
-                if (3 == status) {
-                    RegisterUserInfo tmp =  *(AddressInfoMap.find(addStr));
-                    tmp.roleRequireStatus = 3;
-                    tmp.approver = approverAddr;
-                    AddressInfoMap.update(addStr,tmp);
-                    // AddressInfoMap[addStr].roleRequireStatus = 3;
-                    // AddressInfoMap[addStr].approver = approverAddr;
+                if (S_REJECTED == status) {
+
+                    userInfoPtr->roleRequireStatus = S_REJECTED;
+                    userInfoPtr->approver = approverAddr;
+                    AddressInfoMap.update(addStr, *userInfoPtr);
+
                     string ok = "OK: [userRoleManger] [addRole] Registration rejected. ";
                     BCWASM_EMIT_EVENT(Notify, A_SUCCESS, ok.c_str());
                     bcwasm::println(ok);
                     return A_SUCCESS;
                 }
-                else if (2 == status) {
+                else if (S_APPROVED == status) {
                     std::vector<std::string> requireRoles = userInfoPtr->requireRoles;
                     Document doc;
                     doc.SetObject();
@@ -264,12 +271,11 @@ namespace SystemContract
                         bcwasm::println(err);
                         return A_ADD_ROLE_ERROR; //未找到角色管理合约
                     }
-                    RegisterUserInfo tmp =  *(AddressInfoMap.find(addStr));
-                    tmp.roleRequireStatus = 3;
-                    tmp.approver = approverAddr;
-                    AddressInfoMap.update(addStr,tmp);
-                    // AddressInfoMap[addStr].roleRequireStatus = 2;
-                    // AddressInfoMap[addStr].approver = approverAddr;
+
+                    userInfoPtr->roleRequireStatus = S_APPROVED;
+                    userInfoPtr->approver = approverAddr;
+                    AddressInfoMap.update(addStr, *userInfoPtr);
+
                     string ok = "OK: [RoleRegister] [approve] Registration approved. ";
                     BCWASM_EMIT_EVENT(Notify, A_SUCCESS, ok.c_str());
                     bcwasm::println(ok);
@@ -339,6 +345,10 @@ namespace SystemContract
                 
                 size_t size = jsonBuffer.GetSize();
                 char* buf = (char *)malloc(size + 1);
+                if (buf == nullptr) {
+                    bcwasm::println("Malloc failed.");
+                    return buf;
+                }
                 memset(buf, 0, size + 1);
                 strcpy(buf, jsonBuffer.GetString());
 
@@ -373,6 +383,10 @@ namespace SystemContract
                 
                 size_t size = jsonBuffer.GetSize();
                 char* buf = (char *)malloc(size + 1);
+                if (buf == nullptr) {
+                    bcwasm::println("Malloc failed.");
+                    return buf;
+                }
                 memset(buf, 0, size + 1);
                 strcpy(buf, jsonBuffer.GetString());
 

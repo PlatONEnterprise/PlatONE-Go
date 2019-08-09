@@ -109,6 +109,14 @@ var (
 		ConfigPathFlag,
 	}
 
+	migInvokeCmdFlags = []cli.Flag{
+		ContractAddrFlag,
+		ContractFuncNameFlag,
+		ContractParamFlag,
+		TransactionTypeFlag,
+		ConfigPathFlag,
+	}
+
 	codeGenCmdFlags = []cli.Flag{
 		ContractWasmFilePathFlag,
 		ContractAbiFilePathFlag,
