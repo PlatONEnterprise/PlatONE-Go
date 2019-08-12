@@ -386,7 +386,7 @@ namespace bcwasm {
             }
 
             ConstIteratorType operator --(int) {
-                IteratorType tmp(map_, index_--);
+                ConstIteratorType tmp(map_, index_--);
                 //--tmp;
                 return tmp;
             }
@@ -460,22 +460,22 @@ namespace bcwasm {
                 return &pair_;
             }
 
-            ConstIteratorType& operator--(){
+            ConstReverseIteratorType& operator--(){
                 ++index_;
                 return *this;
             }
 
-            ConstIteratorType operator --(int) {
-                IteratorType tmp(map_, index_++);
+            ConstReverseIteratorType operator --(int) {
+                ConstReverseIteratorType tmp(map_, index_++);
                 return tmp;
             }
 
-            ConstIteratorType& operator ++() {
+            ConstReverseIteratorType& operator ++() {
                 --index_;
                 return *this;
             }
-            ConstIteratorType operator ++(int) {
-                ConstIteratorType tmp(map_, index_--);
+            ConstReverseIteratorType operator ++(int) {
+                ConstReverseIteratorType tmp(map_, index_--);
                 return tmp;
             }
 
