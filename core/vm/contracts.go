@@ -364,7 +364,7 @@ func (c *bn256Pairing) Run(input []byte) ([]byte, error) {
 type ContractTypeInputParsing struct{}
 
 func (c *ContractTypeInputParsing) RequiredGas(input []byte) uint64 {
-	return 0
+	return (uint64(len(input)+31)/32*params.Sha256PerWordGas + params.Sha256BaseGas) * 47
 }
 
 func (c *ContractTypeInputParsing) Run(input []byte) ([]byte, error) {
