@@ -210,8 +210,9 @@ namespace bcwasm {
             Pair& operator*() {
                 Key k;
                 Value v;
-                getState(IndexWrapper(wrapperName_, index_), k);
-                getState(KeyWrapper(wrapperName_, k), v);
+                size_t len = getState(IndexWrapper(wrapperName1_,index_),k);
+                BCWasmAssert(len != 0, "cannot find key!");
+                getState(KeyWrapper(wrapperName2_, k), v);
                 pair_ = Pair(k,v);
                 return pair_;
             }
@@ -219,8 +220,9 @@ namespace bcwasm {
             Pair* operator->() {
                 Key k;
                 Value v;
-                getState(IndexWrapper(wrapperName_,index_),k);
-                getState(KeyWrapper(wrapperName_,k),v);
+                size_t len = getState(IndexWrapper(wrapperName1_,index_),k);
+                BCWasmAssert(len != 0, "cannot find key!");
+                getState(KeyWrapper(wrapperName2_,k),v);
                 pair_ = Pair(k,v);
                 return &pair_;
             }
@@ -248,7 +250,9 @@ namespace bcwasm {
             }
         private:
             Pair pair_;
-            const std::string wrapperName_ = kType + Name;
+            const std::string wrapperName1_ = kType + Name + "index";
+            const std::string wrapperName2_ = kType + Name + "key";
+            const std::string wrapperName3_ = kType + Name + "string";
             Map<Name, Key, Value> *map_;
             int  index_;
         };
@@ -288,8 +292,9 @@ namespace bcwasm {
             Pair& operator*() {
                 Key k;
                 Value v;
-                getState(IndexWrapper(wrapperName_, index_), k);
-                getState(KeyWrapper(wrapperName_, k), v);
+                size_t len = getState(IndexWrapper(wrapperName1_,index_),k);
+                BCWasmAssert(len != 0, "cannot find key!");
+                getState(KeyWrapper(wrapperName2_, k), v);
                 pair_ = Pair(k,v);
                 return pair_;
             }
@@ -297,14 +302,17 @@ namespace bcwasm {
             Pair* operator->() {
                 Key k;
                 Value v;
-                getState(IndexWrapper(wrapperName_,index_),k);
-                getState(KeyWrapper(wrapperName_,k),v);
+                size_t len = getState(IndexWrapper(wrapperName1_,index_),k);
+                BCWasmAssert(len != 0, "cannot find key!");
+                getState(KeyWrapper(wrapperName2_,k),v);
                 pair_ = Pair(k,v);
                 return &pair_;
             }
 
             IteratorType& operator--(){
+
                 ++index_;
+                // index total guanxi
                 return *this;
             }
 
@@ -316,6 +324,7 @@ namespace bcwasm {
 
             IteratorType& operator ++() {
                 --index_;
+
                 return *this;
             }
 
@@ -326,7 +335,9 @@ namespace bcwasm {
             }
         private:
             Pair pair_;
-            const std::string wrapperName_ = kType + Name;
+            const std::string wrapperName1_ = kType + Name + "index";
+            const std::string wrapperName2_ = kType + Name + "key";
+            const std::string wrapperName3_ = kType + Name + "string";
             Map<Name, Key, Value> *map_;
             int  index_;
         };
@@ -365,8 +376,9 @@ namespace bcwasm {
             ConstPair& operator*() {
                 Key k;
                 Value v;
-                getState(IndexWrapper(wrapperName_,index_),k);
-                getState(KeyWrapper(wrapperName_,k),v);
+                size_t len = getState(IndexWrapper(wrapperName1_,index_),k);
+                BCWasmAssert(len != 0, "cannot find key!");
+                getState(KeyWrapper(wrapperName2_,k),v);
                 pair_ = ConstPair(k,v);
                 return pair_;
             }
@@ -374,8 +386,9 @@ namespace bcwasm {
             ConstPair* operator->() {
                 Key k;
                 Value v;
-                getState(IndexWrapper(wrapperName_,index_),k);
-                getState(KeyWrapper(wrapperName_,k),v);
+                size_t len = getState(IndexWrapper(wrapperName1_,index_),k);
+                BCWasmAssert(len != 0, "cannot find key!");
+                getState(KeyWrapper(wrapperName2_,k),v);
                 pair_ = ConstPair(k,v);
                 return &pair_;
             }
@@ -386,7 +399,7 @@ namespace bcwasm {
             }
 
             ConstIteratorType operator --(int) {
-                IteratorType tmp(map_, index_--);
+                ConstIteratorType tmp(map_, index_--);
                 //--tmp;
                 return tmp;
             }
@@ -404,7 +417,9 @@ namespace bcwasm {
         private:
             ConstPair pair_;
             const Map<Name, Key, Value> *map_;
-            const std::string wrapperName_ = kType + Name;
+            const std::string wrapperName1_ = kType + Name + "index";
+            const std::string wrapperName2_ = kType + Name + "key";
+            const std::string wrapperName3_ = kType + Name + "string";
             int index_;
         };
 
@@ -445,8 +460,9 @@ namespace bcwasm {
             ConstPair& operator*() {
                 Key k;
                 Value v;
-                getState(IndexWrapper(wrapperName_,index_),k);
-                getState(KeyWrapper(wrapperName_,k),v);
+                size_t len = getState(IndexWrapper(wrapperName1_,index_),k);
+                BCWasmAssert(len != 0, "cannot find key!");
+                getState(KeyWrapper(wrapperName2_,k),v);
                 pair_ = ConstPair(k,v);
                 return pair_;
             }
@@ -454,35 +470,38 @@ namespace bcwasm {
             ConstPair* operator->() {
                 Key k;
                 Value v;
-                getState(IndexWrapper(wrapperName_,index_),k);
-                getState(KeyWrapper(wrapperName_,k),v);
+                size_t len = getState(IndexWrapper(wrapperName1_,index_),k);
+                BCWasmAssert(len != 0, "cannot find key!");
+                getState(KeyWrapper(wrapperName2_,k),v);
                 pair_ = ConstPair(k,v);
                 return &pair_;
             }
 
-            ConstIteratorType& operator--(){
+            ConstReverseIteratorType& operator--(){
                 ++index_;
                 return *this;
             }
 
-            ConstIteratorType operator --(int) {
-                IteratorType tmp(map_, index_++);
+            ConstReverseIteratorType operator --(int) {
+                ConstReverseIteratorType tmp(map_, index_++);
                 return tmp;
             }
 
-            ConstIteratorType& operator ++() {
+            ConstReverseIteratorType& operator ++() {
                 --index_;
                 return *this;
             }
-            ConstIteratorType operator ++(int) {
-                ConstIteratorType tmp(map_, index_--);
+            ConstReverseIteratorType operator ++(int) {
+                ConstReverseIteratorType tmp(map_, index_--);
                 return tmp;
             }
 
         private:
             ConstPair pair_;
             const Map<Name, Key, Value> *map_;
-            const std::string wrapperName_ = kType + Name;
+            const std::string wrapperName1_ = kType + Name + "index";
+            const std::string wrapperName2_ = kType + Name + "key";
+            const std::string wrapperName3_ = kType + Name + "string";
             int index_;
         };
         /**
@@ -524,14 +543,14 @@ namespace bcwasm {
             init();
     
             Value v_;
-            size_t len = bcwasm::getState(KeyWrapper(wrapperName_, k), v_);
+            size_t len = bcwasm::getState(KeyWrapper(wrapperName2_, k), v_);
             if(0 != len){
                     return false;
             }
-            setState(IndexWrapper(wrapperName_, total),k);          
+            setState(IndexWrapper(wrapperName1_, total),k);          
             total += 1;
-            setState(KeyWrapper(wrapperName_, k),v);
-            setState(StrWrapper(wrapperName_, TOTAL),total);
+            setState(KeyWrapper(wrapperName2_, k),v);
+            setState(StrWrapper(wrapperName3_, TOTAL),total);
             return true;
         }
         /**
@@ -545,11 +564,11 @@ namespace bcwasm {
          bool update(const Key &k, const Value &v) {
             init();
             Value v_;
-            size_t len = bcwasm::getState(KeyWrapper(wrapperName_, k), v_);
+            size_t len = bcwasm::getState(KeyWrapper(wrapperName2_, k), v_);
             if(0 == len){
                 return false;
             }
-            setState(KeyWrapper(wrapperName_, k), v);
+            setState(KeyWrapper(wrapperName2_, k), v);
             return true;
         }
         
@@ -562,7 +581,7 @@ namespace bcwasm {
          */
         const Value* find(const Key &k) const {
             BCWasmAssert(v_ptr != nullptr, "v_ptr is null.");
-            size_t len = bcwasm::getState(KeyWrapper(wrapperName_, k), *v_ptr);
+            size_t len = bcwasm::getState(KeyWrapper(wrapperName2_, k), *v_ptr);
             if (0 != len) {
                 return (const Value*)v_ptr;
             }
@@ -577,7 +596,7 @@ namespace bcwasm {
         Value* find(const Key &k) {
             init();
             BCWasmAssert(v_ptr != nullptr, "v_ptr is null.");
-            size_t len = bcwasm::getState(KeyWrapper(wrapperName_, k), *v_ptr);
+            size_t len = bcwasm::getState(KeyWrapper(wrapperName2_, k), *v_ptr);
             if (0 != len) {
                 return v_ptr;
             }
@@ -598,17 +617,24 @@ namespace bcwasm {
             if(find(k)==nullptr){
                 return;
             }
-            bcwasm::delState(KeyWrapper(wrapperName_,k));
+            bcwasm::delState(KeyWrapper(wrapperName2_,k));
             for(int i=0; i<total;i++)
             {
-                getState(IndexWrapper(wrapperName_,i),k1);  
-                size_t len_1 = getState(KeyWrapper(wrapperName_,k1),v1);
+                getState(IndexWrapper(wrapperName1_,i),k1);  
+                size_t len_1 = getState(KeyWrapper(wrapperName2_,k1),v1);
                 if(0 == len_1)
                 {
-                    getState(IndexWrapper(wrapperName_, total-1),lastKey);
-                    setState(IndexWrapper(wrapperName_,i),lastKey);
-                    bcwasm::delState(IndexWrapper(wrapperName_, total-1));
-                    setState(StrWrapper(wrapperName_, TOTAL),total-1);        
+                    if(i == total-1)
+                    {
+                        bcwasm::delState(IndexWrapper(wrapperName1_,i));
+                        setState(StrWrapper(wrapperName3_, TOTAL),--total);       
+                        //this.iter.total = total;
+                        break;
+                    }
+                    getState(IndexWrapper(wrapperName1_, total-1),lastKey);
+                    setState(IndexWrapper(wrapperName1_,i),lastKey);
+                    bcwasm::delState(IndexWrapper(wrapperName1_, total-1));
+                    setState(StrWrapper(wrapperName3_, TOTAL),--total);        
                     break;
                 }
 
@@ -637,6 +663,8 @@ namespace bcwasm {
         Iterator begin() {
             int begin = 0;
             return Iterator(this, begin);
+            // this.iter.index = 0;
+            // return this.iter;
         }
         /**
          * @brief const Iterator start position
@@ -673,7 +701,14 @@ namespace bcwasm {
          */
         /*Iterator*/
         Iterator  end() {
-            return Iterator(this,total);
+           // return Iterator(this,total);
+        //    this.iter.index = total;
+        //    this.iter.total = total;
+        //    if (total == 0) {
+        //        return nullptr;
+        //    }
+        //    return this.iter;
+        return Iterator(this,total);
         }
         /**
          * @brief const Iterator end position
@@ -750,16 +785,22 @@ namespace bcwasm {
          * 
          */
         void init() {
+            
             if (!init_) {
+            //iter =  Iterator(this, begin); // index:0, total
             v_ptr = (Value *)malloc(sizeof(Value));
             BCWasmAssert(v_ptr != nullptr, "unable to allocate memory for v_ptr.");
-            bcwasm::getState(StrWrapper(wrapperName_, TOTAL), total);
+            bcwasm::getState(StrWrapper(wrapperName3_, TOTAL), total);
             init_ = true;
             }
         }
 
         int total = 0;
-        const std::string wrapperName_ = kType + Name;
+        //IteratorType iter;
+
+        const std::string wrapperName1_ = kType + Name + "index";
+        const std::string wrapperName2_ = kType + Name + "key";
+        const std::string wrapperName3_ = kType + Name + "string";
         const std::string TOTAL = "total";
         bool init_ = false;
         Value *v_ptr;
@@ -768,5 +809,6 @@ namespace bcwasm {
     
     template <const char *Name, typename Key, typename Value>
     const std::string Map<Name, Key, Value>::kType = "__map__";
+
 }
 }

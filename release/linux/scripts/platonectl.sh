@@ -70,7 +70,7 @@ cat <<EOF
 #c6            --help, -h                   show help
 #c0        console                          start an interactive JavaScript environment
 #c7        console OPTIONS
-#c7            --opennodeid , -o            open the specified node console
+#c7            --opennodeid , -n            open the specified node console
 #c7                                         set the node id here
 #c7            --closenodeid, -c            stop the specified node console
 #c7                                         set the node id here
@@ -347,7 +347,7 @@ function stop() {
 
 function console() {
     case "$1" in
-    --opennodeid | -o)
+    --opennodeid | -n)
         shiftOption2 $#
         cd ${DATA_PATH}/node-${2}/
         rpc_port=`cat node.rpc_port`

@@ -362,7 +362,7 @@ func (srv *Server) RemovePeer(node *discover.Node) {
 // UpdatePeer by nodeManager contract
 func UpdatePeer() {
 	if server == nil {
-		log.Warn("updatePeer: srv is nil")
+		log.Info("updatePeer: srv is nil")
 		return
 	}
 	joinNodes := make([]string, 0)
