@@ -623,9 +623,9 @@ func (srv *Server) Start() (err error) {
 
 	var (
 		conn      *net.UDPConn
-		sconn     *sharedUDPConn
+		//sconn     *sharedUDPConn
 		realaddr  *net.UDPAddr
-		unhandled chan discover.ReadPacket
+		//unhandled chan discover.ReadPacket
 	)
 
 	if !srv.NoDiscovery || srv.DiscoveryV5 {
@@ -649,46 +649,46 @@ func (srv *Server) Start() (err error) {
 		}
 	}
 
-	if !srv.NoDiscovery && srv.DiscoveryV5 {
-		unhandled = make(chan discover.ReadPacket, 100)
-		sconn = &sharedUDPConn{conn, unhandled}
-	}
+	//if !srv.NoDiscovery && srv.DiscoveryV5 {
+	//	unhandled = make(chan discover.ReadPacket, 100)
+	//	sconn = &sharedUDPConn{conn, unhandled}
+	//}
 
 	// node table
-	if !srv.NoDiscovery {
-		cfg := discover.Config{
-			PrivateKey:   srv.PrivateKey,
-			AnnounceAddr: realaddr,
-			NodeDBPath:   srv.NodeDatabase,
-			NetRestrict:  srv.NetRestrict,
-			Bootnodes:    srv.BootstrapNodes,
-			Unhandled:    unhandled,
-		}
-		ntab, err := discover.ListenUDP(conn, cfg)
-		if err != nil {
-			return err
-		}
-		srv.ntab = ntab
-	}
+	//if !srv.NoDiscovery {
+	//	cfg := discover.Config{
+	//		PrivateKey:   srv.PrivateKey,
+	//		AnnounceAddr: realaddr,
+	//		NodeDBPath:   srv.NodeDatabase,
+	//		NetRestrict:  srv.NetRestrict,
+	//		Bootnodes:    srv.BootstrapNodes,
+	//		Unhandled:    unhandled,
+	//	}
+	//	ntab, err := discover.ListenUDP(conn, cfg)
+	//	if err != nil {
+	//		return err
+	//	}
+	//	srv.ntab = ntab
+	//}
 
-	if srv.DiscoveryV5 {
-		var (
-			ntab *discv5.Network
-			err  error
-		)
-		if sconn != nil {
-			ntab, err = discv5.ListenUDP(srv.PrivateKey, sconn, realaddr, "", srv.NetRestrict) //srv.NodeDatabase)
-		} else {
-			ntab, err = discv5.ListenUDP(srv.PrivateKey, conn, realaddr, "", srv.NetRestrict) //srv.NodeDatabase)
-		}
-		if err != nil {
-			return err
-		}
-		if err := ntab.SetFallbackNodes(srv.BootstrapNodesV5); err != nil {
-			return err
-		}
-		srv.DiscV5 = ntab
-	}
+	//if srv.DiscoveryV5 {
+	//	var (
+	//		ntab *discv5.Network
+	//		err  error
+	//	)
+	//	if sconn != nil {
+	//		ntab, err = discv5.ListenUDP(srv.PrivateKey, sconn, realaddr, "", srv.NetRestrict) //srv.NodeDatabase)
+	//	} else {
+	//		ntab, err = discv5.ListenUDP(srv.PrivateKey, conn, realaddr, "", srv.NetRestrict) //srv.NodeDatabase)
+	//	}
+	//	if err != nil {
+	//		return err
+	//	}
+	//	if err := ntab.SetFallbackNodes(srv.BootstrapNodesV5); err != nil {
+	//		return err
+	//	}
+	//	srv.DiscV5 = ntab
+	//}
 
 	dynPeers := srv.maxDialedConns()
 	dialer := newDialState(srv.StaticNodes, srv.BootstrapNodes, srv.ntab, dynPeers, srv.NetRestrict)
@@ -738,6 +738,7 @@ func (srv *Server) startListening() error {
 
 type dialer interface {
 	newTasks(running int, peers map[discover.NodeID]*Peer, now time.Time) []task
+	newTasks2(running int, peers map[discover.NodeID]*Peer, now time.Time) []task
 	taskDone(task, time.Time)
 	addStatic(*discover.Node)
 	removeStatic(*discover.Node)
@@ -786,7 +787,7 @@ func (srv *Server) run(dialstate dialer) {
 		queuedTasks = append(queuedTasks[:0], startTasks(queuedTasks)...)
 		// Query dialer for new tasks and start as many as possible now.
 		if len(runningTasks) < maxActiveDialTasks {
-			nt := dialstate.newTasks(len(runningTasks)+len(queuedTasks), peers, time.Now())
+			nt := dialstate.newTasks2(len(runningTasks)+len(queuedTasks), peers, time.Now())
 			queuedTasks = append(queuedTasks, startTasks(nt)...)
 		}
 	}
