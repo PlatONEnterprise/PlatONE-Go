@@ -5,17 +5,18 @@
 ```c++
 struct NodeInfo
 {
-    string name;       // 节点名字，全网唯一，不能重复。所有接口均以此为主键。
+    string name;       // 节点名字, 全网唯一，不能重复。所有接口均以此为主键。
     address owner;     // 申请者的地址
-    address approveor; // 审核人的地址
     string desc;       // 节点描述
-    int type;          // 1:共识节点；0:观察者节点
+    int type;          // 0:观察者节点；1:共识节点
     string publicKey;  // 节点公钥，全网唯一，不能重复
     string externalIP; // 外网 IP
     string internalIP; // 内网 IP
     int rpcPort;       // rpc 通讯端口
     int p2pPort;       // p2p 通讯端口
-    int status         // 1:正常；2:隔离；3:删除
+    int status;        // 1:正常；3：删除
+    address approveor; // 审核人的地址
+    int delayNum;      // 共识节点延迟设置的区块高度 (可选, 默认实时设置)
 }
 ```
 
@@ -123,10 +124,14 @@ struct NodeInfo
 ```
 *****
 ### void updata(const char *name, const char *nodeJsonStr)
-更新节点信息，比如，我需要将节点的名字为"node1"的节点进行隔离，那么第二个传入的**字符串** {"status":2}；如果我需要更新节点的内部IP以及rpc端口。那么第二个传入的字符串可能为：{"internalIP":"10.10.8.13", "rpcPort": 6788}。总之，你可以根据节点信息可多个组合进行更新。  
+更新节点信息，比如，我需要将节点的名字为"node1"的节点进行删除，那么第二个参数传入的**字符串** {"status":3}；如果我需要更新节点的内部IP以及rpc端口。那么第二个参数传入的字符串可能为：{"internalIP":"10.10.8.13", "rpcPort": 6788}。总之，你可以根据节点信息可多个组合进行更新。  
 入参：
+
 * name 节点名字
 * nodeJsonStr 需要更新的信息，以json表示。
   
+
 出参：
+
 * void
+
