@@ -269,7 +269,7 @@ func (p *Peer) pingLoop() {
 			}*/
 			ping.Reset(pingInterval)
 		case <-p.closed:
-			log.Trace("Ping loop closed", "peerID", p.ID())
+			log.Info("Ping loop closed", "peerID", p.ID())
 			return
 		}
 	}

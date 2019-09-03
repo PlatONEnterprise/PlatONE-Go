@@ -39,7 +39,6 @@ func (c *core) sendCommitForOldBlock(view *istanbul.View, digest common.Hash) {
 
 func (c *core) broadcastCommit(sub *istanbul.Subject) {
 	logger := c.logger.New("state", c.state)
-	// logger.Info("*********************sendCommit*****************************")
 	encodedSubject, err := Encode(sub)
 	if err != nil {
 		logger.Error("Failed to encode", "subject", sub)
@@ -53,7 +52,6 @@ func (c *core) broadcastCommit(sub *istanbul.Subject) {
 
 func (c *core) handleCommit(msg *message, src istanbul.Validator) error {
 	logger := c.logger.New("from", src, "state", c.state)
-	// logger.Debug("*********************handleCommit*****************************")
 	// Decode COMMIT message
 	var commit *istanbul.Subject
 	err := msg.Decode(&commit)
@@ -68,7 +66,6 @@ func (c *core) handleCommit(msg *message, src istanbul.Validator) error {
 	if err := c.verifyCommit(commit, src); err != nil {
 		return err
 	}
-	// log.Debug("handleCommit", "c.current.Commits.Size()", c.current.Commits.Size(), "c.valSet.Size()", c.valSet.Size(), "c.valSet.F()", c.valSet.F())
 	c.acceptCommit(msg, src)
 
 	// Commit the proposal once we have enough COMMIT messages and we are not in the Committed state.

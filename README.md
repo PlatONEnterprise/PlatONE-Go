@@ -18,21 +18,6 @@ or, to build the full suite of utilities:
 
     make all
 
-If you want to Building platone with MPC function, run
-
-    make platone-with-mpc
-
-or:
-
-    make all-with-mpc
-
-If you want to Building platone with VC function, run
-
-    make platone-with-vc
-
-or:
-
-    make all-with-vc
 
 ## Executables
 

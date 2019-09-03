@@ -77,7 +77,7 @@ func BoolToBytes(b bool) []byte {
 func BytesConverter(source []byte, t string) interface{} {
 	switch t {
 	case "int32":
-		return common.CallResAsInt64(source)
+		return common.CallResAsInt32(source)
 	case "int64":
 		return common.CallResAsInt64(source)
 	case "float32":

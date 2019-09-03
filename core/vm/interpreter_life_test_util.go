@@ -74,7 +74,7 @@ func genSetInput() []byte {
 	input = append(input, utils.Int64ToBytes(1))
 	input = append(input, []byte("Set"))
 	input = append(input, []byte(time.Now().Add(time.Duration(rand.Int63())).String()))
-	input = append(input, utils.Int64ToBytes(rand.Int63()))
+	input = append(input, utils.Int32ToBytes(rand.Int31()))
 
 	buffer := new(bytes.Buffer)
 	err := rlp.Encode(buffer, input)
@@ -90,7 +90,7 @@ func genSetFixedInput() []byte {
 	input = append(input, utils.Int64ToBytes(1))
 	input = append(input, []byte("Set"))
 	input = append(input, []byte("platone"))
-	input = append(input, utils.Int64ToBytes(11))
+	input = append(input, utils.Int32ToBytes(11))
 
 	buffer := new(bytes.Buffer)
 	err := rlp.Encode(buffer, input)

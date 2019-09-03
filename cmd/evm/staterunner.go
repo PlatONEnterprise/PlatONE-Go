@@ -53,7 +53,7 @@ func stateTestCmd(ctx *cli.Context) error {
 		return errors.New("path-to-test argument required")
 	}
 	// Configure the go-ethereum logger
-	glogger := log.NewGlogHandler(log.StreamHandler(os.Stderr, log.TerminalFormat(false)))
+	glogger := log.NewGlogHandler(log.StreamHandler(os.Stdout, log.TerminalFormat(false)))
 	glogger.Verbosity(log.Lvl(ctx.GlobalInt(VerbosityFlag.Name)))
 	log.Root().SetHandler(glogger)
 
@@ -68,7 +68,7 @@ func stateTestCmd(ctx *cli.Context) error {
 	)
 	switch {
 	case ctx.GlobalBool(MachineFlag.Name):
-		tracer = NewJSONLogger(config, os.Stderr)
+		tracer = NewJSONLogger(config, os.Stdout)
 
 	case ctx.GlobalBool(DebugFlag.Name):
 		debugger = vm.NewStructLogger(config)

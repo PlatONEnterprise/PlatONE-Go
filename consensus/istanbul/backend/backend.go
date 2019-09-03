@@ -246,7 +246,7 @@ func (sb *backend) Commit(proposal istanbul.Proposal, seals [][]byte) error {
 	block := &types.Block{}
 	block, ok := proposal.(*types.Block)
 	if !ok {
-		sb.logger.Error("Invalid proposal, %v", proposal)
+		sb.logger.Error("Invalid proposal",  "proposal", proposal)
 		return errInvalidProposal
 	}
 
@@ -258,8 +258,12 @@ func (sb *backend) Commit(proposal istanbul.Proposal, seals [][]byte) error {
 	}
 	// update block's header
 	block = block.WithSeal(h)
+	isEmpty := block.Transactions().Len() == 0
+	isProduceEmptyBlock := common.SysCfg.IsProduceEmptyBlock()
 
-	sb.logger.Info("Committed", "address", sb.Address(), "hash", proposal.Hash(), "number", proposal.Number().Uint64())
+	if !isEmpty || isProduceEmptyBlock{
+		sb.logger.Info("Committed", "address", sb.Address(), "hash", proposal.Hash(), "number", proposal.Number().Uint64())
+	}
 	// - if the proposed and committed blocks are the same, send the proposed hash
 	//   to commit channel, which is being watched inside the engine.Seal() function.
 	// - otherwise, we try to insert the block.
@@ -268,15 +272,27 @@ func (sb *backend) Commit(proposal istanbul.Proposal, seals [][]byte) error {
 	// -- otherwise, a error will be returned and a round change event will be fired.
 	if sb.proposedBlockHash == block.Hash() {
 		// feed block hash to Seal() and wait the Seal() result
+		if isEmpty && !isProduceEmptyBlock{
+			sb.commitCh <- nil
+			return istanbulCore.ErrEmpty
+		}
 		sb.commitCh <- block
 		return nil
 	}
-	//
+
 	if sb.current != nil && sb.current.block != nil && sb.current.block.Hash() == block.Hash() {
+		if isEmpty && !isProduceEmptyBlock {
+			return istanbulCore.ErrEmpty
+		}
+
 		if err:= sb.writeCommitedBlockWithState(block); err!= nil{
 			return err
 		}
 	}else {
+		if isEmpty && !isProduceEmptyBlock {
+			return istanbulCore.ErrEmpty
+		}
+
 		if sb.broadcaster != nil {
 			sb.broadcaster.Enqueue(fetcherID, block)
 		}
@@ -361,9 +377,18 @@ func (sb *backend) excuteBlock(proposal istanbul.Proposal) error{
 		statedb := sb.current.state
 
 		// Iterate over and process the individual transactios
+		txsMap := make(map[common.Hash]struct{})
 		for _, tx := range block.Transactions() {
 			sb.current.state.Prepare(tx.Hash(), common.Hash{}, sb.current.tcount)
 			snap := sb.current.state.Snapshot()
+			if r :=  chain.GetReceiptsByHash(tx.Hash()); r!=nil{
+				return errors.New("Already executed tx")
+			}
+			if _,ok := txsMap[tx.Hash()]; ok{
+				return errors.New("Repeated tx in one block")
+			}else{
+				txsMap[tx.Hash()] = struct{}{}
+			}
 
 			receipt, _, err := core.ApplyTransaction(chain.Config(), chain, &sb.address, sb.current.gasPool, statedb, sb.current.header, tx, &sb.current.header.GasUsed, vm.Config{})
 			if err != nil {
@@ -396,7 +421,7 @@ func (sb *backend) Verify(proposal istanbul.Proposal, isProposer bool) (time.Dur
 	block := &types.Block{}
 	block, ok := proposal.(*types.Block)
 	if !ok {
-		sb.logger.Error("Invalid proposal, %v", proposal)
+		sb.logger.Error("Invalid proposal", "proposal", proposal)
 		return 0, errInvalidProposal
 	}
 

@@ -16,7 +16,7 @@ import (
 	"testing"
 )
 
-var abi = `{
+var abi_ = `{
 	"version": "0.01",
 	"abi": [{
 			"method": "transfer",
@@ -65,7 +65,7 @@ func TestWasmInterpreter(t *testing.T) {
 		self:          ContractRefSelf{},
 		Code:          code,
 		Gas:           1000000,
-		ABI:           []byte(abi),
+		ABI:           []byte(abi_),
 	}
 	// build input, {1}{transfer}{from}{to}{asset}
 	input := genInput()
@@ -132,6 +132,17 @@ func BenchmarkWasmInterpreter_SetState_FixedInput(bench *testing.B) {
 	wasmRun(bench, statedb, "SetFixed", 10000)
 }
 
+func BenchmarkWasmInterpreter_Deploy(bench *testing.B) {
+	db, _ := ethdb.NewLDBDatabase("./data.getsettest", 0, 0)
+
+	statedb, err := state.New(common.Hash{}, state.NewDatabase(db))
+	if nil != err {
+		bench.Fatal(err)
+	}
+
+	wasmRun(bench, statedb, "Deploy", 10000)
+}
+
 func BenchmarkWasmInterpreter_GetState_FixedInput_MockStateDB(bench *testing.B) {
 	wasmRun(bench, stateDB{}, "GetFixed", 10000)
 }
@@ -139,6 +150,11 @@ func BenchmarkWasmInterpreter_GetState_FixedInput_MockStateDB(bench *testing.B) 
 func BenchmarkWasmInterpreter_SetState_FixedInput_MockStateDB(bench *testing.B) {
 	wasmRun(bench, stateDB{}, "SetFixed", 10000)
 }
+
+func BenchmarkWasmInterpreter_Deploy_MockStateDB(bench *testing.B) {
+	wasmRun(bench, stateDB{}, "Deploy", 10000)
+}
+
 
 func wasmRun(bench *testing.B, statedb stateDBer, inputKind string, prepareCount int) {
 	address := common.HexToAddress("0x823140710bf13990e4500136726d8b55")
@@ -185,7 +201,7 @@ func wasmRun(bench *testing.B, statedb stateDBer, inputKind string, prepareCount
 		self:          ContractRefSelf{},
 		Code:          code,
 		Gas:           99999999999999999,
-		ABI:           []byte(abi),
+		ABI:           []byte(abi_),
 	}
 
 	for i := 0; i < prepareCount; i++ {
@@ -215,6 +231,8 @@ func wasmRun(bench *testing.B, statedb stateDBer, inputKind string, prepareCount
 			input = genSetInput()
 		case "Get":
 			input = genGetInput()
+		case "Deploy":
+			input = nil
 		}
 		_, err := wasmInterpreter.Run(contract, input, true)
 		if nil != err {

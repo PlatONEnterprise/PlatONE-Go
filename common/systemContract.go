@@ -56,6 +56,7 @@ type SystemParameter struct {
 	GasContractName string
 	GasContractAddr Address
 	CheckContractDeployPermission int64
+	IsProduceEmptyBlock bool
 }
 
 type SystemConfig struct {
@@ -97,6 +98,12 @@ func (sc *SystemConfig) UpdateSystemConfig() {
 	}
 
 	sysContractCall(sc)
+}
+
+func (sc *SystemConfig) IsProduceEmptyBlock() bool{
+	sc.SystemConfigMu.RLock()
+	defer sc.SystemConfigMu.RUnlock()
+	return sc.SysParam.IsProduceEmptyBlock
 }
 
 func (sc *SystemConfig) IfCheckContractDeployPermission() int64{

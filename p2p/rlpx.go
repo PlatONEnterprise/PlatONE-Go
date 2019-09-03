@@ -317,20 +317,20 @@ func initiatorEncHandshake(conn io.ReadWriter, prv *ecdsa.PrivateKey, remoteID d
 	// receive sign(rand 32 bytes) by remote private key
 	signature := make([]byte, 65)
 	if _, err := io.ReadFull(conn, signature); err != nil {
-		log.Warn("initiatorEncHandshake receive msgSig error: ", err)
+		log.Warn("initiatorEncHandshake receive msgSig error: ", "error", err)
 		return s, err
 	}
 	// checkout
 	recoveredPub, _ := crypto.Ecrecover(msgHash, signature)
 	remotePubStr := hex.EncodeToString(recoveredPub[1:])
 	if remoteID.String() != remotePubStr {
-		log.Warn("initiatorEncHandshake signature fail, cur remoteId: ", remoteID.String(), ". recove remoteId: ", remotePubStr)
+		log.Warn("initiatorEncHandshake signature fail ", "cur remoteId", remoteID.String(), "remotePubStr", remotePubStr)
 		return s, err
 	}
 
 	// prove myself
 	if _, err := io.ReadFull(conn, msgHash); err != nil {
-		log.Warn("receiverEncHandshake receive msgHash error: ", err)
+		log.Warn("receiverEncHandshake receive msgHash", "error", err)
 		return s, err
 	}
 	signature, _ = crypto.Sign(msgHash, prv)
@@ -420,7 +420,7 @@ func receiverEncHandshake(conn io.ReadWriter, prv *ecdsa.PrivateKey) (s secrets,
 	// prove myself
 	msgHash := make([]byte, 32)
 	if _, err := io.ReadFull(conn, msgHash); err != nil {
-		log.Warn("receiverEncHandshake receive msgHash error: ", err)
+		log.Warn("receiverEncHandshake receive msgHash", "error", err)
 		return s, err
 	}
 	signature, _ := crypto.Sign(msgHash, prv)
@@ -437,23 +437,22 @@ func receiverEncHandshake(conn io.ReadWriter, prv *ecdsa.PrivateKey) (s secrets,
 	}
 	signature = make([]byte, 65)
 	if _, err := io.ReadFull(conn, signature); err != nil {
-		log.Warn("receiverEncHandshake receive msgSig error: ", err)
+		log.Warn("receiverEncHandshake receive msgSig", "error", err)
 		return s, err
 	}
 
 	recoveredPub, err := crypto.Ecrecover(msgHash, signature)
 	if err != nil {
-		log.Warn("receiverEncHandshake ecrecover publickey error ", err)
+		log.Warn("receiverEncHandshake ecrecover publickey", "error", err)
 		return s, err
 	}
 
 	pubStr := hex.EncodeToString(recoveredPub[1:])
-	//if pubStr == GetRootNode().ID.String() || common.SysCfg.IsValidJoinNode(pubStr) {
 	if common.SysCfg.IsValidJoinNode(pubStr) {
 		log.Info("receiverEncHandshake success", "PeerInfo_pubStr", pubStr)
 		return h.secrets(authPacket, authRespPacket)
 	}
-	log.Warn("receiverEncHandshake fail: joined node is a invalid node ", "pubStr", pubStr)
+	log.Info("receiverEncHandshake fail: joined node is a invalid node ", "pubStr", pubStr)
 	return s, errors.New("join node is a invalid node")
 }
 

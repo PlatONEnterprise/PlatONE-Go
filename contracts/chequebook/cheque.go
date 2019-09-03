@@ -228,7 +228,7 @@ func (self *Chequebook) Save() (err error) {
 	if err != nil {
 		return err
 	}
-	self.log.Trace("Saving chequebook to disk", self.path)
+	self.log.Trace("Saving chequebook to disk", "path", self.path)
 
 	return ioutil.WriteFile(self.path, data, os.ModePerm)
 }
@@ -582,7 +582,6 @@ func (self *Inbox) Receive(promise swap.Promise) (*big.Int, error) {
 
 // Verify verifies cheque for signer, contract, beneficiary, amount, valid signature.
 func (self *Cheque) Verify(signerKey *ecdsa.PublicKey, contract, beneficiary common.Address, sum *big.Int) (*big.Int, error) {
-	log.Trace("Verifying chequebook cheque", "cheque", self, "sum", sum)
 	if sum == nil {
 		return nil, fmt.Errorf("invalid amount")
 	}

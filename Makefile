@@ -11,23 +11,16 @@
 GOBIN = $(shell pwd)/build/bin
 GO ?= latest
 
+syscontracts:
+	build/build_syscontracts.sh
+
 platone:
 	build/build_deps.sh
 	build/env.sh go run build/ci.go install ./cmd/platone
+	@cp $(GOBIN)/platone $(shell pwd)/release/linux/bin/
 	@echo "Done building."
 	@echo "Run \"$(GOBIN)/platone\" to launch platone."
 
-platone-with-mpc:
-	build/build_deps.sh
-	build/env.sh go run build/ci.go install -mpc on ./cmd/platone
-	@echo "Done building platone with mpc."
-	@echo "Run \"$(GOBIN)/platone\" to launch platone."
-
-platone-with-vc:
-	build/build_deps.sh
-	build/env.sh go run build/ci.go install -vc on ./cmd/platone
-	@echo "Done building platone with vc."
-	@echo "Run \"$(GOBIN)/platone\" to launch platone."
 
 swarm:
 	build/env.sh go run build/ci.go install ./cmd/swarm
@@ -36,15 +29,10 @@ swarm:
 
 all:
 	build/build_deps.sh
+	build/build_syscontracts.sh
 	build/env.sh go run build/ci.go install
+	build/move_bin_to_release.sh
 
-all-with-mpc:
-	build/build_deps.sh
-	build/env.sh go run build/ci.go install -mpc on
-
-all-with-vc:
-	build/build_deps.sh
-	build/env.sh go run build/ci.go install -vc on
 
 android:
 	build/env.sh go run build/ci.go aar --local

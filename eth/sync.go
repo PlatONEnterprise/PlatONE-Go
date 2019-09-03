@@ -192,7 +192,6 @@ func (pm *ProtocolManager) synchronise(peer *peer) {
 		mode = downloader.FastSync
 	}
 
-	log.Info("sync mode", "mode", mode)
 	if mode == downloader.FastSync {
 		// Make sure the peer's total difficulty we are synchronizing is higher.
 		if pm.blockchain.CurrentFastBlock().Number().Cmp(pBn) >= 0 {

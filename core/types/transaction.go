@@ -43,6 +43,9 @@ const (
 
 	CnsTxType uint64 = 0x11	// Used for sending transactions without address
 	FwTxType  uint64 = 0x12 // Used fot sending transactions about firewall
+	MigTxType uint64 = 0x13 //Used for update system contract.
+	MigDpType uint64 = 0x14 //Used for update system contract.
+
 )
 
 type Transaction struct {
@@ -61,7 +64,7 @@ type txdata struct {
 	Amount       *big.Int        `json:"value"    gencodec:"required"`
 	Payload      []byte          `json:"input"    gencodec:"required"`
 	//CnsData      []byte          `json:"cnsData"`
-	TxType uint64 `json:"txType"`
+	TxType uint64 `json:"txType" gencodec:"required"`
 
 	// Signature values
 	V *big.Int `json:"v" gencodec:"required"`
@@ -79,7 +82,7 @@ type txdataMarshaling struct {
 	Amount       *hexutil.Big
 	Payload      hexutil.Bytes
 	//CnsData	     hexutil.Bytes
-	TxType uint64
+	TxType  hexutil.Uint64
 	V      *hexutil.Big
 	R      *hexutil.Big
 	S      *hexutil.Big
@@ -350,6 +353,9 @@ func NewTransactionsByPriceAndNonce(signer Signer, txs map[common.Address]Transa
 	// Initialize a price based heap with the head transactions
 	heads := make(TxByPrice, 0, len(txs))
 	for from, accTxs := range txs {
+		if accTxs == nil || accTxs.Len() == 0{
+			continue
+		}
 		heads = append(heads, accTxs[0])
 		// Ensure the sender address is from the signer
 		acc, _ := Sender(signer, accTxs[0])

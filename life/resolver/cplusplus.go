@@ -20,7 +20,9 @@ import "C"
 
 
 import "C"
-import "unsafe"
+import (
+	"unsafe"
+)
 import (
 	"bytes"
 	"encoding/binary"
@@ -553,7 +555,6 @@ func envBlockHash(vm *exec.VirtualMachine) int64 {
 	num := int(int32(vm.GetCurrentFrame().Locals[0]))
 	offset := int(int32(vm.GetCurrentFrame().Locals[1]))
 	blockHash := vm.Context.StateDB.BlockHash(uint64(num))
-	//fmt.Printf("Number:%v ,Num:%v ,0:%v, 1:%v, (-2):%v, (-1):%v. \n", num, blockHash.Hex(), " -> ", blockHash[0], blockHash[1], blockHash[len(blockHash)-2], blockHash[len(blockHash)-1])
 	copy(vm.Memory.Memory[offset:], blockHash.Bytes())
 	return 0
 }
@@ -577,7 +578,6 @@ func envTimestamp(vm *exec.VirtualMachine) int64 {
 func envCoinbase(vm *exec.VirtualMachine) int64 {
 	offset := int(int32(vm.GetCurrentFrame().Locals[0]))
 	coinBase := vm.Context.StateDB.Coinbase()
-	//fmt.Println("CoinBase:", coinBase.Hex(), " -> ", coinBase[0], coinBase[1], coinBase[len(coinBase)-2], coinBase[len(coinBase)-1])
 	copy(vm.Memory.Memory[offset:], coinBase.Bytes())
 	return 0
 }
@@ -604,7 +604,6 @@ func envBalance(vm *exec.VirtualMachine) int64 {
 func envOrigin(vm *exec.VirtualMachine) int64 {
 	offset := int(int32(vm.GetCurrentFrame().Locals[0]))
 	address := vm.Context.StateDB.Origin()
-	//fmt.Println("Origin:", address.Hex(), " -> ", address[0], address[1], address[len(address)-2], address[len(address)-1])
 	copy(vm.Memory.Memory[offset:], address.Bytes())
 	return 0
 }
@@ -613,7 +612,6 @@ func envOrigin(vm *exec.VirtualMachine) int64 {
 func envCaller(vm *exec.VirtualMachine) int64 {
 	offset := int(int32(vm.GetCurrentFrame().Locals[0]))
 	caller := vm.Context.StateDB.Caller()
-	//fmt.Println("Caller:", caller.Hex(), " -> ", caller[0], caller[1], caller[len(caller)-2], caller[len(caller)-1])
 	copy(vm.Memory.Memory[offset:], caller.Bytes())
 	return 0
 }
@@ -661,7 +659,6 @@ func envCallValue(vm *exec.VirtualMachine) int64 {
 func envAddress(vm *exec.VirtualMachine) int64 {
 	offset := int(int32(vm.GetCurrentFrame().Locals[0]))
 	address := vm.Context.StateDB.Address()
-	//fmt.Println("Address:", address.Hex(), " -> ", address[0], address[1], address[len(address)-2], address[len(address)-1])
 	copy(vm.Memory.Memory[offset:], address.Bytes())
 	return 0
 }
@@ -674,11 +671,9 @@ func envSha3(vm *exec.VirtualMachine) int64 {
 	destSize := int(int32(vm.GetCurrentFrame().Locals[3]))
 	data := vm.Memory.Memory[offset : offset+size]
 	hash := crypto.Keccak256(data)
-	//fmt.Println(common.Bytes2Hex(hash))
 	if destSize < len(hash) {
 		return 0
 	}
-	//fmt.Printf("Sha3:%v, 0:%v, 1:%v, (-2):%v, (-1):%v. \n", common.Bytes2Hex(hash), hash[0], fmt.Sprintf("%b", hash[1]), hash[len(hash)-2], hash[len(hash)-1])
 	copy(vm.Memory.Memory[destOffset:], hash)
 	return 0
 }
@@ -1058,6 +1053,7 @@ func envBCWasmCall(vm *exec.VirtualMachine) int64 {
 	addr := int(int32(vm.GetCurrentFrame().Locals[0]))
 	params := int(int32(vm.GetCurrentFrame().Locals[1]))
 	paramsLen := int(int32(vm.GetCurrentFrame().Locals[2]))
+
 	_, err := vm.Context.StateDB.Call(vm.Memory.Memory[addr:addr+20], vm.Memory.Memory[params:params+paramsLen])
 	if err != nil {
 		fmt.Printf("call error,%s", err.Error())
@@ -1088,6 +1084,7 @@ func envBCWasmCallInt64(vm *exec.VirtualMachine) int64 {
 		fmt.Printf("call error,%s", err.Error())
 		return 0
 	}
+	ret = common.WasmCallResultCompatibleSolInt64(ret)
 	return common.BytesToInt64(ret)
 }
 
@@ -1101,6 +1098,7 @@ func envBCWasmDelegateCallInt64(vm *exec.VirtualMachine) int64 {
 		fmt.Printf("call error,%s", err.Error())
 		return 0
 	}
+	ret = common.WasmCallResultCompatibleSolInt64(ret)
 	return common.BytesToInt64(ret)
 }
 
@@ -1114,6 +1112,7 @@ func envBCWasmCallString(vm *exec.VirtualMachine) int64 {
 		fmt.Printf("call error,%s", err.Error())
 		return 0
 	}
+	ret = common.WasmCallResultCompatibleSolString(ret)
 	return MallocString(vm, string(ret))
 }
 
@@ -1127,6 +1126,7 @@ func envBCWasmDelegateCallString(vm *exec.VirtualMachine) int64 {
 		fmt.Printf("call error,%s", err.Error())
 		return 0
 	}
+	ret = common.WasmCallResultCompatibleSolString(ret)
 	return MallocString(vm, string(ret))
 }
 

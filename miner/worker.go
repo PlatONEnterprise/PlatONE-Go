@@ -494,11 +494,10 @@ func (w *worker) newWorkLoop(recommit time.Duration) {
 			} else if eng, ok := w.engine.(consensus.Istanbul); ok{
 				// todo: shouldSeal()
 				if eng.ShouldSeal() {
-					log.Debug("+++++++++++++++++++++++++++++++++++ShouldSeal() -> true")
+					log.Debug("************ ShouldSeal() -> true *************")
 					commit(false, commitInterruptResubmit, nil)
 					timer.Reset(1000 * time.Millisecond)
 				} else{
-					//log.Info("...")
 					timer.Reset(100 * time.Millisecond)
 				}
 			} else if w.config.Clique == nil || w.config.Clique.Period > 0 {
@@ -573,7 +572,6 @@ func (w *worker) mainLoop() {
 			// be automatically eliminated.
 			if _, ok := w.engine.(consensus.Istanbul); ok {
 				if !w.isRunning() && w.current != nil {
-					log.Info("<-w.txsCh","<-w.txsCh")
 					w.mu.RLock()
 					coinbase := w.coinbase
 					w.mu.RUnlock()
@@ -698,10 +696,8 @@ func (w *worker) taskLoop() {
 
 			if _, ok := w.engine.(consensus.Istanbul); ok {
 				// todo: shouldSeal()
-				if true {
-					if _, err := w.engine.Seal(w.chain, task.block, w.resultCh, stopCh); err != nil {
-						log.Warn("Block sealing failed", "err", err)
-					}
+				if _, err := w.engine.Seal(w.chain, task.block, w.resultCh, stopCh); err != nil {
+					log.Warn("Block sealing failed", "err", err)
 				}
 				continue
 			}
@@ -724,7 +720,6 @@ func (w *worker) resultLoop() {
 		select {
 		case block := <-w.resultCh:
 			// Short circuit when receiving empty result.
-			log.Info("ResultCh Block", "number", block.Number())
 			if block == nil {
 				continue
 			}
@@ -1326,7 +1321,7 @@ func (w *worker) commitNewWork(interrupt *int32, noempty bool, timestamp int64, 
 			localTxs[account] = txs
 		}
 	}
-	//log.Debug("execute pending transactions", "hash", commitBlock.Hash(), "number", commitBlock.NumberU64(), "localTxCount", len(localTxs), "remoteTxCount", len(remoteTxs), "txsCount", txsCount)
+	log.Debug("execute pending transactions", "localTxCount", len(localTxs), "remoteTxCount", len(remoteTxs), "txsCount", txsCount)
 
 	startTime = time.Now()
 	var localTimeout = false

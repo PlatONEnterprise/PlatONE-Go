@@ -90,8 +90,13 @@ var (
 
 	wasmLogFileFlag = cli.StringFlag{
 		Name:  "wasmlog",
-		Usage: "output wasm contract log to file",
+		Usage: "output wasm contract log dir",
 		Value: "",
+	}
+	wasmLogSizeFlag = cli.UintFlag{
+		Name:  "wasmlogsize",
+		Usage: "output wasm contract log file partition size",
+		Value: 1024*1024*64,
 	}
 	moduleLogParamsFlag = cli.StringFlag{
 		Name:  "moduleLogParams",
@@ -105,7 +110,7 @@ var Flags = []cli.Flag{
 	verbosityFlag, vmoduleFlag, backtraceAtFlag, debugFlag,
 	pprofFlag, pprofAddrFlag, pprofPortFlag,
 	memprofilerateFlag, blockprofilerateFlag, cpuprofileFlag, traceFlag,
-	wasmLogFileFlag, moduleLogParamsFlag,
+	wasmLogFileFlag, wasmLogSizeFlag, moduleLogParamsFlag,
 }
 
 var (
@@ -115,7 +120,7 @@ var (
 
 func init() {
 	usecolor := term.IsTty(os.Stderr.Fd()) && os.Getenv("TERM") != "dumb"
-	output := io.Writer(os.Stderr)
+	output := io.Writer(os.Stdout)
 	if usecolor {
 		output = colorable.NewColorableStderr()
 	}
@@ -168,23 +173,14 @@ func Setup(ctx *cli.Context, logdir string) error {
 
 func SetupWasmLog(ctx *cli.Context) error {
 	log.SetWasmLogLevel(log.Lvl(ctx.GlobalInt(verbosityFlag.Name)))
-	wasmFileName := ctx.GlobalString(wasmLogFileFlag.Name)
+	wasmLogDir := ctx.GlobalString(wasmLogFileFlag.Name)
 
-	if wasmFileName == "" {
+	if wasmLogDir == "" {
 		log.WasmRoot().SetHandler(log.Root().GetHandler())
 		return nil
 	}
-
-	handler, err := log.FileHandler(wasmFileName, log.FormatFunc(func(r *log.Record) []byte {
-		return []byte(r.Msg)
-	}))
-
-	if err != nil {
-		return err
-	}
-
-	log.WasmRoot().SetHandler(handler)
-
+	size := ctx.GlobalUint(wasmLogSizeFlag.Name)
+	log.WasmRoot().SetHandler(log.ModuleRotatingHandler(wasmLogDir, size))
 	return nil
 }
 

@@ -18,8 +18,8 @@ package core
 
 import (
 	"bytes"
+	"errors"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
-	"math"
 	"math/big"
 	"sync"
 	"time"
@@ -32,6 +32,8 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/metrics"
 	"gopkg.in/karalabe/cookiejar.v2/collections/prque"
 )
+
+var ErrEmpty = errors.New("empty block")
 
 // New creates an Istanbul consensus core
 func New(backend istanbul.Backend, config *params.IstanbulConfig) Engine {
@@ -51,6 +53,7 @@ func New(backend istanbul.Backend, config *params.IstanbulConfig) Engine {
 		roundMeter:         metrics.NewMeter(),
 		sequenceMeter:      metrics.NewMeter(),
 		consensusTimer:     metrics.NewTimer(),
+		lastRoundTimeout:   time.Duration(config.RequestTimeout) * time.Millisecond,
 	}
 
 	r.Register("consensus/istanbul/core/round", c.roundMeter)
@@ -58,6 +61,12 @@ func New(backend istanbul.Backend, config *params.IstanbulConfig) Engine {
 	r.Register("consensus/istanbul/core/consensus", c.consensusTimer)
 
 	c.validateFn = c.checkValidatorSignature
+	// initialize lastView
+	c.lastView = &istanbul.View{
+		Sequence: new(big.Int),
+		Round:    new(big.Int),
+	}
+
 	return c
 }
 
@@ -67,6 +76,8 @@ type core struct {
 	config  *params.IstanbulConfig
 	address common.Address
 	state   State
+	// last view, to be used by miner to check if to seal by the moment
+	lastView *istanbul.View
 	logger  log.Logger
 
 	backend               istanbul.Backend
@@ -90,6 +101,8 @@ type core struct {
 
 	pendingRequests   *prque.Prque
 	pendingRequestsMu *sync.Mutex
+
+	lastRoundTimeout  time.Duration
 
 	consensusTimestamp time.Time
 	// the meter to record the round change rate
@@ -167,7 +180,37 @@ func (c *core) IsProposer() bool {
 }
 
 func (c *core) CanPropose() bool {
-	return c.IsProposer() && c.state == StateAcceptRequest
+	//return c.IsProposer() && c.state == StateAcceptRequest
+	furtherCheck := c.IsProposer() && c.state == StateAcceptRequest
+	if furtherCheck {
+		// To check whether last proposed/sealed block has finished consensus process
+		// if it hasn't, then we should wait until it finishes
+		if c.LastConsensusFinish() {
+			c.UpdateLastView()
+			return true
+		} else {
+			return false
+		}
+	} else {
+		return furtherCheck
+	}
+
+}
+
+// LastConsensusFinish checks if consensus has finished for last proposal
+// if lastView is not equal to current view,it means consensus has finished or timed out for last proposal
+// i.e., startNewRound has executed once again
+func (c *core) LastConsensusFinish() bool {
+	if 0 != c.lastView.Cmp(c.currentView()) {
+		return true
+	}
+
+	return false
+}
+
+// UpdateLastView updates lastView to current view
+func (c *core) UpdateLastView() {
+	c.lastView = c.currentView()
 }
 
 func (c *core) IsCurrentProposal(blockHash common.Hash) bool {
@@ -186,11 +229,59 @@ func (c *core) commit() {
 		}
 
 		if err := c.backend.Commit(proposal, committedSeals); err != nil {
+
+			if err == ErrEmpty && !common.SysCfg.IsProduceEmptyBlock() {
+				c.current.UnlockHash() //Unlock block when insertion fails
+				cur := c.currentView().Round
+				time.Sleep(time.Second)
+				c.startNewRoundWhenEmpty(big.NewInt(0).Add(cur, big.NewInt(1)))
+
+				return
+			}
+
 			c.current.UnlockHash() //Unlock block when insertion fails
 			c.sendNextRoundChange()
 			return
 		}
 	}
+}
+
+// startNewRound starts a new round. if round equals to 0, it means to starts a new sequence
+func (c *core) startNewRoundWhenEmpty(round *big.Int) {
+	var logger log.Logger
+	if c.current == nil {
+		logger = c.logger.New("old_round", -1, "old_seq", 0)
+	} else {
+		logger = c.logger.New("old_round", c.current.Round(), "old_seq", c.current.Sequence())
+	}
+	// Try to get last proposal
+	_, lastProposer := c.backend.LastProposal()
+
+	var newView *istanbul.View
+	if true {
+		newView = &istanbul.View{
+			Sequence: new(big.Int).Set(c.current.Sequence()),
+			Round:    new(big.Int).Set(round),
+		}
+	}
+
+	// Update logger
+	logger = logger.New("old_proposer", c.valSet.GetProposer())
+	// Clear invalid ROUND CHANGE messages
+	c.roundChangeSet = newRoundChangeSet(c.valSet)
+	// New snapshot for new round
+	logger.Debug("startNewRound", "roundChange", true)
+	c.updateRoundState(newView, c.valSet, true)
+	// Calculate new proposer
+	c.valSet.CalcProposer(lastProposer, newView.Round.Uint64())
+	c.waitingForRoundChange = false
+	c.setStateWhenEmpty(StateAcceptRequest)
+
+	c.newRoundChangeTimerWhenEmpty()
+	log.Info("==================================================")
+	log.Info("RoundChange\t"+"Height: "+newView.Sequence.String()+"\tRound: "+newView.Round.String()+"\tProposer: "+c.valSet.GetProposer().Address().String(),"IsProposer: ",c.IsProposer())
+	log.Info("==================================================")
+	logger.Info("New round", "valSet", c.valSet.List(), "size", c.valSet.Size())
 }
 
 // startNewRound starts a new round. if round equals to 0, it means to starts a new sequence
@@ -206,7 +297,7 @@ func (c *core) startNewRound(round *big.Int) {
 	// Try to get last proposal
 	lastProposal, lastProposer := c.backend.LastProposal()
 	if c.current == nil {
-		logger.Trace("Start to the initial round")
+		logger.Trace("Start the initial round")
 	} else if lastProposal.Number().Cmp(c.current.Sequence()) >= 0 {
 		diff := new(big.Int).Sub(lastProposal.Number(), c.current.Sequence())
 		c.sequenceMeter.Mark(new(big.Int).Add(diff, common.Big1).Int64())
@@ -305,6 +396,12 @@ func (c *core) updateRoundState(view *istanbul.View, validatorSet istanbul.Valid
 	}
 }
 
+func (c *core) setStateWhenEmpty(state State) {
+	if c.state != state {
+		c.state = state
+	}
+}
+
 func (c *core) setState(state State) {
 	if c.state != state {
 		c.state = state
@@ -331,6 +428,22 @@ func (c *core) stopTimer() {
 		c.roundChangeTimer.Stop()
 	}
 }
+func (c *core) newRoundChangeTimerWhenEmpty() {
+	c.stopTimer()
+
+	// set timeout based on the round number
+	timeout := time.Duration(c.config.RequestTimeout) * time.Millisecond
+	round := c.current.Round().Uint64()
+	c.lastRoundTimeout = timeout
+	//if round > 0 {
+	//	timeout += time.Duration(math.Pow(1.5, float64(round))) * time.Second
+	//}
+	log.Debug("newRoundChangeTimer", "round", round, "timeout", timeout)
+	c.roundChangeTimer = time.AfterFunc(timeout, func() {
+		c.sendEvent(timeoutEvent{})
+	})
+}
+
 
 func (c *core) newRoundChangeTimer() {
 	c.stopTimer()
@@ -339,8 +452,10 @@ func (c *core) newRoundChangeTimer() {
 	timeout := time.Duration(c.config.RequestTimeout) * time.Millisecond
 	round := c.current.Round().Uint64()
 	if round > 0 {
-		timeout += time.Duration(math.Pow(1.5, float64(round))) * time.Second
+		//timeout += time.Duration(math.Pow(1.5, float64(round))) * time.Second
+		timeout = time.Duration(float64(c.lastRoundTimeout) * 1.5)
 	}
+	c.lastRoundTimeout = timeout
 	log.Debug("newRoundChangeTimer", "round", round, "timeout", timeout)
 	c.roundChangeTimer = time.AfterFunc(timeout, func() {
 		c.sendEvent(timeoutEvent{})

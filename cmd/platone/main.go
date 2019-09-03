@@ -160,16 +160,6 @@ var (
 		utils.MetricsInfluxDBHostTagFlag,
 	}
 
-	mpcFlags = []cli.Flag{
-		utils.MPCEnabledFlag,
-		utils.MPCIceFileFlag,
-		utils.MPCActorFlag,
-	}
-	vcFlags = []cli.Flag{
-		utils.VCEnabledFlag,
-		utils.VCActorFlag,
-		utils.VCPasswordFlag,
-	}
 )
 
 func init() {
@@ -208,10 +198,6 @@ func init() {
 	app.Flags = append(app.Flags, whisperFlags...)
 	app.Flags = append(app.Flags, metricsFlags...)
 
-	// for mpc
-	app.Flags = append(app.Flags, mpcFlags...)
-	// for vc
-	app.Flags = append(app.Flags, vcFlags...)
 
 	app.Before = func(ctx *cli.Context) error {
 		runtime.GOMAXPROCS(runtime.NumCPU())
@@ -224,13 +210,14 @@ func init() {
 			return err
 		}
 
+
+		// init module log
+		debug.SetupModuleLog(ctx)
+
 		//init wasm logfile
 		if err := debug.SetupWasmLog(ctx); err != nil {
 			return err
 		}
-
-		// init module log
-		debug.SetupModuleLog(ctx)
 
 		// Cap the cache allowance and tune the garbage collector
 		var mem gosigar.Mem

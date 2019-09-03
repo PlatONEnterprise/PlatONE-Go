@@ -65,11 +65,10 @@ type nodeInfo struct {
 func getConsensusNodesList(chain consensus.ChainReader, sb *backend, headers []*types.Header, number uint64) ([]discover.NodeID, error) {
 	var tmp []common.NodeInfo
 	if common.SysCfg == nil {
-		log.Info("common.SysCfg == nil")
 		loadLastConsensusNodesList(chain, sb, headers)
 
 		common.SysCfg.UpdateSystemConfig()
-		log.Info("UpdateSystemConfig successful")
+		log.Info("UpdateSystemConfig successful in getConsensusNodesList function")
 	}
 
 	tmp = common.SysCfg.GetConsensusNodesFilterDelay(number)
@@ -135,7 +134,6 @@ func loadLastConsensusNodesList(chain consensus.ChainReader, sb *backend, header
 	sysContractCall := func(sc *common.SystemConfig) {
 		//ctx := context.Background()
 
-		//log.Info("this is for test loadLastConsensusNodesList", sb.chain.CurrentHeader().Root)
 		state, _ := state.New(chain.CurrentHeader().Root, state.NewDatabase(sb.db))
 		// Get the state
 		if state == nil {
@@ -255,7 +253,7 @@ func loadLastConsensusNodesList(chain consensus.ChainReader, sb *backend, header
 			if err := json.Unmarshal(utils.String2bytes(strRes), &tmp); err != nil {
 				log.Warn("unmarshal consensus node list failed", "result", strRes, "err", err.Error())
 			} else if tmp.RetCode != 0 {
-				log.Debug("contract inner error", "code", tmp.RetCode, "msg", tmp.RetMsg)
+				log.Info("contract inner error", "code", tmp.RetCode, "msg", tmp.RetMsg)
 			} else {
 				sc.Nodes = tmp.Data
 			}

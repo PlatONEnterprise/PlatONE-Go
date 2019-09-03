@@ -22,8 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
-	"os"
-	"path/filepath"
+	"math/rand"
 	"strconv"
 	"time"
 
@@ -51,6 +50,10 @@ import (
 const (
 	defaultGasPrice = params.GWei
 )
+
+//func init(){
+//	rand.Seed(time.Now().UnixNano())
+//}
 
 // PublicEthereumAPI provides an API to access Ethereum related information.
 // It offers only methods that operate on public data that is freely available to anyone.
@@ -366,12 +369,12 @@ func (s *PrivateAccountAPI) signTransaction(ctx context.Context, args SendTxArgs
 // tries to sign it with the key associated with args.To. If the given passwd isn't
 // able to decrypt the key it fails.
 func (s *PrivateAccountAPI) SendTransaction(ctx context.Context, args SendTxArgs, passwd string) (common.Hash, error) {
-	if args.Nonce == nil {
-		// Hold the addresse's mutex around signing to prevent concurrent assignment of
-		// the same nonce to multiple accounts.
-		s.nonceLock.LockAddr(args.From)
-		defer s.nonceLock.UnlockAddr(args.From)
-	}
+	//if args.Nonce == nil {
+	//	// Hold the addresse's mutex around signing to prevent concurrent assignment of
+	//	// the same nonce to multiple accounts.
+	//	s.nonceLock.LockAddr(args.From)
+	//	defer s.nonceLock.UnlockAddr(args.From)
+	//}
 	signed, err := s.signTransaction(ctx, args, passwd)
 	if err != nil {
 		return common.Hash{}, err
@@ -487,25 +490,6 @@ func NewPublicBlockChainAPI(b Backend) *PublicBlockChainAPI {
 	return &PublicBlockChainAPI{b}
 }
 
-// SetActor set address for mpc compute.
-func (s *PublicBlockChainAPI) SetActor(address common.Address) error {
-	absPath, err := filepath.Abs(core.DEFAULT_ACTOR_FILE_NAME)
-	if err != nil {
-		return fmt.Errorf("File not exists : %v", err.Error())
-	}
-	f, err := os.OpenFile(absPath, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, os.ModePerm)
-	if err != nil {
-		return fmt.Errorf("open file error : %v ", err.Error())
-	}
-	f.Write(address.Bytes())
-	f.Close()
-
-	if core.MPC_POOL != nil {
-		core.MPC_POOL.LoadActor()
-	}
-
-	return nil
-}
 
 func (s *PublicBlockChainAPI) Monitor(ctx context.Context, hash common.Hash, monitorType string) (map[string]interface{}) {
 	// Determine whether it is a transaction or a block of information
@@ -687,7 +671,7 @@ func (s *PublicBlockChainAPI) doCall(ctx context.Context, args CallArgs, blockNr
 
 	// Create new call message
 	msg := types.NewMessage(addr, args.To, 0, args.Value.ToInt(), 0x999999999, gasPrice, args.Data, false, args.TxType)
-
+	log.Debug("evm call", "txtpe", args.TxType)
 	// Setup context so it may be cancelled the call has completed
 	// or, in case of unmetered gas, setup a context with a timeout.
 	var cancel context.CancelFunc
@@ -911,6 +895,7 @@ type RPCTransaction struct {
 	V                *hexutil.Big    `json:"v"`
 	R                *hexutil.Big    `json:"r"`
 	S                *hexutil.Big    `json:"s"`
+	TxType   		  hexutil.Uint64 `json:"txType"`
 }
 
 // newRPCTransaction returns a transaction that will serialize to the RPC
@@ -935,6 +920,7 @@ func newRPCTransaction(tx *types.Transaction, blockHash common.Hash, blockNumber
 		V:        (*hexutil.Big)(v),
 		R:        (*hexutil.Big)(r),
 		S:        (*hexutil.Big)(s),
+		TxType:	  hexutil.Uint64(tx.Type()),
 	}
 	if blockHash != (common.Hash{}) {
 		result.BlockHash = blockHash
@@ -1178,10 +1164,12 @@ func (args *SendTxArgs) setDefaults(ctx context.Context, b Backend) error {
 		args.Value = new(hexutil.Big)
 	}
 	if args.Nonce == nil {
-		nonce, err := b.GetPoolNonce(ctx, args.From)
-		if err != nil {
-			return err
-		}
+		//nonce, err := b.GetPoolNonce(ctx, args.From)
+		//if err != nil {
+		//	return err
+		//}
+		//rand.Seed(time.Now().UnixNano())
+		nonce := rand.Uint64()
 		args.Nonce = (*hexutil.Uint64)(&nonce)
 	}
 	if args.Data != nil && args.Input != nil && !bytes.Equal(*args.Data, *args.Input) {
@@ -1221,13 +1209,13 @@ func submitTransaction(ctx context.Context, b Backend, tx *types.Transaction) (c
 		return common.Hash{}, err
 	}
 	if tx.To() == nil {
-		signer := types.MakeSigner(b.ChainConfig(), b.CurrentBlock().Number())
-		from, err := types.Sender(signer, tx)
-		if err != nil {
-			return common.Hash{}, err
-		}
-		addr := crypto.CreateAddress(from, tx.Nonce())
-		log.Info("Submitted contract creation", "fullhash", tx.Hash().Hex(), "contract", addr.Hex())
+		//signer := types.MakeSigner(b.ChainConfig(), b.CurrentBlock().Number())
+		//from, err := types.Sender(signer, tx)
+		//if err != nil {
+		//	return common.Hash{}, err
+		//}
+		//addr := crypto.CreateAddress(from, tx.Nonce())
+		log.Info("Submitted contract creation", "fullhash", tx.Hash().Hex())
 	} else {
 		//log.Info("Submitted transaction", "fullhash", tx.Hash().Hex(), "recipient", tx.To())
 	}
@@ -1245,7 +1233,7 @@ func (s *PublicTransactionPoolAPI) SendTransaction(ctx context.Context, args Sen
 	if err != nil {
 		return common.Hash{}, err
 	}
-
+	//
 	if args.Nonce == nil {
 		// Hold the addresse's mutex around signing to prevent concurrent assignment of
 		// the same nonce to multiple accounts.

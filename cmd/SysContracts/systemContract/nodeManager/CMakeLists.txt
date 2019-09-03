@@ -1,0 +1,4 @@
+add_wast_executable(TARGET nodeManager 
+INCLUDE_FOLDERS ${STANDARD_INCLUDE_FOLDERS} 
+LIBRARIES  ${libbcwasm} ${libc++} ${libc}
+DESTINATION_FOLDER ${CMAKE_CURRENT_BINARY_DIR})  

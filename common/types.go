@@ -207,7 +207,6 @@ func IsHexZeroAddress(s string) bool {
 	return 0 == strings.Compare(s, "0000000000000000000000000000000000000000")
 }
 
-
 // Bytes gets the string representation of the underlying address.
 func (a Address) Bytes() []byte { return a[:] }
 
@@ -396,4 +395,14 @@ func NewBlockConfirmSign(signSlice []byte) *BlockConfirmSign {
 	var sign BlockConfirmSign
 	copy(sign[:], signSlice[:])
 	return &sign
+}
+
+var currentInterpreterType string
+
+func SetCurrentInterpreterType(cit string) {
+	currentInterpreterType = cit
+}
+
+func GetCurrentInterpreterType() string {
+	return currentInterpreterType
 }

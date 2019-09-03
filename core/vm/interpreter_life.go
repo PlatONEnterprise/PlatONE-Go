@@ -63,16 +63,16 @@ func NewWASMInterpreter(evm *EVM, cfg Config) *WASMInterpreter {
 }
 
 // check if the called functin in the abi
-func  (in *WASMInterpreter) preCheckFunction(contract *Contract, input []byte, abi []byte) (bool,  *common.Address,error){
+func (in *WASMInterpreter) preCheckFunction(contract *Contract, input []byte, abi []byte) (bool, *common.Address, error) {
 
 	var txData [][]byte
 	containFunc := false
 
 	if err := rlp.DecodeBytes(input, &txData); err != nil {
-		return containFunc,nil,err
+		return containFunc, nil, err
 	}
-	if len(txData) < 2{
-		return containFunc,nil,errors.New("Too few elements in tx.data")
+	if len(txData) < 2 {
+		return containFunc, nil, errors.New("Too few elements in tx.data")
 	}
 
 	funcName := string(txData[1])
@@ -80,27 +80,31 @@ func  (in *WASMInterpreter) preCheckFunction(contract *Contract, input []byte, a
 
 	err := wasmabi.FromJson(abi)
 	if err != nil {
-		return containFunc, nil,err
+		return containFunc, nil, err
 	}
 
-	for _,obj := range wasmabi.AbiArr{
-		if obj.Name == funcName{
+	for _, obj := range wasmabi.AbiArr {
+		if obj.Name == funcName {
 			containFunc = true
 			break
 		}
 	}
-	if !containFunc{
+	if !containFunc {
 		statedb := NewWasmStateDB(in.wasmStateDB, contract)
-		key :=[]byte("currentManagerName")
-		key = append(key,byte(0))
+		key := []byte("currentManagerName")
+		key = append(key, byte(0))
 		key = append([]byte{byte(len(key))}, key...)
 
-		cnsManagerAddr := common.HexToAddress(string(statedb.GetState(key)[1:]))
+		cnsManagerBytes := statedb.GetState(key)
+		if len(cnsManagerBytes) <= 1 {
+			return false, &common.Address{}, nil
+		}
+		cnsManagerAddr := common.HexToAddress(string(cnsManagerBytes[1:]))
 
-		return false, &cnsManagerAddr,nil
+		return false, &cnsManagerAddr, nil
 	}
 
-	return containFunc,nil,nil
+	return containFunc, nil, nil
 }
 
 // Run loops and evaluates the contract's code with the given input data and returns.
@@ -134,13 +138,13 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 		return nil, er
 	}
 
-	if contract.self.Address() == common.HexToAddress("0x0000000000000000000000000000000000000011"){
-		containFunction,addr,err :=  in.preCheckFunction(contract,input,abi)
-		if err != nil{
-			return nil,err
+	if contract.self.Address() == common.HexToAddress("0x0000000000000000000000000000000000000011") {
+		containFunction, addr, err := in.preCheckFunction(contract, input, abi)
+		if err != nil {
+			return nil, err
 		}
 
-		if !containFunction{
+		if !containFunction {
 			contract.self = ContractRef(AccountRef(*addr))
 			contract.SetCallCode(addr, in.evm.StateDB.GetCodeHash(*addr), in.evm.StateDB.GetCode(*addr))
 
@@ -213,7 +217,7 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 
 	res, err := lvm.RunWithGasLimit(entryID, int(context.GasLimit), params...)
 	if err != nil {
-		fmt.Println("throw exception:", err.Error())
+		log.Error("RunWithGasLimit error", "err", err.Error())
 		return nil, err
 	}
 	if contract.Gas > context.GasUsed {
@@ -268,7 +272,6 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 		finalData = append(finalData, sizeHash.Bytes()...)
 		finalData = append(finalData, dataByt...)
 
-		//fmt.Println("CallReturn:", string(returnBytes))
 		return finalData, nil
 	}
 	return nil, nil
@@ -277,7 +280,17 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 // CanRun tells if the contract, passed as an argument, can be run
 // by the current interpreter
 func (in *WASMInterpreter) CanRun(code []byte) bool {
-	return true
+	if !strings.EqualFold(common.GetCurrentInterpreterType(), "all"){
+		return true
+	}
+	_, _, bytecode, err := parseRlpData(code)
+	if err != nil {
+		return false
+	}
+	if bytes.Equal(bytecode[:8], []byte{0, 97, 115, 109, 1, 0, 0, 0}){
+		return true
+	}
+	return false
 }
 
 // parse input(payload)
@@ -421,11 +434,9 @@ func parseRlpData(rlpData []byte) (int64, []byte, []byte, error) {
 	}
 	if v, ok := iRlpList[1].([]byte); ok {
 		code = v
-		//fmt.Println("dstCode: ", common.Bytes2Hex(code))
 	}
 	if v, ok := iRlpList[2].([]byte); ok {
 		abi = v
-		//fmt.Println("dstAbi:", common.Bytes2Hex(abi))
 	}
 	return txType, abi, code, nil
 }

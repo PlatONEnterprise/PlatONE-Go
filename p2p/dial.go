@@ -162,13 +162,81 @@ func (s *dialstate) removeStatic(n *discover.Node) {
 }
 
 func (s *dialstate) addConsensus(n *discover.Node) {
-	log.Warn("dial adding consensus node", "node", n)
+	log.Info("dial adding consensus node", "node", n)
 	s.consensus[n.ID] = &dialTask{flags: consensusDialedConn, dest: n}
 }
 
 func (s *dialstate) removeConsensus(n *discover.Node) {
 	delete(s.consensus, n.ID)
 	s.hist.remove(n.ID)
+}
+
+func (s *dialstate) newTasks2(nRunning int, peers map[discover.NodeID]*Peer, now time.Time) []task {
+	if s.start.IsZero() {
+		s.start = now
+	}
+	var newtasks []task
+	addDial := func(flag connFlag, n *discover.Node) bool {
+		if err := s.checkDial(n, peers); err != nil {
+			log.Trace("Skipping dial candidate", "id", n.ID, "addr", &net.TCPAddr{IP: n.IP, Port: int(n.TCP)}, "err", err)
+			return false
+		}
+		s.dialing[n.ID] = flag
+		newtasks = append(newtasks, &dialTask{flags: flag, dest: n})
+		return true
+	}
+
+	// Expire the dial history on every invocation.
+	s.hist.expire(now)
+
+	// Create dials for static nodes if they are not connected.
+	for id, t := range s.static {
+		err := s.checkDial(t.dest, peers)
+		switch err {
+		case errNotWhitelisted, errSelf:
+			log.Warn("Removing static dial candidate", "id", t.dest.ID, "addr", &net.TCPAddr{IP: t.dest.IP, Port: int(t.dest.TCP)}, "err", err)
+			delete(s.static, t.dest.ID)
+		case nil:
+			s.dialing[id] = t.flags
+			newtasks = append(newtasks, t)
+		}
+	}
+
+	for id, t := range s.consensus {
+		err := s.checkDial(t.dest, peers)
+		switch err {
+		case errNotWhitelisted, errSelf:
+			log.Warn("Removing consensus dial candidate", "id", t.dest.ID, "addr", &net.TCPAddr{IP: t.dest.IP, Port: int(t.dest.TCP)}, "err", err)
+			delete(s.consensus, t.dest.ID)
+		case nil:
+			s.dialing[id] = t.flags
+			newtasks = append(newtasks, t)
+		}
+	}
+
+	needDynDials := s.maxDynDials
+	// If we don't have any peers whatsoever, try to dial a random bootnode. This
+	// scenario is useful for the testnet (and private networks) where the discovery
+	// table might be full of mostly bad peers, making it hard to find good ones.
+	if len(peers) == 0 && len(s.bootnodes) > 0 && needDynDials > 0 && now.Sub(s.start) > fallbackInterval {
+		bootnode := s.bootnodes[0]
+		s.bootnodes = append(s.bootnodes[:0], s.bootnodes[1:]...)
+		s.bootnodes = append(s.bootnodes, bootnode)
+
+		if addDial(dynDialedConn, bootnode) {
+			needDynDials--
+		}
+	}
+
+	// Launch a timer to wait for the next node to expire if all
+	// candidates have been tried and no task is currently active.
+	// This should prevent cases where the dialer logic is not ticked
+	// because there are no pending events.
+	if nRunning == 0 && len(newtasks) == 0 && s.hist.Len() > 0 {
+		t := &waitExpireTask{s.hist.min().exp.Sub(now)}
+		newtasks = append(newtasks, t)
+	}
+	return newtasks
 }
 
 func (s *dialstate) newTasks(nRunning int, peers map[discover.NodeID]*Peer, now time.Time) []task {

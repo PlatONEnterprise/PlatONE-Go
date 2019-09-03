@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"io"
 	"math/big"
 
@@ -43,11 +44,11 @@ const (
 	ACCEPT Action = 0
 	REJECT Action = 1
 )
-const FWALLADDR  = "0xffffffffffffffffffffffffffffffffffffffff"
+const FWALLADDR = "0xffffffffffffffffffffffffffffffffffffffff"
 
-type FwElem struct{
-     Addr common.Address
-     FuncName string
+type FwElem struct {
+	Addr     common.Address
+	FuncName string
 }
 
 type FwElems []FwElem
@@ -64,41 +65,39 @@ type FwData struct {
 	DeniedList   map[string]bool
 }
 
-func (l FwElems) Len() int{
+func (l FwElems) Len() int {
 	return len(l)
 }
 
-func (l FwElems) Swap(i,j int) {
-	l[i],l[j] = l[j], l[i]
+func (l FwElems) Swap(i, j int) {
+	l[i], l[j] = l[j], l[i]
 }
 
-func (l FwElems)  Less(i, j int) bool{
-	return l[i].FuncName <  l[j].FuncName
+func (l FwElems) Less(i, j int) bool {
+	return l[i].FuncName < l[j].FuncName
 }
 
-func NewFwData() FwData{
+func NewFwData() FwData {
 	return FwData{
-		AcceptedList:make(map[string]bool),
-		DeniedList:make(map[string]bool),
+		AcceptedList: make(map[string]bool),
+		DeniedList:   make(map[string]bool),
 	}
 }
 
-func  FwMarshal(fw FwData) []byte {
+func FwMarshal(fw FwData) []byte {
 
-
-	rawData , err := json.Marshal(fw)
-	if err != nil{
-		fmt.Println("json Marshal failed", err)
+	rawData, err := json.Marshal(fw)
+	if err != nil {
+		log.Warn("json Marshal failed", "err", err)
 		return nil
 	}
-	fmt.Println("json Marshal: ",rawData)
 	return rawData
 }
 
 func FwUnMarshal(raw []byte, fw *FwData) (*FwData) {
-	err :=json.Unmarshal(raw,fw)
-	if err != nil{
-		fmt.Println(err)
+	err := json.Unmarshal(raw, fw)
+	if err != nil {
+		log.Warn(err.Error())
 	}
 	return fw
 }
@@ -165,8 +164,8 @@ type stateObject struct {
 	// storage trie, which becomes non-nil on first access
 	code Code // contract bytecode, which gets set when code is loaded
 
-	abi Abi
-	fwData FwData // firewall data
+	abi       Abi
+	fwData    FwData // firewall data
 	rawFwData []byte
 
 	originStorage      Storage      // Storage cache of original entries to dedup rewrites
@@ -191,13 +190,13 @@ func (s *stateObject) empty() bool {
 // Account is the Ethereum consensus representation of accounts.
 // These objects are stored in the main account trie.
 type Account struct {
-	Nonce    uint64
-	FwActive  uint64
-	Balance  *big.Int
-	Root     common.Hash // merkle root of the storage trie
-	CodeHash []byte
-	AbiHash  []byte
-	Creator   common.Address
+	Nonce      uint64
+	FwActive   uint64
+	Balance    *big.Int
+	Root       common.Hash // merkle root of the storage trie
+	CodeHash   []byte
+	AbiHash    []byte
+	Creator    common.Address
 	FwDataHash []byte
 }
 
@@ -209,7 +208,7 @@ func newObject(db *StateDB, address common.Address, data Account) *stateObject {
 	if data.CodeHash == nil {
 		data.CodeHash = emptyCodeHash
 	}
-	if data.FwDataHash == nil{
+	if data.FwDataHash == nil {
 		data.FwDataHash = emptyFwDataHash
 	}
 	return &stateObject{
@@ -392,18 +391,18 @@ func (self *stateObject) updateTrie(db Database) Trie {
 		self.originStorage[key] = valueKey
 
 		if valueKey == emptyStorage {
-			self.setError(tr.TryDelete([]byte(key)))
+			self.setError(self.trie.TryDelete([]byte(key)))
 			continue
 		}
 
 		v, _ := rlp.EncodeToBytes(bytes.TrimLeft(valueKey[:], "\x00"))
-		self.setError(tr.TryUpdate([]byte(key), v))
+		self.setError(self.trie.TryUpdate([]byte(key), v))
 
 		//flush dirty value
 		if value, ok := self.dirtyValueStorage[valueKey]; ok {
 			delete(self.originValueStorage, valueKey)
 			self.originValueStorage[valueKey] = value
-			self.setError(tr.TryUpdateValue(valueKey.Bytes(), v))
+			self.setError(self.trie.TryUpdateValue(valueKey.Bytes(), v))
 		}
 	}
 
@@ -608,19 +607,19 @@ func (self *stateObject) setAbi(abiHash common.Hash, abi []byte) {
 }
 
 // todo: setter and getter for contractCreator
-func (self *stateObject) ContractCreator() common.Address{
+func (self *stateObject) ContractCreator() common.Address {
 	return self.data.Creator
 }
 
 func (self *stateObject) SetContractCreator(addr common.Address) error {
-	if bytes.Equal(self.CodeHash(),emptyCodeHash){
+	if bytes.Equal(self.CodeHash(), emptyCodeHash) {
 		return errors.New("not a contract account")
 	}
 	prevCreator := self.ContractCreator()
 
 	self.db.journal.append(creatorChange{
-		account:  &self.address,
-		prevCreator:prevCreator,
+		account:     &self.address,
+		prevCreator: prevCreator,
 	})
 
 	self.setContractCreator(addr)
@@ -633,12 +632,12 @@ func (self *stateObject) setContractCreator(addr common.Address) {
 
 // todo: setters and getters for firewall data
 
-func (self *stateObject) FwData() FwData{
-	if self.rawFwData != nil{
+func (self *stateObject) FwData() FwData {
+	if self.rawFwData != nil {
 		return self.fwData
 	}
 	fwData := NewFwData()
-	if bytes.Equal(self.FwDataHash(), emptyFwDataHash){
+	if bytes.Equal(self.FwDataHash(), emptyFwDataHash) {
 		return fwData
 	}
 	rawData := self.db.GetState(self.Address(), self.FwDataHash())
@@ -648,14 +647,14 @@ func (self *stateObject) FwData() FwData{
 
 	return self.fwData
 }
-func (self *stateObject) FwDataHash() []byte{
+func (self *stateObject) FwDataHash() []byte {
 	return self.data.FwDataHash
 }
 
-func (self *stateObject) FwActive() bool{
-	if self.data.FwActive != uint64(0){
+func (self *stateObject) FwActive() bool {
+	if self.data.FwActive != uint64(0) {
 		return true
-	}else{
+	} else {
 		return false
 	}
 }
@@ -663,8 +662,8 @@ func (self *stateObject) FwActive() bool{
 func (self *stateObject) SetFwData(data FwData) {
 	prevFwData := self.FwData()
 	self.db.journal.append(fwDataChange{
-		account: &self.address,
-		prevFwData:prevFwData,
+		account:    &self.address,
+		prevFwData: prevFwData,
 	})
 
 	self.setFwData(data)
@@ -674,27 +673,26 @@ func (self *stateObject) setFwData(data FwData) {
 	rawData := FwMarshal(data)
 
 	var fwHash []byte
-	if bytes.Equal(self.FwDataHash(), emptyFwDataHash){
+	if bytes.Equal(self.FwDataHash(), emptyFwDataHash) {
 		fwHash = crypto.Keccak256(rawData)
 		self.data.FwDataHash = fwHash
-	}else{
-		fwHash= self.FwDataHash()
+	} else {
+		fwHash = self.FwDataHash()
 	}
-
 
 	self.fwData = data
 	self.rawFwData = rawData
 
-	self.db.SetState(self.Address(),fwHash, rawData)
+	self.db.SetState(self.Address(), fwHash, rawData)
 }
 
 func (self *stateObject) SetFwActive(active bool) {
 
 	self.db.journal.append(fwActiveChange{
-		account:&self.address,
-		prevActive:self.data.FwActive,
+		account:    &self.address,
+		prevActive: self.data.FwActive,
 	})
-	if active{
+	if active {
 		self.setFwActive(uint64(1))
 	} else {
 		self.setFwActive(uint64(0))
