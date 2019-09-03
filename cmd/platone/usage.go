@@ -235,22 +235,6 @@ var AppHelpFlagGroups = []flagGroup{
 		},
 	},
 	{
-		Name: "MPC COMPUTE",
-		Flags: []cli.Flag{
-			utils.MPCEnabledFlag,
-			utils.MPCActorFlag,
-			utils.MPCIceFileFlag,
-		},
-	},
-	{
-		Name: "VC COMPUTE",
-		Flags: []cli.Flag{
-			utils.VCEnabledFlag,
-			utils.VCActorFlag,
-			utils.VCPasswordFlag,
-		},
-	},
-	{
 		Name: "MISC",
 	},
 }

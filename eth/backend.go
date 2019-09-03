@@ -276,9 +276,6 @@ type Ethereum struct {
 	blockchain      *core.BlockChain
 	protocolManager *ProtocolManager
 	lesServer       LesServer
-	// modify
-	mpcPool *core.MPCPool
-	vcPool  *core.VCPool
 
 	// DB interfaces
 	chainDb ethdb.Database // Block chain database
@@ -427,21 +424,6 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	eth.txPool = core.NewTxPool(config.TxPool, eth.chainConfig, blockChainCache, chainDb, eth.extDb)
 	log.Debug("Transaction pool info", "pool", eth.txPool)
 
-	// mpcPool deal with mpc transactions
-	// modify By J
-	if config.MPCPool.Journal != "" {
-		config.MPCPool.Journal = ctx.ResolvePath(config.MPCPool.Journal)
-	} else {
-		config.MPCPool.Journal = ctx.ResolvePath(core.DefaultMPCPoolConfig.Journal)
-	}
-	if config.MPCPool.Rejournal == 0 {
-		config.MPCPool.Rejournal = core.DefaultMPCPoolConfig.Rejournal
-	}
-	if config.MPCPool.Lifetime == 0 {
-		config.MPCPool.Lifetime = core.DefaultMPCPoolConfig.Lifetime
-	}
-	eth.mpcPool = core.NewMPCPool(config.MPCPool, eth.chainConfig, eth.blockchain)
-	eth.vcPool = core.NewVCPool(config.VCPool, eth.chainConfig, eth.blockchain)
 
 	// modify by platone remove consensusCache
 	//var consensusCache *cbft.Cache = cbft.NewCache(eth.blockchain)

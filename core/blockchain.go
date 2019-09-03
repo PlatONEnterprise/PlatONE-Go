@@ -1018,11 +1018,6 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.
 
 		// parse block and retrieves txs
 
-		receipts := bc.GetReceiptsByHash(block.Hash())
-		if MPC_POOL != nil && VC_POOL != nil {
-			MPC_POOL.InjectTxs(block, receipts, bc, state)
-			VC_POOL.InjectTxs(block, receipts, bc, state)
-		}
 	}
 	bc.futureBlocks.Remove(block.Hash())
 	return status, nil

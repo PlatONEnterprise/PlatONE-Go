@@ -23,8 +23,6 @@ import (
 	"fmt"
 	"math/big"
 	"math/rand"
-	"os"
-	"path/filepath"
 	"strconv"
 	"time"
 
@@ -492,25 +490,6 @@ func NewPublicBlockChainAPI(b Backend) *PublicBlockChainAPI {
 	return &PublicBlockChainAPI{b}
 }
 
-// SetActor set address for mpc compute.
-func (s *PublicBlockChainAPI) SetActor(address common.Address) error {
-	absPath, err := filepath.Abs(core.DEFAULT_ACTOR_FILE_NAME)
-	if err != nil {
-		return fmt.Errorf("File not exists : %v", err.Error())
-	}
-	f, err := os.OpenFile(absPath, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, os.ModePerm)
-	if err != nil {
-		return fmt.Errorf("open file error : %v ", err.Error())
-	}
-	f.Write(address.Bytes())
-	f.Close()
-
-	if core.MPC_POOL != nil {
-		core.MPC_POOL.LoadActor()
-	}
-
-	return nil
-}
 
 func (s *PublicBlockChainAPI) Monitor(ctx context.Context, hash common.Hash, monitorType string) (map[string]interface{}) {
 	// Determine whether it is a transaction or a block of information

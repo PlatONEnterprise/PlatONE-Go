@@ -21,17 +21,6 @@ platone:
 	@echo "Done building."
 	@echo "Run \"$(GOBIN)/platone\" to launch platone."
 
-platone-with-mpc:
-	build/build_deps.sh
-	build/env.sh go run build/ci.go install -mpc on ./cmd/platone
-	@echo "Done building platone with mpc."
-	@echo "Run \"$(GOBIN)/platone\" to launch platone."
-
-platone-with-vc:
-	build/build_deps.sh
-	build/env.sh go run build/ci.go install -vc on ./cmd/platone
-	@echo "Done building platone with vc."
-	@echo "Run \"$(GOBIN)/platone\" to launch platone."
 
 swarm:
 	build/env.sh go run build/ci.go install ./cmd/swarm
@@ -44,13 +33,6 @@ all:
 	build/env.sh go run build/ci.go install
 	build/move_bin_to_release.sh
 
-all-with-mpc:
-	build/build_deps.sh
-	build/env.sh go run build/ci.go install -mpc on
-
-all-with-vc:
-	build/build_deps.sh
-	build/env.sh go run build/ci.go install -vc on
 
 android:
 	build/env.sh go run build/ci.go aar --local
