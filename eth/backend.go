@@ -181,6 +181,14 @@ func InitInnerCallFunc(ethPtr *Ethereum) {
 				sc.SysParam.CheckContractDeployPermission = ret
 			}
 
+			funcName = "getIsProduceEmptyBlock"
+			funcParams = []interface{}{}
+			res = callContract(paramAddr, common.GenCallData(funcName, funcParams))
+			if res != nil {
+				ret := common.CallResAsInt64(res)
+				sc.SysParam.IsProduceEmptyBlock = ret == 1
+			}
+
 			funcName = "getCBFTTimeParam"
 			funcParams = []interface{}{}
 			res = callContract(paramAddr, common.GenCallData(funcName, funcParams))
