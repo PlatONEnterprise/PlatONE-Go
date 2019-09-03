@@ -258,7 +258,7 @@ macro(add_wast_executable)
             add_custom_command(OUTPUT ${target}.cpp.abi.json
                     DEPENDS ${infile}
                     PRE_BUILD
-                    COMMAND ${BCWASM-ABIGEN} -extra-arg=-std=c++14  -extra-arg=--target=wasm32 -extra-arg=-w ${ABI_INCLUDE} ${infile} -outpath=${DESTINATION_FOLDER}
+                    COMMAND ${BCWASM-ABIGEN} -extra-arg=-std=c++14  -extra-arg=--target=wasm32 -extra-arg=-w ${ABI_INCLUDE} ${infile} -- -outpath=${DESTINATION_FOLDER}
                     IMPLICIT_DEPENDS CXX ${infile}
                     COMMENT "Generating JSON ${infle}.abi.json"
                     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}

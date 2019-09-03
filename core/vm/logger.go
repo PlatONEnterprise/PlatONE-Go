@@ -288,7 +288,7 @@ func NewWasmLogger(cfg Config, root log.Logger) *WasmLogger {
 
 func (wl *WasmLogger) Flush()  {
 	if wl.buf.Len() != 0 {
-		wl.root.Debug(wl.buf.String())
+		wl.root.Info(wl.buf.String())
 	}
 	wl.buf.Reset()
 }

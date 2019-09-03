@@ -452,7 +452,7 @@ func receiverEncHandshake(conn io.ReadWriter, prv *ecdsa.PrivateKey) (s secrets,
 		log.Info("receiverEncHandshake success", "PeerInfo_pubStr", pubStr)
 		return h.secrets(authPacket, authRespPacket)
 	}
-	log.Warn("receiverEncHandshake fail: joined node is a invalid node ", "pubStr", pubStr)
+	log.Info("receiverEncHandshake fail: joined node is a invalid node ", "pubStr", pubStr)
 	return s, errors.New("join node is a invalid node")
 }
 

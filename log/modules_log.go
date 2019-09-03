@@ -114,15 +114,7 @@ func (m *modulesHandlersState) init() {
 	m.dir, m.size = dir, size
 	for k := range enableModules {
 		if _, ok := m.Get(k); !ok {
-			g := NewGlogHandler(must(RotatingFileHandler(
-				m.GetStateFilePath(k),
-				m.size,
-				TerminalFormat(true)),
-			))
-			g.Verbosity(moduleLogLvl)
-			g.Vmodule(vModule)
-			g.BacktraceAt(backtraceAt)
-			m.Put(k, g)
+			m.Put(k, ModuleRotatingHandler(m.GetStateFilePath(k), m.size))
 		}
 	}
 }
@@ -177,4 +169,16 @@ func getEnableModulesConfigKey(key string, fn func(string) interface{}) interfac
 
 func init() {
 	mhState = newModulesHandlersState()
+}
+
+func ModuleRotatingHandler(dir string, size uint) Handler {
+	g := NewGlogHandler(must(RotatingFileHandler(
+		dir,
+		size,
+		TerminalFormat(true)),
+	))
+	g.Verbosity(moduleLogLvl)
+	g.Vmodule(vModule)
+	g.BacktraceAt(backtraceAt)
+	return g
 }

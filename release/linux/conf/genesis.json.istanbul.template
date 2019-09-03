@@ -12,7 +12,7 @@
     	"timeout": 10000,
       	"period": 1,
       	"policy": 0,
-      	"epoch": 1000000,
+      	"epoch": 1000,
       	"initialNodes": [],
         "validatorNodes": [__VALIDATORS__],
         "observeNodes": [__OBSERVES__]

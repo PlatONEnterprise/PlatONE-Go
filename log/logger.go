@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/go-stack/stack"
+	"regexp"
 	"runtime"
 	"runtime/debug"
-	"regexp"
 )
 
 const timeKey = "t"
@@ -21,7 +21,7 @@ const skipLevel = 2
 type Lvl int
 
 const (
-	LvlCrit  Lvl = iota
+	LvlCrit Lvl = iota
 	LvlError
 	LvlWarn
 	LvlInfo
