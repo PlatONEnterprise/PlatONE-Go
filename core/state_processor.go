@@ -211,7 +211,7 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 
 	if err != nil {
 		switch err {
-		case FirewallErr:
+		case PermissionErr:
 			data :=[][]byte{}
 			data = append(data, []byte(err.Error()))
 			encodeData,_:= rlp.EncodeToBytes(data)

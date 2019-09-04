@@ -40,8 +40,8 @@ var (
 
 const CnsManagerAddr string = "0x0000000000000000000000000000000000000011"
 
-var fwErr = errors.New("firewall error!")
-var FirewallErr = errors.New("Permission Denied!")
+var fwProcessErr = errors.New("firewall process error!")
+var PermissionErr = errors.New("Permission Denied!")
 
 var migErr = errors.New("migration error!")
 
@@ -424,7 +424,7 @@ func fwCheck(stateDb vm.StateDB, contractAddr common.Address, caller common.Addr
 	/*
 	* Reject List!
 	 */
-	for _, fwElem := range fwStatus.DeniedList {
+	for _, fwElem := range fwStatus.RejectedList {
 		if addressCompare(fwElem.Addr, common.HexToAddress(state.FWALLADDR)) {
 			if fwElem.FuncName == "*" {
 				// 1. [*:*] and reject any address and any function access!
@@ -498,7 +498,7 @@ func fwCheck(stateDb vm.StateDB, contractAddr common.Address, caller common.Addr
 	return makeReturnBytes([]byte(fwLog)), false
 }
 
-// 只允许合约创建者设置合约的防火墙规则
+// The contract's firewall rule can only be set by its creator
 func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Address, input []byte) ([]byte, uint64, error) {
 	var fwStatus state.FwStatus
 	var err error
@@ -509,56 +509,58 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 
 	if !addressCompare(stateDb.GetContractCreator(contractAddr), caller) {
 		log.Warn("FW : error, only contract owner can set firewall setting!")
-		return nil, 0, fwErr
+		return nil, 0, fwProcessErr
 	}
 
 	if err = rlp.DecodeBytes(input, &fwData); err != nil {
 		log.Warn("FW : error, fwData decoded failure!")
-		return nil, 0, fwErr
+		return nil, 0, fwProcessErr
 	}
 
 	// check parameters
 	if len(fwData) < 2 {
 		log.Warn("FW : error, require function name!")
-		return nil, 0, fwErr
+		return nil, 0, fwProcessErr
 	}
 	funcName = string(fwData[1])
 	if funcName == "__sys_FwOpen" || funcName == "__sys_FwClose" || funcName == "__sys_FwStatus" {
 		if len(fwData) != 2 {
 			log.Warn("FW : error, wrong function parameters!")
-			return nil, 0, fwErr
+			return nil, 0, fwProcessErr
 		}
 	} else if funcName == "__sys_FwClear" {
 		if len(fwData) != 3 {
 			log.Warn("FW : error, wrong function parameters!")
-			return nil, 0, fwErr
+			return nil, 0, fwProcessErr
 		}
 
 		listName = string(fwData[2])
-		if listName == "Accept" {
+		listName = strings.ToUpper(listName)
+		if listName == "ACCEPT" {
 			act = state.ACCEPT
-		} else if listName == "Reject" {
+		} else if listName == "REJECT" {
 			act = state.REJECT
 		} else {
 			log.Warn("FW : error, action is invalid!")
-			return nil, 0, fwErr
+			return nil, 0, fwProcessErr
 		}
 
 	} else if funcName == "__sys_FwAdd" || funcName == "__sys_FwDel" || funcName == "__sys_FwSet" {
 		if len(fwData) != 4 {
 			log.Warn("FW : error, wrong function parameters!")
-			return nil, 0, fwErr
+			return nil, 0, fwProcessErr
 		}
 
 		listName = string(fwData[2])
 		params = string(fwData[3])
-		if listName == "Accept" {
+		listName = strings.ToUpper(listName)
+		if listName == "ACCEPT" {
 			act = state.ACCEPT
-		} else if listName == "Reject" {
+		} else if listName == "REJECT" {
 			act = state.REJECT
 		} else {
 			log.Warn("FW : error, action is invalid!")
-			return nil, 0, fwErr
+			return nil, 0, fwProcessErr
 		}
 
 		elements := strings.Split(params, "|")
@@ -566,7 +568,7 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 			tmp := strings.Split(e, ":")
 			if len(tmp) != 2 {
 				log.Warn("FW : error, wrong function parameters!")
-				return nil, 0, fwErr
+				return nil, 0, fwProcessErr
 			}
 
 			addr := tmp[0]
@@ -581,11 +583,11 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 	} else if funcName == "__sys_FwImport" {
 		if len(fwData) != 3 {
 			log.Warn("FW : error, wrong function parameters!")
-			return nil, 0, fwErr
+			return nil, 0, fwProcessErr
 		}
 	} else {
 		log.Warn("FW : error, wrong function name!")
-		return nil, 0, fwErr
+		return nil, 0, fwProcessErr
 	}
 
 	switch funcName {
@@ -612,7 +614,7 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 	returnBytes, err = json.Marshal(fwStatus)
 	if err != nil {
 		log.Warn("FW : fwStatus Marshal error", "err", err)
-		return nil, 0, fwErr
+		return nil, 0, fwProcessErr
 	}
 	return makeReturnBytes(returnBytes), 0, nil
 }
@@ -732,7 +734,7 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 		}
 		if !res {
 			st.state.SetNonce(msg.From(), st.state.GetNonce(sender.Address())+1)
-			return nil, 0, true, FirewallErr
+			return nil, 0, true, PermissionErr
 		}
 
 		if msg.TxType() == types.MigDpType {
@@ -747,8 +749,8 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 		}
 		var pass bool
 		if ret, pass = fwCheck(evm.StateDB, st.to(), msg.From(), msg.Data()); !pass {
-			err = FirewallErr
-			vmerr = FirewallErr
+			err = PermissionErr
+			vmerr = PermissionErr
 			log.Debug("Calling contract was refused by firewall", "err", vmerr)
 		} else {
 			// Increment the nonce for the next transaction

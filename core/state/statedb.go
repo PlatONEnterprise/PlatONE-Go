@@ -857,7 +857,7 @@ func (s *StateDB) SetFwStatus(addr common.Address, status FwStatus) {
 	accept := status.AcceptedList
 	s.FwSet(addr, ACCEPT, accept)
 
-	denied := status.DeniedList
+	denied := status.RejectedList
 	s.FwSet(addr, REJECT, denied)
 }
 
@@ -868,9 +868,9 @@ func (s *StateDB) GetFwStatus(addr common.Address) FwStatus {
 	if stateObject == nil{
 		return FwStatus{
 			ContractAddress: addr,
-			FwActive:false,
-			DeniedList:nil,
-			AcceptedList:nil,
+			FwActive:        false,
+			RejectedList:    nil,
+			AcceptedList:    nil,
 		}
 	}
 	fwData := stateObject.FwData()
@@ -883,9 +883,9 @@ func (s *StateDB) GetFwStatus(addr common.Address) FwStatus {
 		if(len(tmp) <2){
 			return FwStatus{
 				ContractAddress: addr,
-				FwActive:false,
-				DeniedList:nil,
-				AcceptedList:nil,
+				FwActive:        false,
+				RejectedList:    nil,
+				AcceptedList:    nil,
 			}
 		}
 		api := tmp[0]
@@ -899,9 +899,9 @@ func (s *StateDB) GetFwStatus(addr common.Address) FwStatus {
 		if len(tmp) != 2 {
 			return FwStatus{
 				ContractAddress: addr,
-				FwActive:false,
-				DeniedList:nil,
-				AcceptedList:nil,
+				FwActive:        false,
+				RejectedList:    nil,
+				AcceptedList:    nil,
 			}
 		}
 		api := tmp[0]
@@ -916,9 +916,9 @@ func (s *StateDB) GetFwStatus(addr common.Address) FwStatus {
 
 	return FwStatus{
 		ContractAddress: addr,
-		FwActive:fwActive,
-		DeniedList:deniedList,
-		AcceptedList:acceptedList,
+		FwActive:        fwActive,
+		RejectedList:    deniedList,
+		AcceptedList:    acceptedList,
 	}
 }
 
