@@ -145,7 +145,7 @@ function main() {
     deploy roleManager
     deploy roleRegister 
     deploy nodeManager 
-    deploy nodeRegister 
+#    deploy nodeRegister
 
     add_first_node
 
