@@ -38,7 +38,7 @@ type NodeInfo struct {
 	Owner string `json:"owner,omitempty"`
 	Desc  string `json:"desc,omitempty"`
 	Types int32  `json:"type,omitempty"`
-	// status 1为正常节点, 3为删除节点
+	// status 1为正常节点, 2为删除节点
 	Status     int32  `json:"status,omitempty"`
 	ExternalIP string `json:"externalIP,omitempty"`
 	InternalIP string `json:"internalIP,omitempty"`
@@ -137,7 +137,6 @@ func (sc *SystemConfig) GetTxGasLimit() int64 {
 		return 10000000000000
 	}
 	return sc.SysParam.TxGasLimit
-	//return 10000000000
 }
 
 func (sc *SystemConfig) GetHighsetNumber() *big.Int {
@@ -158,7 +157,6 @@ func (sc *SystemConfig) GetNormalNodes() []NodeInfo {
 	var normalNodes = make([]NodeInfo, 0)
 
 	for _, node := range sc.Nodes {
-		//if node.Status <= 2 {
 		if node.Status == 1 {
 			normalNodes = append(normalNodes, node)
 		}
@@ -172,7 +170,6 @@ func (sc *SystemConfig) IsValidJoinNode(publicKey string) bool {
 	var validNodes = make([]NodeInfo, 0)
 
 	for _, node := range sc.Nodes {
-		//if (node.Status == 1 || node.Status == 2) && node.PublicKey == publicKey {
 		if node.Status == 1 && node.PublicKey == publicKey {
 			validNodes = append(validNodes, node)
 		}
@@ -215,7 +212,7 @@ func (sc *SystemConfig) GetDeletedNodes() []NodeInfo {
 
 	var deletedNodes = make([]NodeInfo, 0)
 	for _, node := range sc.Nodes {
-		if node.Status == 3 {
+		if node.Status != 1 {
 			deletedNodes = append(deletedNodes, node)
 		}
 	}
