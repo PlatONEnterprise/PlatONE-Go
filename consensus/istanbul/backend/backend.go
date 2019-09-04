@@ -271,6 +271,7 @@ func (sb *backend) Commit(proposal istanbul.Proposal, seals [][]byte) error {
 	//    the next block and the previous Seal() will be stopped.
 	// -- otherwise, a error will be returned and a round change event will be fired.
 	if sb.proposedBlockHash == block.Hash() {
+		sb.proposedBlockHash = common.Hash{}
 		// feed block hash to Seal() and wait the Seal() result
 		if isEmpty && !isProduceEmptyBlock{
 			sb.commitCh <- nil
