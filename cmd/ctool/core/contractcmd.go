@@ -69,7 +69,7 @@ func codeGen(c *cli.Context) error {
 	err := CodeGen(abiPath, codePath)
 
 	if err != nil {
-		panic(fmt.Errorf("generate code error,%s", err.Error()))
+		panic(fmt.Errorf("generate code error, %s", err.Error()))
 	}
 	return nil
 }
@@ -85,7 +85,7 @@ func CodeGen(abiFilePath string, codeFilePath string) error {
 	}
 	paramBytes, err := rlp.EncodeToBytes(param)
 	if err != nil {
-		return fmt.Errorf("rlp encode error,%s", err.Error())
+		return fmt.Errorf("rlp encode error, %s", err.Error())
 	}
 
 	fmt.Println(hexutil.Encode(paramBytes))
@@ -101,7 +101,7 @@ func deploy(c *cli.Context) error {
 	err := DeployContract(abiPath, codePath)
 
 	if err != nil {
-		panic(fmt.Errorf("deploy contract error,%s", err.Error()))
+		panic(fmt.Errorf("deploy contract error, %s", err.Error()))
 	}
 	return nil
 }
@@ -133,11 +133,11 @@ func DeployContract(abiFilePath string, codeFilePath string) error {
 	params[0] = deployParams
 
 	//paramJson, _ := json.Marshal(paramList)
-	//fmt.Printf("\n request json data：%s\n", string(paramJson))
+	//fmt.Printf("\n request json data: %s\n", string(paramJson))
 
 	r, err := Send(params, "eth_sendTransaction")
 
-	//fmt.Printf("\nresponse json：%s\n", r)
+	//fmt.Printf("\nresponse json: %s\n", r)
 
 	resp := parseResponse(r)
 
@@ -159,7 +159,7 @@ func DeployContract(abiFilePath string, codeFilePath string) error {
 func parseFileToBytes(file string) []byte {
 	bytes, err := ioutil.ReadFile(file)
 	if err != nil {
-		panic(fmt.Sprintf("parse file %s error,%s", file, err.Error()))
+		panic(fmt.Sprintf("parse file %s error, %s", file, err.Error()))
 	}
 	return bytes
 }
@@ -187,7 +187,7 @@ func fwInvoke(c *cli.Context) error {
 
 	err := FwInvokeContract(addr,funcName, funcParams, txType, hasBracket)
 	if err != nil {
-		panic(fmt.Errorf("FwInvokeContract contract error,%s", err.Error()))
+		panic(fmt.Errorf("FwInvokeContract contract error, %s", err.Error()))
 	}
 	return nil
 }
@@ -216,7 +216,7 @@ func migInvoke(c *cli.Context) error {
 
 	err := migInvokeContract(addr, funcName, funcParams, txType, hasBracket)
 	if err != nil {
-		panic(fmt.Errorf("MigInvokeContract contract error,%s", err.Error()))
+		panic(fmt.Errorf("MigInvokeContract contract error, %s", err.Error()))
 	}
 	return nil
 }
@@ -253,7 +253,7 @@ func cnsInvoke(c *cli.Context) error {
 
 	err := CnsInvokeContract(cnsName, abiPath, funcName,funcParams, txType, hasBracket)
 	if err != nil {
-		panic(fmt.Errorf("invokeContract contract error,%s", err.Error()))
+		panic(fmt.Errorf("invokeContract contract error, %s", err.Error()))
 	}
 	return nil
 }
@@ -285,7 +285,7 @@ func invoke(c *cli.Context) error {
 
 	err := InvokeContract(addr, abiPath, funcName, funcParams, txType,hasBracket)
 	if err != nil {
-		panic(fmt.Errorf("invokeContract contract error,%s", err.Error()))
+		panic(fmt.Errorf("invokeContract contract error, %s", err.Error()))
 	}
 	return nil
 }
@@ -310,7 +310,7 @@ func FwInvokeContract(contractAddr string, funcName string, inputParams []string
 
 	paramBytes, e := rlp.EncodeToBytes(paramArr)
 	if e != nil {
-		return fmt.Errorf("rlp encode error,%s", e.Error())
+		return fmt.Errorf("rlp encode error, %s", e.Error())
 	}
 
 	txParams := TxParams{
@@ -330,21 +330,21 @@ func FwInvokeContract(contractAddr string, funcName string, inputParams []string
 		params[1] = "latest"
 
 		paramJson, _ := json.Marshal(params)
-		fmt.Printf("\n request json data：%s \n", string(paramJson))
+		fmt.Printf("\n request json data: %s \n", string(paramJson))
 		r, err = Send(params, "eth_call")
 	} else {
 		params := make([]interface{}, 1)
 		params[0] = txParams
 
 		paramJson, _ := json.Marshal(params)
-		fmt.Printf("\n request json data：%s \n", string(paramJson))
+		fmt.Printf("\n request json data: %s \n", string(paramJson))
 		r, err = Send(params, "eth_sendTransaction")
 	}
 
-	fmt.Printf("\n response json：%s \n", r)
+	fmt.Printf("\n response json: %s \n", r)
 
 	if err != nil {
-		return fmt.Errorf("send http post to invokeContract contract error,%s", e.Error())
+		return fmt.Errorf("send http post to invokeContract contract error, %s", e.Error())
 	}
 	resp := parseResponse(r)
 
@@ -398,14 +398,14 @@ func migInvokeContract(contractAddr string, funcName string, inputParams []strin
 		params[0] = txParams
 
 		paramJson, _ := json.Marshal(params)
-		fmt.Printf("\n request json data：%s \n", string(paramJson))
+		fmt.Printf("\n request json data: %s \n", string(paramJson))
 		r, err = Send(params, "eth_sendTransaction")
 	}
 
-	fmt.Printf("\n response json：%s \n", r)
+	fmt.Printf("\n response json: %s \n", r)
 
 	if err != nil {
-		return fmt.Errorf("send http post to invokeContract contract error,%s", e.Error())
+		return fmt.Errorf("send http post to invokeContract contract error, %s", e.Error())
 	}
 	resp := parseResponse(r)
 
@@ -444,7 +444,7 @@ func CnsInvokeContract(contractName string, abiPath string, funcName string,inpu
 		input := abiFunc.Inputs[i]
 		p, e := StringConverter(v, input.Type)
 		if e != nil {
-			return fmt.Errorf("incorrect param type: %s,index:%d", v, i)
+			return fmt.Errorf("incorrect param type: %s,index: %d", v, i)
 		}
 		paramArr = append(paramArr, p)
 	}
@@ -470,21 +470,21 @@ func CnsInvokeContract(contractName string, abiPath string, funcName string,inpu
 		params[1] = "latest"
 
 		paramJson, _ := json.Marshal(params)
-		fmt.Printf("\n request json data：%s \n", string(paramJson))
+		fmt.Printf("\n request json data: %s \n", string(paramJson))
 		r, err = Send(params, "eth_call")
 	} else {
 		params := make([]interface{}, 1)
 		params[0] = txParams
 
 		paramJson, _ := json.Marshal(params)
-		fmt.Printf("\n request json data：%s \n", string(paramJson))
+		fmt.Printf("\n request json data: %s \n", string(paramJson))
 		r, err = Send(params, "eth_sendTransaction")
 	}
 
-	fmt.Printf("\n response json：%s \n", r)
+	fmt.Printf("\n response json: %s \n", r)
 
 	if err != nil {
-		return fmt.Errorf("send http post to invokeContract contract error,%s", e.Error())
+		return fmt.Errorf("send http post to invokeContract contract error, %s", e.Error())
 	}
 	resp := parseResponse(r)
 
@@ -542,7 +542,7 @@ func InvokeContract(contractAddr string, abiPath string, funcName string,
 		input := abiFunc.Inputs[i]
 		p, e := StringConverter(v, input.Type)
 		if e != nil {
-			return fmt.Errorf("incorrect param type: %s,index:%d", v, i)
+			return fmt.Errorf("incorrect param type: %s, index: %d, wanted type: %v", v, i, input.Type)
 		}
 		paramArr = append(paramArr, p)
 	}
@@ -568,21 +568,21 @@ func InvokeContract(contractAddr string, abiPath string, funcName string,
 		params[1] = "latest"
 
 		paramJson, _ := json.Marshal(params)
-		fmt.Printf("\n request json data：%s \n", string(paramJson))
+		fmt.Printf("\n request json data: %s \n", string(paramJson))
 		r, err = Send(params, "eth_call")
 	} else {
 		params := make([]interface{}, 1)
 		params[0] = txParams
 
 		paramJson, _ := json.Marshal(params)
-		fmt.Printf("\n request json data：%s \n", string(paramJson))
+		fmt.Printf("\n request json data: %s \n", string(paramJson))
 		r, err = Send(params, "eth_sendTransaction")
 	}
 
-	fmt.Printf("\n response json：%s \n", r)
+	fmt.Printf("\n response json: %s \n", r)
 
 	if err != nil {
-		return fmt.Errorf("send http post to invokeContract contract error,%s", e.Error())
+		return fmt.Errorf("send http post to invokeContract contract error, %s", e.Error())
 	}
 	resp := parseResponse(r)
 
@@ -621,7 +621,7 @@ func getContractByAddress(addr string) bool {
 	}
 
 	if resp.Error.Code != 0 {
-		fmt.Printf("eth_getCode error ,error:%v", resp.Error.Message)
+		fmt.Printf("eth_getCode error ,error: %v", resp.Error.Message)
 		return false
 	}
 	//fmt.Printf("trasaction hash: %s\n", resp.Result)
