@@ -208,7 +208,7 @@ namespace SystemContract
                             }
                         }
 
-                        mapUserRoles.insert(addr, urole2);
+                        mapUserRoles.update(addr, urole2);
                         
                         string ok = "OK: [RoleManager] [addRole] Update roles success. address: " + string(addr) + " ,  roles: " + string(roles);
                         BCWASM_EMIT_EVENT(Notify, A_SUCCESS, ok.c_str());

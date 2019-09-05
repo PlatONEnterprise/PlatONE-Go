@@ -368,7 +368,7 @@ namespace SystemContract
                 doc.SetObject();
                 Document::AllocatorType &allocator=doc.GetAllocator();
 
-                int code = 0;
+                int code = 1;
                 std::string msg = "not found";
                 Value dataObject(kObjectType);
                 dataObject.SetString("");
