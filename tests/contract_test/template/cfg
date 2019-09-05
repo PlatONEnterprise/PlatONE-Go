@@ -1,0 +1,5 @@
+CTOOL_JSON=../../../release/linux/conf/ctool.json
+ABI_JSON=../../../release/linux/conf/contracts/roleRegister.cpp.abi.json
+ADDR=0x7843befb3bbf1e5d625d876b5382f4f00fdcfd87
+CTOOL_BIN=../../../release/linux/bin/ctool
+WASM_LOG=../../../release/linux/data/node-0/logs/wasm_log/*
