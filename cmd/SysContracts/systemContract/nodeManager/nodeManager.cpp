@@ -21,7 +21,7 @@ struct NodeInfo
     string internalIP; // 内网 IP
     int rpcPort;       // rpc 通讯端口
     int p2pPort;       // p2p 通讯端口
-    int status;        // 1:正常；3：删除
+    int status;        // 1:正常；2：删除
     address approveor; // 审核人的地址
     int delayNum;      // 共识节点延迟设置的区块高度 (可选, 默认实时设置)
 }
@@ -123,8 +123,16 @@ namespace systemContract
 
                 // 重复性检查
                 std::string publicKey = std::string(node["publicKey"].GetString());
+
+                if ( publicKey.empty())
+                {
+                    msg = "publicKey is empty";
+                    code = BAD_PARAMETER;
+                    break;
+                }
                 std::string name = std::string(node["name"].GetString());
                 int type = node["type"].GetInt();
+                int status = node["status"].GetInt();
                 std::string condition = "";
 
                 // 公钥必须唯一
@@ -145,11 +153,29 @@ namespace systemContract
                     code = BAD_PARAMETER;
                     break;
                 }
+             
 
                 // 添加节点时类型必须是观察者节点
                 if (type != 0)
                 {
-                    msg = "join node type must be observer";
+                    if (type == 1)
+                    {
+                        msg = "join node type must be observer";
+                        code = BAD_PARAMETER;
+                        break;
+                    }
+                    else {
+                        //添加节点的type值只能是0或1
+                        msg = "The value of type is illegally entered. Must be 0 or 1.";
+                        code = BAD_PARAMETER;
+                        break;
+                    }
+                }
+
+                // 添加节点的status只能是1或2
+                if (status != 1 || status != 2)
+                {
+                    msg = "The value of status is illegally entered. Must be 1 or 2.";
                     code = BAD_PARAMETER;
                     break;
                 }
@@ -167,6 +193,7 @@ namespace systemContract
             }
 
             msg += std::string(". node info: ") + nodeJsonStr;
+            bcwasm::println(code, msg.c_str());
             BCWASM_EMIT_EVENT(Notify, code, msg.c_str());
             return code;
         }
@@ -294,12 +321,25 @@ namespace systemContract
             Document curNode;
             curNode.Parse(nodeStr.c_str());
             bcwasm::println("NodeManager update:", name, nodeJsonStr, nodeStr);
+            int status_flag = 1;
+            for (Value::ConstMemberIterator itr = inNode.MemberBegin(); itr != inNode.MemberEnd(); ++itr)
+            {
+                std::string key = std::string(itr->name.GetString());
+                if( key == "status"  && curNode["status"].GetInt() != 1)
+                {
+                    status_flag = 0;
+                    bcwasm::println("NodeManager update failed! Status means to delete.");
+                    break;
+                }
+
+            }
+	      if (!status_flag) return updateCount;
 
             for (Value::ConstMemberIterator itr = inNode.MemberBegin(); itr != inNode.MemberEnd(); ++itr)
             {
                 std::string key = std::string(itr->name.GetString());
-                // 更新节点信息只能是：desc, type, status, delayNum
-                if (key == "desc" || key == "type" || (key == "status" && curNode["status"].GetInt() != 3) || key == "delayNum")
+                    // 更新节点信息只能是：desc, type, status, delayNum
+                if (key == "desc" || key == "type" || (key == "status" && curNode["status"].GetInt() == 1) || key == "delayNum")
                 {
                     curNode.RemoveMember(itr->name.GetString());
                     curNode.AddMember(rapidjson::StringRef(itr->name.GetString()), inNode[itr->name.GetString()], curNode.GetAllocator());
@@ -308,6 +348,8 @@ namespace systemContract
                     updateCount++;
                 }
             }
+
+            
 
             StringBuffer buffer;
             Writer<StringBuffer> writer(buffer);
@@ -327,6 +369,7 @@ namespace systemContract
             return updateCount;
         }
 
+        //deleted 0正常 1删除
         const char *getEnodeNodes(int deleted) const
         {
             bcwasm::println("NodeManager getEnodeNodes...");
@@ -341,12 +384,13 @@ namespace systemContract
                 node.Parse(nodeStr.c_str());
 
                 int status = node["status"].GetInt();
-                if (deleted && status <= 2)
+
+                if (deleted && status == 1)
                 {
                     continue;
                 }
 
-                if (!deleted && status == 3)
+                if (!deleted && status == 2)
                 {
                     continue;
                 }
