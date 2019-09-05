@@ -12,15 +12,17 @@
 
 #### 1. 步骤：
 
-1. 进入到某个合约命名的文件夹 如：
+1. 从`template`复制一份至待测合约的文件夹 如：
 
-   `cd template`
+   `cp -r template roleManager`
+
+   `cd roleManager`
 
 2. 编辑`cfg`文件：
 
    ```shell
    CTOOL_JSON=../../../release/linux/conf/ctool.json
-   ABI_JSON=../../../release/linux/conf/contracts/roleRegister.cpp.abi.json
+   ABI_JSON=../../../release/linux/conf/contracts/xxxx.cpp.abi.json
    ADDR=0x7843befb3bbf1e5d625d876b5382f4f00fdcfd87
    CTOOL_BIN=../../../release/linux/bin/ctool
    WASM_LOG=../../../release/linux/data/node-0/logs/wasm_log/*
@@ -30,9 +32,9 @@
 
    2）其中`ADDR`变量指示当前要测试的合约地址
 
+   3)  指示正确的`ABI_JSON`
 
-
-3. 为合约每个接口编写入口脚本，如
+3. 为合约每个接口编写调用脚本，如
 
    ```shell
    #!/bin/bash
@@ -49,7 +51,7 @@
    echo roles_string = $roles_string
    ```
 
-   （前6行不用变，保留修改`invoke`行，及其入参即可）
+   （前6行不用变，主要修改`invoke`这一行，及其入参即可）
 
 4. 编辑runTest脚本，移动到`# START TO MODIFY HERE`行，开始编辑用例，一个用例示例如下：
 
