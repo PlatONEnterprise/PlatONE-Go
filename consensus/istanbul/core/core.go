@@ -400,6 +400,8 @@ func (c *core) setStateWhenEmpty(state State) {
 	if c.state != state {
 		c.state = state
 	}
+	// c.processPendingRequests()
+	c.processBacklog()
 }
 
 func (c *core) setState(state State) {

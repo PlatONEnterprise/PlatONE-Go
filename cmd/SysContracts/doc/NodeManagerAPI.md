@@ -14,7 +14,7 @@ struct NodeInfo
     string internalIP; // 内网 IP
     int rpcPort;       // rpc 通讯端口
     int p2pPort;       // p2p 通讯端口
-    int status;        // 1:正常；3：删除
+    int status;        // 1:正常；2：删除
     address approveor; // 审核人的地址
     int delayNum;      // 共识节点延迟设置的区块高度 (可选, 默认实时设置)
 }

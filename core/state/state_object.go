@@ -57,7 +57,7 @@ type FwStatus struct {
 	ContractAddress common.Address
 	FwActive        bool
 	AcceptedList    []FwElem
-	DeniedList      []FwElem
+	RejectedList    []FwElem
 }
 
 type FwData struct {
