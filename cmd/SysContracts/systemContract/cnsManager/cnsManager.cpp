@@ -554,7 +554,7 @@ class CnsManager : public bcwasm::Contract
         for(auto it = cnsMap.begin(); it != cnsMap.end(); ++it)
         {
             ContractInfo info = it->second();
-            if (info.name.compare(std::string(name)) == 0 && compareVersion(info.version.c_str(), latest.c_str()) == 1)
+            if (info.name.compare(std::string(name)) == 0 && compareVersion(info.version.c_str(), latest.c_str()) == 1 && info.enabled == true)
             {
                 latest = info.version;
             }
