@@ -1,12 +1,5 @@
 #!/bin/bash
 
-HOME=$1
-TARGET=$2
-SIGN=$3
-USER_PATH="${HOME}/appContract"
-TARGET_PATH="${USER_PATH}/$2"
-export APP=1
-
 createDirectory(){
     if [ -d ${TARGET_PATH} ]
     then
@@ -155,12 +148,19 @@ cd ${CURRENT_PATH}
 
 
 CURRENT_PATH=`pwd`
-cd ${SCRIPT_DIR}/../..
-WORKSPACE_PATH=`pwd`
+cd ${SCRIPT_DIR}/../../..
+WORKSPACE_PATH=`pwd`  # PlatONE-Go/
 cd ${CURRENT_PATH}
 
-BIN_PATH=${CURRENT_PATH}/../../release/linux/bin
+BIN_PATH=${WORKSPACE_PATH}/release/linux/bin
 
+
+HOME=${WORKSPACE_PATH}/cmd/SysContracts # PlatONE-Go/cmd/SystemContracts
+TARGET=$2
+SIGN=$3
+USER_PATH="${HOME}/appContract"
+TARGET_PATH="${USER_PATH}/$2"
+export APP=1
 
 main
 

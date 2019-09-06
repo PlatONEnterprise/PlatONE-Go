@@ -17,7 +17,7 @@ for str in ${syscontracts[@]};do
     echo "remove $str$ABI before rebuild"
 done
 
-./script/autoproject.sh
+./script/build_system_contracts.sh
 
 for str in ${syscontracts[@]};do
     if [ ! -f $SYSCONTRACTS/build/systemContract/$str/$str$WASM ]; then
