@@ -118,7 +118,7 @@ pageSize：每页显示条目数
 合约信息的json字符串
 ```
 
-### 7. 获取某人已注册合约 | getRegisteredContracts(address, pageNum, pageSize)
+### 7. 获取某人已注册合约 | getRegisteredContractsByAddress(address, pageNum, pageSize)
 
 * inputs: 
 
