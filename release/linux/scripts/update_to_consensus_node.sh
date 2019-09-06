@@ -98,6 +98,7 @@ echo "nodeManager's address: ${addr}"
 name_string=node-${NODE_ID}
 
 
+nodeJsonStr_string=`echo ${nodeJsonStr_string} | sed s/[[:space:]]//g`
 ${BIN_PATH}/ctool invoke --config $config --addr $addr --abi $node_manager_abi --func update --param $name_string --param $nodeJsonStr_string
 
 sleep 2

@@ -67,7 +67,7 @@ address：合约地址必须符合以太坊合约地址标准格式，“0x”�
 1：注册失败
 ```
 
-### 4. 注销特定合约 | unregister(name, version)
+### 4. 注销特定合约 | cnsUnregister(name, version)
 
 - 只有合约的owner才能调用该接口
 
@@ -118,7 +118,7 @@ pageSize：每页显示条目数
 合约信息的json字符串
 ```
 
-### 7. 获取某人已注册合约 | getRegisteredContracts(address, pageNum, pageSize)
+### 7. 获取某人已注册合约 | getRegisteredContractsByAddress(address, pageNum, pageSize)
 
 * inputs: 
 

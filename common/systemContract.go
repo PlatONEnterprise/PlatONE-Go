@@ -46,7 +46,7 @@ type NodeInfo struct {
 	RpcPort    int32  `json:"rpcPort,omitempty"`
 	P2pPort    int32  `json:"p2pPort,omitempty"`
 	// delay set validatorSet
-	DelayNum uint64 `json:"delay,omitempty"`
+	DelayNum uint64 `json:"delayNum,omitempty"`
 }
 
 type SystemParameter struct {

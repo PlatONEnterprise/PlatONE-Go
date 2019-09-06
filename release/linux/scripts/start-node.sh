@@ -102,8 +102,8 @@ function readFile() {
     if [ -d ${NODE_DIR} ]; then
         echo "datadir: ${NODE_DIR}"
     else
-        mkdir -p ${NODE_DIR}
-        echo "datadir: ${NODE_DIR}"
+        echo "[ERROR]: Node does not exist; at node_id=${NODE_ID}"
+        exit
     fi
 
     if [ -d ${LOG_DIR} ]; then
@@ -148,7 +148,7 @@ function readFile() {
     readConf $NODE_ID "bootnodes"
     if [[ $BOOTNODES == "" ]];then
         if [[ -f ${CONF_PATH}/genesis.json ]];then
-            BOOTNODES=`cat ${CONF_PATH}/genesis.json | sed -n 's/"observeNodes": \["\(.*\)".*/\1/p' | sed "s/\",\"/,/g" | sed s/[[:space:]]//g`
+            BOOTNODES=`cat ${CONF_PATH}/genesis.json | sed -n 's/"observeNodes": \["\(.*\)".*/\1/p' | sed s/[[:space:]]//g | sed "s/\",\"/,/g" | sed s/[[:space:]]//g`
         else
             echo "[ERROR] ************** miss the genesis.json ***************"
         fi

@@ -153,7 +153,7 @@ function readEnv() {
             break
         done
     else
-        echo "[WARN]: !!! There node has no account !!!"
+        echo "[WARN]: !!! The node has no account !!!"
     fi
 }
 

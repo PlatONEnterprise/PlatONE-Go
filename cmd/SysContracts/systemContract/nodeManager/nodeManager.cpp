@@ -173,7 +173,7 @@ namespace systemContract
                 }
 
                 // 添加节点的status只能是1或2
-                if (status != 1 || status != 2)
+                if (status != 1 && status != 2)
                 {
                     msg = "The value of status is illegally entered. Must be 1 or 2.";
                     code = BAD_PARAMETER;
