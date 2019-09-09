@@ -322,24 +322,37 @@ namespace systemContract
             curNode.Parse(nodeStr.c_str());
             bcwasm::println("NodeManager update:", name, nodeJsonStr, nodeStr);
             int status_flag = 1;
+            // 非正常状态的节点, 不能进行更新
+            if ( curNode["status"].GetInt() != 1 )
+            {
+                bcwasm::println("NodeManager update failed! The node being updated is in an abnormal state");
+                status_flag = 0;
+            }
             for (Value::ConstMemberIterator itr = inNode.MemberBegin(); itr != inNode.MemberEnd(); ++itr)
             {
                 std::string key = std::string(itr->name.GetString());
-                if( key == "status"  && curNode["status"].GetInt() != 1)
+                // 节点status 只能从1更新为2
+                if( key == "status" && inNode["status"] != 2)
                 {
                     status_flag = 0;
-                    bcwasm::println("NodeManager update failed! Status means to delete.");
-                    break;
+                    bcwasm::println("Node status can only be updated from 1 to 2");
+                }
+
+                // 节点type 只能在0和1之间进行更新
+                if ( key == "type" && inNode["type"].GetInt() != 0 && inNode["type"] != 1)
+                {
+                    status_flag = 0;
+                    bcwasm::println("Node type can only be updated at 1 or 2");
                 }
 
             }
-	      if (!status_flag) return updateCount;
+            if (!status_flag) return updateCount;
 
             for (Value::ConstMemberIterator itr = inNode.MemberBegin(); itr != inNode.MemberEnd(); ++itr)
             {
                 std::string key = std::string(itr->name.GetString());
-                    // 更新节点信息只能是：desc, type, status, delayNum
-                if (key == "desc" || key == "type" || (key == "status" && curNode["status"].GetInt() == 1) || key == "delayNum")
+                // 更新节点信息只能是：desc, type, status, delayNum
+                if (key == "desc" || key == "type"  || key == "status" || key == "delayNum")
                 {
                     curNode.RemoveMember(itr->name.GetString());
                     curNode.AddMember(rapidjson::StringRef(itr->name.GetString()), inNode[itr->name.GetString()], curNode.GetAllocator());
@@ -348,8 +361,6 @@ namespace systemContract
                     updateCount++;
                 }
             }
-
-            
 
             StringBuffer buffer;
             Writer<StringBuffer> writer(buffer);
