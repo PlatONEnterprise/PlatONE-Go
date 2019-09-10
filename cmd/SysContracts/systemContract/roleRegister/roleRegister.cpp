@@ -198,6 +198,14 @@ namespace SystemContract
 
                 std::vector<std::string> approverRoles;
                 util::getRoles(approverRoles);
+
+                int userStatus = util::getUserStatus();
+                if (0 != userStatus) {
+                    string err = "ERR: [RoleRegister] [approve] Approver status is invalid. ";
+                    BCWASM_EMIT_EVENT(Notify, R_ADDRRESS_STATUS_ERROR, err.c_str());
+                    bcwasm::println(err);
+                    return R_ADDRRESS_STATUS_ERROR; // 审批人用户状态不正确
+                }
                 
                 //检查是否有权限审核
                 if (!util::ifHavePermission(approverRoles, regRoles)){
@@ -207,7 +215,7 @@ namespace SystemContract
                     return A_ROLE_ERROR; //角色权限不足；
                 }
                 
-                //检查地址状态
+                //检查地址申请状态
                 RegisterUserInfo *userInfoPtr = AddressInfoMap.find(addStr);
                 if(nullptr == userInfoPtr) {
                     string err = "ERR: [RoleRegister] [approve] This address has no roles to register. " + addStr;

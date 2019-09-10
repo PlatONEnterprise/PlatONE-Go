@@ -71,6 +71,13 @@ namespace systemContract
 
             do
             {
+                if(!util::isValidUser(origin))
+                {
+                    code = NO_PERMISSION;
+                    msg = origin + "not a valid user status";
+                    break;
+                }
+
                 bcwasm::DeployedContract cnsContract("0x0000000000000000000000000000000000000011");
                 std::string urmAddress = cnsContract.callString("getContractAddress", "__sys_RoleManager", "latest");
 
