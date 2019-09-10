@@ -329,24 +329,37 @@ namespace systemContract
             curNode.Parse(nodeStr.c_str());
             bcwasm::println("NodeManager update:", name, nodeJsonStr, nodeStr);
             int status_flag = 1;
+            // 非正常状态的节点, 不能进行更新
+            if ( curNode["status"].GetInt() != 1 )
+            {
+                bcwasm::println("NodeManager update failed! The node being updated is in an abnormal state");
+                status_flag = 0;
+            }
             for (Value::ConstMemberIterator itr = inNode.MemberBegin(); itr != inNode.MemberEnd(); ++itr)
             {
                 std::string key = std::string(itr->name.GetString());
-                if( key == "status"  && curNode["status"].GetInt() != 1)
+                // 节点status 只能从1更新为2
+                if( key == "status" && inNode["status"] != 2)
                 {
                     status_flag = 0;
-                    bcwasm::println("NodeManager update failed! Status means to delete.");
-                    break;
+                    bcwasm::println("Node status can only be updated from 1 to 2");
+                }
+
+                // 节点type 只能在0和1之间进行更新
+                if ( key == "type" && inNode["type"].GetInt() != 0 && inNode["type"] != 1)
+                {
+                    status_flag = 0;
+                    bcwasm::println("Node type can only be updated at 1 or 2");
                 }
 
             }
-	      if (!status_flag) return updateCount;
+            if (!status_flag) return updateCount;
 
             for (Value::ConstMemberIterator itr = inNode.MemberBegin(); itr != inNode.MemberEnd(); ++itr)
             {
                 std::string key = std::string(itr->name.GetString());
-                    // 更新节点信息只能是：desc, type, status, delayNum
-                if (key == "desc" || key == "type" || (key == "status" && curNode["status"].GetInt() == 1) || key == "delayNum")
+                // 更新节点信息只能是：desc, type, status, delayNum
+                if (key == "desc" || key == "type"  || key == "status" || key == "delayNum")
                 {
                     curNode.RemoveMember(itr->name.GetString());
                     curNode.AddMember(rapidjson::StringRef(itr->name.GetString()), inNode[itr->name.GetString()], curNode.GetAllocator());
@@ -355,8 +368,6 @@ namespace systemContract
                     updateCount++;
                 }
             }
-
-            
 
             StringBuffer buffer;
             Writer<StringBuffer> writer(buffer);
@@ -525,51 +536,6 @@ BCWASM_ABI(systemContract::NodeManager, getNodes)
 BCWASM_ABI(systemContract::NodeManager, nodesNum)
 BCWASM_ABI(systemContract::NodeManager, update)
 BCWASM_ABI(systemContract::NodeManager, validJoinNode)
-BCWASM_ABI(systemContract::NodeManager, getEnodeNodes)
 BCWASM_ABI(systemContract::NodeManager, getNormalEnodeNodes)
 BCWASM_ABI(systemContract::NodeManager, getDeletedEnodeNodes)
 //bcwasm autogen begin
-extern "C" { 
-int add(const char * nodeJsonStr) {
-systemContract::NodeManager NodeManager_bcwasm;
-return NodeManager_bcwasm.add(nodeJsonStr);
-}
-const char * getAllNodes() {
-systemContract::NodeManager NodeManager_bcwasm;
-return NodeManager_bcwasm.getAllNodes();
-}
-int validJoinNode(const char * publicKey) {
-systemContract::NodeManager NodeManager_bcwasm;
-return NodeManager_bcwasm.validJoinNode(publicKey);
-}
-int nodesNum(const char * nodeJsonStr) {
-systemContract::NodeManager NodeManager_bcwasm;
-return NodeManager_bcwasm.nodesNum(nodeJsonStr);
-}
-const char * getNodes(const char * nodeJsonStr) {
-systemContract::NodeManager NodeManager_bcwasm;
-return NodeManager_bcwasm.getNodes(nodeJsonStr);
-}
-int update(const char * name,const char * nodeJsonStr) {
-systemContract::NodeManager NodeManager_bcwasm;
-return NodeManager_bcwasm.update(name,nodeJsonStr);
-}
-const char * getEnodeNodes(int deleted) {
-systemContract::NodeManager NodeManager_bcwasm;
-return NodeManager_bcwasm.getEnodeNodes(deleted);
-}
-const char * getNormalEnodeNodes() {
-systemContract::NodeManager NodeManager_bcwasm;
-return NodeManager_bcwasm.getNormalEnodeNodes();
-}
-const char * getDeletedEnodeNodes() {
-systemContract::NodeManager NodeManager_bcwasm;
-return NodeManager_bcwasm.getDeletedEnodeNodes();
-}
-void init() {
-systemContract::NodeManager NodeManager_bcwasm;
-NodeManager_bcwasm.init();
-}
-
-}
-//bcwasm autogen end

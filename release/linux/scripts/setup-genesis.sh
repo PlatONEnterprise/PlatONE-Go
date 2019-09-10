@@ -192,7 +192,7 @@ function compile_system_contracts() {
         cd ${SYS_CONTRACTS_PATH}
 
         rm -rf ${SYS_CONTRACTS_PATH}/build
-        ./script/autoproject.sh .
+        ./script/build_system_contracts.sh .
         cp ${SYS_CONTRACTS_PATH}/build/systemContract/*/*json ${SYS_CONTRACTS_PATH}/build/systemContract/*/*wasm  ${WORKSPACE_PATH}/conf/contracts
 
         cd ${CURRENT_PATH}
