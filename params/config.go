@@ -230,7 +230,7 @@ type IstanbulConfig struct {
 	Epoch          uint64          `json:"epoch,omitempty"`   // The number of blocks after which to checkpoint and reset the pending votes
 	InitialNodes   []discover.Node `json:"initialNodes,omitempty"`
 	ValidatorNodes []discover.Node `json:"validatorNodes,omitempty"`
-	ObserveNodes   []discover.Node `json:"observeNodes,omitempty"`
+	ObserverNodes   []discover.Node `json:"suggestObserverNodes,omitempty"`
 }
 
 // CliqueConfig is the consensus engine configs for proof-of-authority based sealing.

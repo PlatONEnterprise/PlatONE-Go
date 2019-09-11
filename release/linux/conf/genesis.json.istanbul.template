@@ -15,7 +15,7 @@
       	"epoch": 1000,
       	"initialNodes": [],
         "validatorNodes": [__VALIDATORS__],
-        "observeNodes": [__OBSERVES__]
+        "suggestObserverNodes": [__OBSERVES__]
     }
   },
   "nonce": "0x0",
