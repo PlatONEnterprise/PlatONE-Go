@@ -1,0 +1,5 @@
+CTOOL_JSON=../../../release/linux/conf/ctool.json
+ABI_JSON=../../../release/linux/conf/contracts/userManager.cpp.abi.json
+ADDR=0x3f66299e45c57ce5d60a651d11374e1a0e970b40
+CTOOL_BIN=../../../release/linux/bin/ctool
+WASM_LOG=../../../release/linux/data/node-0/logs/wasm_log/*
