@@ -533,7 +533,7 @@ func envDisableFree(vm *exec.VirtualMachine) int64 {
 }
 
 func envDisableFreeGasCost(vm *exec.VirtualMachine) (uint64, error) {
-	return 0, nil
+	return 1, nil
 }
 
 func envAbort(vm *exec.VirtualMachine) int64 {
@@ -541,7 +541,7 @@ func envAbort(vm *exec.VirtualMachine) int64 {
 }
 
 func envAbortGasCost(vm *exec.VirtualMachine) (uint64, error) {
-	return 0, nil
+	return 1, nil
 }
 
 // define: int64_t gasPrice();
