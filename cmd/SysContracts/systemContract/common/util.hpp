@@ -316,12 +316,12 @@ namespace util {
                             return true;
                         }
 
-                    }else if(CONTRACT_ADMIN == callerRole )
+                    }else if(CONTRACT_ADMIN == callerRole  || NODE_ADMIN == callerRole  || CONTRACT_DEPLOYER == callerRole)
                     {
                             bool havePermission(true);
                             for (auto const&  r   :  roles)
                             {
-                                if( CHAIN_CREATOR == r || CHAIN_ADMIN == r || NODE_ADMIN == r || CONTRACT_ADMIN == r )
+                                if( CHAIN_CREATOR == r || CHAIN_ADMIN == r || NODE_ADMIN == r || CONTRACT_ADMIN == r || CONTRACT_DEPLOYER == r)
                                 {
                                         havePermission = false;
                                         break;

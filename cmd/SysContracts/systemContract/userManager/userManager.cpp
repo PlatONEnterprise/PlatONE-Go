@@ -155,6 +155,10 @@ namespace SystemContract
             // 将用户设置为禁用状态
             int disable(const char* userAddr)
             {
+                if (isChainCreator(string(userAddr)))
+                {
+                   return NO_PERMISSION;
+                }
                 return setUserStatus(userAddr, 1);
             }
 
@@ -304,7 +308,7 @@ namespace SystemContract
                 
                 if (db_value.empty()) 
                 {
-                    bcwasm::println("user is not exist in the useManager contract");
+                    bcwasm::println("user is not exist in the userManager contract");
                     return 0;
                 }
 

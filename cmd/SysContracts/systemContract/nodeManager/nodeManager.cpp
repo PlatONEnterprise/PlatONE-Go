@@ -71,6 +71,13 @@ namespace systemContract
 
             do
             {
+                if(!util::isValidUser(origin))
+                {
+                    code = NO_PERMISSION;
+                    msg = origin + "not a valid user status";
+                    break;
+                }
+
                 bcwasm::DeployedContract cnsContract("0x0000000000000000000000000000000000000011");
                 std::string urmAddress = cnsContract.callString("getContractAddress", "__sys_RoleManager", "latest");
 
@@ -529,51 +536,6 @@ BCWASM_ABI(systemContract::NodeManager, getNodes)
 BCWASM_ABI(systemContract::NodeManager, nodesNum)
 BCWASM_ABI(systemContract::NodeManager, update)
 BCWASM_ABI(systemContract::NodeManager, validJoinNode)
-BCWASM_ABI(systemContract::NodeManager, getEnodeNodes)
 BCWASM_ABI(systemContract::NodeManager, getNormalEnodeNodes)
 BCWASM_ABI(systemContract::NodeManager, getDeletedEnodeNodes)
 //bcwasm autogen begin
-extern "C" { 
-int add(const char * nodeJsonStr) {
-systemContract::NodeManager NodeManager_bcwasm;
-return NodeManager_bcwasm.add(nodeJsonStr);
-}
-const char * getAllNodes() {
-systemContract::NodeManager NodeManager_bcwasm;
-return NodeManager_bcwasm.getAllNodes();
-}
-int validJoinNode(const char * publicKey) {
-systemContract::NodeManager NodeManager_bcwasm;
-return NodeManager_bcwasm.validJoinNode(publicKey);
-}
-int nodesNum(const char * nodeJsonStr) {
-systemContract::NodeManager NodeManager_bcwasm;
-return NodeManager_bcwasm.nodesNum(nodeJsonStr);
-}
-const char * getNodes(const char * nodeJsonStr) {
-systemContract::NodeManager NodeManager_bcwasm;
-return NodeManager_bcwasm.getNodes(nodeJsonStr);
-}
-int update(const char * name,const char * nodeJsonStr) {
-systemContract::NodeManager NodeManager_bcwasm;
-return NodeManager_bcwasm.update(name,nodeJsonStr);
-}
-const char * getEnodeNodes(int deleted) {
-systemContract::NodeManager NodeManager_bcwasm;
-return NodeManager_bcwasm.getEnodeNodes(deleted);
-}
-const char * getNormalEnodeNodes() {
-systemContract::NodeManager NodeManager_bcwasm;
-return NodeManager_bcwasm.getNormalEnodeNodes();
-}
-const char * getDeletedEnodeNodes() {
-systemContract::NodeManager NodeManager_bcwasm;
-return NodeManager_bcwasm.getDeletedEnodeNodes();
-}
-void init() {
-systemContract::NodeManager NodeManager_bcwasm;
-NodeManager_bcwasm.init();
-}
-
-}
-//bcwasm autogen end
