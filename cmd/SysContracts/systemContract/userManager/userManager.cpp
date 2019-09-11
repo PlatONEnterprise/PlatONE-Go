@@ -165,6 +165,10 @@ namespace SystemContract
             // 将用户设置为删除用户
             int delUser(const char* userAddr)
             {
+                     if (isChainCreator(string(userAddr)))
+                {
+                   return NO_PERMISSION;
+                }
                 return setUserStatus(userAddr, 2);
             }
             
@@ -235,7 +239,7 @@ namespace SystemContract
                     return NO_PERMISSION;
                 }
 
-                // 账户地址和用户名不可更改，其他基本信息可编辑（email,mobile,status）
+                // 账户地址,用户名,status不可更改，其他基本信息可编辑（email,mobile）
                 // 更新email
 				if(!userUpdate.email.empty())
 				{
@@ -248,11 +252,7 @@ namespace SystemContract
 					userOld.mobile = userUpdate.mobile;
 				}
 
-                // 更新status
-                if(userUpdate.status != userOld.status)
-				{
-					userOld.status = userUpdate.status;
-				}
+           
 
                 storeUserRecord(userOld);
 
