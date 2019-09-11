@@ -325,7 +325,7 @@ func envPrintsGasCost(vm *exec.VirtualMachine) (uint64, error) {
 	//	}
 	//}
 	//return uint64(end - start), nil
-	return 1597, nil
+	return 319400, nil
 }
 
 //libc prints_l
@@ -340,7 +340,7 @@ func envPrintsl(vm *exec.VirtualMachine) int64 {
 func envPrintslGasCost(vm *exec.VirtualMachine) (uint64, error) {
 	//msgLen := int(uint32(vm.GetCurrentFrame().Locals[1]))
 	//return uint64(msgLen), nil
-	return 1792, nil
+	return 358400, nil
 
 }
 
@@ -351,7 +351,7 @@ func envPrinti(vm *exec.VirtualMachine) int64 {
 }
 
 func envPrintiGasCost(vm *exec.VirtualMachine) (uint64, error) {
-	return 1673, nil
+	return 334600, nil
 }
 
 func envPrintui(vm *exec.VirtualMachine) int64 {
@@ -360,7 +360,7 @@ func envPrintui(vm *exec.VirtualMachine) int64 {
 }
 
 func envPrintuiGasCost(vm *exec.VirtualMachine) (uint64, error) {
-	return 1468, nil
+	return 293600, nil
 }
 
 func envPrinti128(vm *exec.VirtualMachine) int64 {
@@ -374,7 +374,7 @@ func envPrinti128(vm *exec.VirtualMachine) int64 {
 }
 
 func envPrinti128GasCost(vm *exec.VirtualMachine) (uint64, error) {
-	return 4627, nil
+	return 300000, nil
 }
 
 func envPrintui128(vm *exec.VirtualMachine) int64 {
@@ -388,7 +388,7 @@ func envPrintui128(vm *exec.VirtualMachine) int64 {
 }
 
 func envPrintui128GasCost(vm *exec.VirtualMachine) (uint64, error) {
-	return 4465, nil
+	return 300000, nil
 }
 
 func envPrintsf(vm *exec.VirtualMachine) int64 {
@@ -399,7 +399,7 @@ func envPrintsf(vm *exec.VirtualMachine) int64 {
 }
 
 func envPrintsfGasCost(vm *exec.VirtualMachine) (uint64, error) {
-	return 1604, nil
+	return 320800, nil
 }
 
 func envPrintdf(vm *exec.VirtualMachine) int64 {
@@ -410,7 +410,7 @@ func envPrintdf(vm *exec.VirtualMachine) int64 {
 }
 
 func envPrintdfGasCost(vm *exec.VirtualMachine) (uint64, error) {
-	return 1618, nil
+	return 323600, nil
 }
 
 func envPrintqf(vm *exec.VirtualMachine) int64 {
@@ -426,7 +426,7 @@ func envPrintqf(vm *exec.VirtualMachine) int64 {
 }
 
 func envPrintqfGasCost(vm *exec.VirtualMachine) (uint64, error) {
-	return 15305, nil
+	return 300000, nil
 }
 
 func envPrintn(vm *exec.VirtualMachine) int64 {
@@ -435,7 +435,7 @@ func envPrintn(vm *exec.VirtualMachine) int64 {
 }
 
 func envPrintnGasCost(vm *exec.VirtualMachine) (uint64, error) {
-	return 1507, nil
+	return 301400, nil
 }
 
 func envPrinthex(vm *exec.VirtualMachine) int64 {
@@ -446,7 +446,7 @@ func envPrinthex(vm *exec.VirtualMachine) int64 {
 }
 
 func envPrinthexGasCost(vm *exec.VirtualMachine) (uint64, error) {
-	return 1937, nil
+	return 387400, nil
 }
 
 //libc malloc()
@@ -970,7 +970,7 @@ func envEmitEvent(vm *exec.VirtualMachine) int64 {
 }
 
 func envEmitEventGasCost(vm *exec.VirtualMachine) (uint64, error) {
-	return 2117, nil
+	return 300000, nil
 }
 
 func envSetState(vm *exec.VirtualMachine) int64 {

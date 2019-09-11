@@ -23,11 +23,11 @@ func constGasFunc(gas uint64) gasFunc {
 var GasTable = [256]Instruction{
 	opcodes.Nop: {
 		Execute: nil,
-		GasCost: constGasFunc(0),
+		GasCost: constGasFunc(1),
 	},
 	opcodes.Unreachable: {
 		Execute: nil,
-		GasCost: constGasFunc(0),
+		GasCost: constGasFunc(1),
 	},
 	opcodes.Select: {
 		Execute: nil,
@@ -648,11 +648,11 @@ var GasTable = [256]Instruction{
 		},
 		opcodes.Call: {
 			Execute: nil,
-			GasCost: constGasFunc(0),
+			GasCost: constGasFunc(1),
 		},// this opcode will be modify latter
 		opcodes.CallIndirect: {
 			Execute: nil,
-			GasCost: constGasFunc(0),
+			GasCost: constGasFunc(1),
 		},// this opcode will be modify latter
 		opcodes.InvokeImport: {
 			Execute: nil,
@@ -664,7 +664,7 @@ var GasTable = [256]Instruction{
 		},
 		opcodes.GrowMemory: {
 			Execute: nil,
-			GasCost: constGasFunc(0),
+			GasCost: constGasFunc(1),
 		},// this opcode will be modify latter
 		opcodes.Phi: {
 			Execute: nil,
@@ -676,7 +676,7 @@ var GasTable = [256]Instruction{
 		},
 		opcodes.Unknown: {
 			Execute: nil,
-			GasCost: constGasFunc(0),
+			GasCost: constGasFunc(1),
 		},
 	}
 
