@@ -201,7 +201,7 @@ ret=`${BIN_PATH}/ctool invoke --config $config --abi $cns_manager_abi --addr $cn
 addr=${ret#*result:}
 echo "[INFO]: nodeManager's address: ${addr}"
 
-nodeJsonStr_string="{\"name\":\"node-${NODE_ID}\",\"type\":${NODE_TYPE},\"publicKey\":\"${PUBKEY}\",\"desc\":\"$DESC\",\"externalIP\":\"${IP}\",\"internalIP\":\"${IP}\",\"rpcPort\":${RPC_PORT},\"p2pPort\":${P2P_PORT},\"owner\":\"0x${ACCOUNT}\",\"status\":1}"
+nodeJsonStr_string="{\"name\":\"${NODE_ID}\",\"type\":${NODE_TYPE},\"publicKey\":\"${PUBKEY}\",\"desc\":\"$DESC\",\"externalIP\":\"${IP}\",\"internalIP\":\"${IP}\",\"rpcPort\":${RPC_PORT},\"p2pPort\":${P2P_PORT},\"owner\":\"0x${ACCOUNT}\",\"status\":1}"
 
 ${BIN_PATH}/ctool invoke --config $config --addr $addr --abi $node_manager_abi --func "add" --param $nodeJsonStr_string
 

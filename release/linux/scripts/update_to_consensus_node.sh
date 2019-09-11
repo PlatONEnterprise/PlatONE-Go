@@ -95,7 +95,7 @@ ret=`${BIN_PATH}/ctool invoke --config $config --abi $cns_manager_abi --addr $cn
 addr=${ret#*result:}
 echo "nodeManager's address: ${addr}"
 
-name_string=node-${NODE_ID}
+name_string=${NODE_ID}
 
 
 nodeJsonStr_string=`echo ${nodeJsonStr_string} | sed s/[[:space:]]//g`
