@@ -217,7 +217,7 @@ USAGE: platonectl.sh setupgen [options]
            --p2p_port                   the first node p2p_port (default: 16791)
            --auto                       auto=true: Will auto create new node keys and will
                                         not compile system contracts again (default=false)
-           --observeNodes, -o           set the genesis observeNodes
+           --observerNodes, -o          set the genesis suggestObserverNodes
                                         (default is the first node enode code)
            --validatorNodes, -v         set the genesis validatorNodes
                                         (default is the first node enode code)
@@ -272,7 +272,7 @@ do
             echo "auto: $2"
             AUTO=$2
             ;;
-        --observeNodes | -o)
+        --observerNodes | -o)
             echo "bootnodes: $2"
             OBSERVE_NODES=$2
             ;;

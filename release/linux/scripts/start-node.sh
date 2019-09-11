@@ -6,7 +6,7 @@ USAGE: platonectl.sh start [options]
     OPTIONS:
         --nodeid, -n                 start the specified node
         --bootnodes, -b              Connect to the specified bootnodes node
-                                     The default is the first in the observeNodes
+                                     The default is the first in the suggestObserverNodes
                                      in genesis.json
         --logsize, -s                Log block size (default: 67108864)
         --logdir, -d                 log dir (default: ../data/node_dir/logs/)
@@ -148,7 +148,7 @@ function readFile() {
     readConf $NODE_ID "bootnodes"
     if [[ $BOOTNODES == "" ]];then
         if [[ -f ${CONF_PATH}/genesis.json ]];then
-            BOOTNODES=`cat ${CONF_PATH}/genesis.json | sed -n 's/"observeNodes": \["\(.*\)".*/\1/p' | sed s/[[:space:]]//g | sed "s/\",\"/,/g" | sed s/[[:space:]]//g`
+            BOOTNODES=`cat ${CONF_PATH}/genesis.json | sed -n 's/"suggestObserverNodes": \["\(.*\)".*/\1/p' | sed s/[[:space:]]//g | sed "s/\",\"/,/g" | sed s/[[:space:]]//g`
         else
             echo "[ERROR] ************** miss the genesis.json ***************"
         fi

@@ -48,7 +48,7 @@ cat <<EOF
 #c4        start OPTIONS
 #c4            --nodeid, -n                 start the specified node
 #c4            --bootnodes, -b              Connect to the specified bootnodes node
-#c4                                         The default is the first in the observeNodes
+#c4                                         The default is the first in the suggestObserverNodes
 #c4                                         in genesis.json
 #c4            --logsize, -s                Log block size (default: 67108864)
 #c4            --logdir, -d                 log dir (default: ../data/node_dir/logs/)
@@ -125,7 +125,7 @@ cat <<EOF
 #c13           --p2p_port                   the first node p2p_port (default: 16791)
 #c13           --auto                       auto=true: Will auto create new node keys and will
 #c13                                        not compile system contracts again (default=false)
-#c13           --observeNodes, -o           set the genesis observeNodes
+#c13           --observerNodes, -o          set the genesis suggestObserverNodes
 #c13                                        (default is the first node enode code)
 #c13           --validatorNodes, -v         set the genesis validatorNodes
 #c13                                        (default is the first node enode code)
