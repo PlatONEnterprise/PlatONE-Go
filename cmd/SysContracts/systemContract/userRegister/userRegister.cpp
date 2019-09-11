@@ -103,6 +103,7 @@ namespace SystemContract
                 if (800 < regStr.size())
                 {
                     BCWASM_EMIT_EVENT(Notify, REGISTER_STR_LEN_ERROR, "用户信息参数json字符串长度>800, 注册失败");
+                    bcwasm::println("用户信息参数json字符串长度>800, 注册失败");
                     return REGISTER_STR_LEN_ERROR;
                 }
 
@@ -110,7 +111,7 @@ namespace SystemContract
 				RegisterInfo reg_user;
 				if (!deserializeDbRegisterRecord(regStr, reg_user))
 				{
-				//	bcwasm::println("解析用户注册信息失败，获取状态失败");
+					bcwasm::println("解析用户注册信息失败，获取状态失败");
 					BCWASM_EMIT_EVENT(Notify, DESERIALIZE_REGISTER_ERROR, "解析用户注册信息失败，获取状态失败");
 					return DESERIALIZE_REGISTER_ERROR;
 				}
@@ -120,7 +121,7 @@ namespace SystemContract
 				// 自己发起申请
 				if(reg_user.user_address != strOrigin)
 				{
-				//	bcwasm::println("只有自己可申请自己为平台用户");
+					bcwasm::println("只有自己可申请自己为平台用户");
 					BCWASM_EMIT_EVENT(Notify, NO_PERMISSION, "只有自己可申请自己为平台用户");
 					return NO_PERMISSION;
 				}
@@ -128,7 +129,7 @@ namespace SystemContract
 				// 判断用户申请记录是否存在(一个用户只能申请一次)
 				if(isRegistered(reg_user.user_address.c_str()))
 				{
-				//	bcwasm::println("申请记录已存在");
+				    bcwasm::println("申请记录已存在");
 					BCWASM_EMIT_EVENT(Notify, RECORD_EXIT, "申请记录已存在");
 					return RECORD_EXIT;
 				}
@@ -136,7 +137,7 @@ namespace SystemContract
 				// 判断用户信息是否为空
 				if("" == reg_user.name)
 				{
-				//	bcwasm::println("用户名不能为空");
+				    bcwasm::println("用户名不能为空");
 					BCWASM_EMIT_EVENT(Notify, NAME_NULL, "用户名不能为空");
 					return NAME_NULL;
 				}
@@ -148,7 +149,7 @@ namespace SystemContract
 				bcwasm::getState<std::string, std::string>(reg_user.name, strUserAddr);
 				if("" != strUserAddr)
 				{
-				//	bcwasm::println("平台用户的用户名已申请，申请失败");
+				    bcwasm::println("平台用户的用户名已申请，申请失败");
 					BCWASM_EMIT_EVENT(Notify, NAME_APPLIED, "平台用户的用户名已申请或已审核通过，申请失败");
 					return NAME_APPLIED;
 				}
@@ -163,14 +164,14 @@ namespace SystemContract
 				ResultInfo res;
 				if(!desResultInfo(strResult, res))
 				{
-				//	bcwasm::println("解析用户数据失败");
+				    bcwasm::println("解析用户数据失败");
 					BCWASM_EMIT_EVENT(Notify, DESERIALIZE_DATA_ERROR, "解析用户数据失败");
 					return DESERIALIZE_DATA_ERROR;
 				}
 
 				if("0" == res.code)
 				{
-				//	bcwasm::println("平台用户的用户名已经存在");
+				    bcwasm::println("平台用户的用户名已经存在");
 					BCWASM_EMIT_EVENT(Notify, NAME_EXIT, "平台用户的用户名已经存在");
 					return NAME_EXIT;
 				}
@@ -180,7 +181,7 @@ namespace SystemContract
 				int ret = storeRegisterRecord(reg_user, reg_user.user_address);
 				if (ret != 0) 
 				{
-				//	bcwasm::println("写入用户申请记录失败");
+				    bcwasm::println("写入用户申请记录失败");
 					BCWASM_EMIT_EVENT(Notify, STORE_ERROR, "写入用户申请记录失败");
 					return STORE_ERROR;
 				}
@@ -191,7 +192,7 @@ namespace SystemContract
 				// 6.保存待审核用户地址（用于查询相应用户状态的所有用户信息）
 				m_listAudit.push(reg_user.user_address);
 
-			//	bcwasm::println("保存用户申请记录成功");
+			    bcwasm::println("保存用户申请记录成功");
 				BCWASM_EMIT_EVENT(Notify, R_SUCCESS, "保存用户申请记录成功");
 				return R_SUCCESS;
 			}
@@ -202,7 +203,7 @@ namespace SystemContract
 				// 1.检查入参
 				if (auditStatus != USER_STATE_REJECT && auditStatus != USER_STATE_ACTIVE) 
 				{
-				//	bcwasm::println("用户状态不合法");
+					bcwasm::println("用户状态不合法");
 					BCWASM_EMIT_EVENT(Notify, STATE_ERROR, "用户状态不合法");
 					return STATE_ERROR;
 				}
@@ -215,7 +216,7 @@ namespace SystemContract
 				getRegisterRecord(strUserAddr, db_reg_record);
 				if (db_reg_record.empty()) 
 				{
-				//	bcwasm::println("审核的用户地址:[", strUserAddr, "] 不存在!");
+					bcwasm::println("审核的用户地址:[", strUserAddr, "] 不存在!");
 					BCWASM_EMIT_EVENT(Notify, NO_INFO, "用户信息不存在");
 					return NO_INFO;
 				}
@@ -224,14 +225,14 @@ namespace SystemContract
 				int tmp_state = getStatusByAddress(strUserAddr.c_str());
 				if (-1 == tmp_state) 
 				{
-				//	bcwasm::println("获取被审核者用户状态失败");
+					bcwasm::println("获取被审核者用户状态失败");
 					BCWASM_EMIT_EVENT(Notify, STATE_ERROR, "获取被审核者用户状态失败");
 					return STATE_ERROR;
 				}
 
 				if (tmp_state != USER_STATE_AUDIT) 
 				{
-				//	bcwasm::println("被审核的用户为非审核中");
+					bcwasm::println("被审核的用户为非审核中");
 					BCWASM_EMIT_EVENT(Notify, STATE_ERROR, "被审核的用户为非审核中");
 					return STATE_ERROR;
 				}
@@ -241,7 +242,7 @@ namespace SystemContract
 				// 4 判断审核人是否是有效用户
 				if (!isValidUser(strOrigin))
 				{
-				//	bcwasm::println("审核人不是有效用户，审核失败");
+					bcwasm::println("审核人不是有效用户，审核失败");
 					BCWASM_EMIT_EVENT(Notify, INVALID_USER, "审核人不是有效用户，审核失败");
 					return INVALID_USER;    
 				}	
@@ -249,7 +250,7 @@ namespace SystemContract
 				// 5.判断审核人是否是管理员角色
 				if(!isAdminRole(strOrigin))
 				{
-				//	bcwasm::println("审核人没有管理员权限，审核失败");
+					bcwasm::println("审核人没有管理员权限，审核失败");
 					BCWASM_EMIT_EVENT(Notify, NO_PERMISSION, "审核人没有管理员权限，审核失败");
 					return NO_PERMISSION;
 				}
@@ -258,7 +259,7 @@ namespace SystemContract
 				RegisterInfo reg_user;
 				if (!deserializeDbRegisterRecord(db_reg_record, reg_user)) 
 				{
-				//	bcwasm::println("解析用户注册信息失败");
+					bcwasm::println("解析用户注册信息失败");
 					BCWASM_EMIT_EVENT(Notify, DESERIALIZE_INFO_ERROR, "解析用户注册信息失败");
 					return DESERIALIZE_INFO_ERROR;
 				}
@@ -269,7 +270,7 @@ namespace SystemContract
 				// 修改审核信息
 				if (0 != storeRegisterRecord(reg_user, reg_user.user_address)) 
 				{
-				//	bcwasm::println("修改用户审核记录失败");
+					bcwasm::println("修改用户审核记录失败");
 					BCWASM_EMIT_EVENT(Notify, STARE_RECORD_ERROR, "修改用户审核记录失败");
 					// rollback
 					bcwasmThrow("修改用户审核记录失败");
@@ -288,7 +289,7 @@ namespace SystemContract
 					int nRet = b.callInt64("addUser", db_reg_record.c_str());
 					if(0 != nRet)
 					{
-					//	bcwasm::println("新增用户到平台用户管理合约失败");
+						bcwasm::println("新增用户到平台用户管理合约失败");
 						BCWASM_EMIT_EVENT(Notify, STARE_RECORD_ERROR, "新增用户到平台用户管理合约失败");
 						// rollback
 						bcwasmThrow("新增用户到平台用户管理合约失败");
@@ -313,7 +314,7 @@ namespace SystemContract
 						int nRet = setUserRole(reg_user.name, reg_user.user_address, strRoles);
 						if(0 != nRet)
 						{
-						//	bcwasm::println("添加用户角色失败");
+							bcwasm::println("添加用户角色失败");
 							BCWASM_EMIT_EVENT(Notify, ADD_ROLE_ERROR, "添加用户角色失败");
 							// rollback
 							bcwasmThrow("添加用户角色失败");
@@ -327,7 +328,7 @@ namespace SystemContract
 				else
 				{
 					// 审核不通过
-				//	bcwasm::println("用户申请被拒绝");
+					bcwasm::println("用户申请被拒绝");
 					delState(reg_user.name);
 					m_listReject.push(strUserAddr);
 				}
@@ -369,7 +370,7 @@ namespace SystemContract
 				bcwasm::getState<std::string, std::string>(strUserName, strUserAddr);
 				if("" == strUserAddr)
 				{
-				//	bcwasm::println("不存在用户：[", UserName, "],请检查");
+					bcwasm::println("不存在用户：[", UserName, "],请检查");
 					return getResJson("1", "The user does not exist in the UserRegister", "\"\"");
 				}
 				return getAccountByAddress(strUserAddr.c_str());
