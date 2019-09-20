@@ -774,7 +774,7 @@ func (s *Ethereum) Start(srvr *p2p.Server) error {
 
 	if _, ok := s.engine.(consensus.Istanbul); ok {
 		for _, n := range p2p.GetBootNodes() {
-			srvr.AddConsensusPeer(discover.NewNode(n.ID, n.IP, n.UDP, n.TCP))
+			srvr.AddPeer(discover.NewNode(n.ID, n.IP, n.UDP, n.TCP))
 		}
 	} else if engine, ok := s.engine.(consensus.Bft); ok {
 		engine.SetPrivateKey(srvr.Config.PrivateKey)
