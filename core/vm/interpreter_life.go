@@ -23,6 +23,7 @@ var (
 	errReturnInvalidRlpFormat   = errors.New("interpreter_life: invalid rlp format.")
 	errReturnInsufficientParams = errors.New("interpreter_life: invalid input. ele must greater than 2")
 	errReturnInvalidAbi         = errors.New("interpreter_life: invalid abi, encoded fail.")
+	errFuncNameNotInTheAbis		= errors.New("interpreter_life: the FuncName is not in the Abi list")
 )
 
 const (
@@ -336,7 +337,7 @@ func parseInputFromAbi(vm *exec.VirtualMachine, input []byte, abi []byte) (txTyp
 	if v, ok := iRlpList[1].([]byte); ok {
 		funcName = string(v)
 	}
-
+	isFuncNameInTheAbis := false
 	var args []utils.InputParam
 	for _, v := range wasmabi.AbiArr {
 		if strings.EqualFold(funcName, v.Name) && strings.EqualFold(v.Type, "function") {
@@ -346,8 +347,13 @@ func parseInputFromAbi(vm *exec.VirtualMachine, input []byte, abi []byte) (txTyp
 			} else {
 				returnType = "void"
 			}
+			isFuncNameInTheAbis = true
 			break
 		}
+	}
+
+	if !isFuncNameInTheAbis {
+		return -1,"",nil,"",errFuncNameNotInTheAbis
 	}
 	argsRlp := iRlpList[2:]
 	if len(args) != len(argsRlp) {
@@ -440,3 +446,4 @@ func parseRlpData(rlpData []byte) (int64, []byte, []byte, error) {
 	}
 	return txType, abi, code, nil
 }
+
