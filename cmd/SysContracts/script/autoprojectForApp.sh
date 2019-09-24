@@ -120,7 +120,8 @@ main(){
     if [ "-${TARGET}" == "-" ]
     then
         build
-        cp ${BIN_PATH}/ctool ${SCRIPT_DIR}/../build
+        #cp ${BIN_PATH}/ctool ${SCRIPT_DIR}/../build
+        cp ../external/bin/ctool ${SCRIPT_DIR}/../build
     else 
         createDirectory   
 
@@ -155,7 +156,8 @@ cd ${CURRENT_PATH}
 BIN_PATH=${WORKSPACE_PATH}/release/linux/bin
 
 
-HOME=${WORKSPACE_PATH}/cmd/SysContracts # PlatONE-Go/cmd/SystemContracts
+# HOME=${WORKSPACE_PATH}/cmd/SysContracts # PlatONE-Go/cmd/SystemContracts
+HOME=.
 TARGET=$2
 SIGN=$3
 USER_PATH="${HOME}/appContract"
