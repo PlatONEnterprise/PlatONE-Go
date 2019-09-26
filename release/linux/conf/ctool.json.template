@@ -1,0 +1,7 @@
+{
+  "url":"http://NODE-IP:RPC-PORT",
+  "gas":"0x0",
+  "gasPrice":"0x0",
+  "from":"0xDEFAULT-ACCOUNT"
+}
+
