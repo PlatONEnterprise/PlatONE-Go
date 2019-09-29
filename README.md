@@ -1,6 +1,6 @@
 ## Go PlatONE
 
-Welcome to the PlatONE source code repository! This software is Ethereum-based and it has changed some peculiarities according the PlatONE's [documents](https://platonenterprise.github.io/Docs/)
+Welcome to the PlatONE source code repository! This software is Ethereum-based and it has changed some peculiarities according the PlatONE's [Documents](https://platonenterprise.github.io/Docs/)
 
 ## Use
 
