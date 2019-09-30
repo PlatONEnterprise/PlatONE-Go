@@ -121,7 +121,7 @@ main(){
     then
         build
         #cp ${BIN_PATH}/ctool ${SCRIPT_DIR}/../build
-        cp ../external/bin/ctool ${SCRIPT_DIR}/../build
+        #cp ../external/bin/ctool ${SCRIPT_DIR}/../build
     else 
         createDirectory   
 
