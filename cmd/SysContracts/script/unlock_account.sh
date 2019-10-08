@@ -68,7 +68,8 @@ cd ${SCRIPT_DIR}/../..
 WORKSPACE_PATH=`pwd`
 cd ${CURRENT_PATH}
 
-BIN_PATH=${WORKSPACE_PATH}/chain/PlatONE_linux/bin
+# BIN_PATH=${WORKSPACE_PATH}/chain/PlatONE_linux/bin
+[ "$BIN_PATH" == "" ] && BIN_PATH=${WORKSPACE_PATH}/../release/linux/bin/
 
 while [ ! $# -eq 0 ]
 do
