@@ -106,13 +106,6 @@ function readFile() {
         exit
     fi
 
-    if [ -d ${LOG_DIR} ]; then
-        echo "logdir: ${LOG_DIR}"
-    else
-        mkdir -p ${LOG_DIR}
-        echo "logdir: ${LOG_DIR}"
-    fi
-
     if [ -f ${NODE_DIR}/node.ip ]; then
         IP=`cat ${NODE_DIR}/node.ip`
         echo "node.ip: ${IP}"
@@ -157,6 +150,14 @@ function readFile() {
     readConf $NODE_ID "logsize"
     readConf $NODE_ID "logdir"
     readConf $NODE_ID "extraoptions"
+
+
+    if [ -d ${LOG_DIR} ]; then
+        echo "logdir: ${LOG_DIR}"
+    else
+        mkdir -p ${LOG_DIR}
+        echo "logdir: ${LOG_DIR}"
+    fi
 }
 
 readFile

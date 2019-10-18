@@ -242,7 +242,7 @@ function saveConf() {
 
     res=`cat ${node_conf} | grep "$2"`
     if [[ ${res} != "" ]];then
-        cat $node_conf | sed "s/${2}=.*/${2}=${3}/g" | cat > $node_conf_tmp
+        cat $node_conf | sed "s#${2}=.*#${2}=${3}#g" | cat > $node_conf_tmp
         mv $node_conf_tmp $node_conf
     else
         echo "${2}=${3}" >> ${node_conf}
