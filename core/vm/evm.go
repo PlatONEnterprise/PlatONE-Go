@@ -31,6 +31,7 @@ import (
 // emptyCodeHash is used by create to ensure deployment is disallowed to already
 // deployed contract addresses (relevant after the account abstraction).
 var emptyCodeHash = crypto.Keccak256Hash(nil)
+var emptyContractError = errors.New("Empty Contract")
 
 type (
 	// CanTransferFunc is the signature of a transfer guard function
@@ -52,6 +53,10 @@ func run(evm *EVM, contract *Contract, input []byte, readOnly bool) ([]byte, err
 		if p := precompiles[*contract.CodeAddr]; p != nil {
 			return RunPrecompiledContract(p, input, contract)
 		}
+	}
+
+	if input != nil && contract.Code == nil{
+		return nil,emptyContractError
 	}
 
 	for _, interpreter := range evm.interpreters {
@@ -225,9 +230,6 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas 
 		defer func() { // Lazy evaluation of the parameters
 			evm.vmConfig.Tracer.CaptureEnd(ret, gas-contract.Gas, time.Since(start), err)
 		}()
-	}
-	if input != nil && contract.Code == nil{
-		return ret, contract.Gas, errors.New("Empty Contract")
 	}
 
 	ret, err = run(evm, contract, input, false)
