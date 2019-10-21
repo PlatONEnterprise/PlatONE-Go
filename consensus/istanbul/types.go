@@ -43,6 +43,7 @@ type Proposal interface {
 
 type Request struct {
 	Proposal Proposal
+	Round 	 *big.Int
 }
 
 // View includes a round number and a sequence number.

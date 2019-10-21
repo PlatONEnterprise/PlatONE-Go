@@ -34,7 +34,7 @@ type Config struct {
 */
 type Config params.IstanbulConfig
 
-var DefaultConfig = &Config{
+var  DefaultConfig = &Config{
 	RequestTimeout: 10000,
 	BlockPeriod:    1,
 	ProposerPolicy: RoundRobin,
