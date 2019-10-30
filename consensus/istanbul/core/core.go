@@ -271,7 +271,9 @@ func (c *core) startNewRoundWhenEmpty(round *big.Int) {
 	c.roundChangeSet = newRoundChangeSet(c.valSet)
 	// New snapshot for new round
 	logger.Debug("startNewRound", "roundChange", true)
-	c.updateRoundState(newView, c.valSet, true)
+	//c.updateRoundState(newView, c.valSet, true)
+	c.current = newRoundState(newView, c.valSet, common.Hash{}, nil, nil, c.backend.HasBadProposal, big.NewInt(0), nil)
+
 	// Calculate new proposer
 	c.valSet.CalcProposer(lastProposer, newView.Round.Uint64())
 	c.waitingForRoundChange = false
@@ -352,6 +354,7 @@ func (c *core) startNewRound(round *big.Int) {
 		if c.current.IsHashLocked() {
 			r := &istanbul.Request{
 				Proposal: c.current.Proposal(), //c.current.Proposal would be the locked proposal by previous proposer, see updateRoundState
+				Round: newView.Round,
 			}
 			c.sendPreprepare(r)
 		} else if c.current.pendingRequest != nil {

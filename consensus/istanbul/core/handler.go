@@ -91,6 +91,7 @@ func (c *core) handleEvents() {
 			case istanbul.RequestEvent:
 				r := &istanbul.Request{
 					Proposal: ev.Proposal,
+					Round:c.currentView().Round,
 				}
 				err := c.handleRequest(r)
 				if err == errFutureMessage {
