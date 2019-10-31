@@ -24,7 +24,6 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
-	"math/big"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -354,6 +353,7 @@ func (s *SolInput) GenerateInputData() ([]byte, error) {
 			common.ErrPrintln("sol SpliceParam error: ", err)
 			return nil, err
 		}
+		// parsing arg type
 		var argument Argument
 		if argument.Type, err = NewType(paramType); err != nil {
 			common.ErrPrintln("sol NewType error: ", err)
@@ -361,6 +361,7 @@ func (s *SolInput) GenerateInputData() ([]byte, error) {
 		}
 		arguments = append(arguments, argument)
 
+		// parsing arg value
 		arg, err := SolInputTypeConversion(paramType, paramValue)
 		if err != nil {
 			common.ErrPrintln("sol SolInputTypeConversion error: ", err)
@@ -374,7 +375,9 @@ func (s *SolInput) GenerateInputData() ([]byte, error) {
 		common.ErrPrintln("pack args error: ", err)
 		return nil, err
 	}
+	// sig func
 	inputBytes := crypto.Keccak256([]byte(Sig(s.FuncName, paramTypes)))[:4]
+	// append params byte stream
 	inputBytes = append(inputBytes, paramsBytes...)
 	return inputBytes, nil
 }
@@ -406,22 +409,22 @@ func SolInputTypeConversion(t string, v string) (interface{}, error) {
 	switch {
 	case strings.HasPrefix(t, "address"):
 		return common.HexToAddress(v), nil
-	case strings.HasPrefix(t, "bytes"):
-		if len(v) < 3 {
-			return nil, fmt.Errorf("input format error: %s", v)
-		}
-
-		v = v[1 : len(v)-1]
-		vs := strings.Split(v, ",")
-		var res []byte
-		for _, value := range vs {
-			intV, err := strconv.Atoi(value)
-			if err != nil || intV > 255 {
-				return nil, fmt.Errorf("bytes input strconv a to i error || value > 255 : %s", value)
-			}
-			res = append(res, byte(intV))
-		}
-		return res, nil
+	//case strings.HasPrefix(t, "bytes"):
+	//	if len(v) < 3 {
+	//		return nil, fmt.Errorf("input format error: %s", v)
+	//	}
+	//
+	//	v = v[1 : len(v)-1]
+	//	vs := strings.Split(v, ",")
+	//	var res []byte
+	//	for _, value := range vs {
+	//		intV, err := strconv.Atoi(value)
+	//		if err != nil || intV > 255 {
+	//			return nil, fmt.Errorf("bytes input strconv a to i error || value > 255 : %s", value)
+	//		}
+	//		res = append(res, byte(intV))
+	//	}
+	//	return res, nil
 		//todo: 反生成数组形式
 		//parts := regexp.MustCompile(`bytes([0-9]*)`).FindStringSubmatch(t)
 		//if parts[1] != "" {
@@ -452,19 +455,19 @@ func SolInputTypeConversion(t string, v string) (interface{}, error) {
 			return SolInputStringTOInt(v, 32, parts[1] == "")
 		case "64":
 			return SolInputStringTOInt(v, 64, parts[1] == "")
-		case "128", "256":
-			if parts[1] == "" {
-				value, err := strconv.ParseInt(v, 10, 64)
-				if err != nil {
-					return nil, err
-				}
-				return big.NewInt(0).SetInt64(value), nil
-			}
-			value, err := strconv.ParseUint(v, 10, 64)
-			if err != nil {
-				return nil, err
-			}
-			return big.NewInt(0).SetUint64(value), nil
+		//case "128", "256":
+		//	if parts[1] == "" {
+		//		value, err := strconv.ParseInt(v, 10, 64)
+		//		if err != nil {
+		//			return nil, err
+		//		}
+		//		return big.NewInt(0).SetInt64(value), nil
+		//	}
+		//	value, err := strconv.ParseUint(v, 10, 64)
+		//	if err != nil {
+		//		return nil, err
+		//	}
+		//	return big.NewInt(0).SetUint64(value), nil
 		}
 		return nil, errors.New("parse input type int has err bitsize")
 	case strings.HasPrefix(t, "bool"):

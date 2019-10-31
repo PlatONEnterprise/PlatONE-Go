@@ -1092,6 +1092,7 @@ func envBCWasmDelegateCallInt64(vm *exec.VirtualMachine) int64 {
 	paramsLen := int(int32(vm.GetCurrentFrame().Locals[2]))
 
 	address := vm.Memory.Memory[addr : addr+20]
+	// Resolve the delegate call solidity contract input problem
 	input, err := parseWasmCallSolInput(vm, address, vm.Memory.Memory[params:params+paramsLen])
 	if err != nil {
 		common.ErrPrintln("call parseWasmInput err: ", err.Error())
@@ -1127,6 +1128,7 @@ func envBCWasmDelegateCallString(vm *exec.VirtualMachine) int64 {
 	paramsLen := int(int32(vm.GetCurrentFrame().Locals[2]))
 
 	address := vm.Memory.Memory[addr : addr+20]
+	// Resolve the delegate call solidity contract input problem
 	input, err := parseWasmCallSolInput(vm, address, vm.Memory.Memory[params:params+paramsLen])
 	if err != nil {
 		common.ErrPrintln("call parseWasmInput err: ", err.Error())

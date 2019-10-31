@@ -301,8 +301,11 @@ func ToBytes(source interface{}) ([]byte, error) {
 }
 
 func WasmCallResultCompatibleSolString(res []byte) []byte {
+	// The first 32 bits are offsets, and the next 32 bits are string lengths
 	rl := len(res)
+	// Sol contract string type return value, longer than 64, and the first byte value is 0
 	if rl >= 64 && res[0] == byte(0) && strings.EqualFold(GetCurrentInterpreterType(), "all") {
+		// Get string length
 		lengthBytes := bytes.TrimLeft(res[32:64], "\x00")
 		length := 0
 		for i := 0; i < len(lengthBytes); i++ {
@@ -311,6 +314,7 @@ func WasmCallResultCompatibleSolString(res []byte) []byte {
 		if rl < 64+length {
 			return res
 		}
+		// Intercept string
 		res = res[64 : 64+length]
 		res = append(res, byte(0))
 	}
@@ -321,6 +325,7 @@ func WasmCallResultCompatibleSolInt64(res []byte) []byte {
 	if !strings.EqualFold(GetCurrentInterpreterType(), "all") || len(res) != 32 {
 		return res
 	}
+	// The first 24 bytes are all 255 for negative numbers, all 0 for positive numbers
 	if !bytes.Equal(bytes.Repeat([]byte{255}, 24), res[:24]) && !bytes.Equal(res[:24], make([]byte, 24)) {
 		return nil
 	}
