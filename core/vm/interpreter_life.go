@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/math"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/lru"
@@ -23,11 +24,7 @@ var (
 	errReturnInvalidRlpFormat   = errors.New("interpreter_life: invalid rlp format.")
 	errReturnInsufficientParams = errors.New("interpreter_life: invalid input. ele must greater than 2")
 	errReturnInvalidAbi         = errors.New("interpreter_life: invalid abi, encoded fail.")
-	errFuncNameNotInTheAbis		= errors.New("interpreter_life: the FuncName is not in the Abi list")
-)
-
-const (
-	CALL_CANTRACT_FLAG = 9
+	errFuncNameNotInTheAbis     = errors.New("interpreter_life: the FuncName is not in the Abi list")
 )
 
 var DEFAULT_VM_CONFIG = exec.VMConfig{
@@ -234,7 +231,7 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 	// todo: more type need to be completed
 	switch returnType {
 	case "void", "int8", "int", "int32", "int64":
-		if txType == CALL_CANTRACT_FLAG {
+		if txType == common.CALL_CANTRACT_FLAG {
 			return utils.Int64ToBytes(res), nil
 		}
 		bigRes := new(big.Int)
@@ -242,7 +239,7 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 		finalRes := utils.Align32Bytes(math.U256(bigRes).Bytes())
 		return finalRes, nil
 	case "uint8", "uint16", "uint32", "uint64":
-		if txType == CALL_CANTRACT_FLAG {
+		if txType == common.CALL_CANTRACT_FLAG {
 			return utils.Uint64ToBytes(uint64(res)), nil
 		}
 		finalRes := utils.Align32Bytes(utils.Uint64ToBytes((uint64(res))))
@@ -256,7 +253,7 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 			}
 			returnBytes = append(returnBytes, v)
 		}
-		if txType == CALL_CANTRACT_FLAG {
+		if txType == common.CALL_CANTRACT_FLAG || txType == common.TxTypeCallSollCompatibleWasm {
 			return returnBytes, nil
 		}
 		strHash := common.BytesToHash(common.Int32ToBytes(32))
@@ -280,18 +277,46 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 
 // CanRun tells if the contract, passed as an argument, can be run
 // by the current interpreter
-func (in *WASMInterpreter) CanRun(code []byte) bool {
-	if !strings.EqualFold(common.GetCurrentInterpreterType(), "all"){
-		return true
+func (in *WASMInterpreter) CanRun(code, input []byte, contract *Contract) (bool, []byte) {
+	if !strings.EqualFold(common.GetCurrentInterpreterType(), "all") {
+		return true, input
 	}
-	_, _, bytecode, err := parseRlpData(code)
-	if err != nil {
-		return false
+
+	// Handling internal calls
+	addr := common.Address{}
+	if contract.Caller() == addr {
+		return true, input
 	}
-	if bytes.Equal(bytecode[:8], []byte{0, 97, 115, 109, 1, 0, 0, 0}){
-		return true
+
+	// Handling non-wasm contracts, unable to execute.
+	if ok, _, _, _ := common.IsWasmContractCode(code); !ok {
+		return false, input
 	}
-	return false
+
+	// Extra processing delegate call
+	if contract.DelegateCall {
+		return true, input
+	}
+
+	// Handling user calls
+	callerCode := in.wasmStateDB.StateDB.GetCode(contract.Caller())
+	if callerCode == nil {
+		return true, input
+	}
+
+	// Handling caller is wasm contracts
+	if ok, _, _, _ := common.IsWasmContractCode(callerCode); ok {
+		return true, input
+	}
+	// Handling the sol contract call wasm contract
+	var (
+		wasmInput []byte
+		err       error
+	)
+	if wasmInput, err = abi.GenerateInputData(&abi.WasmInput{}, input); err != nil {
+		return false, input
+	}
+	return true, wasmInput
 }
 
 // parse input(payload)
@@ -353,7 +378,7 @@ func parseInputFromAbi(vm *exec.VirtualMachine, input []byte, abi []byte) (txTyp
 	}
 
 	if !isFuncNameInTheAbis {
-		return -1,"",nil,"",errFuncNameNotInTheAbis
+		return -1, "", nil, "", errFuncNameNotInTheAbis
 	}
 	argsRlp := iRlpList[2:]
 	if len(args) != len(argsRlp) {
@@ -446,4 +471,3 @@ func parseRlpData(rlpData []byte) (int64, []byte, []byte, error) {
 	}
 	return txType, abi, code, nil
 }
-

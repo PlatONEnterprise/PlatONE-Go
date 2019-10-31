@@ -1,6 +1,5 @@
 package resolver
 
-
 /*
 #cgo CFLAGS: -I../softfloat/source/include
 #define SOFTFLOAT_FAST_INT64
@@ -15,9 +14,6 @@ package resolver
 
 */
 import "C"
-
-
-
 
 import "C"
 import (
@@ -218,7 +214,7 @@ func newCfcSet() map[string]map[string]*exec.FunctionImport {
 			"nizkVerifyProof": &exec.FunctionImport{Execute: envNizkVerifyProof, GasCost: envNizkVerifyProofGasCost},
 
 			//sm2
-			"smSigVerify":	&exec.FunctionImport{Execute: envSmSigVerify, GasCost: envSMVerifyGasCost},
+			"smSigVerify": &exec.FunctionImport{Execute: envSmSigVerify, GasCost: envSMVerifyGasCost},
 		},
 	}
 }
@@ -698,7 +694,6 @@ func envEcrecoverGasCost(vm *exec.VirtualMachine) (uint64, error) {
 	return 280738, nil
 }
 
-
 func envSmSigVerify(vm *exec.VirtualMachine) int64 {
 	msgOffset := int(int32(vm.GetCurrentFrame().Locals[0]))
 	msgSize := int(int32(vm.GetCurrentFrame().Locals[1]))
@@ -711,10 +706,10 @@ func envSmSigVerify(vm *exec.VirtualMachine) int64 {
 	resultOffset := int(int32(vm.GetCurrentFrame().Locals[8]))
 	resultSize := int(int32(vm.GetCurrentFrame().Locals[9]))
 
-	msg := vm.Memory.Memory[msgOffset : msgOffset + msgSize]
-	userid := vm.Memory.Memory[useridOffset: useridOffset + useridSize]
+	msg := vm.Memory.Memory[msgOffset : msgOffset+msgSize]
+	userid := vm.Memory.Memory[useridOffset : useridOffset+useridSize]
 	pubkey := vm.Memory.Memory[pubkeyOffset : pubkeyOffset+pubkeySize]
-	sig := vm.Memory.Memory[sigOffset: sigOffset + sigSize]
+	sig := vm.Memory.Memory[sigOffset : sigOffset+sigSize]
 	msg = append(msg, 0)
 	userid = append(userid, 0)
 	pubkey = append(pubkey, 0)
@@ -728,7 +723,7 @@ func envSmSigVerify(vm *exec.VirtualMachine) int64 {
 	//result := C.smSigVerify(msgPtr, useridPtr, pubkeyPtr, sigPtr)
 	result := C.sm_verify_sig(msgPtr, pubkeyPtr, sigPtr)
 	ret := "0"
-	if result == 1{
+	if result == 1 {
 		ret = "1"
 	}
 	resultBts := []byte(ret)
@@ -742,7 +737,6 @@ func envSmSigVerify(vm *exec.VirtualMachine) int64 {
 
 	return 0
 }
-
 
 func envPailHomAdd(vm *exec.VirtualMachine) int64 {
 	cipher1Offset := int(int32(vm.GetCurrentFrame().Locals[0]))
@@ -764,7 +758,6 @@ func envPailHomAdd(vm *exec.VirtualMachine) int64 {
 	cipher1Ptr := (*C.char)(unsafe.Pointer(&cipher1[0]))
 	cipher2Ptr := (*C.char)(unsafe.Pointer(&cipher2[0]))
 	pubkeyPtr := (*C.char)(unsafe.Pointer(&pubkey[0]))
-
 
 	resultPtr := C.pailHomAdd(cipher1Ptr, cipher2Ptr, pubkeyPtr)
 	resultStr := C.GoString(resultPtr)
@@ -802,7 +795,6 @@ func envPailHomSub(vm *exec.VirtualMachine) int64 {
 	cipher1Ptr := (*C.char)(unsafe.Pointer(&cipher1[0]))
 	cipher2Ptr := (*C.char)(unsafe.Pointer(&cipher2[0]))
 	pubkeyPtr := (*C.char)(unsafe.Pointer(&pubkey[0]))
-
 
 	resultPtr := C.pailHomSub(cipher1Ptr, cipher2Ptr, pubkeyPtr)
 	resultStr := C.GoString(resultPtr)
@@ -856,12 +848,11 @@ func envNizkVerifyProof(vm *exec.VirtualMachine) int64 {
 	fromPubkeyPtr := (*C.char)(unsafe.Pointer(&fromPubkey[0]))
 	toPubkeyPtr := (*C.char)(unsafe.Pointer(&toPubkey[0]))
 
-
 	resultPtr := C.nizkVerifyProof(paiPtr, fromBalCipherPtr, fromAmountCipherPtr, toAmountCipherPtr, fromPubkeyPtr, toPubkeyPtr)
 	resultStr := C.GoString(resultPtr)
 	C.free(unsafe.Pointer(resultPtr))
 
-	resultBts := []byte(resultStr) 	
+	resultBts := []byte(resultStr)
 	resultBts = append(resultBts, 0)
 
 	if resultSize < len(resultBts) {
@@ -1054,21 +1045,28 @@ func envBCWasmCall(vm *exec.VirtualMachine) int64 {
 	params := int(int32(vm.GetCurrentFrame().Locals[1]))
 	paramsLen := int(int32(vm.GetCurrentFrame().Locals[2]))
 
-	_, err := vm.Context.StateDB.Call(vm.Memory.Memory[addr:addr+20], vm.Memory.Memory[params:params+paramsLen])
+	_, err := vm.Context.StateDB.Call(vm.Memory.Memory[addr : addr+20], vm.Memory.Memory[params:params+paramsLen])
 	if err != nil {
-		fmt.Printf("call error,%s", err.Error())
+		common.ErrPrintln("call error: ", err.Error())
 		return 0
 	}
 	return 0
 }
+
 func envBCWasmDelegateCall(vm *exec.VirtualMachine) int64 {
 	addr := int(int32(vm.GetCurrentFrame().Locals[0]))
 	params := int(int32(vm.GetCurrentFrame().Locals[1]))
 	paramsLen := int(int32(vm.GetCurrentFrame().Locals[2]))
 
-	_, err := vm.Context.StateDB.DelegateCall(vm.Memory.Memory[addr:addr+20], vm.Memory.Memory[params:params+paramsLen])
+	address := vm.Memory.Memory[addr : addr+20]
+	input, err := parseWasmCallSolInput(vm, address, vm.Memory.Memory[params:params+paramsLen])
 	if err != nil {
-		fmt.Printf("call error,%s", err.Error())
+		common.ErrPrintln("call parseWasmInput err: ", err.Error())
+		return 0
+	}
+	_, err = vm.Context.StateDB.DelegateCall(address, input)
+	if err != nil {
+		common.ErrPrintln("call error: ", err.Error())
 		return 0
 	}
 	return 0
@@ -1079,9 +1077,9 @@ func envBCWasmCallInt64(vm *exec.VirtualMachine) int64 {
 	params := int(int32(vm.GetCurrentFrame().Locals[1]))
 	paramsLen := int(int32(vm.GetCurrentFrame().Locals[2]))
 
-	ret, err := vm.Context.StateDB.Call(vm.Memory.Memory[addr:addr+20], vm.Memory.Memory[params:params+paramsLen])
+	ret, err := vm.Context.StateDB.Call(vm.Memory.Memory[addr : addr+20], vm.Memory.Memory[params:params+paramsLen])
 	if err != nil {
-		fmt.Printf("call error,%s", err.Error())
+		common.ErrPrintln("call error: ", err.Error())
 		return 0
 	}
 	ret = common.WasmCallResultCompatibleSolInt64(ret)
@@ -1093,9 +1091,16 @@ func envBCWasmDelegateCallInt64(vm *exec.VirtualMachine) int64 {
 	params := int(int32(vm.GetCurrentFrame().Locals[1]))
 	paramsLen := int(int32(vm.GetCurrentFrame().Locals[2]))
 
-	ret, err := vm.Context.StateDB.DelegateCall(vm.Memory.Memory[addr:addr+20], vm.Memory.Memory[params:params+paramsLen])
+	address := vm.Memory.Memory[addr : addr+20]
+	input, err := parseWasmCallSolInput(vm, address, vm.Memory.Memory[params:params+paramsLen])
 	if err != nil {
-		fmt.Printf("call error,%s", err.Error())
+		common.ErrPrintln("call parseWasmInput err: ", err.Error())
+		return 0
+	}
+
+	ret, err := vm.Context.StateDB.DelegateCall(address, input)
+	if err != nil {
+		common.ErrPrintln("call error: ", err.Error())
 		return 0
 	}
 	ret = common.WasmCallResultCompatibleSolInt64(ret)
@@ -1107,9 +1112,9 @@ func envBCWasmCallString(vm *exec.VirtualMachine) int64 {
 	params := int(int32(vm.GetCurrentFrame().Locals[1]))
 	paramsLen := int(int32(vm.GetCurrentFrame().Locals[2]))
 
-	ret, err := vm.Context.StateDB.Call(vm.Memory.Memory[addr:addr+20], vm.Memory.Memory[params:params+paramsLen])
+	ret, err := vm.Context.StateDB.Call(vm.Memory.Memory[addr : addr+20], vm.Memory.Memory[params:params+paramsLen])
 	if err != nil {
-		fmt.Printf("call error,%s", err.Error())
+		common.ErrPrintln("call error: ", err.Error())
 		return 0
 	}
 	ret = common.WasmCallResultCompatibleSolString(ret)
@@ -1121,9 +1126,16 @@ func envBCWasmDelegateCallString(vm *exec.VirtualMachine) int64 {
 	params := int(int32(vm.GetCurrentFrame().Locals[1]))
 	paramsLen := int(int32(vm.GetCurrentFrame().Locals[2]))
 
-	ret, err := vm.Context.StateDB.DelegateCall(vm.Memory.Memory[addr:addr+20], vm.Memory.Memory[params:params+paramsLen])
+	address := vm.Memory.Memory[addr : addr+20]
+	input, err := parseWasmCallSolInput(vm, address, vm.Memory.Memory[params:params+paramsLen])
 	if err != nil {
-		fmt.Printf("call error,%s", err.Error())
+		common.ErrPrintln("call parseWasmInput err: ", err.Error())
+		return 0
+	}
+
+	ret, err := vm.Context.StateDB.DelegateCall(address, input)
+	if err != nil {
+		common.ErrPrintln("call error: ", err.Error())
 		return 0
 	}
 	ret = common.WasmCallResultCompatibleSolString(ret)

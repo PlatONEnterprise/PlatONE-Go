@@ -17,7 +17,14 @@
 package abi
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"math/big"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -206,4 +213,351 @@ func (t Type) pack(v reflect.Value) ([]byte, error) {
 // prefixing.
 func (t Type) requiresLengthPrefix() bool {
 	return t.T == StringTy || t.T == BytesTy || t.T == SliceTy
+}
+
+const (
+	ContractTypeWasm     = "wasm"
+	ContractTypeSolidity = "sol"
+)
+
+type ContractType interface {
+	GenerateInputData() ([]byte, error)
+	NewContractTypeFromJson([]byte) error
+}
+
+func GenerateInputData(ct ContractType, input []byte) ([]byte, error) {
+	if err := ct.NewContractTypeFromJson(input); err != nil {
+		return input, err
+	}
+	return ct.GenerateInputData()
+}
+
+type WasmInput struct {
+	TxType     int      `json:"-"`
+	FuncName   string   `json:"func_name"`
+	FuncParams []string `json:"func_params"`
+}
+
+func (c *WasmInput) NewContractTypeFromJson(input []byte) error {
+	var err error
+	if err = json.Unmarshal(input, c); err != nil {
+		common.ErrPrintln("GenerateInputData sol json unmarshal error: ", err)
+		return err
+	}
+	return err
+}
+
+// Generate the input data of the wasm contract
+func (c *WasmInput) GenerateInputData() ([]byte, error) {
+
+	if c.FuncName == "" {
+		common.ErrPrintln("miss wasm func name")
+		return nil, errors.New("miss wasm func name")
+	}
+	c.TxType = common.TxTypeCallSollCompatibleWasm
+
+	paramArr := [][]byte{
+		common.Int64ToBytes(int64(c.TxType)),
+		[]byte(c.FuncName),
+	}
+
+	for _, param := range c.FuncParams {
+		paramType, paramValue, err := SpliceParam(param)
+		if err != nil {
+			common.ErrPrintln("SpliceParam wasm param err: ", err)
+			return nil, err
+		}
+		p, err := StringConverter(paramValue, paramType)
+		if err != nil {
+			common.ErrPrintln("StringConverter wasm param err: ", err)
+			return nil, err
+		}
+		paramArr = append(paramArr, p)
+	}
+
+	paramBytes, e := rlp.EncodeToBytes(paramArr)
+	if e != nil {
+		common.ErrPrintln("rlp.EncodeToBytes wasm param err: ", e)
+		return nil, fmt.Errorf("rpl encode error,%s", e.Error())
+	}
+	return paramBytes, nil
+}
+
+func SpliceParam(param string) (paramType string, paramValue string, err error) {
+	var (
+		errMissParamValueType = errors.New("func param miss param value type")
+		errParamFormat        = errors.New("func param format error")
+	)
+
+	if param == "" {
+		err = errMissParamValueType
+		return
+	}
+	reg := regexp.MustCompile(`(.*)\((.*)\)`)
+	if p := reg.FindStringSubmatch(param); len(p) == 3 {
+		paramType = p[1]
+		paramValue = p[2]
+		return
+	}
+	err = errParamFormat
+	return
+}
+
+func StringConverter(source string, t string) ([]byte, error) {
+	switch t {
+	case "int32", "uint32", "uint", "int":
+		dest, err := strconv.Atoi(source)
+		return common.Int32ToBytes(int32(dest)), err
+	case "int64", "uint64":
+		dest, err := strconv.ParseInt(source, 10, 64)
+		return common.Int64ToBytes(dest), err
+	case "float32":
+		dest, err := strconv.ParseFloat(source, 32)
+		return common.Float32ToBytes(float32(dest)), err
+	case "float64":
+		dest, err := strconv.ParseFloat(source, 64)
+		return common.Float64ToBytes(dest), err
+	case "bool":
+		if "true" == source || "false" == source {
+			return common.BoolToBytes("true" == source), nil
+		} else {
+			return []byte{}, errors.New("invalid boolean param")
+		}
+	default:
+		return []byte(source), nil
+	}
+}
+
+type SolInput struct {
+	FuncName   string   `json:"func_name"`
+	FuncParams []string `json:"func_params"`
+}
+
+func (s *SolInput) NewContractTypeFromJson(input []byte) error {
+	var err error
+	if err = json.Unmarshal(input, s); err != nil {
+		common.ErrPrintln("GenerateInputData sol json unmarshal error: ", err)
+		return err
+	}
+	return err
+}
+
+// Generate input data for solidity contract
+func (s *SolInput) GenerateInputData() ([]byte, error) {
+	var arguments Arguments
+	var args []interface{}
+	var paramTypes []string
+
+	for _, param := range s.FuncParams {
+		paramType, paramValue, err := SpliceParam(param)
+		if err != nil {
+			common.ErrPrintln("sol SpliceParam error: ", err)
+			return nil, err
+		}
+		var argument Argument
+		if argument.Type, err = NewType(paramType); err != nil {
+			common.ErrPrintln("sol NewType error: ", err)
+			return nil, err
+		}
+		arguments = append(arguments, argument)
+
+		arg, err := SolInputTypeConversion(paramType, paramValue)
+		if err != nil {
+			common.ErrPrintln("sol SolInputTypeConversion error: ", err)
+			return nil, err
+		}
+		args = append(args, arg)
+		paramTypes = append(paramTypes, paramType)
+	}
+	paramsBytes, err := arguments.Pack(args...)
+	if err != nil {
+		common.ErrPrintln("pack args error: ", err)
+		return nil, err
+	}
+	inputBytes := crypto.Keccak256([]byte(Sig(s.FuncName, paramTypes)))[:4]
+	inputBytes = append(inputBytes, paramsBytes...)
+	return inputBytes, nil
+}
+
+func SetInputLength(input []byte) (res []byte) {
+	length := len(input)
+	if length == 0 {
+		return
+	}
+	lengthStr := strconv.Itoa(length)
+	res = append(res, byte(len(lengthStr)))
+	for _, value := range strings.Split(lengthStr, "") {
+		v, _ := strconv.Atoi(value)
+		res = append(res, byte(v))
+	}
+	res = append(res, input...)
+	return
+}
+
+func Sig(funcName string, types []string) string {
+	ts := make([]string, len(types))
+	for i, t := range types {
+		ts[i] = t
+	}
+	return fmt.Sprintf("%v(%v)", funcName, strings.Join(ts, ","))
+}
+
+func SolInputTypeConversion(t string, v string) (interface{}, error) {
+	switch {
+	case strings.HasPrefix(t, "address"):
+		return common.HexToAddress(v), nil
+	case strings.HasPrefix(t, "bytes"):
+		if len(v) < 3 {
+			return nil, fmt.Errorf("input format error: %s", v)
+		}
+
+		v = v[1 : len(v)-1]
+		vs := strings.Split(v, ",")
+		var res []byte
+		for _, value := range vs {
+			intV, err := strconv.Atoi(value)
+			if err != nil || intV > 255 {
+				return nil, fmt.Errorf("bytes input strconv a to i error || value > 255 : %s", value)
+			}
+			res = append(res, byte(intV))
+		}
+		return res, nil
+		//todo: 反生成数组形式
+		//parts := regexp.MustCompile(`bytes([0-9]*)`).FindStringSubmatch(t)
+		//if parts[1] != "" {
+		//	length, err := strconv.Atoi(parts[1])
+		//	if err != nil {
+		//		return nil, err
+		//	}
+		//
+		//	if len(v) < 3 {
+		//		return nil, fmt.Errorf("input format error: %s", v)
+		//	}
+		//
+		//	v = v[1 : len(v)-1]
+		//	vs := strings.Split(v, ",")
+		//	if len(vs) != length {
+		//		return nil, fmt.Errorf("input format error: %s", v)
+		//	}
+		//}
+
+	case strings.HasPrefix(t, "int") || strings.HasPrefix(t, "uint"):
+		parts := regexp.MustCompile(`(u)?int([0-9]*)`).FindStringSubmatch(t)
+		switch parts[2] {
+		case "8":
+			return SolInputStringTOInt(v, 8, parts[1] == "")
+		case "16":
+			return SolInputStringTOInt(v, 16, parts[1] == "")
+		case "32":
+			return SolInputStringTOInt(v, 32, parts[1] == "")
+		case "64":
+			return SolInputStringTOInt(v, 64, parts[1] == "")
+		case "128", "256":
+			if parts[1] == "" {
+				value, err := strconv.ParseInt(v, 10, 64)
+				if err != nil {
+					return nil, err
+				}
+				return big.NewInt(0).SetInt64(value), nil
+			}
+			value, err := strconv.ParseUint(v, 10, 64)
+			if err != nil {
+				return nil, err
+			}
+			return big.NewInt(0).SetUint64(value), nil
+		}
+		return nil, errors.New("parse input type int has err bitsize")
+	case strings.HasPrefix(t, "bool"):
+		if v == "false" {
+			return false, nil
+		} else if v == "true" {
+			return true, nil
+		} else {
+			return false, errors.New("parse bool type error")
+		}
+	case strings.HasPrefix(t, "string"):
+		return v, nil
+	default:
+		return nil, errors.New("sol input type error")
+	}
+}
+
+func SolInputStringTOInt(v string, bitSize int, hasNotPrefixU bool) (interface{}, error) {
+	if hasNotPrefixU {
+		res, err := strconv.ParseInt(v, 10, bitSize)
+		if err != nil {
+			return nil, err
+		}
+		switch strconv.Itoa(bitSize) {
+		case "8":
+			return int8(res), nil
+		case "16":
+			return int16(res), nil
+		case "32":
+			return int32(res), nil
+		case "64":
+			return int64(res), nil
+		default:
+			return nil, fmt.Errorf("SolInputStringTOInt parsing int error. res: %d", res)
+		}
+	}
+	res, err := strconv.ParseUint(v, 10, bitSize)
+	if err != nil {
+		return nil, err
+	}
+	switch strconv.Itoa(bitSize) {
+	case "8":
+		return uint8(res), nil
+	case "16":
+		return uint16(res), nil
+	case "32":
+		return uint32(res), nil
+	case "64":
+		return uint64(res), nil
+	default:
+		return nil, fmt.Errorf("SolInputStringTOInt parsing uint error. res: %d", res)
+	}
+}
+
+func ParseWasmCallSolInput(input []byte) ([]byte, error) {
+	// Only used in compatibility mode
+	ptr := new(interface{})
+	err := rlp.Decode(bytes.NewReader(input), &ptr)
+	if err != nil {
+		return input, err
+	}
+	rlpList := reflect.ValueOf(ptr).Elem().Interface()
+	if _, ok := rlpList.([]interface{}); !ok {
+		return input, fmt.Errorf("error input rlp data type")
+	}
+	iRlpList := rlpList.([]interface{})
+	if len(iRlpList) < 2 {
+		return input, fmt.Errorf("error input rlp data count")
+	}
+	var (
+		funcName string
+		params   []string
+	)
+	v, ok := iRlpList[1].([]byte)
+	if !ok {
+		return input, fmt.Errorf("error input rlp data funcname")
+	}
+	funcName = string(v)
+
+	for _, v := range iRlpList[2:] {
+		vv, ok := v.([]byte)
+		if !ok {
+			return input, fmt.Errorf("error input rlp data funcparams")
+		}
+		params = append(params, string(vv))
+	}
+	solInput := SolInput{
+		FuncName:   funcName,
+		FuncParams: params,
+	}
+	newInput, err := solInput.GenerateInputData()
+	if err != nil {
+		return input, err
+	}
+	return newInput, nil
 }

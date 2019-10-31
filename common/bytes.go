@@ -318,28 +318,11 @@ func WasmCallResultCompatibleSolString(res []byte) []byte {
 }
 
 func WasmCallResultCompatibleSolInt64(res []byte) []byte {
-	if !strings.EqualFold(GetCurrentInterpreterType(), "all") {
+	if !strings.EqualFold(GetCurrentInterpreterType(), "all") || len(res) != 32 {
 		return res
 	}
-	defer func() {
-		if err := recover(); err != nil {
-			ErrPrintln("############# WasmCallResultCompatibleSolInt64 error:", err)
-		}
-	}()
-	if len(res) != 32 {
-		return res
+	if !bytes.Equal(bytes.Repeat([]byte{255}, 24), res[:24]) && !bytes.Equal(res[:24], make([]byte, 24)) {
+		return nil
 	}
-	// filter int64 out of bounds solidity return value
-	if !(bytes.Equal(res[:24], make([]byte, 24)) && res[24] <= 127){
-		return []byte{}
-	}
-	valueBytes := bytes.TrimLeft(res, "\x00")
-	value := int64(0)
-	for i := 0; i < len(valueBytes); i++ {
-		value += int64(valueBytes[i]) * int64(math.Pow(256, float64(len(valueBytes)-1-i)))
-	}
-	if value > int64(math.MaxInt64) {
-		return res
-	}
-	return Int64ToBytes(value)
+	return res[24:]
 }

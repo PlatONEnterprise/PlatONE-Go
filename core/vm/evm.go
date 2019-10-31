@@ -54,7 +54,10 @@ func run(evm *EVM, contract *Contract, input []byte, readOnly bool) ([]byte, err
 	}
 
 	for _, interpreter := range evm.interpreters {
-		if interpreter.CanRun(contract.Code) {
+		// TODO 尝试在这里进行换参数
+		var ok bool
+		ok, input = interpreter.CanRun(contract.Code, input, contract)
+		if ok {
 			if evm.interpreter != interpreter {
 				// Ensure that the interpreter pointer is set back
 				// to its current value upon return.
@@ -300,7 +303,11 @@ func (evm *EVM) DelegateCall(caller ContractRef, addr common.Address, input []by
 	contract := NewContract(caller, to, nil, gas).AsDelegate()
 	contract.SetCallCode(&addr, evm.StateDB.GetCodeHash(addr), evm.StateDB.GetCode(addr))
 
-	ret, err = run(evm, contract, input, false)
+	input, err = parseSolCallWasmInput(evm, addr, input)
+	if err == nil {
+		ret, err = run(evm, contract, input, false)
+	}
+
 	if err != nil {
 		evm.StateDB.RevertToSnapshot(snapshot)
 		if err != errExecutionReverted {

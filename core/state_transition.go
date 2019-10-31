@@ -45,7 +45,6 @@ var PermissionErr = errors.New("Permission Denied!")
 
 var migErr = errors.New("migration error!")
 
-
 /*
 A state transition is a change made when a transaction is applied to the current world state
 The state transitioning model does all the necessary work to work out a valid new state root.
@@ -788,7 +787,7 @@ func (st *StateTransition) doCallContract(address, funcName string, funcParams [
 	caller := vm.AccountRef(msg.From())
 	gas := uint64(0x999999999)
 
-	var txType int64 = vm.CALL_CANTRACT_FLAG // donot encode result in rlp
+	var txType int64 = common.CALL_CANTRACT_FLAG // donot encode result in rlp
 	paramArr := [][]byte{
 		common.Int64ToBytes(txType),
 		[]byte(funcName),
