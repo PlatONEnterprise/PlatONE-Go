@@ -24,6 +24,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"math/big"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -425,24 +426,24 @@ func SolInputTypeConversion(t string, v string) (interface{}, error) {
 	//		res = append(res, byte(intV))
 	//	}
 	//	return res, nil
-		//todo: 反生成数组形式
-		//parts := regexp.MustCompile(`bytes([0-9]*)`).FindStringSubmatch(t)
-		//if parts[1] != "" {
-		//	length, err := strconv.Atoi(parts[1])
-		//	if err != nil {
-		//		return nil, err
-		//	}
-		//
-		//	if len(v) < 3 {
-		//		return nil, fmt.Errorf("input format error: %s", v)
-		//	}
-		//
-		//	v = v[1 : len(v)-1]
-		//	vs := strings.Split(v, ",")
-		//	if len(vs) != length {
-		//		return nil, fmt.Errorf("input format error: %s", v)
-		//	}
-		//}
+	//todo: 反生成数组形式
+	//parts := regexp.MustCompile(`bytes([0-9]*)`).FindStringSubmatch(t)
+	//if parts[1] != "" {
+	//	length, err := strconv.Atoi(parts[1])
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//
+	//	if len(v) < 3 {
+	//		return nil, fmt.Errorf("input format error: %s", v)
+	//	}
+	//
+	//	v = v[1 : len(v)-1]
+	//	vs := strings.Split(v, ",")
+	//	if len(vs) != length {
+	//		return nil, fmt.Errorf("input format error: %s", v)
+	//	}
+	//}
 
 	case strings.HasPrefix(t, "int") || strings.HasPrefix(t, "uint"):
 		parts := regexp.MustCompile(`(u)?int([0-9]*)`).FindStringSubmatch(t)
@@ -455,19 +456,16 @@ func SolInputTypeConversion(t string, v string) (interface{}, error) {
 			return SolInputStringTOInt(v, 32, parts[1] == "")
 		case "64":
 			return SolInputStringTOInt(v, 64, parts[1] == "")
-		//case "128", "256":
-		//	if parts[1] == "" {
-		//		value, err := strconv.ParseInt(v, 10, 64)
-		//		if err != nil {
-		//			return nil, err
-		//		}
-		//		return big.NewInt(0).SetInt64(value), nil
-		//	}
-		//	value, err := strconv.ParseUint(v, 10, 64)
-		//	if err != nil {
-		//		return nil, err
-		//	}
-		//	return big.NewInt(0).SetUint64(value), nil
+		case "128", "256":
+			if parts[1] != "" && strings.Contains(v, "-") {
+				return nil, fmt.Errorf("value does not match type: Unsigned type passes negative number")
+			}
+			value, ok := big.NewInt(0).SetString(v, 10)
+			bit, _ := strconv.Atoi(parts[2])
+			if !ok || !common.IsSafeNumber(v, bit, parts[1] != "") {
+				return nil, fmt.Errorf("paring big int string error")
+			}
+			return value, nil
 		}
 		return nil, errors.New("parse input type int has err bitsize")
 	case strings.HasPrefix(t, "bool"):

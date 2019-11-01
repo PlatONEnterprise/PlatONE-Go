@@ -331,3 +331,25 @@ func WasmCallResultCompatibleSolInt64(res []byte) []byte {
 	}
 	return res[24:]
 }
+
+func IsSafeNumber(number string, bit int, isUnsigned bool) (res bool) {
+	if bit%8 != 0 {
+		return
+	}
+	count := bit / 8
+	var max, min *big.Int
+	if isUnsigned {
+		max = big.NewInt(0).SetBytes(bytes.Repeat([]byte{255}, count))
+		min = big.NewInt(0)
+	} else {
+		max = big.NewInt(0).SetBytes(bytes.Repeat([]byte{255}, count))
+		max = max.Div(big.NewInt(0).Sub(max, big.NewInt(1)), big.NewInt(2))
+		min = big.NewInt(0).Neg(big.NewInt(0).Add(max, big.NewInt(1)))
+	}
+	fmt.Println(max, min)
+	src, ok := big.NewInt(0).SetString(number, 10)
+	if !ok {
+		return
+	}
+	return src.Cmp(min) >= 0 && src.Cmp(max) <= 0
+}
