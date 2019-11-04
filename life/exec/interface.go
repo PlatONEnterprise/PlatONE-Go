@@ -15,6 +15,7 @@ type StateDB interface {
 	GetBalance(addr common.Address) *big.Int
 	Origin() common.Address
 	Caller() common.Address
+	GetCode(addr common.Address) []byte
 	Address() common.Address
 	CallValue() *big.Int
 	IsOwner(contractAddress common.Address, accountAddress common.Address) int64

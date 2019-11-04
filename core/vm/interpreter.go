@@ -18,6 +18,9 @@ package vm
 
 import (
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"strings"
 	"sync/atomic"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common/math"
@@ -43,7 +46,7 @@ type Interpreter interface {
 	//   }
 	// }
 	// ```
-	CanRun([]byte) bool
+	CanRun([]byte, []byte, *Contract) (bool, []byte)
 }
 
 // EVMInterpreter represents an EVM interpreter
@@ -246,6 +249,39 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 
 // CanRun tells if the contract, passed as an argument, can be
 // run by the current interpreter.
-func (in *EVMInterpreter) CanRun(code []byte) bool {
-	return true
+func (in *EVMInterpreter) CanRun(code []byte, input []byte, contract *Contract) (bool, []byte) {
+	// If it is not all mode, then it must be the mode of evm
+	if !strings.EqualFold(common.GetCurrentInterpreterType(), "all") {
+		return true, input
+	}
+
+	// Handling non-sol contracts
+	if ok, _, _, _ := common.IsWasmContractCode(code); ok {
+		return false, input
+	}
+
+	// Extra processing proxy call
+	if contract.DelegateCall {
+		return true, input
+	}
+
+	// Handling user calls
+	callerCode := in.evm.StateDB.GetCode(contract.Caller())
+	if callerCode == nil {
+		return true, input
+	}
+
+	// Handling callers is sol contracts
+	if ok, _, _, _ := common.IsWasmContractCode(callerCode); !ok {
+		return true, input
+	}
+	// Handling wasm contract call solidity
+	var (
+		solInput []byte
+		err      error
+	)
+	if solInput, err = abi.ParseWasmCallSolInput(input); err != nil {
+		return false, input
+	}
+	return true, solInput
 }
