@@ -17,7 +17,6 @@
 package vm
 
 import (
-	"errors"
 	"math/big"
 	"strings"
 	"sync/atomic"
@@ -31,7 +30,7 @@ import (
 // emptyCodeHash is used by create to ensure deployment is disallowed to already
 // deployed contract addresses (relevant after the account abstraction).
 var emptyCodeHash = crypto.Keccak256Hash(nil)
-var emptyContractError = errors.New("Empty Contract")
+// var emptyContractError = errors.New("Empty Contract")
 
 type (
 	// CanTransferFunc is the signature of a transfer guard function
@@ -55,9 +54,9 @@ func run(evm *EVM, contract *Contract, input []byte, readOnly bool) ([]byte, err
 		}
 	}
 
-	if input != nil && contract.Code == nil{
+	/*if input != nil && contract.Code == nil{
 		return nil,emptyContractError
-	}
+	}*/
 
 	for _, interpreter := range evm.interpreters {
 		// TODO 尝试在这里进行换参数
