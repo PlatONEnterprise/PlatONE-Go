@@ -370,6 +370,10 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 
 	// Block header query, collect the requested headers and reply
 	case msg.Code == GetBlockHeadersMsg:
+		if pm.isUnNormalBootNodesAtPeer(p) {
+			log.Warn("the bootNode is not a normal node. cancel exemption", "bootNode id: ", pm.peers.Peer(p.id).Peer.ID().String())
+			break
+		}
 		// Decode the complex header query
 		var query getBlockHeadersData
 		if err := msg.Decode(&query); err != nil {
@@ -682,6 +686,13 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 		p.MarkBlock(request.Block.Hash())
 		pm.fetcher.Enqueue(p.id, request.Block)
 
+		if !p2p.BootNodesNotExempt {
+			if hDiff := request.Block.NumberU64() - pm.blockchain.CurrentBlock().NumberU64(); hDiff == 1 || hDiff == 0 {
+				log.Info("enable boot nodes not exemption: ", "local", "at new block msg")
+				p2p.BootNodesNotExempt = true
+				p2p.UpdatePeer()
+			}
+		}
 		// Assuming the block is importable by the peer, but possibly not yet done so,
 		// calculate the head hash and block number that the peer truly must have.
 		var (
@@ -864,7 +875,7 @@ func (pm *ProtocolManager) BroadcastBlock(block *types.Block, propagate bool) {
 		for _, peer := range peers {
 			peer.AsyncSendNewBlockHash(block)
 		}
-		log.Trace("Announced block", "hash", fmt.Sprintf("%x", hash[:log.LogHashLen]), "blockNumber", block.Number(),"recipients", len(peers), "duration", common.PrettyDuration(time.Since(block.ReceivedAt)))
+		log.Trace("Announced block", "hash", fmt.Sprintf("%x", hash[:log.LogHashLen]), "blockNumber", block.Number(), "recipients", len(peers), "duration", common.PrettyDuration(time.Since(block.ReceivedAt)))
 	}
 }
 
@@ -1008,7 +1019,6 @@ func (pm *ProtocolManager) NodeInfo() *NodeInfo {
 		Head:    currentBlock.Hash(),
 	}
 }
-
 
 func (self *ProtocolManager) FindPeers(targets map[common.Address]bool) map[common.Address]consensus.Peer {
 	m := make(map[common.Address]consensus.Peer)

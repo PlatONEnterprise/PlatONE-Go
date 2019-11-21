@@ -39,12 +39,13 @@ var (
 )
 
 const CnsManagerAddr string = "0x0000000000000000000000000000000000000011"
+var ZeroAddress common.Address
 
 var fwProcessErr = errors.New("firewall process error!")
 var PermissionErr = errors.New("Permission Denied!")
+var CnsQueryErr = errors.New("[CNS ERROR]: No Registered!")
 
 var migErr = errors.New("migration error!")
-
 
 /*
 A state transition is a change made when a transaction is applied to the current world state
@@ -240,6 +241,10 @@ func ApplyMessage(evm *vm.EVM, msg Message, gp *GasPool) ([]byte, uint64, bool, 
 			log.Warn("GetCnsAddr failed", "err", err)
 			evm.StateDB.SetNonce(msg.From(), evm.StateDB.GetNonce(msg.From())+1)
 			return nil, 0, true, nil
+		}
+
+		if *addr == ZeroAddress {
+			return nil, 0, true, CnsQueryErr
 		}
 
 		msg.SetTo(*addr)
@@ -788,7 +793,7 @@ func (st *StateTransition) doCallContract(address, funcName string, funcParams [
 	caller := vm.AccountRef(msg.From())
 	gas := uint64(0x999999999)
 
-	var txType int64 = vm.CALL_CANTRACT_FLAG // donot encode result in rlp
+	var txType int64 = common.CALL_CANTRACT_FLAG // donot encode result in rlp
 	paramArr := [][]byte{
 		common.Int64ToBytes(txType),
 		[]byte(funcName),

@@ -211,6 +211,9 @@ func (sb *backend) writeCommitedBlockWithState(block *types.Block) error{
 	if chain, ok = sb.chain.(*core.BlockChain); !ok {
 		return errors.New("sb.chain not a core.BlockChain")
 	}
+	if sb.current == nil{
+		return errors.New("sb.current is nil")
+	}
 
 	for i, receipt := range sb.current.receipts {
 		receipts[i] = new(types.Receipt)
@@ -223,7 +226,10 @@ func (sb *backend) writeCommitedBlockWithState(block *types.Block) error{
 		logs = append(logs, receipt.Logs...)
 	}
 
-	stat, _ := chain.WriteBlockWithState(block, sb.current.receipts, sb.current.state)
+	stat, err := chain.WriteBlockWithState(block, sb.current.receipts, sb.current.state)
+	if err != nil{
+		return err
+	}
 	sb.EventMux().Post(core.NewMinedBlockEvent{Block: block})
 
 	switch stat {
@@ -287,6 +293,7 @@ func (sb *backend) Commit(proposal istanbul.Proposal, seals [][]byte) error {
 		}
 
 		if err:= sb.writeCommitedBlockWithState(block); err!= nil{
+			sb.logger.Error("writeCommitedBlockWithState() failed", "error", err.Error())
 			return err
 		}
 	}else {
@@ -344,7 +351,6 @@ func (sb *backend) excuteBlock(proposal istanbul.Proposal) error{
 		chain *core.BlockChain
 		parent *types.Block
 		header *types.Header
-		number = big.NewInt(0)
 		ok bool
 		err error
 	)
@@ -357,25 +363,16 @@ func (sb *backend) excuteBlock(proposal istanbul.Proposal) error{
 		return errors.New("sb.chain not a core.BlockChain")
 	}
 
+	header = block.Header()
+
+	if parent = chain.GetBlockByHash(header.ParentHash);  parent == nil{
+		return errors.New("Proposal's parent block is not in current chain")
+	}
+
 	if sb.current == nil || sb.current.block == nil || sb.current.block.Hash() != block.Hash(){
-		parent = chain.CurrentBlock()
-		header = &types.Header{
-			ParentHash: parent.Hash(),
-			Number:     number.Add(parent.Number(), big.NewInt(1)),
-			GasLimit:   core.CalcGasLimit(parent, 0, 0),
-			Time:       big.NewInt(0),
-		}
-
-		if err = sb.makeCurrent(chain.CurrentBlock().Root(), header);err != nil{
+		if err = sb.makeCurrent(parent.Root(), header);err != nil{
 			return err
 		}
-
-		if err = sb.Prepare(chain, header); err != nil{
-			return err
-		}
-		header.Coinbase = sb.address
-
-		statedb := sb.current.state
 
 		// Iterate over and process the individual transactios
 		txsMap := make(map[common.Hash]struct{})
@@ -391,9 +388,9 @@ func (sb *backend) excuteBlock(proposal istanbul.Proposal) error{
 				txsMap[tx.Hash()] = struct{}{}
 			}
 
-			receipt, _, err := core.ApplyTransaction(chain.Config(), chain, &sb.address, sb.current.gasPool, statedb, sb.current.header, tx, &sb.current.header.GasUsed, vm.Config{})
+			receipt, _, err := core.ApplyTransaction(chain.Config(), chain, &sb.address, sb.current.gasPool, sb.current.state, sb.current.header, tx, &sb.current.header.GasUsed, vm.Config{})
 			if err != nil {
-				statedb.RevertToSnapshot(snap)
+				sb.current.state.RevertToSnapshot(snap)
 				return err
 			}
 			sb.current.txs = append(sb.current.txs, tx)
@@ -401,13 +398,14 @@ func (sb *backend) excuteBlock(proposal istanbul.Proposal) error{
 			sb.current.tcount++
 
 			if chain.Config().IsByzantium(chain.CurrentHeader().Number) {
-				statedb.Finalise(true)
+				sb.current.state.Finalise(true)
 			} else {
-				statedb.IntermediateRoot(chain.Config().IsEIP158(chain.CurrentHeader().Number))
+				sb.current.state.IntermediateRoot(chain.Config().IsEIP158(chain.CurrentHeader().Number))
 			}
 		}
 
-		if statedb.IntermediateRoot(true) != block.Root(){
+		if sb.current.state.IntermediateRoot(true) != block.Root(){
+			sb.current = nil
 			return errors.New("Invalid block root")
 		}
 		sb.current.block = block
