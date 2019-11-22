@@ -32,7 +32,7 @@ namespace bcwasm{
      * @param args      Argument list.
      */
     template<typename... Args>
-    inline void assertAux(bool cond, const char *condStr, uint64_t line, const char *file, const char *func, Args&&... args) {
+    inline void assertAux(bool cond, const char *condStr, int line, const char *file, const char *func, Args&&... args) {
         if (!cond) {
            bcwasmThrow("Assertion failed:", condStr, "func:", func, "line:", line, "file:", file, args...);
         }
