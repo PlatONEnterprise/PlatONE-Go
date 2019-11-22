@@ -27,6 +27,9 @@ swarm:
 	@echo "Done building."
 	@echo "Run \"$(GOBIN)/swarm\" to launch swarm."
 
+syscontract:
+	build/build_syscontracts.sh
+
 all:
 	build/build_deps.sh
 	build/build_syscontracts.sh
