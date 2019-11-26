@@ -1,5 +1,14 @@
 package exec
 
+/*
+#cgo CFLAGS: -I../resolver/
+#include "platone_softfloat.h"
+#cgo CXXFLAGS: -std=c++14
+#cgo LDFLAGS: -L ../resolver/softfloat/build -lsoftfloat
+
+*/
+import "C"
+
 import (
 	"encoding/binary"
 	"fmt"
@@ -1067,7 +1076,7 @@ func (vm *VirtualMachine) Execute() {
 			a := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			b := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP+4:frame.IP+8]))]))
 			frame.IP += 8
-			frame.Regs[valueID] = int64(math.Float64bits(a + b))
+			frame.Regs[valueID] = int64(math.Float64bits(float64(C.platone_f64_add(C.double(a),C.double(b)))))
 		case opcodes.F64Sub:
 			a := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			b := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP+4:frame.IP+8]))]))
@@ -1207,9 +1216,12 @@ func (vm *VirtualMachine) Execute() {
 			frame.Regs[valueID] = int64(math.Trunc(v))
 
 		case opcodes.F32DemoteF64:
-			v := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
+			tmp := uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))])
+			v := C.platone_ui64_to_f64(C.ulong(tmp))
 			frame.IP += 4
-			frame.Regs[valueID] = int64(math.Float32bits(float32(v)))
+			ret := C.platone_f64_demote(v)
+			frame.Regs[valueID] = int64(C.platone_f32_trunc_i32u(C.float(ret)))
+			//frame.Regs[valueID] = int64(math.Float32bits(float32(v)))
 
 		case opcodes.F64PromoteF32:
 			v := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))

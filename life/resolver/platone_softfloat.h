@@ -1,5 +1,6 @@
-#include "./softfloat/source/include/softfloat.h"
+#include "softfloat/source/include/softfloat.h"
 #include <float.h>
+#include <string.h>
 
 static  uint32_t inv_float_eps = 0x4B000000;
 static  uint64_t inv_double_eps = 0x4330000000000000;
