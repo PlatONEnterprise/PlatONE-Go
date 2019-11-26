@@ -1216,57 +1216,54 @@ func (vm *VirtualMachine) Execute() {
 			frame.Regs[valueID] = int64(math.Trunc(v))
 
 		case opcodes.F32DemoteF64:
-			tmp := uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))])
-			v := C.platone_ui64_to_f64(C.ulong(tmp))
+			v := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			frame.IP += 4
-			ret := C.platone_f64_demote(v)
-			frame.Regs[valueID] = int64(C.platone_f32_trunc_i32u(C.float(ret)))
-			//frame.Regs[valueID] = int64(math.Float32bits(float32(v)))
+			frame.Regs[valueID] = int64(math.Float32bits(float32(C.platone_f64_demote(C.double(v)))))
 
 		case opcodes.F64PromoteF32:
 			v := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			frame.IP += 4
-			frame.Regs[valueID] = int64(math.Float64bits(float64(v)))
+			frame.Regs[valueID] = int64(math.Float64bits(float64(C.platone_f32_promote(C.float(v)))))
 
 		case opcodes.F32ConvertSI32:
 			v := int32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))])
 			frame.IP += 4
-			frame.Regs[valueID] = int64(math.Float32bits(float32(v)))
+			frame.Regs[valueID] = int64(math.Float32bits(float32(C.platone_i32_to_f32(C.int(v)))))
 
 		case opcodes.F32ConvertUI32:
 			v := uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))])
 			frame.IP += 4
-			frame.Regs[valueID] = int64(math.Float32bits(float32(v)))
+			frame.Regs[valueID] = int64(math.Float32bits(float32(C.platone_ui32_to_f32(C.uint(v)))))
 
 		case opcodes.F32ConvertSI64:
 			v := int64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))])
 			frame.IP += 4
-			frame.Regs[valueID] = int64(math.Float32bits(float32(v)))
+			frame.Regs[valueID] = int64(math.Float32bits(float32(C.platone_i64_to_f32(C.longlong(v)))))
 
 		case opcodes.F32ConvertUI64:
 			v := uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))])
 			frame.IP += 4
-			frame.Regs[valueID] = int64(math.Float32bits(float32(v)))
+			frame.Regs[valueID] = int64(math.Float32bits(float32(C.platone_ui64_to_f32(C.ulonglong(v)))))
 
 		case opcodes.F64ConvertSI32:
 			v := int32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))])
 			frame.IP += 4
-			frame.Regs[valueID] = int64(int32(math.Float64bits(float64(v))))
+			frame.Regs[valueID] = int64(int32(math.Float64bits(float64(C.platone_i32_to_f64(C.int(v))))))
 
 		case opcodes.F64ConvertUI32:
 			v := uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))])
 			frame.IP += 4
-			frame.Regs[valueID] = int64(int32(math.Float64bits(float64(v))))
+			frame.Regs[valueID] = int64(int32(math.Float64bits(float64(C.platone_ui32_to_f64(C.uint(v))))))
 
 		case opcodes.F64ConvertSI64:
 			v := int64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))])
 			frame.IP += 4
-			frame.Regs[valueID] = int64(math.Float64bits(float64(v)))
+			frame.Regs[valueID] = int64(math.Float64bits(float64(C.platone_i64_to_f64(C.longlong(v)))))
 
 		case opcodes.F64ConvertUI64:
 			v := uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))])
 			frame.IP += 4
-			frame.Regs[valueID] = int64(math.Float64bits(float64(v)))
+			frame.Regs[valueID] = int64(math.Float64bits(float64(C.platone_ui64_to_f64(C.ulonglong(v)))))
 
 		case opcodes.I64ExtendUI32:
 			v := uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))])
