@@ -1,7 +1,5 @@
 #!/bin/bash
 
-VERSION="v0.9.0"
-
 SCRIPT_NAME="$(basename ${0})"
 CURRENT_PATH=`pwd`
 WORKSPACE_PATH=`cd ${CURRENT_PATH}/.. && echo ${PWD}`
@@ -13,6 +11,8 @@ ENABLE=""
 DISENABLE=""
 NODE_ID=0
 cd ${CURRENT_PATH}
+
+VERSION=`${BIN_PATH}/platone --version`
 
 function usage() {
 cat <<EOF
@@ -626,7 +626,7 @@ function createAcc() {
 }
 
 function showVersion() {
-    echo "PlatONE Release Version: ${VERSION}"
+    echo "${VERSION}"
 }
 
 case $1 in
