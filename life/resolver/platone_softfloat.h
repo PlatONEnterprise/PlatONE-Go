@@ -1,4 +1,4 @@
-#include "./softfloat/source/include/softfloat.h"
+#include "softfloat/source/include/softfloat.h"
 #include <float.h>
 #include <string.h>
 
