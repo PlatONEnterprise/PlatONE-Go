@@ -1,28 +1,25 @@
-package exec
+ package exec
 
 /*
 #cgo CFLAGS: -I../resolver/
 #include "platone_softfloat.h"
 #cgo CXXFLAGS: -std=c++14
 #cgo LDFLAGS: -L ../resolver/softfloat/build -lsoftfloat
-
 */
-import "C"
+ import "C"
+ import (
+	 "encoding/binary"
+	 "fmt"
+	 "github.com/PlatONEnetwork/PlatONE-Go/log"
+	 "math"
+	 "math/bits"
 
-import (
-	"encoding/binary"
-	"fmt"
-	"math"
-	"math/bits"
+	 "github.com/PlatONEnetwork/PlatONE-Go/life/compiler"
+	 "github.com/PlatONEnetwork/PlatONE-Go/life/compiler/opcodes"
+	 "github.com/PlatONEnetwork/PlatONE-Go/life/utils"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
-
-	"github.com/PlatONEnetwork/PlatONE-Go/life/compiler"
-	"github.com/PlatONEnetwork/PlatONE-Go/life/compiler/opcodes"
-	"github.com/PlatONEnetwork/PlatONE-Go/life/utils"
-
-	"github.com/go-interpreter/wagon/wasm"
-)
+	 "github.com/go-interpreter/wagon/wasm"
+ )
 
 type (
 	Execute func(vm *VirtualMachine) int64
@@ -997,27 +994,40 @@ func (vm *VirtualMachine) Execute() {
 			val := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			frame.IP += 4
 			frame.Regs[valueID] = int64(math.Float32bits(float32(math.Floor(float64(val)))))
+
 		case opcodes.F32Trunc:
 			val := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			frame.IP += 4
-			frame.Regs[valueID] = int64(math.Float32bits(float32(math.Trunc(float64(val)))))
+			//frame.Regs[valueID] = int64(math.Float32bits(float32(math.Trunc(float64(val)))))
+			frame.Regs[valueID] = int64(math.Float32bits(float32(C.platone_f32_trunc(C.float(val)))))
+
 		case opcodes.F32Nearest:
 			val := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			frame.IP += 4
-			frame.Regs[valueID] = int64(math.Float32bits(float32(math.RoundToEven(float64(val)))))
+			//frame.Regs[valueID] = int64(math.Float32bits(float32(math.RoundToEven(float64(val)))))
+			frame.Regs[valueID] = int64(math.Float32bits(float32(C.platone_f32_nearest(C.float(val)))))
+
 		case opcodes.F32Abs:
 			val := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			frame.IP += 4
-			frame.Regs[valueID] = int64(math.Float32bits(float32(math.Abs(float64(val)))))
+			//frame.Regs[valueID] = int64(math.Float32bits(float32(math.Abs(float64(val)))))
+			frame.Regs[valueID] = int64(math.Float32bits(float32(C.platone_f32_abs(C.float(val)))))
+
 		case opcodes.F32Neg:
 			val := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			frame.IP += 4
-			frame.Regs[valueID] = int64(math.Float32bits(-val))
+			frame.Regs[valueID] = int64(math.Float32bits(float32(C.platone_f32_neg(C.float(val)))))
+
 		case opcodes.F32CopySign:
 			a := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			b := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP+4:frame.IP+8]))]))
 			frame.IP += 8
-			frame.Regs[valueID] = int64(math.Float32bits(float32(math.Copysign(float64(a), float64(b)))))
+			//frame.Regs[valueID] = int64(math.Float32bits(float32(math.Copysign(float64(a), float64(b)))))
+			frame.Regs[valueID] = int64(math.Float32bits(float32(C.platone_f32_copysign(C.float(a),C.float(b)))))
+
+			//-------------------------zbx------------------------------------------
+			//-------------------------zbx------------------------------------------
+
 		case opcodes.F32Eq:
 			a := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			b := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP+4:frame.IP+8]))]))
@@ -1114,27 +1124,37 @@ func (vm *VirtualMachine) Execute() {
 			val := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			frame.IP += 4
 			frame.Regs[valueID] = int64(math.Float64bits(math.Floor(val)))
+
+
 		case opcodes.F64Trunc:
 			val := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			frame.IP += 4
-			frame.Regs[valueID] = int64(math.Float64bits(math.Trunc(val)))
+			//frame.Regs[valueID] = int64(math.Float64bits(math.Trunc(val)))
+			frame.Regs[valueID] = int64(math.Float64bits(float64(C.platone_f64_trunc(C.double(val)))))
+
 		case opcodes.F64Nearest:
 			val := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			frame.IP += 4
-			frame.Regs[valueID] = int64(math.Float64bits(math.RoundToEven(val)))
+			//frame.Regs[valueID] = int64(math.Float64bits(math.RoundToEven(val)))
+			frame.Regs[valueID] = int64(math.Float64bits(float64(C.platone_f64_nearest(C.double(val)))))
+
 		case opcodes.F64Abs:
 			val := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			frame.IP += 4
-			frame.Regs[valueID] = int64(math.Float64bits(math.Abs(val)))
+			//frame.Regs[valueID] = int64(math.Float64bits(math.Abs(val)))
+			frame.Regs[valueID] = int64(math.Float64bits(float64(C.platone_f64_abs(C.double(val)))))
+
 		case opcodes.F64Neg:
 			val := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			frame.IP += 4
-			frame.Regs[valueID] = int64(math.Float64bits(-val))
+			//frame.Regs[valueID] = int64(math.Float64bits(-val))
+			frame.Regs[valueID] = int64(math.Float64bits(float64(C.platone_f64_neg(C.double(val)))))
 		case opcodes.F64CopySign:
 			a := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			b := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP+4:frame.IP+8]))]))
 			frame.IP += 8
-			frame.Regs[valueID] = int64(math.Float64bits(math.Copysign(a, b)))
+			//frame.Regs[valueID] = int64(math.Float64bits(math.Copysign(a, b)))
+			frame.Regs[valueID] = int64(math.Float64bits(float64(C.platone_f64_copysign(C.double(a), C.double(b)))))
 		case opcodes.F64Eq:
 			a := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			b := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP+4:frame.IP+8]))]))
@@ -1552,6 +1572,7 @@ func (vm *VirtualMachine) Execute() {
 			vm.AddAndCheckGas(delta)
 		default:
 			panic("unknown instruction")
+
 		}
 	}
 }
