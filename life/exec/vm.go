@@ -1,5 +1,13 @@
 package exec
 
+/*
+#cgo CFLAGS: -I../resolver
+#cgo CXXFLAGS: -std=c++14
+#include "platone_softfloat.h"
+#cgo LDFLAGS: -L ../resolver/softfloat/build -lsoftfloat
+*/
+import "C"
+
 import (
 	"encoding/binary"
 	"fmt"
@@ -969,26 +977,27 @@ func (vm *VirtualMachine) Execute() {
 		case opcodes.F32Sqrt:
 			val := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			frame.IP += 4
-			frame.Regs[valueID] = int64(math.Float32bits(float32(math.Sqrt(float64(val)))))
+			frame.Regs[valueID] = int64(math.Float32bits(float32((C.platone_f32_sqrt(C.float(val))))))
+
 		case opcodes.F32Min:
 			a := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			b := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP+4:frame.IP+8]))]))
 			frame.IP += 8
-			frame.Regs[valueID] = int64(math.Float32bits(float32(math.Min(float64(a), float64(b)))))
+			frame.Regs[valueID] = int64(math.Float32bits(float32(C.platone_f32_min(C.float(a), C.float(b)))))
 		case opcodes.F32Max:
 			a := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			b := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP+4:frame.IP+8]))]))
 			frame.IP += 8
-			frame.Regs[valueID] = int64(math.Float32bits(float32(math.Max(float64(a), float64(b)))))
+			frame.Regs[valueID] = int64(math.Float32bits(float32(C.platone_f32_max(C.float(a), C.float(b)))))
 		case opcodes.F32Ceil:
 			val := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			frame.IP += 4
-			frame.Regs[valueID] = int64(math.Float32bits(float32(math.Ceil(float64(val)))))
+			frame.Regs[valueID] = int64(math.Float32bits(float32(C.platone_f32_ceil(C.float(val)))))
 		case opcodes.F32Floor:
 			val := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			frame.IP += 4
-			frame.Regs[valueID] = int64(math.Float32bits(float32(math.Floor(float64(val)))))
-		case opcodes.F32Trunc:
+			frame.Regs[valueID] = int64(math.Float32bits(float32(C.platone_f32_floor(C.float(val)))))
+        case opcodes.F32Trunc:
 			val := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			frame.IP += 4
 			frame.Regs[valueID] = int64(math.Float32bits(float32(math.Trunc(float64(val)))))
@@ -1086,25 +1095,25 @@ func (vm *VirtualMachine) Execute() {
 		case opcodes.F64Sqrt:
 			val := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			frame.IP += 4
-			frame.Regs[valueID] = int64(math.Float64bits(math.Sqrt(val)))
+			frame.Regs[valueID] = int64(math.Float64bits(float64(C.platone_f64_sqrt(C.double(val)))))
 		case opcodes.F64Min:
 			a := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			b := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP+4:frame.IP+8]))]))
 			frame.IP += 8
-			frame.Regs[valueID] = int64(math.Float64bits(math.Min(a, b)))
+			frame.Regs[valueID] = int64(math.Float64bits(float64(C.platone_f64_min(C.double(a), C.double(b)))))
 		case opcodes.F64Max:
 			a := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			b := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP+4:frame.IP+8]))]))
 			frame.IP += 8
-			frame.Regs[valueID] = int64(math.Float64bits(math.Max(a, b)))
+			frame.Regs[valueID] = int64(math.Float64bits(float64(C.platone_f64_max(C.double(a), C.double(b)))))
 		case opcodes.F64Ceil:
 			val := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			frame.IP += 4
-			frame.Regs[valueID] = int64(math.Float64bits(math.Ceil(val)))
+			frame.Regs[valueID] = int64(math.Float64bits(float64(C.platone_f64_ceil(C.double(val)))))
 		case opcodes.F64Floor:
 			val := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			frame.IP += 4
-			frame.Regs[valueID] = int64(math.Float64bits(math.Floor(val)))
+			frame.Regs[valueID] = int64(math.Float64bits(float64(C.platone_f64_floor(C.double(val)))))
 		case opcodes.F64Trunc:
 			val := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			frame.IP += 4
