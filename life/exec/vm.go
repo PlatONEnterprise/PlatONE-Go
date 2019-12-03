@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 package exec
 
 /*
@@ -23,30 +22,6 @@ import (
 
 	"github.com/go-interpreter/wagon/wasm"
 )
-=======
- package exec
-
-/*
-#cgo CFLAGS: -I../resolver/
-#include "platone_softfloat.h"
-#cgo CXXFLAGS: -std=c++14
-#cgo LDFLAGS: -L ../resolver/softfloat/build -lsoftfloat
-*/
- import "C"
- import (
-	 "encoding/binary"
-	 "fmt"
-	 "github.com/PlatONEnetwork/PlatONE-Go/log"
-	 "math"
-	 "math/bits"
-
-	 "github.com/PlatONEnetwork/PlatONE-Go/life/compiler"
-	 "github.com/PlatONEnetwork/PlatONE-Go/life/compiler/opcodes"
-	 "github.com/PlatONEnetwork/PlatONE-Go/life/utils"
-
-	 "github.com/go-interpreter/wagon/wasm"
- )
->>>>>>> 1c2cc1bbba7eb6e9cd5828d31086bf95daabe504
 
 type (
 	Execute func(vm *VirtualMachine) int64
@@ -1021,14 +996,8 @@ func (vm *VirtualMachine) Execute() {
 		case opcodes.F32Floor:
 			val := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			frame.IP += 4
-<<<<<<< HEAD
 			frame.Regs[valueID] = int64(math.Float32bits(float32(C.platone_f32_floor(C.float(val)))))
         case opcodes.F32Trunc:
-=======
-			frame.Regs[valueID] = int64(math.Float32bits(float32(math.Floor(float64(val)))))
-
-		case opcodes.F32Trunc:
->>>>>>> 1c2cc1bbba7eb6e9cd5828d31086bf95daabe504
 			val := math.Float32frombits(uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			frame.IP += 4
 			//frame.Regs[valueID] = int64(math.Float32bits(float32(math.Trunc(float64(val)))))
@@ -1156,13 +1125,7 @@ func (vm *VirtualMachine) Execute() {
 		case opcodes.F64Floor:
 			val := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			frame.IP += 4
-<<<<<<< HEAD
 			frame.Regs[valueID] = int64(math.Float64bits(float64(C.platone_f64_floor(C.double(val)))))
-=======
-			frame.Regs[valueID] = int64(math.Float64bits(math.Floor(val)))
-
-
->>>>>>> 1c2cc1bbba7eb6e9cd5828d31086bf95daabe504
 		case opcodes.F64Trunc:
 			val := math.Float64frombits(uint64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))]))
 			frame.IP += 4
