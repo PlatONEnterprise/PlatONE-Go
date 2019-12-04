@@ -22,7 +22,7 @@ release_md_name="release.md"
 
 function create_release_note() {
 cat <<EOF
-###链部署指南
+链部署指南
 
 [PlatONE快速搭链教程](https://180.167.100.189:20443/PlatONE/doc/PlatONE_WIKI/blob/v0.9.0/zh-cn/basics/Installation/%5BChinese-Simplified%5D-%E5%BF%AB%E9%80%9F%E9%83%A8%E7%BD%B2.md)
 
@@ -30,7 +30,7 @@ Asset
 
 ->上传${PlatONE_linux_name}
 
-###WASM合约开发库
+WASM合约开发库
 
 [PlatONE合约指导文档](https://180.167.100.189:20443/PlatONE/doc/PlatONE_WIKI/blob/v0.9.0/zh-cn/WASMContract/%5BChinese-Simplified%5D-%E5%90%88%E7%BA%A6%E6%95%99%E7%A8%8B.md)
 
@@ -39,7 +39,7 @@ Asset
 ->上传${BCWasm_linux_name}
 
 
-###SDK工具
+SDK工具
 
 [SDK使用说明](https://180.167.100.189:20443/PlatONE/doc/PlatONE_WIKI/blob/v0.9.0/zh-cn/SDK/%5BChinese-Simplified%5D-SDK%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E.md)
 
@@ -47,7 +47,7 @@ Asset
 
 ->上传${Java_sdk_linux_name}
 
-###Release Change Log
+Release Change Log
 
 [change_log文档](https://180.167.100.189:20443/PlatONE/src/node/PlatONE-Go/blob/develop/CHANGELOG.md)
 EOF
