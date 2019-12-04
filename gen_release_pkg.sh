@@ -33,6 +33,9 @@ WASM合约开发库
 SDK工具
 [SDK使用说明](https://180.167.100.189:20443/PlatONE/doc/PlatONE_WIKI/blob/v0.9.0/zh-cn/SDK/%5BChinese-Simplified%5D-SDK%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E.md)
 ->上传${Java_sdk_linux_name}
+
+Release Change Log
+[change_log](https://180.167.100.189:20443/PlatONE/src/node/PlatONE-Go/blob/develop/CHANGELOG.md)
 EOF
 }
 
@@ -48,6 +51,7 @@ function env() {
     else
         git clone --recursive https://172.16.211.192/PlatONE/src/node/java-sdk.git
     fi
+    rm -rf ${Java_Project_name}/.git
 }
 
 function compile() {
@@ -66,7 +70,9 @@ function create_bcwasm_linux() {
     mkdir ${BCWasm_project_name}
     cp -rf ${PlatONE_CMD_SystemContract}/* ${BCWasm_project_name}/
     cp ${PlatONE_Project_name}/release/linux/bin/ctool ${BCWasm_project_name}/external/bin/
-    tar -zcf ${BCWasm_linux_name}${End_with} ${BCWasm_project_name}
+    rm -rf ${BCWasm_project_name}/systemContract
+    rm -rf ${BCWasm_project_name}/build
+    tar -zcvf ${BCWasm_linux_name}${End_with} ${BCWasm_project_name}
 }
 
 function create_sdk_linux() {
@@ -82,16 +88,19 @@ function tag() {
 
 function clean() {
     rm -rf ${PlatONE_linux_name}
-    rm -rf ${PlatONE_Project_name}
     rm -rf ${Java_Project_name}
     rm -rf ${BCWasm_project_name}
 }
-
 
 function main() {
     echo "#################################################################################"
     echo "note: Please change the version number in PlatONE-Go before executing this script"
     echo "#################################################################################"
+    sleep 3
+    echo "#################################################################################"
+    echo "note: If it is github, please set the change log differently"
+    echo "#################################################################################"
+    sleep 3
 
     env
     compile
@@ -100,10 +109,11 @@ function main() {
     create_bcwasm_linux
     create_sdk_linux
 
-    clean
+    tag
 
+    clean
     echo "#################################################################################"
-    echo "echo the release pkg massage format"
+    echo "note: The release pkg massage format:"
     echo "#################################################################################"
     create_release_note
 }
