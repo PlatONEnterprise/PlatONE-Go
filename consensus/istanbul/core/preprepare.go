@@ -95,7 +95,7 @@ func (c *core) handlePreprepare(msg *message, src istanbul.Validator) error {
 	}
 
 	// Verify the proposal we received
-	c.roundChangeTimer.Reset(time.Millisecond * time.Duration(c.config.RequestTimeout))
+	// c.roundChangeTimer.Reset(time.Millisecond * time.Duration(c.config.RequestTimeout))
 	if duration, err := c.backend.Verify(preprepare.Proposal , c.valSet.IsProposer(c.address)); err != nil {
 		logger.Warn("Failed to verify proposal", "err", err, "duration", duration)
 		// if it's a future block, we will handle it again after the duration

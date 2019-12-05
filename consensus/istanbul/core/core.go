@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"errors"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
+	"math"
 	"math/big"
 	"sync"
 	"time"
@@ -53,7 +54,6 @@ func New(backend istanbul.Backend, config *params.IstanbulConfig) Engine {
 		roundMeter:         metrics.NewMeter(),
 		sequenceMeter:      metrics.NewMeter(),
 		consensusTimer:     metrics.NewTimer(),
-		lastRoundTimeout:   time.Duration(config.RequestTimeout) * time.Millisecond,
 	}
 
 	r.Register("consensus/istanbul/core/round", c.roundMeter)
@@ -102,7 +102,7 @@ type core struct {
 	pendingRequests   *prque.Prque
 	pendingRequestsMu *sync.Mutex
 
-	lastRoundTimeout  time.Duration
+	lastResetRound    uint64
 
 	consensusTimestamp time.Time
 	// the meter to record the round change rate
@@ -439,7 +439,7 @@ func (c *core) newRoundChangeTimerWhenEmpty() {
 	// set timeout based on the round number
 	timeout := time.Duration(c.config.RequestTimeout) * time.Millisecond
 	round := c.current.Round().Uint64()
-	c.lastRoundTimeout = timeout
+	c.lastResetRound = round
 	//if round > 0 {
 	//	timeout += time.Duration(math.Pow(1.5, float64(round))) * time.Second
 	//}
@@ -457,10 +457,11 @@ func (c *core) newRoundChangeTimer() {
 	timeout := time.Duration(c.config.RequestTimeout) * time.Millisecond
 	round := c.current.Round().Uint64()
 	if round > 0 {
-		//timeout += time.Duration(math.Pow(1.5, float64(round))) * time.Second
-		timeout = time.Duration(float64(c.lastRoundTimeout) * 1.5)
+		timeout = time.Duration(math.Pow(2, float64(round-c.lastResetRound))) * timeout
+	} else{
+		c.lastResetRound = round
 	}
-	c.lastRoundTimeout = timeout
+
 	log.Debug("newRoundChangeTimer", "round", round, "timeout", timeout)
 	c.roundChangeTimer = time.AfterFunc(timeout, func() {
 		c.sendEvent(timeoutEvent{})
