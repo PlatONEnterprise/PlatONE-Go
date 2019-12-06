@@ -6,7 +6,9 @@
 ### Features
 ### Improvements
 ### Bug Fixes
-* [chain] 区块执行时间过长时，共识无法正常工作，不能继续出块。
+* [chain] 区块执行时间过长时，共识无法正常工作，不能继续出块。--葛鑫
+
+
 
 ## [0.9.1] -- 2019-11-22
 ### Breaking Changes
