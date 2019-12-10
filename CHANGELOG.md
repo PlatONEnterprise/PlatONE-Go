@@ -17,7 +17,7 @@
 
 ### Improvements
 * [contract] 简化了wasm与solidity兼容调用方式。-- 汤勇
-* [chain] 添加对版本的支持，`./platonce  --version`可以打印当前版本。 -- 葛鑫
+* [chain] 添加对版本的支持，`./platone  --version`可以打印当前版本。 -- 葛鑫
 * [contract] 删除sm密码库的静态库文件，改为用源码编译，方便为以后的跨平台做准备。 -- 潘晨
 * [chain] 暂时注释掉VC（verifiable computation，可验证计算）和nizkpail相关代码为跨平台做准备。-- 杜满想
 

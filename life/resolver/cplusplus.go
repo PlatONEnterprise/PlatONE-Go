@@ -1,4 +1,6 @@
 package resolver
+//#cgo LDFLAGS: -L ./nizkpail/ -lnizkpail -lpthread
+//#include "./nizkpail/nizkpail.h"
 
 /*
 #cgo CFLAGS: -I../softfloat/source/include
@@ -8,10 +10,7 @@ package resolver
 #include "printqf.h"
 #include "print128.h"
 #cgo LDFLAGS: -L ./sm2/ -lsm -lcrypto -lssl -ldl -lpthread
-#cgo LDFLAGS: -L ./nizkpail/ -lnizkpail -lpthread
 #include "./sm2/sm.h"
-#include "./nizkpail/nizkpail.h"
-
 */
 import "C"
 
