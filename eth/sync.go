@@ -163,7 +163,7 @@ func (pm *ProtocolManager) syncer() {
 
 func (pm *ProtocolManager) isUnNormalBootNodes() bool {
 	if !p2p.BootNodesNotExempt {
-		for _, peer := range pm.peers.peers {
+		for _, peer := range pm.peers.Peers() {
 			if p2p.IsNodeInBootNodes(pm.peers.Peer(peer.id).Peer.Info().ID) && peer.bn.Uint64() <= pm.blockchain.CurrentBlock().NumberU64() {
 				p2p.BootNodesNotExempt = true
 				p2p.UpdatePeer()
