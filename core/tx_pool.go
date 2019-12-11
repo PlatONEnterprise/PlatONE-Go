@@ -938,9 +938,6 @@ func (pool *TxPool) promoteTx(addr common.Address, hash common.Hash, tx *types.T
 // pricing constraints.
 func (pool *TxPool) AddLocal(tx *types.Transaction) error {
 	//return pool.addTxs(txs, true)
-	if len(pool.txExtBuffer) >= txExtBufferSize {
-		return errors.New("Error: txpool is full!")
-	}
 	errCh := make(chan interface{})
 	txExt := &txExt{tx, !pool.config.NoLocals, errCh}
 	pool.txExtBuffer <- txExt
@@ -957,9 +954,6 @@ func (pool *TxPool) AddLocal(tx *types.Transaction) error {
 // apply.
 func (pool *TxPool) AddRemote(tx *types.Transaction) error {
 	//return pool.addTxs(txs, true)
-	if len(pool.txExtBuffer) >= txExtBufferSize {
-		return errors.New("Error: txpool is full!")
-	}
 	errCh := make(chan interface{}, 1)
 	txExt := &txExt{tx, false, errCh}
 	select {
@@ -975,9 +969,6 @@ func (pool *TxPool) AddRemote(tx *types.Transaction) error {
 // the local pricing constraints.
 func (pool *TxPool) AddLocals(txs []*types.Transaction) []error {
 	//return pool.addTxs(txs, true)
-	if len(pool.txExtBuffer) >= txExtBufferSize {
-		return []error{errors.New("Error: txpool is full!")}
-	}
 	errCh := make(chan interface{})
 	txExt := &txExt{txs, !pool.config.NoLocals, errCh}
 	pool.txExtBuffer <- txExt
@@ -999,9 +990,6 @@ func (pool *TxPool) ExtendedDb() ethdb.Database {
 // will apply.
 func (pool *TxPool) AddRemotes(txs []*types.Transaction) []error {
 	//return pool.addTxs(txs, false)
-	if len(pool.txExtBuffer) >= txExtBufferSize {
-		return []error{errors.New("Error: txpool is full!")}
-	}
 	errCh := make(chan interface{}, 1)
 	txExt := &txExt{txs, false, errCh}
 	select {
