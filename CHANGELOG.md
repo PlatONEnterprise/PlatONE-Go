@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.9.3] -- 2019-12-11
+
+### Breaking Changes
+
+### Features
+
+### Improvements
+
+### Bug Fixes
+
+* [chain] 并发访问所有链接的节点map集合时，出现并发读写错误，导致节点宕机。--汤勇
+
 ## [0.9.2] -- 2019-12-06
 
 ### Breaking Changes
@@ -7,8 +19,6 @@
 ### Improvements
 ### Bug Fixes
 * [chain] 区块执行时间过长时，共识无法正常工作，不能继续出块。--葛鑫
-
-
 
 ## [0.9.1] -- 2019-11-22
 ### Breaking Changes
