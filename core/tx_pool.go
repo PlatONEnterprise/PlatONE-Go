@@ -308,44 +308,11 @@ func NewTxPool(config TxPoolConfig, chainconfig *params.ChainConfig, chain txPoo
 }
 
 func (pool *TxPool) txExtBufferReadLoop() {
-	txExtBuf := make([]*txExt, 0)
-
-	var bufMu  = sync.Mutex{}
-	var timer = time.NewTimer(time.Millisecond  * 10)
-
 	for {
 		select {
 		case ext := <-pool.txExtBuffer:
-			bufMu.Lock()
-			txExtBuf = append(txExtBuf, ext)
-			bufMu.Unlock()
-
-			rstFlag := atomic.LoadInt32(&pool.rstFlag)
-			pendingFlag := atomic.LoadInt32(&pool.pendingFlag)
-			if rstFlag != DoingRst && pendingFlag != DoingPending {
-				bufMu.Lock()
-				for _, txExt := range txExtBuf {
-					err := pool.addTxExt(txExt)
-					txExt.txErr <- err
-				}
-				txExtBuf = make([]*txExt, 0)
-				bufMu.Unlock()
-			}
-
-		case <- timer.C:
-			timer.Reset(time.Millisecond * 10)
-
-			rstFlag := atomic.LoadInt32(&pool.rstFlag)
-			pendingFlag := atomic.LoadInt32(&pool.pendingFlag)
-			if rstFlag != DoingRst && pendingFlag != DoingPending {
-				bufMu.Lock()
-				for _, txExt := range txExtBuf {
-					err := pool.addTxExt(txExt)
-					txExt.txErr <- err
-				}
-				txExtBuf = make([]*txExt, 0)
-				bufMu.Unlock()
-			}
+				err := pool.addTxExt(ext)
+				ext.txErr <- err
 
 		case <-pool.exitCh:
 			return
