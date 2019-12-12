@@ -107,12 +107,12 @@ func (t *SecureTrie) TryUpdate(key, value []byte) error {
 	if err != nil {
 		return err
 	}
-  	t.getNewSecKeyCache()[string(hk)] = common.CopyBytes(key)
+  	t.getSecKeyCache()[string(hk)] = common.CopyBytes(key)
 	return nil
 }
 
 func (t *SecureTrie) TryUpdateValue(key, value []byte) error {
-	t.getNewSecKeyCache()[string(key)] = common.CopyBytes(value)
+	t.getSecKeyCache()[string(key)] = common.CopyBytes(value)
 	return nil
 }
 
