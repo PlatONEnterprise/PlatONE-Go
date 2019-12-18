@@ -82,6 +82,8 @@ type core struct {
 
 	backend               istanbul.Backend
 	events                *event.TypeMuxSubscription
+	msgFeedSub 	          event.Subscription
+	msgCh                 chan istanbul.MessageEvent
 	finalCommittedSub     *event.TypeMuxSubscription
 	timeoutSub            *event.TypeMuxSubscription
 	futurePreprepareTimer *time.Timer
@@ -443,7 +445,7 @@ func (c *core) newRoundChangeTimerWhenEmpty() {
 	//if round > 0 {
 	//	timeout += time.Duration(math.Pow(1.5, float64(round))) * time.Second
 	//}
-	log.Debug("newRoundChangeTimer", "round", round, "timeout", timeout)
+	log.Debug("newRoundChangeTimer", "round", round, "lastResetRound", c.lastResetRound,"timeout", timeout)
 	c.roundChangeTimer = time.AfterFunc(timeout, func() {
 		c.sendEvent(timeoutEvent{})
 	})
@@ -457,12 +459,17 @@ func (c *core) newRoundChangeTimer() {
 	timeout := time.Duration(c.config.RequestTimeout) * time.Millisecond
 	round := c.current.Round().Uint64()
 	if round > 0 {
-		timeout = time.Duration(math.Pow(2, float64(round-c.lastResetRound))) * timeout
+		mul := math.Pow(2, float64(round-c.lastResetRound))
+		maxTimeout := 2 * time.Hour
+		if mul > float64(maxTimeout / timeout){
+			mul = float64(maxTimeout / timeout)
+		}
+		timeout = time.Duration(mul) * timeout
 	} else{
 		c.lastResetRound = round
 	}
 
-	log.Debug("newRoundChangeTimer", "round", round, "timeout", timeout)
+	log.Debug("newRoundChangeTimer", "round", round, "lastResetRound", c.lastResetRound,"timeout", timeout)
 	c.roundChangeTimer = time.AfterFunc(timeout, func() {
 		c.sendEvent(timeoutEvent{})
 	})
