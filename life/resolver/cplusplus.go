@@ -684,11 +684,17 @@ func envEcrecover(vm *exec.VirtualMachine) int64 {
 	h := vm.Memory.Memory[hashOffset : hashOffset+32]
 	rs := vm.Memory.Memory[rsOffset : rsOffset+65]
 
-	pubK, _ := crypto.SigToPub(h, rs)
+	pubK, err := crypto.SigToPub(h, rs)
+	if err != nil{
+		ret := []byte("sig error")
+		copy(vm.Memory.Memory[addrOffset:], ret)
 
-	addr := crypto.PubkeyToAddress(*pubK)
+	} else {
+		addr := crypto.PubkeyToAddress(*pubK)
+		copy(vm.Memory.Memory[addrOffset:], addr.Bytes())
+	}
 
-	copy(vm.Memory.Memory[addrOffset:], addr.Bytes())
+
 	return 0
 }
 
