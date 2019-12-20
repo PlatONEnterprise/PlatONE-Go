@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.9.4] -- 2019-12-20
+
+### Breaking Changes
+
+### Features
+
+### Improvements
+
+### Bug Fixes
+
+- [contract] 修复合约调用ecrecover时，若签名无效，则虚拟机执行失败的问题，现改为返回nil。--潘晨
+
 ## [0.9.3] -- 2019-12-11
 
 ### Breaking Changes
