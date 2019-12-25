@@ -1,5 +1,9 @@
 # Changelog
 
+## [unknown]
+### Features
+* [contract] Wasm合约支持float型计算 -- 王琪，王忠莉，朱冰心，潘晨，吴启迪，杜满想
+
 ## [0.9.1] -- 2019-11-22
 ### Breaking Changes
 ### Features
