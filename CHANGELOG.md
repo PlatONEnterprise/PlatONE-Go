@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.9.4] -- 2019-12-26
+
+### Breaking Changes
+
+### Features
+
+### Improvements
+
+### Bug Fixes
+
+* [chain] 修复第一个节点数据清空无法再加入网络的问题。--汤勇
+
 ## [0.9.3] -- 2019-12-11
 
 ### Breaking Changes
