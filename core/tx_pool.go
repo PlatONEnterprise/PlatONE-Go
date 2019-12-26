@@ -22,7 +22,6 @@ import (
 	"math"
 	"math/big"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
@@ -234,9 +233,6 @@ type TxPool struct {
 	homestead bool
 
 	txExtBuffer chan *txExt
-
-	rstFlag     int32
-	pendingFlag int32
 }
 
 type txExt struct {
@@ -270,8 +266,6 @@ func NewTxPool(config TxPoolConfig, chainconfig *params.ChainConfig, chain txPoo
 		exitCh:      make(chan struct{}),
 		gasPrice:    new(big.Int).SetUint64(config.PriceLimit),
 		txExtBuffer: make(chan *txExt, txExtBufferSize),
-		rstFlag:     DoneRst,
-		pendingFlag: DonePending,
 	}
 	pool.locals = newAccountSet(pool.signer)
 	for _, addr := range config.Locals {
@@ -308,44 +302,11 @@ func NewTxPool(config TxPoolConfig, chainconfig *params.ChainConfig, chain txPoo
 }
 
 func (pool *TxPool) txExtBufferReadLoop() {
-	txExtBuf := make([]*txExt, 0)
-
-	var bufMu  = sync.Mutex{}
-	var timer = time.NewTimer(time.Millisecond  * 10)
-
 	for {
 		select {
 		case ext := <-pool.txExtBuffer:
-			bufMu.Lock()
-			txExtBuf = append(txExtBuf, ext)
-			bufMu.Unlock()
-
-			rstFlag := atomic.LoadInt32(&pool.rstFlag)
-			pendingFlag := atomic.LoadInt32(&pool.pendingFlag)
-			if rstFlag != DoingRst && pendingFlag != DoingPending {
-				bufMu.Lock()
-				for _, txExt := range txExtBuf {
-					err := pool.addTxExt(txExt)
-					txExt.txErr <- err
-				}
-				txExtBuf = make([]*txExt, 0)
-				bufMu.Unlock()
-			}
-
-		case <- timer.C:
-			timer.Reset(time.Millisecond * 10)
-
-			rstFlag := atomic.LoadInt32(&pool.rstFlag)
-			pendingFlag := atomic.LoadInt32(&pool.pendingFlag)
-			if rstFlag != DoingRst && pendingFlag != DoingPending {
-				bufMu.Lock()
-				for _, txExt := range txExtBuf {
-					err := pool.addTxExt(txExt)
-					txExt.txErr <- err
-				}
-				txExtBuf = make([]*txExt, 0)
-				bufMu.Unlock()
-			}
+				err := pool.addTxExt(ext)
+				ext.txErr <- err
 
 		case <-pool.exitCh:
 			return
@@ -459,7 +420,7 @@ func (pool *TxPool) lockedReset(oldHead, newHead *types.Header) {
 	pool.reset(oldHead, newHead)
 }
 
-// added by PlatONE
+// This method is called by cbft
 func (pool *TxPool) Reset(newBlock *types.Block) {
 	if pool == nil {
 		// tx pool not initialized yet.
@@ -467,9 +428,6 @@ func (pool *TxPool) Reset(newBlock *types.Block) {
 	}
 	log.Debug("call Reset()", "RoutineID", common.CurrentGoRoutineID(), "hash", newBlock.Hash(), "number", newBlock.NumberU64(), "parentHash", newBlock.ParentHash(), "pool.chainHeadCh.len", len(pool.chainHeadCh))
 	pool.chainHeadCh <- newBlock
-	if newBlock.NumberU64() < pool.chain.CurrentBlock().NumberU64() {
-		atomic.StoreInt32(&pool.rstFlag, DoingRst)
-	}
 }
 
 func (pool *TxPool) ForkedReset(origTress, newTress []*types.Block) {
@@ -522,8 +480,6 @@ func (pool *TxPool) ForkedReset(origTress, newTress []*types.Block) {
 // reset retrieves the current state of the blockchain and ensures the content
 // of the transaction pool is valid with regard to the chain state.
 func (pool *TxPool) reset(oldHead, newHead *types.Header) {
-	defer atomic.StoreInt32(&pool.rstFlag, DoneRst)
-
 	var oldHash common.Hash
 	var oldNumber uint64
 	if oldHead != nil {
@@ -740,9 +696,6 @@ func (pool *TxPool) Pending() (map[common.Address]types.Transactions, error) {
 // grouped by origin account and stored by nonce. The returned transaction set
 // is a copy and can be freely modified by calling code.
 func (pool *TxPool) PendingLimited() (map[common.Address]types.Transactions, error) {
-	atomic.StoreInt32(&pool.pendingFlag, DoingPending)
-	defer atomic.StoreInt32(&pool.pendingFlag, DonePending)
-
 	now := time.Now()
 	pool.mu.Lock()
 	defer pool.mu.Unlock()
@@ -953,6 +906,9 @@ func (pool *TxPool) AddLocal(tx *types.Transaction) error {
 // sender is not among the locally tracked ones, full pricing constraints will
 // apply.
 func (pool *TxPool) AddRemote(tx *types.Transaction) error {
+	if len(pool.txExtBuffer) == txExtBufferSize {
+		return errors.New("txpool is full")
+	}
 	//return pool.addTxs(txs, true)
 	errCh := make(chan interface{}, 1)
 	txExt := &txExt{tx, false, errCh}
@@ -990,6 +946,9 @@ func (pool *TxPool) ExtendedDb() ethdb.Database {
 // will apply.
 func (pool *TxPool) AddRemotes(txs []*types.Transaction) []error {
 	//return pool.addTxs(txs, false)
+	if len(pool.txExtBuffer) == txExtBufferSize {
+		return []error{errors.New("txpool is full")}
+	}
 	errCh := make(chan interface{}, 1)
 	txExt := &txExt{txs, false, errCh}
 	select {

@@ -56,6 +56,7 @@ func New(config *params.IstanbulConfig, privateKey *ecdsa.PrivateKey, db ethdb.D
 		backend := &backend{
 			config:           config,
 			istanbulEventMux: new(event.TypeMux),
+			msgFeed:		  new(event.Feed),
 			privateKey:       privateKey,
 			address:          common.BytesToAddress([]byte("0x0000000000000000000000000000000000000112")),
 			logger:           log.New(),
@@ -73,6 +74,7 @@ func New(config *params.IstanbulConfig, privateKey *ecdsa.PrivateKey, db ethdb.D
 	backend := &backend{
 		config:           config,
 		istanbulEventMux: new(event.TypeMux),
+		msgFeed:		  new(event.Feed),
 		privateKey:       privateKey,
 		address:          crypto.PubkeyToAddress(privateKey.PublicKey),
 		logger:           log.New(),
@@ -106,6 +108,7 @@ type environment struct {
 type backend struct {
 	config           *params.IstanbulConfig
 	istanbulEventMux *event.TypeMux
+	msgFeed 		 *event.Feed
 	privateKey       *ecdsa.PrivateKey
 	address          common.Address
 	core             istanbulCore.Engine
@@ -160,7 +163,7 @@ func (sb *backend) Broadcast(valSet istanbul.ValidatorSet, payload []byte) error
 	msg := istanbul.MessageEvent{
 		Payload: payload,
 	}
-	go sb.istanbulEventMux.Post(msg)
+	go sb.msgFeed.Send(msg)
 	return nil
 }
 
@@ -215,6 +218,9 @@ func (sb *backend) writeCommitedBlockWithState(block *types.Block) error {
 	if sb.current == nil {
 		return errors.New("sb.current is nil")
 	}
+	if chain.HasBlock(block.Hash(), block.NumberU64()){
+		return nil
+	}
 
 	for i, receipt := range sb.current.receipts {
 		receipts[i] = new(types.Receipt)
@@ -231,7 +237,7 @@ func (sb *backend) writeCommitedBlockWithState(block *types.Block) error {
 	if err != nil {
 		return err
 	}
-	sb.EventMux().Post(core.NewMinedBlockEvent{Block: block})
+	go sb.EventMux().Post(core.NewMinedBlockEvent{Block: block})
 
 	switch stat {
 	case core.CanonStatTy:
@@ -296,16 +302,16 @@ func (sb *backend) Commit(proposal istanbul.Proposal, seals [][]byte) error {
 		return istanbulCore.ErrFirstCommitAtWrongTime
 	}
 
-	if sb.current != nil && sb.current.block != nil && sb.current.block.Hash() == block.Hash() {
-		if isEmpty && !isProduceEmptyBlock {
-			return istanbulCore.ErrEmpty
-		}
+	// if sb.current != nil && sb.current.block != nil && sb.current.block.Hash() == block.Hash() {
+	// 	if isEmpty && !isProduceEmptyBlock {
+	// 		return istanbulCore.ErrEmpty
+	// 	}
 
-		if err := sb.writeCommitedBlockWithState(block); err != nil {
-			sb.logger.Error("writeCommitedBlockWithState() failed", "error", err.Error())
-			return err
-		}
-	} else {
+	// 	if err := sb.writeCommitedBlockWithState(block); err != nil {
+	// 		sb.logger.Error("writeCommitedBlockWithState() failed", "error", err.Error())
+	// 		return err
+	// 	}
+	// } else {
 		if isEmpty && !isProduceEmptyBlock {
 			return istanbulCore.ErrEmpty
 		}
@@ -313,13 +319,18 @@ func (sb *backend) Commit(proposal istanbul.Proposal, seals [][]byte) error {
 		if sb.broadcaster != nil {
 			sb.broadcaster.Enqueue(fetcherID, block)
 		}
-	}
+	//}
 	return nil
 }
 
 // EventMux implements istanbul.Backend.EventMux
 func (sb *backend) EventMux() *event.TypeMux {
 	return sb.istanbulEventMux
+}
+
+// EventMux implements istanbul.Backend.EventMux
+func (sb *backend) MsgFeed() *event.Feed {
+	return sb.msgFeed
 }
 
 // makeCurrent creates a new environment for the current cycle.
@@ -342,10 +353,11 @@ func (sb *backend) makeCurrent(parentRoot common.Hash, header *types.Header) err
 	}
 
 	env := &environment{
-		signer:  types.NewEIP155Signer(chain.Config().ChainID),
-		state:   state,
-		header:  header,
-		gasPool: gp,
+		signer:    types.NewEIP155Signer(chain.Config().ChainID),
+		state:     state,
+		header:    header,
+		gasPool:   gp,
+		txs: make([]*types.Transaction,0),
 	}
 
 	// Keep track of transactions which return errors so they can be removed
@@ -378,11 +390,9 @@ func (sb *backend) excuteBlock(proposal istanbul.Proposal) error {
 		return errors.New("Proposal's parent block is not in current chain")
 	}
 
-	if sb.current == nil || sb.current.block == nil || sb.current.block.Hash() != block.Hash() {
-		if err = sb.makeCurrent(parent.Root(), header); err != nil {
-			return err
-		}
-
+	if err = sb.makeCurrent(parent.Root(), header);err != nil{
+		return err
+	}else{
 		// Iterate over and process the individual transactios
 		txsMap := make(map[common.Hash]struct{})
 		for _, tx := range block.Transactions() {
