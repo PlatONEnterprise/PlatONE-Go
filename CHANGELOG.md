@@ -1,6 +1,18 @@
 # Changelog
 
-## [0.9.4] -- 2019-12-26
+## [unknow] -- unknow
+
+### Breaking Changes
+
+### Features
+
+### Improvements
+
+### Bug Fixes
+
+* [chain] 修复第一个节点数据清空无法再加入网络的问题。--汤勇
+
+## [0.9.4] -- 2019-12-20
 ### Breaking Changes
 
 ### Features
@@ -10,7 +22,6 @@
 ### Bug Fixes
 
 * [contract] 修复合约调用ecrecover时，若签名无效，则虚拟机执行失败的问题，现改为返回nil。--潘晨
-* [chain] 修复第一个节点数据清空无法再加入网络的问题。--汤勇
 
 ## [0.9.3] -- 2019-12-11
 
