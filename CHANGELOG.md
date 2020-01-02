@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.9.4] -- 2019-12-26
+## [0.9.4] -- 2020-01-02
 ### Breaking Changes
 
 ### Features
