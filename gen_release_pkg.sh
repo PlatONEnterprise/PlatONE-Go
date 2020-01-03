@@ -102,7 +102,7 @@ function tag() {
 
 function clean() {
     rm -rf ${PlatONE_linux_name}
-    rm -rf ${Java_Project_name}
+    #rm -rf ${Java_Project_name}
     rm -rf ${BCWasm_project_name}
 }
 
@@ -116,12 +116,12 @@ function main() {
     echo "#################################################################################"
     sleep 3
 
-    env
+    #env
     compile
 
     create_platone_linux
     create_bcwasm_linux
-    create_sdk_linux
+    #create_sdk_linux
 
     tag
 
