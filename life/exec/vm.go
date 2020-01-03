@@ -1305,12 +1305,12 @@ func (vm *VirtualMachine) Execute() {
 		case opcodes.F64ConvertSI32:
 			v := int32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))])
 			frame.IP += 4
-			frame.Regs[valueID] = int64(int32(math.Float64bits(float64(C.platone_i32_to_f64(C.int32_t(v))))))
+			frame.Regs[valueID] = int64(math.Float64bits(float64(C.platone_i32_to_f64(C.int32_t(v)))))
 
 		case opcodes.F64ConvertUI32:
 			v := uint32(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))])
 			frame.IP += 4
-			frame.Regs[valueID] = int64(int32(math.Float64bits(float64(C.platone_ui32_to_f64(C.uint32_t(v))))))
+			frame.Regs[valueID] = int64(math.Float64bits(float64(C.platone_ui32_to_f64(C.uint32_t(v)))))
 
 		case opcodes.F64ConvertSI64:
 			v := int64(frame.Regs[int(LE.Uint32(frame.Code[frame.IP:frame.IP+4]))])
