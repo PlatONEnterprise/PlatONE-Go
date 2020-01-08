@@ -19,6 +19,7 @@ package core
 import (
 	"errors"
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
 	"math"
 	"math/big"
 	"sync"
@@ -26,7 +27,6 @@ import (
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/prque"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
@@ -744,6 +744,11 @@ func (pool *TxPool) local() map[common.Address]types.Transactions {
 // validateTx checks whether a transaction is valid according to the consensus
 // rules and adheres to some heuristic limits of the local node (price and size).
 func (pool *TxPool) validateTx(tx *types.Transaction, local bool) error {
+	if r, _, _, _ := rawdb.ReadReceipt(pool.db, tx.Hash()); r != nil {
+		log.Error("Transaction Repeat","old", r.TxHash.String(), "new", tx.Hash().String())
+		return ErrTransactionRepeat
+	}
+
 	// Heuristic limit, reject transactions over 32KB to prevent DOS attacks
 	// 32kb -> 1m
 	if tx.Size() > 1024*1024 {
@@ -761,11 +766,6 @@ func (pool *TxPool) validateTx(tx *types.Transaction, local bool) error {
 	}
 	// Drop non-local transactions under our own minimal accepted gas price
 	local = local || pool.locals.contains(from) // account may be local even if the transaction arrived from the network
-
-	if r, _, _, _ := rawdb.ReadReceipt(pool.db, tx.Hash()); r != nil {
-		log.Error("Transaction Repeat","old", r.TxHash.String(), "new", tx.Hash().String())
-		return ErrTransactionRepeat
-	}
 
 	// Transactor should have enough funds to cover the costs
 	// cost == V + GP * GL
