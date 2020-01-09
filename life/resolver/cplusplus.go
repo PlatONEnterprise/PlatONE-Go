@@ -354,7 +354,7 @@ func envPrintiGasCost(vm *exec.VirtualMachine) (uint64, error) {
 }
 
 func envPrintui(vm *exec.VirtualMachine) int64 {
-	//vm.Context.Log.Debug(fmt.Sprintf("%d", vm.GetCurrentFrame().Locals[0]))
+	vm.Context.Log.Debug(fmt.Sprintf("%d", vm.GetCurrentFrame().Locals[0]))
 	return 0
 }
 
