@@ -4,6 +4,10 @@
 ### Features
 * [contract] Wasm合约支持float型计算 -- 王琪，王忠莉，朱冰心，潘晨，吴启迪，杜满想
 
+### Bug Fixes
+* [ctool] 返回值是uint32类型时无法解析。 -- 杜满想
+* [contract] Wasm合约无法打印uint64类型的变量。 -- 王琪，杜满想
+
 ## [0.9.1] -- 2019-11-22
 ### Breaking Changes
 ### Features
