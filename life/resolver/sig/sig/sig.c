@@ -1,15 +1,4 @@
-#include <string.h>
-#include <openssl/bn.h>
-#include <openssl/crypto.h>
-#include <openssl/evp.h>
-#include <openssl/ec.h>
-#include <openssl/pem.h>
-#include <openssl/bio.h>
-#include <openssl/ossl_typ.h>
-
-#include <openssl/rand.h>
-#include "sm2.h"
-#include "sm.h"
+#include "sig.h"
 #define error(a) printf(a), exit(-1)
 #define PUBLEN  65
 #define PRIVLEN 32
@@ -168,7 +157,6 @@ int sm2_compute_digest(uint8_t *out,
     int p_bytes = 0;
     uint8_t *buf = NULL;
     uint16_t entl = 0;
-    //uint8_t e_byte = 0;
 
     hash = EVP_MD_CTX_new();
     ctx = BN_CTX_new();
@@ -340,4 +328,187 @@ done:
         free(md);
         return ok;
 
+}
+
+
+int p256r1_sign_with_base64(const char *msg, const char *privkey, char *out)
+{
+    int siglen = 0;
+    EC_KEY *key = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
+    if (key == NULL)
+    {
+        error("Failed to initial ec key");
+    }
+    const EC_GROUP *group = EC_KEY_get0_group(key);
+    if (group == NULL)
+    {
+        goto done;
+    }
+    ECDSA_SIG *sig = NULL;
+    BIGNUM *priv = NULL;
+    EC_POINT *pub = EC_POINT_new(group);
+    BN_CTX *ctx = BN_CTX_new();
+    BN_hex2bn(&priv, privkey);
+    if (EC_KEY_set_private_key(key, priv) != 1)
+    {
+        goto done;
+    }
+    EC_POINT_mul(group, pub, priv, NULL, NULL, NULL);
+    EC_KEY_set_public_key(key, pub);
+    unsigned int mdlen = 0;
+    unsigned char *md = (unsigned char *)malloc(MAXLEN);
+    EVP_Digest(msg, strlen(msg), md, &mdlen, EVP_sha256(), NULL);
+    sig = ECDSA_do_sign(md, strlen(md),key);
+    if (sig == NULL)
+    {
+        goto done;
+    }
+    unsigned char *sigd = (unsigned char  *)malloc(MAXLEN);
+    memset(sigd, 0, MAXLEN);
+    siglen = i2d_ECDSA_SIG(sig, &sigd);
+    base64_encode(sigd - siglen, siglen, out);
+    free(sigd-siglen);
+done:
+    EC_POINT_free(pub);
+    EC_KEY_free(key);
+    BN_free(priv);
+    ECDSA_SIG_free(sig); 
+    free(md);
+    return siglen;
+}
+
+
+int p256r1_verify_with_base64(const char* msg, const char* pub_data, const char* sig_data)
+{
+	int ret = 0;
+	char pub_raw[MAXLEN];
+    char sig_raw[MAXLEN];
+    EC_KEY *key = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
+	if (key == NULL)
+	{
+		goto done;
+	}
+    const EC_GROUP *group = EC_KEY_get0_group(key);
+    if (group == NULL)
+    {
+        goto done;
+    }
+    BN_CTX *ctx = BN_CTX_new();
+    ECDSA_SIG *sig = NULL;
+    int pub_len = base64_decode(pub_data, strlen(pub_data), pub_raw);
+    EC_POINT *pub = EC_POINT_new(group);
+	if (pub == NULL)
+	{
+		goto done;
+	}
+    EC_POINT_oct2point(group, pub, pub_raw, pub_len , ctx);
+    EC_KEY_set_public_key(key, pub);
+    int sig_len = base64_decode(sig_data, strlen(sig_data), sig_raw);
+    sig = ECDSA_SIG_new();
+    const unsigned char *tmp = sig_raw;
+    sig = d2i_ECDSA_SIG(NULL, &tmp, sig_len);
+    unsigned int mdlen = 0;
+    unsigned char *md = (unsigned char *)malloc(MAXLEN);
+    EVP_Digest(msg, strlen(msg), md, &mdlen, EVP_sha256(), NULL);
+    ret = ECDSA_do_verify(md, strlen(md), sig, key);
+
+	done:
+        EC_POINT_free(pub);
+        EC_KEY_free(key);
+        ECDSA_SIG_free(sig);
+        free(md);
+    
+    return ret;
+}
+
+
+
+int p256k1_sign_with_base64(const char *msg, const char *privkey, char *out)
+{
+    int siglen = 0;
+    EC_KEY *key = EC_KEY_new_by_curve_name(NID_secp256k1);
+    if (key == NULL)
+    {
+        error("Failed to initial ec key");
+    }
+    const EC_GROUP *group = EC_KEY_get0_group(key);
+    if (group == NULL)
+    {
+        goto done;
+    }
+    ECDSA_SIG *sig = NULL;
+    BIGNUM *priv = NULL;
+    EC_POINT *pub = EC_POINT_new(group);
+    BN_CTX *ctx = BN_CTX_new();
+    BN_hex2bn(&priv, privkey);
+    if (EC_KEY_set_private_key(key, priv) != 1)
+    {
+        goto done;
+    }
+    EC_POINT_mul(group, pub, priv, NULL, NULL, NULL);
+    EC_KEY_set_public_key(key, pub);
+    unsigned int mdlen = 0;
+    unsigned char *md = (unsigned char *)malloc(MAXLEN);
+    EVP_Digest(msg, strlen(msg), md, &mdlen, EVP_sha256(), NULL);
+    sig = ECDSA_do_sign(md, strlen(md),key);
+    if (sig == NULL)
+    {
+        goto done;
+    }
+    unsigned char *sigd = (unsigned char  *)malloc(MAXLEN);
+    memset(sigd, 0, MAXLEN);
+    siglen = i2d_ECDSA_SIG(sig, &sigd);
+    base64_encode(sigd - siglen, siglen, out);
+    free(sigd-siglen);
+done:
+    EC_POINT_free(pub);
+    EC_KEY_free(key);
+    BN_free(priv);
+    ECDSA_SIG_free(sig); 
+    free(md);
+    return siglen;
+}
+
+
+int p256k1_verify_with_base64(const char* msg, const char* pub_data, const char* sig_data)
+{
+	int ret = 0;
+	char pub_raw[MAXLEN];
+    char sig_raw[MAXLEN];
+    EC_KEY *key = EC_KEY_new_by_curve_name(NID_secp256k1);
+	if (key == NULL)
+	{
+		goto done;
+	}
+    const EC_GROUP *group = EC_KEY_get0_group(key);
+    if (group == NULL)
+    {
+        goto done;
+    }
+    BN_CTX *ctx = BN_CTX_new();
+    ECDSA_SIG *sig = NULL;
+    int pub_len = base64_decode(pub_data, strlen(pub_data), pub_raw);
+    EC_POINT *pub = EC_POINT_new(group);
+	if (pub == NULL)
+	{
+		goto done;
+	}
+    EC_POINT_oct2point(group, pub, pub_raw, pub_len , ctx);
+    EC_KEY_set_public_key(key, pub);
+    int sig_len = base64_decode(sig_data, strlen(sig_data), sig_raw);
+    sig = ECDSA_SIG_new();
+    const unsigned char *tmp = sig_raw;
+    sig = d2i_ECDSA_SIG(NULL, &tmp, sig_len);
+    unsigned int mdlen = 0;
+    unsigned char *md = (unsigned char *)malloc(MAXLEN);
+    EVP_Digest(msg, strlen(msg), md, &mdlen, EVP_sha256(), NULL);
+    ret = ECDSA_do_verify(md, strlen(md), sig, key);
+
+	done:
+        EC_POINT_free(pub);
+        EC_KEY_free(key);
+        ECDSA_SIG_free(sig);
+        free(md);
+    
+    return ret;
 }

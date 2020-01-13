@@ -16,7 +16,7 @@ extern "C" {
 
 namespace bcwasm {
 	std::string sigVerify(const std::string& _msg, const std::string& _userid, const std::string& _pubkey, const std::string& _sig) {
-		int resultSize = 1;
+		int resultSize = 10;
 		char* result = (char*)malloc(resultSize);
 		memcpy(result, 0, resultSize);
 		::smSigVerify(_msg.data(), _msg.size(), _userid.data(), _userid.size(), _pubkey.data(), _pubkey.size(), _sig.data(), _sig.size(), result, resultSize);
@@ -25,7 +25,7 @@ namespace bcwasm {
 		return ret;
 	}
     std::string sm2secSigVerify(const std::string& _msg, const std::string& _pubkey, const std::string& _sig) {
-        int resultSize = 1;
+        int resultSize = 10;
 		char* result = (char*)malloc(resultSize);
 		memcpy(result, 0, resultSize);
 		::sm2secSigVerify(_msg.data(), _msg.size(), _pubkey.data(), _pubkey.size(), _sig.data(), _sig.size(), result, resultSize);
@@ -34,7 +34,7 @@ namespace bcwasm {
 		return ret;
     }
     std::string secp256k1SigVerify(const std::string& _msg, const std::string& _pubkey, const std::string& _sig) {
-        int resultSize = 1;
+        int resultSize = 10;
 		char* result = (char*)malloc(resultSize);
 		memcpy(result, 0, resultSize);
 		::secp256k1SigVerify(_msg.data(), _msg.size(), _pubkey.data(), _pubkey.size(), _sig.data(), _sig.size(), result, resultSize);
@@ -44,7 +44,7 @@ namespace bcwasm {
     }
 
     std::string secp256r1SigVerify(const std::string& _msg, const std::string& _pubkey, const std::string& _sig) {
-        int resultSize = 1;
+        int resultSize = 10;
 		char* result = (char*)malloc(resultSize);
 		memcpy(result, 0, resultSize);
 		::secp256r1SigVerify(_msg.data(), _msg.size(), _pubkey.data(), _pubkey.size(), _sig.data(), _sig.size(), result, resultSize);
