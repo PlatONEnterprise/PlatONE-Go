@@ -220,9 +220,9 @@ func newCfcSet() map[string]map[string]*exec.FunctionImport {
 			//sm2sec
 			"sm2secSigVerify": &exec.FunctionImport{Execute: envSmSecSigVerify, GasCost: envSMVerifyGasCost},
 			//secp256r1
-			"secp256r1SigVerify": &exec.FunctionImport{Execute: envP256k1SigVerify, GasCost: envSMVerifyGasCost},
+			"secp256r1SigVerify": &exec.FunctionImport{Execute: envP256r1SigVerify, GasCost: envSMVerifyGasCost},
 			//secp256k1
-			"secp256k1SigVerify": &exec.FunctionImport{Execute: envP256r1SigVerify, GasCost: envSMVerifyGasCost},
+			"secp256k1SigVerify": &exec.FunctionImport{Execute: envP256k1SigVerify, GasCost: envSMVerifyGasCost},
 		},
 	}
 }
@@ -752,12 +752,12 @@ func envSmSigVerify(vm *exec.VirtualMachine) int64 {
 func envSmSecSigVerify(vm *exec.VirtualMachine) int64 {
 	msgOffset := int(int32(vm.GetCurrentFrame().Locals[0]))
 	msgSize := int(int32(vm.GetCurrentFrame().Locals[1]))
-	pubkeyOffset := int(int32(vm.GetCurrentFrame().Locals[4]))
-	pubkeySize := int(int32(vm.GetCurrentFrame().Locals[5]))
-	sigOffset := int(int32(vm.GetCurrentFrame().Locals[6]))
-	sigSize := int(int32(vm.GetCurrentFrame().Locals[7]))
-	resultOffset := int(int32(vm.GetCurrentFrame().Locals[8]))
-	resultSize := int(int32(vm.GetCurrentFrame().Locals[9]))
+	pubkeyOffset := int(int32(vm.GetCurrentFrame().Locals[2]))
+	pubkeySize := int(int32(vm.GetCurrentFrame().Locals[3]))
+	sigOffset := int(int32(vm.GetCurrentFrame().Locals[4]))
+	sigSize := int(int32(vm.GetCurrentFrame().Locals[5]))
+	resultOffset := int(int32(vm.GetCurrentFrame().Locals[6]))
+	resultSize := int(int32(vm.GetCurrentFrame().Locals[7]))
 
 	msg := vm.Memory.Memory[msgOffset : msgOffset+msgSize]
 	pubkey := vm.Memory.Memory[pubkeyOffset : pubkeyOffset+pubkeySize]
@@ -789,12 +789,12 @@ func envSmSecSigVerify(vm *exec.VirtualMachine) int64 {
 func envP256k1SigVerify(vm *exec.VirtualMachine) int64 {
 	msgOffset := int(int32(vm.GetCurrentFrame().Locals[0]))
 	msgSize := int(int32(vm.GetCurrentFrame().Locals[1]))
-	pubkeyOffset := int(int32(vm.GetCurrentFrame().Locals[4]))
-	pubkeySize := int(int32(vm.GetCurrentFrame().Locals[5]))
-	sigOffset := int(int32(vm.GetCurrentFrame().Locals[6]))
-	sigSize := int(int32(vm.GetCurrentFrame().Locals[7]))
-	resultOffset := int(int32(vm.GetCurrentFrame().Locals[8]))
-	resultSize := int(int32(vm.GetCurrentFrame().Locals[9]))
+	pubkeyOffset := int(int32(vm.GetCurrentFrame().Locals[2]))
+	pubkeySize := int(int32(vm.GetCurrentFrame().Locals[3]))
+	sigOffset := int(int32(vm.GetCurrentFrame().Locals[4]))
+	sigSize := int(int32(vm.GetCurrentFrame().Locals[5]))
+	resultOffset := int(int32(vm.GetCurrentFrame().Locals[6]))
+	resultSize := int(int32(vm.GetCurrentFrame().Locals[7]))
 
 	msg := vm.Memory.Memory[msgOffset : msgOffset+msgSize]
 	pubkey := vm.Memory.Memory[pubkeyOffset : pubkeyOffset+pubkeySize]
@@ -825,12 +825,12 @@ func envP256k1SigVerify(vm *exec.VirtualMachine) int64 {
 func envP256r1SigVerify(vm *exec.VirtualMachine) int64 {
 	msgOffset := int(int32(vm.GetCurrentFrame().Locals[0]))
 	msgSize := int(int32(vm.GetCurrentFrame().Locals[1]))
-	pubkeyOffset := int(int32(vm.GetCurrentFrame().Locals[4]))
-	pubkeySize := int(int32(vm.GetCurrentFrame().Locals[5]))
-	sigOffset := int(int32(vm.GetCurrentFrame().Locals[6]))
-	sigSize := int(int32(vm.GetCurrentFrame().Locals[7]))
-	resultOffset := int(int32(vm.GetCurrentFrame().Locals[8]))
-	resultSize := int(int32(vm.GetCurrentFrame().Locals[9]))
+	pubkeyOffset := int(int32(vm.GetCurrentFrame().Locals[2]))
+	pubkeySize := int(int32(vm.GetCurrentFrame().Locals[3]))
+	sigOffset := int(int32(vm.GetCurrentFrame().Locals[4]))
+	sigSize := int(int32(vm.GetCurrentFrame().Locals[5]))
+	resultOffset := int(int32(vm.GetCurrentFrame().Locals[6]))
+	resultSize := int(int32(vm.GetCurrentFrame().Locals[7]))
 
 	msg := vm.Memory.Memory[msgOffset : msgOffset+msgSize]
 	pubkey := vm.Memory.Memory[pubkeyOffset : pubkeyOffset+pubkeySize]
