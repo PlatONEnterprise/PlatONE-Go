@@ -14,9 +14,9 @@
 */**/*tx_database*
 */**/*dapps*
 build/_vendor/pkg
-life/resolver/sm2/openssl/*
-life/resolver/sm2/*.a
-life/resolver/sm2/sm/*.o
+life/resolver/sig/openssl/*
+life/resolver/sig/*.a
+life/resolver/sig/sig/*.o
 
 
 #*
