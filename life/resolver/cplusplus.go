@@ -9,8 +9,8 @@ package resolver
 #cgo CXXFLAGS: -std=c++14
 #include "printqf.h"
 #include "print128.h"
-#cgo LDFLAGS: -L ./sm2/ -lsm -lcrypto -lssl -ldl -lpthread
-#include "./sm2/sm.h"
+#cgo LDFLAGS: -L ./sig/ -lsig -lcrypto -lssl -ldl -lpthread
+#include "./sig/sig.h"
 */
 import "C"
 
@@ -217,6 +217,12 @@ func newCfcSet() map[string]map[string]*exec.FunctionImport {
 
 			//sm2
 			"smSigVerify": &exec.FunctionImport{Execute: envSmSigVerify, GasCost: envSMVerifyGasCost},
+			//sm2sec
+			"sm2secSigVerify": &exec.FunctionImport{Execute: envSmSecSigVerify, GasCost: envSMVerifyGasCost},
+			//secp256r1
+			"secp256r1SigVerify": &exec.FunctionImport{Execute: envP256k1SigVerify, GasCost: envSMVerifyGasCost},
+			//secp256k1
+			"secp256k1SigVerify": &exec.FunctionImport{Execute: envP256r1SigVerify, GasCost: envSMVerifyGasCost},
 		},
 	}
 }
@@ -726,6 +732,117 @@ func envSmSigVerify(vm *exec.VirtualMachine) int64 {
 
 	//result := C.smSigVerify(msgPtr, useridPtr, pubkeyPtr, sigPtr)
 	result := C.sm_verify_sig(msgPtr, pubkeyPtr, sigPtr)
+	ret := "0"
+	if result == 1 {
+		ret = "1"
+	}
+	resultBts := []byte(ret)
+	resultBts = append(resultBts, 0)
+
+	if resultSize < len(resultBts) {
+		return 0
+	}
+
+	copy(vm.Memory.Memory[resultOffset:], resultBts)
+
+	return 0
+}
+
+
+func envSmSecSigVerify(vm *exec.VirtualMachine) int64 {
+	msgOffset := int(int32(vm.GetCurrentFrame().Locals[0]))
+	msgSize := int(int32(vm.GetCurrentFrame().Locals[1]))
+	pubkeyOffset := int(int32(vm.GetCurrentFrame().Locals[4]))
+	pubkeySize := int(int32(vm.GetCurrentFrame().Locals[5]))
+	sigOffset := int(int32(vm.GetCurrentFrame().Locals[6]))
+	sigSize := int(int32(vm.GetCurrentFrame().Locals[7]))
+	resultOffset := int(int32(vm.GetCurrentFrame().Locals[8]))
+	resultSize := int(int32(vm.GetCurrentFrame().Locals[9]))
+
+	msg := vm.Memory.Memory[msgOffset : msgOffset+msgSize]
+	pubkey := vm.Memory.Memory[pubkeyOffset : pubkeyOffset+pubkeySize]
+	sig := vm.Memory.Memory[sigOffset : sigOffset+sigSize]
+	msg = append(msg, 0)
+	pubkey = append(pubkey, 0)
+	sig = append(sig, 0)
+
+	msgPtr := (*C.char)(unsafe.Pointer(&msg[0]))
+	pubkeyPtr := (*C.char)(unsafe.Pointer(&pubkey[0]))
+	sigPtr := (*C.char)(unsafe.Pointer(&sig[0]))
+	result := C.sm_verify_sig(msgPtr, pubkeyPtr, sigPtr)
+	ret := "0"
+	if result == 1 {
+		ret = "1"
+	}
+	resultBts := []byte(ret)
+	resultBts = append(resultBts, 0)
+
+	if resultSize < len(resultBts) {
+		return 0
+	}
+
+	copy(vm.Memory.Memory[resultOffset:], resultBts)
+
+	return 0
+}
+
+func envP256k1SigVerify(vm *exec.VirtualMachine) int64 {
+	msgOffset := int(int32(vm.GetCurrentFrame().Locals[0]))
+	msgSize := int(int32(vm.GetCurrentFrame().Locals[1]))
+	pubkeyOffset := int(int32(vm.GetCurrentFrame().Locals[4]))
+	pubkeySize := int(int32(vm.GetCurrentFrame().Locals[5]))
+	sigOffset := int(int32(vm.GetCurrentFrame().Locals[6]))
+	sigSize := int(int32(vm.GetCurrentFrame().Locals[7]))
+	resultOffset := int(int32(vm.GetCurrentFrame().Locals[8]))
+	resultSize := int(int32(vm.GetCurrentFrame().Locals[9]))
+
+	msg := vm.Memory.Memory[msgOffset : msgOffset+msgSize]
+	pubkey := vm.Memory.Memory[pubkeyOffset : pubkeyOffset+pubkeySize]
+	sig := vm.Memory.Memory[sigOffset : sigOffset+sigSize]
+	msg = append(msg, 0)
+	pubkey = append(pubkey, 0)
+	sig = append(sig, 0)
+
+	msgPtr := (*C.char)(unsafe.Pointer(&msg[0]))
+	pubkeyPtr := (*C.char)(unsafe.Pointer(&pubkey[0]))
+	sigPtr := (*C.char)(unsafe.Pointer(&sig[0]))
+	result := C.p256k1_verify_with_base64(msgPtr, pubkeyPtr, sigPtr)
+	ret := "0"
+	if result == 1 {
+		ret = "1"
+	}
+	resultBts := []byte(ret)
+	resultBts = append(resultBts, 0)
+
+	if resultSize < len(resultBts) {
+		return 0
+	}
+
+	copy(vm.Memory.Memory[resultOffset:], resultBts)
+
+	return 0
+}
+func envP256r1SigVerify(vm *exec.VirtualMachine) int64 {
+	msgOffset := int(int32(vm.GetCurrentFrame().Locals[0]))
+	msgSize := int(int32(vm.GetCurrentFrame().Locals[1]))
+	pubkeyOffset := int(int32(vm.GetCurrentFrame().Locals[4]))
+	pubkeySize := int(int32(vm.GetCurrentFrame().Locals[5]))
+	sigOffset := int(int32(vm.GetCurrentFrame().Locals[6]))
+	sigSize := int(int32(vm.GetCurrentFrame().Locals[7]))
+	resultOffset := int(int32(vm.GetCurrentFrame().Locals[8]))
+	resultSize := int(int32(vm.GetCurrentFrame().Locals[9]))
+
+	msg := vm.Memory.Memory[msgOffset : msgOffset+msgSize]
+	pubkey := vm.Memory.Memory[pubkeyOffset : pubkeyOffset+pubkeySize]
+	sig := vm.Memory.Memory[sigOffset : sigOffset+sigSize]
+	msg = append(msg, 0)
+	pubkey = append(pubkey, 0)
+	sig = append(sig, 0)
+
+	msgPtr := (*C.char)(unsafe.Pointer(&msg[0]))
+	pubkeyPtr := (*C.char)(unsafe.Pointer(&pubkey[0]))
+	sigPtr := (*C.char)(unsafe.Pointer(&sig[0]))
+	result := C.p256r1_verify_with_base64(msgPtr, pubkeyPtr, sigPtr)
 	ret := "0"
 	if result == 1 {
 		ret = "1"

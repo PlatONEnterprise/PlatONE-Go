@@ -54,18 +54,18 @@ cmake .. -G "$CMAKE_GEN" -DCMAKE_SH="CMAKE_SH-NOTFOUND" -Wno-dev
 $MAKE
 
 #Build sm
-cd $root/sm2
+cd $root/sig
 if [ ! -f ./libcrypto.a ];then 
-    cd $root/sm2/openssl
+    cd $root/sig/openssl
     ./config
     make
     cp ./libcrypto.a ../
     cp ./libssl.a ../
 fi
 
-if [ ! -f ./libsm.a ];then
-    cd $root/sm2/sm
+if [ ! -f ./libsig.a ];then
+    cd $root/sig/sig
     ./build.sh
-    ar -r libsm.a sm2.o
-    mv ./libsm.a ../
+    ar -r libsig.a sig.o
+    mv ./libsig.a ../
 fi
