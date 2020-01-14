@@ -358,7 +358,7 @@ int p256r1_sign_with_base64(const char *msg, const char *privkey, char *out)
     unsigned int mdlen = 0;
     unsigned char *md = (unsigned char *)malloc(MAXLEN);
     EVP_Digest(msg, strlen(msg), md, &mdlen, EVP_sha384(), NULL);
-    sig = ECDSA_do_sign(md, strlen(md),key);
+    sig = ECDSA_do_sign(md, mdlen,key);
     if (sig == NULL)
     {
         goto done;
@@ -410,7 +410,7 @@ int p256r1_verify_with_base64(const char* msg, const char* pub_data, const char*
     unsigned int mdlen = 0;
     unsigned char *md = (unsigned char *)malloc(MAXLEN);
     EVP_Digest(msg, strlen(msg), md, &mdlen, EVP_sha384(), NULL);
-    ret = ECDSA_do_verify(md, strlen(md), sig, key);
+    ret = ECDSA_do_verify(md, mdlen, sig, key);
 
 	done:
         EC_POINT_free(pub);
@@ -450,7 +450,7 @@ int p256k1_sign_with_base64(const char *msg, const char *privkey, char *out)
     unsigned int mdlen = 0;
     unsigned char *md = (unsigned char *)malloc(MAXLEN);
     EVP_Digest(msg, strlen(msg), md, &mdlen, EVP_sha256(), NULL);
-    sig = ECDSA_do_sign(md, strlen(md),key);
+    sig = ECDSA_do_sign(md, mdlen,key);
     if (sig == NULL)
     {
         goto done;
@@ -502,7 +502,7 @@ int p256k1_verify_with_base64(const char* msg, const char* pub_data, const char*
     unsigned int mdlen = 0;
     unsigned char *md = (unsigned char *)malloc(MAXLEN);
     EVP_Digest(msg, strlen(msg), md, &mdlen, EVP_sha256(), NULL);
-    ret = ECDSA_do_verify(md, strlen(md), sig, key);
+    ret = ECDSA_do_verify(md, mdlen, sig, key);
 
 	done:
         EC_POINT_free(pub);
