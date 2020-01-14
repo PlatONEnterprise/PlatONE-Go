@@ -357,7 +357,7 @@ int p256r1_sign_with_base64(const char *msg, const char *privkey, char *out)
     EC_KEY_set_public_key(key, pub);
     unsigned int mdlen = 0;
     unsigned char *md = (unsigned char *)malloc(MAXLEN);
-    EVP_Digest(msg, strlen(msg), md, &mdlen, EVP_sha256(), NULL);
+    EVP_Digest(msg, strlen(msg), md, &mdlen, EVP_sha384(), NULL);
     sig = ECDSA_do_sign(md, strlen(md),key);
     if (sig == NULL)
     {
@@ -409,7 +409,7 @@ int p256r1_verify_with_base64(const char* msg, const char* pub_data, const char*
     sig = d2i_ECDSA_SIG(NULL, &tmp, sig_len);
     unsigned int mdlen = 0;
     unsigned char *md = (unsigned char *)malloc(MAXLEN);
-    EVP_Digest(msg, strlen(msg), md, &mdlen, EVP_sha256(), NULL);
+    EVP_Digest(msg, strlen(msg), md, &mdlen, EVP_sha384(), NULL);
     ret = ECDSA_do_verify(md, strlen(md), sig, key);
 
 	done:
