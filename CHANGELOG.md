@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.9.6] -- 2020-01-15
+
+### Breaking Changes
+
+### Features
+* [contract]　增加secp256k1和r1的验签功能。--潘晨
+
+### Improvements
+
+### Bug Fixes
+
+
 ## [0.9.5] -- 2020-01-03
 
 ### Breaking Changes
