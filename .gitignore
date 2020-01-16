@@ -17,7 +17,7 @@ build/_vendor/pkg
 life/resolver/sig/openssl/*
 life/resolver/sig/*.a
 life/resolver/sig/sig/*.o
-
+life/resolver/sm2
 
 #*
 .#*
