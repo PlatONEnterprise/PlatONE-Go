@@ -499,16 +499,12 @@ int p256k1_verify_with_base64(const char* msg, const char* pub_data, const char*
     sig = ECDSA_SIG_new();
     const unsigned char *tmp = sig_raw;
     sig = d2i_ECDSA_SIG(NULL, &tmp, sig_len);
-    unsigned int mdlen = 0;
-    unsigned char *md = (unsigned char *)malloc(MAXLEN);
-    EVP_Digest(msg, strlen(msg), md, &mdlen, EVP_sha256(), NULL);
-    ret = ECDSA_do_verify(md, mdlen, sig, key);
+    ret = ECDSA_do_verify(msg, 32, sig, key);
 
 	done:
         EC_POINT_free(pub);
         EC_KEY_free(key);
         ECDSA_SIG_free(sig);
-        free(md);
     
     return ret;
 }

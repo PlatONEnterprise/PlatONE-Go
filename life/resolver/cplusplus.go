@@ -799,14 +799,17 @@ func envP256k1SigVerify(vm *exec.VirtualMachine) int64 {
 	msg := vm.Memory.Memory[msgOffset : msgOffset+msgSize]
 	pubkey := vm.Memory.Memory[pubkeyOffset : pubkeyOffset+pubkeySize]
 	sig := vm.Memory.Memory[sigOffset : sigOffset+sigSize]
-	msg = append(msg, 0)
+	fmt.Println("base64:", msg)
+	md := crypto.Keccak256(msg)
+	md = append(md, 0)
 	pubkey = append(pubkey, 0)
 	sig = append(sig, 0)
 
-	msgPtr := (*C.char)(unsafe.Pointer(&msg[0]))
+	mdPtr := (*C.char)(unsafe.Pointer(&md[0]))
 	pubkeyPtr := (*C.char)(unsafe.Pointer(&pubkey[0]))
 	sigPtr := (*C.char)(unsafe.Pointer(&sig[0]))
-	result := C.p256k1_verify_with_base64(msgPtr, pubkeyPtr, sigPtr)
+	result := C.p256k1_verify_with_base64(mdPtr, pubkeyPtr, sigPtr)
+	fmt.Println("result:", result)
 	ret := "0"
 	if result == 1 {
 		ret = "1"
