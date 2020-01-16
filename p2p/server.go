@@ -313,6 +313,25 @@ func GetBootNodes() []*discover.Node {
 	return bootNodes
 }
 
+func IsNodeInBootNodes(id string) bool {
+	for _, bn := range GetBootNodes() {
+		if bn.ID.String() == id {
+			return true
+		}
+	}
+	return false
+}
+
+func IsSelfServerNode(id string) bool {
+	for {
+		if server != nil && server.running {
+			break
+		}
+		time.Sleep(time.Millisecond)
+	}
+	return server.Self().ID.String() == id
+}
+
 // Peers returns all connected peers.
 func (srv *Server) Peers() []*Peer {
 	var ps []*Peer
@@ -395,15 +414,6 @@ func (srv *Server) ExcludeDelNodes(joinNodes []string) (err error) {
 		}
 	}
 	return
-}
-
-func IsNodeInBootNodes(id string) bool {
-	for _, bn := range GetBootNodes() {
-		if bn.ID.String() == id {
-			return true
-		}
-	}
-	return false
 }
 
 func (srv *Server) ExcludeSelfInDelList(joinNodes []string) (err error) {

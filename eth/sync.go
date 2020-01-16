@@ -163,8 +163,9 @@ func (pm *ProtocolManager) syncer() {
 
 func (pm *ProtocolManager) isUnNormalBootNodes() bool {
 	if !p2p.BootNodesNotExempt {
-		for _, peer := range pm.peers.peers {
-			if p2p.IsNodeInBootNodes(pm.peers.Peer(peer.id).Peer.Info().ID) && peer.bn.Uint64() <= pm.blockchain.CurrentBlock().NumberU64() {
+		for _, peer := range pm.peers.Peers() {
+			if p2p.IsNodeInBootNodes(pm.peers.Peer(peer.id).Peer.Info().ID) &&
+				peer.bn.Uint64() <= pm.blockchain.CurrentBlock().NumberU64() {
 				p2p.BootNodesNotExempt = true
 				p2p.UpdatePeer()
 				return true
@@ -178,7 +179,8 @@ func (pm *ProtocolManager) isUnNormalBootNodesAtPeer(peer *peer) bool {
 	if p2p.BootNodesNotExempt {
 		return false
 	}
-	if key := pm.peers.Peer(peer.id).Peer.Info().ID; p2p.IsNodeInBootNodes(key) && peer.bn.Uint64() <= pm.blockchain.CurrentBlock().NumberU64() && !common.SysCfg.IsValidJoinNode(key) {
+	if key := pm.peers.Peer(peer.id).Peer.Info().ID; p2p.IsNodeInBootNodes(key) &&
+		peer.bn.Uint64() <= pm.blockchain.CurrentBlock().NumberU64() && !common.SysCfg.IsValidJoinNode(key) {
 		p2p.BootNodesNotExempt = true
 		p2p.UpdatePeer()
 		return true
@@ -194,7 +196,7 @@ func (pm *ProtocolManager) synchronise(peer *peer) {
 	}
 	// Make sure the peer's TD is higher than our own
 	currentBlock := pm.blockchain.CurrentBlock()
-	if pm.isUnNormalBootNodes(){
+	if pm.isUnNormalBootNodes() {
 		log.Info("boot nodes is unnormal nodes: ", "local", "at sync")
 	}
 	pHead, pBn := peer.Head()

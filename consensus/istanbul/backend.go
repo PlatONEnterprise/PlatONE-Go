@@ -35,6 +35,8 @@ type Backend interface {
 	// EventMux returns the event mux in backend
 	EventMux() *event.TypeMux
 
+	MsgFeed() *event.Feed
+
 	// Broadcast sends a message to all validators (include self)
 	Broadcast(valSet ValidatorSet, payload []byte) error
 
