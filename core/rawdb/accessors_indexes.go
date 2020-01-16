@@ -84,12 +84,13 @@ func ReadReceipt(db DatabaseReader, hash common.Hash) (*types.Receipt, common.Ha
 	if blockHash == (common.Hash{}) {
 		return nil, common.Hash{}, 0, 0
 	}
-	receipts := ReadReceipts(db, blockHash, blockNumber)
-	if len(receipts) <= int(receiptIndex) {
-		log.Error("Receipt refereced missing", "number", blockNumber, "hash", blockHash, "index", receiptIndex)
-		return nil, common.Hash{}, 0, 0
-	}
-	return receipts[receiptIndex], blockHash, blockNumber, receiptIndex
+	/*	receipts := ReadReceipts(db, blockHash, blockNumber)
+		if len(receipts) <= int(receiptIndex) {
+			log.Error("Receipt refereced missing", "number", blockNumber, "hash", blockHash, "index", receiptIndex)
+			return nil, common.Hash{}, 0, 0
+		}
+		return receipts[receiptIndex], blockHash, blockNumber, receiptIndex*/
+	return &types.Receipt{}, common.Hash{}, blockNumber, receiptIndex
 }
 
 // ReadBloomBits retrieves the compressed bloom bit vector belonging to the given
