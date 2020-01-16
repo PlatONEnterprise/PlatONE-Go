@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.9.7] -- 2020-01-16
+
+### Breaking Changes
+
+### Features
+
+### Improvements
+
+### Bug Fixes
+
+* [contract]　修改secp256k1验签功能所用的hash函數。--潘晨
+
 ## [0.9.6] -- 2020-01-15
 
 ### Breaking Changes
