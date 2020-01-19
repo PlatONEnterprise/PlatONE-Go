@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"math"
 	"strconv"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
 )
 
 func BytesCombine(pBytes ...[]byte) []byte {
@@ -42,7 +42,7 @@ func BytesToInt64(b []byte) int64 {
 }
 
 func BytesToUint64(b []byte) uint64 {
-	return  binary.BigEndian.Uint64(b)
+	return binary.BigEndian.Uint64(b)
 }
 
 func Float32ToBytes(float float32) []byte {
@@ -85,13 +85,15 @@ func BytesConverter(source []byte, t string) interface{} {
 	case "float64":
 		return BytesToFloat64(source)
 	case "string":
-		if len(source) < 64{
+		if len(source) < 64 {
 			return string(source[:])
-		}else{
+		} else {
 			return string(source[64:])
 		}
 	case "uint64":
 		return common.CallResAsUint64(source)
+	case "uint32":
+		return common.CallResAsUint32(source)
 	default:
 		return source
 	}

@@ -1,78 +1,44 @@
 # Changelog
 
-## [0.9.7] -- 2020-01-16
-
+## [unknown]
 ### Breaking Changes
-
 ### Features
-
-### Improvements
+* [contract] Wasm合约支持float型计算 -- 王琪，王忠莉，朱冰心，潘晨，吴启迪，杜满想
 
 ### Bug Fixes
+* [ctool] 返回值是uint32类型时无法解析。 -- 杜满想
+* [contract] Wasm合约无法打印uint64类型的变量。 -- 王琪，杜满想
 
+## [0.9.7] -- 2020-01-16
+### Bug Fixes
 * [contract]　修改secp256k1验签功能所用的hash函數。--潘晨
 
 ## [0.9.6] -- 2020-01-15
-
-### Breaking Changes
-
 ### Features
 * [contract]　增加secp256k1和r1的验签功能。--潘晨
 
-### Improvements
-
 ### Bug Fixes
-
 * [chain] txpool先去重再验签。 -- 葛鑫
 
-
 ## [0.9.5] -- 2020-01-03
-
-### Breaking Changes
-
-### Features
-
-### Improvements
-
 ### Bug Fixes
-
 * [chain] 修复第一个节点数据清空无法再加入网络的问题。--汤勇
 * [chain] 共识模块中共识结束直接写入区块数据，可能会造成并发问题，修改为由p2p.fetcher异步写入。 --葛鑫 
 * [chain] 共识消息处理中，投票类消息单独用一个Event Channel消息处理。 -- 葛鑫
 
 ## [0.9.4] -- 2020-12-20
-### Breaking Changes
-
-### Features
-
-### Improvements
-
 ### Bug Fixes
-
 * [contract] 修复合约调用ecrecover时，若签名无效，则虚拟机执行失败的问题，现改为返回nil。--潘晨
 
 ## [0.9.3] -- 2019-12-11
-
-### Breaking Changes
-
-### Features
-
-### Improvements
-
 ### Bug Fixes
-
 * [chain] 并发访问所有链接的节点map集合时，出现并发读写错误，导致节点宕机。--汤勇
 
 ## [0.9.2] -- 2019-12-06
-
-### Breaking Changes
-### Features
-### Improvements
 ### Bug Fixes
 * [chain] 区块执行时间过长时，共识无法正常工作，不能继续出块。--葛鑫
 
 ## [0.9.1] -- 2019-11-22
-### Breaking Changes
 ### Features
 * [contract] 调用一个没有在CNS中注册的合约时报错，receipt的status设为false。-- 简海波，葛鑫
 
