@@ -302,14 +302,26 @@ done:
 int sm_verify_sig(const char *msg, const char *pubkey,const char *signature)
 {
     int ok = 0;
-    char pub_raw[MAXLEN];
+	char pub_raw[MAXLEN];
     char sig_raw[MAXLEN];
     EC_KEY *key = EC_KEY_new_by_curve_name(NID_sm2);
+	if (key == NULL)
+	{
+		goto done;
+	}
     const EC_GROUP *group = EC_KEY_get0_group(key);
+    if (group == NULL)
+    {
+        goto done;
+    }
     BN_CTX *ctx = BN_CTX_new();
-    base64_decode(pubkey, strlen(pubkey), pub_raw);
+    int pub_len = base64_decode(pubkey, strlen(pubkey), pub_raw);
     EC_POINT *pub = EC_POINT_new(group);
-    EC_POINT_oct2point(group, pub, pub_raw, strlen(pub_raw), ctx);
+	if (pub == NULL)
+	{
+		goto done;
+	}
+    EC_POINT_oct2point(group, pub, pub_raw, pub_len, ctx);
     EC_KEY_set_public_key(key, pub);
     
     int sig_len = base64_decode(signature, strlen(signature), sig_raw);
