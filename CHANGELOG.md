@@ -8,6 +8,7 @@
 ### Bug Fixes
 * [ctool] 返回值是uint32类型时无法解析。 -- 杜满想
 * [contract] Wasm合约无法打印uint64类型的变量。 -- 王琪，杜满想
+* [contract]　修复sm2验签某些公钥解析失败的bug。--潘晨
 
 ## [0.9.7] -- 2020-01-16
 ### Bug Fixes
