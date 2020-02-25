@@ -1,6 +1,6 @@
 # Changelog
 
-## [unknown]
+## [0.9.8]
 ### Breaking Changes
 ### Features
 * [contract] Wasm合约支持float型计算 -- 王琪，王忠莉，朱冰心，潘晨，吴启迪，杜满想
