@@ -302,16 +302,16 @@ func (sb *backend) Commit(proposal istanbul.Proposal, seals [][]byte) error {
 		return istanbulCore.ErrFirstCommitAtWrongTime
 	}
 
-	// if sb.current != nil && sb.current.block != nil && sb.current.block.Hash() == block.Hash() {
-	// 	if isEmpty && !isProduceEmptyBlock {
-	// 		return istanbulCore.ErrEmpty
-	// 	}
+	if sb.current != nil && sb.current.block != nil && sb.current.block.Hash() == block.Hash() {
+		if isEmpty && !isProduceEmptyBlock {
+			return istanbulCore.ErrEmpty
+		}
 
-	// 	if err := sb.writeCommitedBlockWithState(block); err != nil {
-	// 		sb.logger.Error("writeCommitedBlockWithState() failed", "error", err.Error())
-	// 		return err
-	// 	}
-	// } else {
+		if err := sb.writeCommitedBlockWithState(block); err != nil {
+			sb.logger.Error("writeCommitedBlockWithState() failed", "error", err.Error())
+			return err
+		}
+	} else {
 		if isEmpty && !isProduceEmptyBlock {
 			return istanbulCore.ErrEmpty
 		}
@@ -319,7 +319,7 @@ func (sb *backend) Commit(proposal istanbul.Proposal, seals [][]byte) error {
 		if sb.broadcaster != nil {
 			sb.broadcaster.Enqueue(fetcherID, block)
 		}
-	//}
+	}
 	return nil
 }
 
