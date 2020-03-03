@@ -324,8 +324,10 @@ func (st *StateTransition) buyContractGas(contractAddr string) error {
 	st.gas += st.msg.Gas()
 
 	st.initialGas = st.msg.Gas()
-	params = []interface{}{addr, mgval.Uint64()}
-	_, _, err = st.doCallContract(contractAddr, "subBalance", params)
+	usergas:=st.msg.Gas()
+	//params = []interface{}{addr, mgval.Uint64()}
+	params = []interface{}{usergas}
+	_, _, err = st.doCallContract(contractAddr, "withHoldingFee", params)
 	if nil != err {
 		fmt.Println(err)
 		return err
@@ -625,21 +627,28 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 }
 
 func (st *StateTransition) ifUseContractTokenAsFee() (string, bool, error) {
+	/*
 	params := []interface{}{"__sys_ParamManager", "latest"}
 	binParamMangerAddr, _, err := st.doCallContract(CnsManagerAddr, "getContractAddress", params)
 	if nil != err {
 		log.Warn("ifUseContractTokenAsFee error", "err", err.Error())
 		return "", false, err
 	}
-	paramMangerAddr := utils.Bytes2string(binParamMangerAddr)
 
+	paramMangerAddr := utils.Bytes2string(binParamMangerAddr)
 	if "0x0000000000000000000000000000000000000000" == paramMangerAddr {
 		//fmt.Println("paramManager contract address not found")//TODO
 		return "", false, nil
 	}
+  */
+	params := []interface{}{"__sys_ParamManager", "latest"}
+	paramMangerAddr,found:=getContractAddr("__sys_ParamManager")
+	if !found{
+		return "", false, nil
+	}
 
 	params = []interface{}{}
-	binContractName, _, err := st.doCallContract(paramMangerAddr, "getGasContractName", params)
+	binContractName, _, err := st.doCallContract(paramMangerAddr.String(), "getGasContractName", params)
 	if nil != err {
 		log.Warn("st.doCallContract error", "err", err.Error())
 		return "", false, err
@@ -699,24 +708,25 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 	)
 
 	//TODO comment temporarily for performance test
-	//feeContractAddr, isUseContractToken,err = st.ifUseContractTokenAsFee()
-	//if nil != err{
-	//	st.state.SetNonce(msg.From(), st.state.GetNonce(sender.Address())+1)
-	//	return nil, 0, true, nil
-	//}
+	feeContractAddr, isUseContractToken,err = st.ifUseContractTokenAsFee()
+	if nil != err{
+		st.state.SetNonce(msg.From(), st.state.GetNonce(sender.Address())+1)
+		return nil, 0, true, nil
+	}
+
 	//
-	//if isUseContractToken{
-	//	// init initialGas value = txMsg.gas
-	//	if err = st.preContractGasCheck(feeContractAddr); err != nil {
-	//		st.state.SetNonce(msg.From(), st.state.GetNonce(sender.Address())+1)
-	//		return nil, 0, true, nil
-	//	}
-	//}else {
+	if isUseContractToken{
+		// init initialGas value = txMsg.gas
+		if err = st.preContractGasCheck(feeContractAddr); err != nil {
+			st.state.SetNonce(msg.From(), st.state.GetNonce(sender.Address())+1)
+			return nil, 0, true, nil
+		}
+	}else {
 	//	// init initialGas value = txMsg.gas
 	if err = st.preCheck(); err != nil {
 		return
 	}
-	//}
+	}
 
 	homestead := st.evm.ChainConfig().IsHomestead(st.evm.BlockNumber)
 	contractCreation := msg.To() == nil
