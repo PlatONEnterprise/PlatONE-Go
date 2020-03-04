@@ -719,7 +719,9 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 		return nil, 0, true, nil
 	}
 
-	//
+	//Call method invoke
+	isUseContractToken = msg.Nonce() != 0 && isUseContractToken
+
 	if isUseContractToken{
 		// init initialGas value = txMsg.gas
 		if err = st.preContractGasCheck(feeContractAddr); err != nil {
