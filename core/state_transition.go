@@ -307,7 +307,7 @@ func (st *StateTransition) buyContractGas(contractAddr string) error {
 	//mgval := new(big.Int).Mul(new(big.Int).SetUint64(st.msg.Gas()), st.gasPrice)
 
 	addr := st.msg.From().String()
-	addr=strings.ToLower(addr)
+	addr = strings.ToLower(addr)
 	params := []interface{}{addr,st.msg.Gas()}
 	ret, _, err := st.doCallContract(contractAddr, "checkBalance", params)
 	if nil != err {
@@ -331,7 +331,7 @@ func (st *StateTransition) buyContractGas(contractAddr string) error {
 	st.initialGas = st.msg.Gas()
 	usergas:=st.msg.Gas()
 	//params = []interface{}{addr, mgval.Uint64()}
-	params = []interface{}{usergas}
+	params = []interface{}{addr,usergas}
 	_, _, err = st.doCallContract(contractAddr, "withHoldingFee", params)
 	if nil != err {
 		fmt.Println(err)
@@ -847,8 +847,9 @@ func (st *StateTransition) refundContractGas(contractAddr string) error {
 	// Return ETH for remaining gas, exchanged at the original rate.
 	//remaining := new(big.Int).Mul(new(big.Int).SetUint64(st.gas), st.gasPrice)
 	//st.state.AddBalance(st.msg.From(), remaining)
-	//addr := st.msg.From().String()
-	params := []interface{}{st.gas}
+	addr := st.msg.From().String()
+	addr = strings.ToLower(addr)
+	params := []interface{}{addr,st.gas}
 	_, _, err := st.doCallContract(contractAddr, "refundFee", params)
 	if nil != err {
 		log.Warn("refundContractGas error", "err", err.Error()) //TODO format
