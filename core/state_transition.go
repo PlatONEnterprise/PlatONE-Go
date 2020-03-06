@@ -314,7 +314,7 @@ func (st *StateTransition) buyContractGas(contractAddr string) error {
 		log.Warn("buyContractGas error", "err", err.Error())
 		return err
 	}
-	if utils.BytesToInt64(ret)!=0{
+	if utils.BytesToInt64(ret)!= 1 {
 		return errInsufficientBalanceForGas
 	}
 /*
@@ -632,42 +632,36 @@ func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Ad
 }
 
 func (st *StateTransition) ifUseContractTokenAsFee() (string, bool, error) {
-	/*
-	params := []interface{}{"__sys_ParamManager", "latest"}
-	binParamMangerAddr, _, err := st.doCallContract(CnsManagerAddr, "getContractAddress", params)
-	if nil != err {
-		log.Warn("ifUseContractTokenAsFee error", "err", err.Error())
-		return "", false, err
-	}
 
-	paramMangerAddr := utils.Bytes2string(binParamMangerAddr)
-	if "0x0000000000000000000000000000000000000000" == paramMangerAddr {
-		//fmt.Println("paramManager contract address not found")//TODO
-		return "", false, nil
-	}
-  */
-	params := []interface{}{"__sys_ParamManager", "latest"}
-	paramMangerAddr,found:=getContractAddr("__sys_ParamManager")
-	if !found{
+	paramMangerAddr, found := getContractAddr("__sys_ParamManager")
+	if !found {
 		return "", false, nil
 	}
 
-	params = []interface{}{}
-	binContractName, _, err := st.doCallContract(paramMangerAddr.String(), "getGasContractName", params)
+	params := []interface{}{}
+	binisUseContractToken, _, err := st.doCallContract(paramMangerAddr.String(), "getIsTxUseGas", params)
 	if nil != err {
 		log.Warn("st.doCallContract error", "err", err.Error())
 		return "", false, err
 	}
-	contractName := utils.Bytes2string(binContractName)
 
-	var isUseContractToken bool = ("" != contractName)
-
+	isUseContractToken := utils.BytesToInt64(binisUseContractToken) == 1
 	contractAddr := ""
 	if isUseContractToken {
+		params = []interface{}{}
+		binContractName, _, err := st.doCallContract(paramMangerAddr.String(), "getGasContractName", params)
+		if nil != err {
+			log.Warn("st.doCallContract error", "err", err.Error())
+			return "", false, err
+		}
+		contractName := utils.Bytes2string(binContractName)
 		contractAddr, err = st.getContractAddr(contractName)
 		if nil != err {
 			log.Warn("getContractAddr error", "err", err.Error())
 			return "", false, err
+		}
+		if contractAddr == "" {
+			return "", false, nil
 		}
 	}
 
