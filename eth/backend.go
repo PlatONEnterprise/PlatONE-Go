@@ -188,6 +188,13 @@ func InitInnerCallFunc(ethPtr *Ethereum) {
 				ret := common.CallResAsInt64(res)
 				sc.SysParam.IsProduceEmptyBlock = ret == 1
 			}
+			funcName = "getIsTxUseGas"
+			funcParams = []interface{}{}
+			res = callContract(paramAddr, common.GenCallData(funcName, funcParams))
+			if res != nil {
+				ret := common.CallResAsInt64(res)
+				sc.SysParam.IsTxUseGas = ret == 1
+			}
 
 			funcName = "getCBFTTimeParam"
 			funcParams = []interface{}{}
