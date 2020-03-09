@@ -36,6 +36,8 @@ import (
 
 var (
 	errInsufficientBalanceForGas = errors.New("insufficient balance to pay for gas")
+	errWithholdingFee = errors.New("withHolding fee error")
+	errRefundFee = errors.New("refund fee error")
 )
 
 const CnsManagerAddr string = "0x0000000000000000000000000000000000000011"
@@ -97,11 +99,12 @@ type Message interface {
 func IntrinsicGas(data []byte, contractCreation, homestead bool) (uint64, error) {
 	// Set the starting gas for the raw transaction
 	var gas uint64
-	if contractCreation && homestead {
-		gas = params.TxGasContractCreation
-	} else {
-		gas = params.TxGas
-	}
+	//if contractCreation && homestead {
+	//	gas = params.TxGasContractCreation
+	//} else {
+	//	gas = params.TxGas
+	//}
+	gas = params.TxGasContractCreation
 	// Bump the required gas by the amount of transactional data
 	if len(data) > 0 {
 		// Zero and non-zero bytes are priced differently
@@ -304,40 +307,37 @@ func (st *StateTransition) buyGas() error {
 }
 
 func (st *StateTransition) buyContractGas(contractAddr string) error {
-	//mgval := new(big.Int).Mul(new(big.Int).SetUint64(st.msg.Gas()), st.gasPrice)
-
 	addr := st.msg.From().String()
 	addr = strings.ToLower(addr)
 	params := []interface{}{addr,st.msg.Gas()}
+
 	ret, _, err := st.doCallContract(contractAddr, "checkBalance", params)
 	if nil != err {
 		log.Warn("buyContractGas error", "err", err.Error())
 		return err
 	}
-	if utils.BytesToInt64(ret)!= 1 {
+	if utils.BytesToInt64(ret) != 1 {
+		log.Warn("insufficientBalance error", "err", errInsufficientBalanceForGas)
 		return errInsufficientBalanceForGas
 	}
-/*
-	balance := new(big.Int).SetBytes(ret)
-	if balance.Cmp(mgval) < 0 {
-		return errInsufficientBalanceForGas
-	}
+
 	if err := st.gp.SubGas(st.msg.Gas()); err != nil {
+		log.Warn("gas pool sub gas error", "err", err.Error())
 		return err
 	}
-*/
+
 	st.gas += st.msg.Gas()
 
 	st.initialGas = st.msg.Gas()
-	usergas:=st.msg.Gas()
-	//params = []interface{}{addr, mgval.Uint64()}
-	params = []interface{}{addr,usergas}
+	usergas := st.msg.Gas()
+
+	params = []interface{}{addr, usergas}
+
 	_, _, err = st.doCallContract(contractAddr, "withHoldingFee", params)
 	if nil != err {
-		fmt.Println(err)
+		log.Warn("withHoldingContractGas error", "err", err.Error())
 		return err
 	}
-
 	return nil
 }
 
@@ -709,8 +709,7 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 	//TODO comment temporarily for performance test
 	feeContractAddr, isUseContractToken,err = st.ifUseContractTokenAsFee()
 	if nil != err{
-		st.state.SetNonce(msg.From(), st.state.GetNonce(sender.Address())+1)
-		return nil, 0, true, nil
+		return nil, 0, false, err
 	}
 
 	//Call method invoke
@@ -719,14 +718,14 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 	if isUseContractToken{
 		// init initialGas value = txMsg.gas
 		if err = st.preContractGasCheck(feeContractAddr); err != nil {
-			st.state.SetNonce(msg.From(), st.state.GetNonce(sender.Address())+1)
-			return nil, 0, true, nil
+			return nil, 0, false, err
 		}
-	}else {
-	//	// init initialGas value = txMsg.gas
-	if err = st.preCheck(); err != nil {
-		return
-	}
+	} else {
+		// init initialGas value = txMsg.gas
+		if err = st.preCheck(); err != nil {
+			return
+		}
+
 	}
 
 	homestead := st.evm.ChainConfig().IsHomestead(st.evm.BlockNumber)
@@ -789,7 +788,7 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 	}
 
 	if isUseContractToken {
-		vmerr = st.refundContractGas(feeContractAddr)
+		err = st.refundContractGas(feeContractAddr)
 	} else {
 		st.refundGas()
 		//st.state.AddBalance(st.evm.Coinbase, new(big.Int).Mul(new(big.Int).SetUint64(st.gasUsed()), st.gasPrice))
@@ -845,7 +844,8 @@ func (st *StateTransition) refundContractGas(contractAddr string) error {
 	//st.state.AddBalance(st.msg.From(), remaining)
 	addr := st.msg.From().String()
 	addr = strings.ToLower(addr)
-	params := []interface{}{addr,st.gas}
+	params := []interface{}{addr, st.gas}
+	fmt.Println("refundFee", addr, st.gas)
 	_, _, err := st.doCallContract(contractAddr, "refundFee", params)
 	if nil != err {
 		log.Warn("refundContractGas error", "err", err.Error()) //TODO format
