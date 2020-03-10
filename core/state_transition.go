@@ -312,16 +312,16 @@ func (st *StateTransition) buyContractGas(contractAddr string) error {
 
 	ret, _, err := st.doCallContract(contractAddr, "checkBalance", params)
 	if nil != err {
-		log.Warn("buyContractGas error", "err", err.Error())
+		log.Error("buyContractGas error", "err", err.Error())
 		return err
 	}
 	if utils.BytesToInt64(ret) != 1 {
-		log.Warn("insufficientBalance error", "err", errInsufficientBalanceForGas)
+		log.Error("insufficientBalance error", "err", errInsufficientBalanceForGas)
 		return errInsufficientBalanceForGas
 	}
 
 	if err := st.gp.SubGas(st.msg.Gas()); err != nil {
-		log.Warn("gas pool sub gas error", "err", err.Error())
+		log.Error("gas pool sub gas error", "err", err.Error())
 		return err
 	}
 
@@ -334,7 +334,7 @@ func (st *StateTransition) buyContractGas(contractAddr string) error {
 
 	_, _, err = st.doCallContract(contractAddr, "withHoldingFee", params)
 	if nil != err {
-		log.Warn("withHoldingContractGas error", "err", err.Error())
+		log.Error("withHoldingContractGas error", "err", err.Error())
 		return err
 	}
 	return nil
@@ -717,6 +717,7 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 	if isUseContractToken{
 		// init initialGas value = txMsg.gas
 		if err = st.preContractGasCheck(feeContractAddr); err != nil {
+			log.Error("PreContractGasCheck", "err:", err)
 			return nil, 0, false, err
 		}
 	} else {
@@ -732,10 +733,12 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 
 	// Pay intrinsic gas
 	gas, err := IntrinsicGas(st.data, contractCreation)
+	log.Debug("IntrinsicGas amount", "IntrinsicGas:", gas)
 	if err != nil {
 		return nil, 0, false, err
 	}
 	if err = st.useGas(gas); err != nil {
+		log.Error("GasLimitTooLow", "err:", err)
 		return nil, 0, false, err
 	}
 	if contractCreation {
@@ -844,7 +847,6 @@ func (st *StateTransition) refundContractGas(contractAddr string) error {
 	addr := st.msg.From().String()
 	addr = strings.ToLower(addr)
 	params := []interface{}{addr, st.gas}
-	fmt.Println("refundFee", addr, st.gas)
 	_, _, err := st.doCallContract(contractAddr, "refundFee", params)
 	if nil != err {
 		log.Warn("refundContractGas error", "err", err.Error()) //TODO format
