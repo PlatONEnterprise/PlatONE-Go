@@ -34,3 +34,9 @@ cd ..; rm -f libsoftfloatlib.a
 
 cd $root/builtins/
 rm -rf build
+
+# Build crypto lib
+cd $root/sig/openssl
+$MAKE clean
+cd ..; rm -f *.a
+cd sig; rm -f *.o

@@ -1,5 +1,12 @@
 # Changelog
 
+## [unknow]
+### Breaking Changes
+### Improvements
+* [chain] 在共识模块中直接同步写入区块，以提高区块链交易处理性能。 --葛鑫
+### Features
+### Bug Fixes
+
 ## [0.9.8]
 ### Breaking Changes
 ### Features
