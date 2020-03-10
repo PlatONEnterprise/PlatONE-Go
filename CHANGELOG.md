@@ -1,10 +1,11 @@
 # Changelog
 
-## [unknow]
+## [0.9.9]
 ### Breaking Changes
 ### Improvements
 * [chain] 在共识模块中直接同步写入区块，以提高区块链交易处理性能。 --葛鑫
 ### Features
+* [chain] 交易处理流程引入根据交易消耗gas扣除用户特定token的功能。 --潘晨
 ### Bug Fixes
 
 ## [0.9.8]
