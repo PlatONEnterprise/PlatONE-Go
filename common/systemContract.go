@@ -56,6 +56,7 @@ type SystemParameter struct {
 	GasContractName               string
 	GasContractAddr               Address
 	CheckContractDeployPermission int64
+	IsTxUseGas 			  		  bool
 	IsProduceEmptyBlock           bool
 }
 
@@ -110,6 +111,12 @@ func (sc *SystemConfig) IfCheckContractDeployPermission() int64 {
 	sc.SystemConfigMu.RLock()
 	defer sc.SystemConfigMu.RUnlock()
 	return sc.SysParam.CheckContractDeployPermission
+}
+
+func (sc *SystemConfig) GetIsTxUseGas() bool {
+	sc.SystemConfigMu.RLock()
+	defer sc.SystemConfigMu.RUnlock()
+	return sc.SysParam.IsTxUseGas
 }
 
 func (sc *SystemConfig) GetBlockGasLimit() int64 {
