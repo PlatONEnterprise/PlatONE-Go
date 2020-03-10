@@ -18,6 +18,7 @@ import (
 
 	"github.com/PlatONEnetwork/PlatONE-Go/life/exec"
 	"github.com/PlatONEnetwork/PlatONE-Go/life/resolver"
+	//gomath "math"
 )
 
 var (
@@ -227,7 +228,6 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 	if input == nil {
 		return contract.Code, nil
 	}
-
 	// todo: more type need to be completed
 	switch returnType {
 	case "void", "int8", "int", "int32", "int64":
@@ -243,6 +243,16 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 			return utils.Uint64ToBytes(uint64(res)), nil
 		}
 		finalRes := utils.Align32Bytes(utils.Uint64ToBytes((uint64(res))))
+		return finalRes, nil
+	case "float32", "float64":
+		bytes := make([]byte, 8)
+		// float in rlp is up to higher-order protocol
+		binary.LittleEndian.PutUint64(bytes, uint64(res))
+		if txType == common.CALL_CANTRACT_FLAG {
+			return bytes, nil
+		}
+		finalRes := utils.Align32BytesLittleEndian(bytes)
+
 		return finalRes, nil
 	case "string":
 		returnBytes := make([]byte, 0)
@@ -426,6 +436,20 @@ func parseInputFromAbi(vm *exec.VirtualMachine, input []byte, abi []byte) (txTyp
 				return -1, "", nil, returnType, fmt.Errorf("invalid parameter: want 8 bytes but got %d bytes", len(bts))
 			}
 			params = append(params, int64(binary.BigEndian.Uint64(bts)))
+		case "float32":
+			if len(bts) > 4 {
+				return -1, "", nil, returnType, fmt.Errorf("invalid parameter: want 4 bytes but got %d bytes", len(bts))
+			}
+			//bits bits is the floating-point number corresponding to the IEEE 754 binary representation bts
+			//in rlp float type is up to higher-order protocol,which is littleEndian.
+			bits := binary.LittleEndian.Uint32(bts)
+			params = append(params, int64(bits))
+		case "float64":
+			if len(bts) > 8 {
+				return -1, "", nil, returnType, fmt.Errorf("invalid parameter: want 8 bytes but got %d bytes", len(bts))
+			}
+			bits := binary.LittleEndian.Uint64(bts)
+			params = append(params, int64(bits))
 		case "bool":
 			if len(bts) > 1 {
 				return -1, "", nil, returnType, fmt.Errorf("invalid parameter: want 1 byte but got %d bytes", len(bts))

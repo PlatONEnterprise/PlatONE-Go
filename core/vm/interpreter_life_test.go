@@ -11,6 +11,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"io/ioutil"
+	"math"
 	"math/big"
 	"math/rand"
 	"testing"
@@ -155,7 +156,6 @@ func BenchmarkWasmInterpreter_Deploy_MockStateDB(bench *testing.B) {
 	wasmRun(bench, stateDB{}, "Deploy", 10000)
 }
 
-
 func wasmRun(bench *testing.B, statedb stateDBer, inputKind string, prepareCount int) {
 	address := common.HexToAddress("0x823140710bf13990e4500136726d8b55")
 	codeBytes, err := ioutil.ReadFile("../../life/contract/getsettest.wasm")
@@ -211,7 +211,7 @@ func wasmRun(bench *testing.B, statedb stateDBer, inputKind string, prepareCount
 		if nil != err {
 			bench.Fatal(err)
 		}
-		
+
 		_, err = statedb.Commit(false)
 		if nil != err {
 			bench.Fatal(err)
@@ -304,4 +304,70 @@ func (stateDB) AddLog(*types.Log) {
 }
 func (stateDB) Commit(deleteEmptyObjects bool) (root common.Hash, err error) {
 	return common.Hash{}, nil
+}
+
+func TestFloatInputAndOutput(t *testing.T) {
+	//gen contract codes
+	//this contract accepts a float64 and return it by add 1
+	codeBytes, err := ioutil.ReadFile("../../life/contract/paramfloattest.wasm")
+	if nil != err {
+		t.Fatal(err)
+	}
+
+	abiBytes, err := ioutil.ReadFile("../../life/contract/paramfloattest.cpp.abi.json")
+	if nil != err {
+		t.Fatal(err)
+	}
+
+	param := [3][]byte{
+		Int64ToBytes(2),
+		codeBytes,
+		abiBytes,
+	}
+	code, err := rlp.EncodeToBytes(param)
+	if err != nil {
+		t.Fatal(err)
+	}
+	evm := &EVM{
+		StateDB: stateDB{},
+		Context: Context{
+			GasLimit:    1000000,
+			BlockNumber: big.NewInt(10),
+		},
+	}
+	cfg := Config{}
+
+	wasmInterpreter := NewWASMInterpreter(evm, cfg)
+
+	contract := &Contract{
+		CallerAddress: common.BigToAddress(big.NewInt(88888)),
+		caller:        ContractRefCaller{},
+		self:          ContractRefSelf{},
+		Code:          code,
+		Gas:           math.MaxUint64,
+	}
+	// build input, {1}{getNum}{num}
+	array := []float64{6.66, -89.555, 12345678910.987654321, 1.12345678901234567890123456789}
+
+	for _, f := range array {
+		var input [][]byte
+		input = make([][]byte, 0)
+		input = append(input, common.Int64ToBytes(1))
+		input = append(input, []byte("getNum"))
+		input = append(input, common.Float64ToBytes(f))
+
+		buffer := new(bytes.Buffer)
+		rlp.Encode(buffer, input)
+
+		ret, err := wasmInterpreter.Run(contract, buffer.Bytes(), true)
+		if err != nil {
+			t.Fatal(err)
+		}
+		retInFloat := common.BytesToFloat64(ret)
+		if retInFloat != f+1 {
+			t.Fatal(fmt.Sprintf("expect %f but get %f", f+1, retInFloat))
+		}
+		fmt.Println(common.BytesToFloat64(ret))
+	}
+
 }

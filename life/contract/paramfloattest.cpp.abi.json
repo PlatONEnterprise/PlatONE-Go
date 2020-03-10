@@ -1,0 +1,26 @@
+[
+    {
+        "name": "init",
+        "inputs": [],
+        "outputs": [],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "getNum",
+        "inputs": [
+            {
+                "name": "d",
+                "type": "float64"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "float64"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    }
+]
