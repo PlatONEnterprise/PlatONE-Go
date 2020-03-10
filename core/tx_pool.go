@@ -775,7 +775,7 @@ func (pool *TxPool) validateTx(tx *types.Transaction, local bool) error {
 	}
 	if common.SysCfg.GetIsTxUseGas() && common.SysCfg.GetGasContractName() != "" {
 		contractCreation := tx.To() == nil
-		gas, err := IntrinsicGas(tx.Data(), contractCreation, true)
+		gas, err := IntrinsicGas(tx.Data(), contractCreation)
 		if err != nil{
 			return err
 		}
