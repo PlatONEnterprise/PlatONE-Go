@@ -67,7 +67,20 @@ type SystemConfig struct {
 	ContractAddress map[string]Address
 }
 
-var SysCfg *SystemConfig
+var SysCfg  = &SystemConfig{
+	SystemConfigMu: &sync.RWMutex{},
+	Nodes:          make([]NodeInfo, 0),
+	HighsetNumber:  new(big.Int).SetInt64(0),
+	SysParam: &SystemParameter{
+		BlockGasLimit: 0xffffffffffff,
+		TxGasLimit:    100000000000000,
+		CBFTTime: CBFTProduceBlockCfg{
+			ProduceDuration: int32(10),
+			BlockInterval:   int32(1),
+		},
+	},
+	ContractAddress: make(map[string]Address),
+}
 
 func InitSystemconfig(root NodeInfo) {
 	SysCfg = &SystemConfig{
