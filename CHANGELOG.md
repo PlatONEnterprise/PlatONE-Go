@@ -1,5 +1,12 @@
 # Changelog
 
+## [unkown]
+### Breaking Changes
+### Improvements
+### Features
+### Bug Fixes
+* [chain] import功能bug修复。  --葛鑫
+
 ## [0.9.9]
 ### Breaking Changes
 ### Improvements
