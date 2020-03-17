@@ -5,7 +5,9 @@ import (
 	"encoding/binary"
 	"errors"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/life/resolver"
 	"math"
+	"math/big"
 	"strconv"
 )
 
@@ -29,6 +31,13 @@ func BytesToInt32(b []byte) int32 {
 
 func Int64ToBytes(n int64) []byte {
 	tmp := int64(n)
+	bytesBuffer := bytes.NewBuffer([]byte{})
+	binary.Write(bytesBuffer, binary.BigEndian, tmp)
+	return bytesBuffer.Bytes()
+}
+
+func Uint64ToBytes(n uint64) []byte {
+	tmp := uint64(n)
 	bytesBuffer := bytes.NewBuffer([]byte{})
 	binary.Write(bytesBuffer, binary.BigEndian, tmp)
 	return bytesBuffer.Bytes()
@@ -68,6 +77,23 @@ func BytesToFloat64(bytes []byte) float64 {
 	bits := binary.LittleEndian.Uint64(bytes)
 	return math.Float64frombits(bits)
 }
+
+func BytesToFloat128(bytes []byte) *big.Float {
+	if len(bytes) < 16 {
+		return &big.Float{}
+	}
+	if len(bytes) > 16 {
+		bytes = bytes[:16]
+	}
+
+	low := binary.LittleEndian.Uint64(bytes[:8])
+	high := binary.LittleEndian.Uint64(bytes[8:])
+
+	F, _ := resolver.NewFromBits(high, low).Big()
+
+	return F
+}
+
 func BoolToBytes(b bool) []byte {
 	buf := bytes.NewBuffer([]byte{})
 	binary.Write(buf, binary.BigEndian, b)
@@ -84,6 +110,8 @@ func BytesConverter(source []byte, t string) interface{} {
 		return BytesToFloat32(source)
 	case "float64":
 		return BytesToFloat64(source)
+	case "float128":
+		return BytesToFloat128(source)
 	case "string":
 		if len(source) < 64 {
 			return string(source[:])
@@ -113,6 +141,15 @@ func StringConverter(source string, t string) ([]byte, error) {
 	case "float64":
 		dest, err := strconv.ParseFloat(source, 64)
 		return Float64ToBytes(dest), err
+	case "float128":
+		F := big.Float{}
+		_, _, err := F.Parse(source, 10)
+		if err != nil {
+			return []byte{}, err
+		}
+		F128, _ := resolver.NewFromBig(&F)
+
+		return append(Uint64ToBytes(F128.Low()), Uint64ToBytes(F128.High())...), nil
 	case "bool":
 		if "true" == source || "false" == source {
 			return BoolToBytes("true" == source), nil
