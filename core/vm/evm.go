@@ -59,7 +59,6 @@ func run(evm *EVM, contract *Contract, input []byte, readOnly bool) ([]byte, err
 	}*/
 
 	for _, interpreter := range evm.interpreters {
-		// TODO 尝试在这里进行换参数
 		var ok bool
 		ok, input = interpreter.CanRun(contract.Code, input, contract)
 		if ok {

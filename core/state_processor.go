@@ -31,9 +31,6 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
 )
 
-func init() {
-	log.StandardLog()
-}
 
 // StateProcessor is a basic Processor, which takes care of transitioning
 // state from one point to another.

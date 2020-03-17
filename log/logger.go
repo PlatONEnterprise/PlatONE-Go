@@ -159,7 +159,7 @@ func ModuleHandle(pkg string, record *Record, state ModulesHandlerState) {
 
 func (l *logger) New(ctx ...interface{}) Logger {
 	child := &logger{newContext(l.ctx, ctx), new(swapHandler)}
-	child.SetHandler(MultiHandler(StreamHandler(os.Stdout, TerminalFormat(true))))
+	child.SetHandler(l.h)
 	return child
 }
 

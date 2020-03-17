@@ -6,6 +6,7 @@
 ### Features
 ### Bug Fixes
 * [chain] import功能bug修复。  --葛鑫
+* [chain] 解决PlatONE终端log输出时，日志等级设置失效问题。 --汤勇
 
 ## [0.9.9]
 ### Breaking Changes
