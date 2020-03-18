@@ -1,0 +1,72 @@
+[
+    {
+        "name": "init",
+        "inputs": [],
+        "outputs": [],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "addFloat",
+        "inputs": [
+            {
+                "name": "f1",
+                "type": "float32"
+            },
+            {
+                "name": "f2",
+                "type": "float32"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "float32"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "addDouble",
+        "inputs": [
+            {
+                "name": "f1",
+                "type": "float64"
+            },
+            {
+                "name": "f2",
+                "type": "float64"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "float64"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "addLongDouble",
+        "inputs": [
+            {
+                "name": "f1",
+                "type": "float128"
+            },
+            {
+                "name": "f2",
+                "type": "float128"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "float128"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    }
+]

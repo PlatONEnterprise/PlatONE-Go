@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	math2 "github.com/PlatONEnetwork/PlatONE-Go/common/math"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
@@ -306,17 +307,17 @@ func (stateDB) Commit(deleteEmptyObjects bool) (root common.Hash, err error) {
 	return common.Hash{}, nil
 }
 
-func TestFloatInputAndOutput(t *testing.T) {
+func RunContractAndGetRes(codePath, abiPath string, input [][]byte) ([]byte, error) {
 	//gen contract codes
 	//this contract accepts a float64 and return it by add 1
-	codeBytes, err := ioutil.ReadFile("../../life/contract/paramfloattest.wasm")
+	codeBytes, err := ioutil.ReadFile(codePath)
 	if nil != err {
-		t.Fatal(err)
+		return []byte{}, err
 	}
 
-	abiBytes, err := ioutil.ReadFile("../../life/contract/paramfloattest.cpp.abi.json")
+	abiBytes, err := ioutil.ReadFile(abiPath)
 	if nil != err {
-		t.Fatal(err)
+		return []byte{}, err
 	}
 
 	param := [3][]byte{
@@ -326,7 +327,7 @@ func TestFloatInputAndOutput(t *testing.T) {
 	}
 	code, err := rlp.EncodeToBytes(param)
 	if err != nil {
-		t.Fatal(err)
+		return []byte{}, err
 	}
 	evm := &EVM{
 		StateDB: stateDB{},
@@ -346,28 +347,67 @@ func TestFloatInputAndOutput(t *testing.T) {
 		Code:          code,
 		Gas:           math.MaxUint64,
 	}
+
+	buffer := new(bytes.Buffer)
+	rlp.Encode(buffer, input)
+
+	return wasmInterpreter.Run(contract, buffer.Bytes(), true)
+}
+
+func TestFloatInputAndOutput(t *testing.T) {
+	codePath := "../../life/contract/floattest.wasm"
+	abiPath := "../../life/contract/floattest.abi.json"
+
 	// build input, {1}{getNum}{num}
-	array := []float64{6.66, -89.555, 12345678910.987654321, 1.12345678901234567890123456789}
+	var input [][]byte
+	input = make([][]byte, 0)
+	input = append(input, common.Int64ToBytes(1))
+	input = append(input, []byte("addDouble"))
+	array := []float64{123456789123456789123456789.12345678901234567890123456789, 123456789123456789123456789.12345678901234567890123456789}
 
 	for _, f := range array {
-		var input [][]byte
-		input = make([][]byte, 0)
-		input = append(input, common.Int64ToBytes(1))
-		input = append(input, []byte("getNum"))
 		input = append(input, common.Float64ToBytes(f))
-
-		buffer := new(bytes.Buffer)
-		rlp.Encode(buffer, input)
-
-		ret, err := wasmInterpreter.Run(contract, buffer.Bytes(), true)
-		if err != nil {
-			t.Fatal(err)
-		}
-		retInFloat := common.BytesToFloat64(ret)
-		if retInFloat != f+1 {
-			t.Fatal(fmt.Sprintf("expect %f but get %f", f+1, retInFloat))
-		}
-		fmt.Println(common.BytesToFloat64(ret))
 	}
 
+	ret, err := RunContractAndGetRes(codePath, abiPath, input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	retInFloat := common.BytesToFloat64(ret)
+	if retInFloat != array[0]+array[1] {
+		t.Fatal("result not correct")
+	}
+	fmt.Println(common.BytesToFloat64(ret))
+}
+
+func TestFloat128(t *testing.T) {
+	codePath := "../../life/contract/floattest.wasm"
+	abiPath := "../../life/contract/floattest.abi.json"
+
+	var input [][]byte
+	input = make([][]byte, 0)
+	input = append(input, common.Int64ToBytes(1))
+	input = append(input, []byte("addLongDouble"))
+
+	// build input, {1}{getNum}{num,num}
+	array := []string{"123456789123456789123456789.12345678901234567890123456789", "123456789123456789123456789.12345678901234567890123456789"}
+	for _, f := range array {
+		F, _, _ := big.ParseFloat(f, 10, 113, big.ToNearestEven)
+		fmt.Println(F)
+		F128, _ := math2.NewFromBig(F)
+
+		bytes := append(common.Uint64ToBytes(F128.Low()), common.Uint64ToBytes(F128.High())...)
+		input = append(input, bytes)
+	}
+
+	ret, err := RunContractAndGetRes(codePath, abiPath, input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	low := binary.LittleEndian.Uint64(ret[:8])
+	high := binary.LittleEndian.Uint64(ret[8:])
+
+	FR := math2.NewFromBits(high, low)
+	FB, _ := FR.Big()
+	fmt.Println(FB)
 }

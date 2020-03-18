@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/life/resolver"
+	math2 "github.com/PlatONEnetwork/PlatONE-Go/common/math"
 	"math"
 	"math/big"
 	"strconv"
@@ -89,7 +89,7 @@ func BytesToFloat128(bytes []byte) *big.Float {
 	low := binary.LittleEndian.Uint64(bytes[:8])
 	high := binary.LittleEndian.Uint64(bytes[8:])
 
-	F, _ := resolver.NewFromBits(high, low).Big()
+	F, _ := math2.NewFromBits(high, low).Big()
 
 	return F
 }
@@ -142,13 +142,11 @@ func StringConverter(source string, t string) ([]byte, error) {
 		dest, err := strconv.ParseFloat(source, 64)
 		return Float64ToBytes(dest), err
 	case "float128":
-		F := big.Float{}
-		_, _, err := F.Parse(source, 10)
+		F, _, err := big.ParseFloat(source, 10, math2.F128Precision, big.ToNearestEven)
 		if err != nil {
 			return []byte{}, err
 		}
-		F128, _ := resolver.NewFromBig(&F)
-
+		F128, _ := math2.NewFromBig(F)
 		return append(Uint64ToBytes(F128.Low()), Uint64ToBytes(F128.High())...), nil
 	case "bool":
 		if "true" == source || "false" == source {

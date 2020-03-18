@@ -1,4 +1,4 @@
-package resolver
+package math
 
 import (
 	"fmt"
@@ -7,27 +7,27 @@ import (
 )
 
 const (
-	// precision specifies the number of bits in the mantissa (including the
+	// Precision specifies the number of bits in the mantissa (including the
 	// implicit lead bit).
-	precision = 113
+	F128Precision = 113
 	// exponent bias.
-	bias = 16383
+	F128Bias = 16383
 )
 
 // Positive and negative Not-a-Number, infinity and zero.
 var (
 	// +NaN
-	NaN = Float{a: 0x7FFF800000000000, b: 0}
+	F128NaN = Float{h: 0x7FFF800000000000, l: 0}
 	// -NaN
-	NegNaN = Float{a: 0xFFFF800000000000, b: 0}
+	F128NegNaN = Float{h: 0xFFFF800000000000, l: 0}
 	// +Inf
-	Inf = Float{a: 0x7FFF000000000000, b: 0}
+	F128Inf = Float{h: 0x7FFF000000000000, l: 0}
 	// -Inf
-	NegInf = Float{a: 0xFFFF000000000000, b: 0}
+	F128NegInf = Float{h: 0xFFFF000000000000, l: 0}
 	// +zero
-	Zero = Float{a: 0x0000000000000000, b: 0}
+	F128Zero = Float{h: 0x0000000000000000, l: 0}
 	// -zero
-	NegZero = Float{a: 0x8000000000000000, b: 0}
+	F128NegZero = Float{h: 0x8000000000000000, l: 0}
 )
 
 // Float is a floating-point number in IEEE 754 quadruple precision format.
@@ -37,14 +37,14 @@ type Float struct {
 	//    1 bit:    sign
 	//    15 bits:  exponent
 	//    112 bits: fraction
-	a uint64 //high part
-	b uint64 //low part
+	h uint64
+	l uint64
 }
 
 // NewFromBits returns the floating-point number corresponding to the IEEE 754
 // quadruple precision binary representation.
-func NewFromBits(a, b uint64) Float {
-	return Float{a: a, b: b}
+func NewFromBits(h, l uint64) Float {
+	return Float{h: h, l: l}
 }
 
 // NewFromFloat32 returns the nearest quadruple precision floating-point number
@@ -65,13 +65,13 @@ func NewFromFloat64(x float64) (Float, big.Accuracy) {
 	case math.IsNaN(x):
 		if math.Signbit(x) {
 			// -NaN
-			return NegNaN, big.Exact
+			return F128NegNaN, big.Exact
 		}
 		// +NaN
-		return NaN, big.Exact
+		return F128NaN, big.Exact
 	}
 	y := big.NewFloat(x)
-	y.SetPrec(precision)
+	y.SetPrec(F128Precision)
 	y.SetMode(big.ToNearestEven)
 	// TODO: check accuracy after setting precision?
 	return NewFromBig(y)
@@ -81,46 +81,46 @@ func NewFromFloat64(x float64) (Float, big.Accuracy) {
 // x and the accuracy of the conversion.
 func NewFromBig(x *big.Float) (Float, big.Accuracy) {
 	// +-Inf
-	zero := big.NewFloat(0).SetPrec(precision)
+	zero := big.NewFloat(0).SetPrec(F128Precision)
 	switch {
 	case x.IsInf():
 		if x.Signbit() {
 			// -Inf
-			return NegInf, big.Exact
+			return F128NegInf, big.Exact
 		}
 		// +Inf
-		return Inf, big.Exact
+		return F128Inf, big.Exact
 	// +-zero
 	case x.Cmp(zero) == 0:
 		if x.Signbit() {
 			// -zero
-			return NegZero, big.Exact
+			return F128NegZero, big.Exact
 		}
 		// +zero
-		return Zero, big.Exact
+		return F128Zero, big.Exact
 	}
 
 	// Sign
-	var a, b uint64
+	var h, l uint64
 	if x.Signbit() {
-		a |= 0x8000000000000000
+		h |= 0x8000000000000000
 	}
 
 	// Exponent and mantissa.
-	mant := new(big.Float).SetPrec(precision)
+	mant := new(big.Float).SetPrec(F128Precision)
 	exponent := x.MantExp(mant)
 	// Remove 1 from the exponent as big.Float has an no lead bit.
-	exp := exponent - 1 + bias
+	exp := exponent - 1 + F128Bias
 
 	// Handle denormalized values.
 	// TODO: validate implementation of denormalized values.
 	if exp <= 0 {
 		acc := big.Exact
-		if exp <= -(precision - 1) {
-			exp = precision - 1
+		if exp <= -(F128Precision - 1) {
+			exp = F128Precision - 1
 			acc = big.Below
 		}
-		mant.SetMantExp(mant, exp+precision-1)
+		mant.SetMantExp(mant, exp+F128Precision-1)
 		if mant.Signbit() {
 			mant.Neg(mant)
 		}
@@ -137,9 +137,9 @@ func NewFromBig(x *big.Float) (Float, big.Accuracy) {
 		bigA.Rsh(bigA, 64)
 		bigB := new(big.Int).And(mantissa, maskB) // b = mantissa & maskB
 		// TODO: calculate acc based on if mantissa&^maskA != 0 {}
-		a |= bigA.Uint64() & 0x0000FFFFFFFFFFFF
-		b = bigB.Uint64()
-		return Float{a: a, b: b}, acc
+		h |= bigA.Uint64() & 0x0000FFFFFFFFFFFF
+		l = bigB.Uint64()
+		return Float{h: h, l: l}, acc
 	}
 
 	// exponent mask (15 bits): 0b111111111111111
@@ -147,12 +147,12 @@ func NewFromBig(x *big.Float) (Float, big.Accuracy) {
 	if (exp &^ 0x7FFF) != 0 {
 		acc = big.Above
 	}
-	a |= uint64(exp&0x7FFF) << 48
+	h |= uint64(exp&0x7FFF) << 48
 
 	if mant.Signbit() {
 		mant.Neg(mant)
 	}
-	mant.SetMantExp(mant, precision)
+	mant.SetMantExp(mant, F128Precision)
 	if !mant.IsInt() {
 		acc = big.Below
 	}
@@ -174,14 +174,14 @@ func NewFromBig(x *big.Float) (Float, big.Accuracy) {
 	if acc == big.Exact && (bigA.Uint64()&^0x0000FFFFFFFFFFFF) != 0 {
 		acc = big.Below
 	}
-	a |= bigA.Uint64() & 0x0000FFFFFFFFFFFF
-	b = bigB.Uint64()
-	return Float{a: a, b: b}, acc
+	h |= bigA.Uint64() & 0x0000FFFFFFFFFFFF
+	l = bigB.Uint64()
+	return Float{h: h, l: l}, acc
 }
 
 // Bits returns the IEEE 754 quadruple precision binary representation of f.
 func (f Float) Bits() (a, b uint64) {
-	return f.a, f.b
+	return f.h, f.l
 }
 
 // Float32 returns the float32 value nearest to f. If f is too small to be
@@ -223,11 +223,11 @@ func (f Float) Big() (x *big.Float, nan bool) {
 	exp := f.Exp()
 	frac1, frac2 := f.Frac()
 	x = big.NewFloat(0)
-	x.SetPrec(precision)
+	x.SetPrec(F128Precision)
 	x.SetMode(big.ToNearestEven)
 
 	lead := 1
-	exponent := exp - bias
+	exponent := exp - F128Bias
 
 	switch exp {
 	// 0b111111111111111
@@ -276,13 +276,13 @@ func (f Float) Big() (x *big.Float, nan bool) {
 // Signbit reports whether f is negative or negative 0.
 func (f Float) Signbit() bool {
 	// first bit is sign bit
-	return f.a&0x8000000000000000 != 0
+	return f.h&0x8000000000000000 != 0
 }
 
 // Exp returns the exponent of f.
 func (f Float) Exp() int {
 	// 15 bit exponent
-	return int(f.a&0x7FFF000000000000) >> 48
+	return int(f.h&0x7FFF000000000000) >> 48
 }
 
 // Frac returns the fraction of f.
@@ -290,15 +290,15 @@ func (f Float) Frac() (uint64, uint64) {
 	// 0x0000FFFFFFFFFFFF removes the sign and exponent part (total 16 bits) from
 	// our floating-point number. Now we can say it contains 48 bits of fraction,
 	// and `f.b` part has the rest of fraction.
-	return (f.a & 0x0000FFFFFFFFFFFF), f.b
+	return (f.h & 0x0000FFFFFFFFFFFF), f.l
 }
 
 // Low returns the Low half of f
 func (f Float) Low() uint64 {
-	return f.b
+	return f.l
 }
 
 // high returns the high half of f
 func (f Float) High() uint64 {
-	return f.a
+	return f.h
 }
