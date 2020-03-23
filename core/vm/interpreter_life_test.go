@@ -355,8 +355,8 @@ func RunContractAndGetRes(codePath, abiPath string, input [][]byte) ([]byte, err
 }
 
 func TestFloatInputAndOutput(t *testing.T) {
-	codePath := "../../life/contract/floattest.wasm"
-	abiPath := "../../life/contract/floattest.abi.json"
+	codePath := "../../life/contract/numberstest.wasm"
+	abiPath := "../../life/contract/numberstest.abi.json"
 
 	// build input, {1}{getNum}{num}
 	var input [][]byte
@@ -381,8 +381,8 @@ func TestFloatInputAndOutput(t *testing.T) {
 }
 
 func TestFloat128(t *testing.T) {
-	codePath := "../../life/contract/floattest.wasm"
-	abiPath := "../../life/contract/floattest.abi.json"
+	codePath := "../../life/contract/numberstest.wasm"
+	abiPath := "../../life/contract/numberstest.abi.json"
 
 	var input [][]byte
 	input = make([][]byte, 0)
@@ -410,4 +410,37 @@ func TestFloat128(t *testing.T) {
 	FR := math2.NewFromBits(high, low)
 	FB, _ := FR.Big()
 	fmt.Println(FB)
+}
+
+func TestBigInt(t *testing.T) {
+	codePath := "../../life/contract/numberstest.wasm"
+	abiPath := "../../life/contract/numberstest.abi.json"
+
+	var input [][]byte
+	input = make([][]byte, 0)
+	input = append(input, common.Int64ToBytes(1))
+	input = append(input, []byte("addLong"))
+
+	// build input, {1}{getNum}{num,num}
+	array := []string{"153265412365478951234569874125632", "153265412365478951234569874125632"}
+	for _, integer := range array {
+		I, _ := new(big.Int).SetString(integer, 10)
+		b, _ := common.BigToByte128(I)
+
+		//fmt.Println(b)
+
+		bytes := append(b[8:], b[:8]...)
+		input = append(input, bytes)
+	}
+
+	ret, err := RunContractAndGetRes(codePath, abiPath, input)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r := common.CallResAsInt128(ret)
+
+	if r.String() != "306530824730957902469139748251264" {
+		t.Fatal("result is not correct")
+	}
 }

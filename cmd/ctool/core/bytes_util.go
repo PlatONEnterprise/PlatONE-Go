@@ -78,6 +78,7 @@ func BytesToFloat64(bytes []byte) float64 {
 	return math.Float64frombits(bits)
 }
 
+// bytes is made of 2 uint64 in little endian
 func BytesToFloat128(bytes []byte) *big.Float {
 	if len(bytes) < 16 {
 		return &big.Float{}
@@ -106,6 +107,8 @@ func BytesConverter(source []byte, t string) interface{} {
 		return common.CallResAsInt32(source)
 	case "int64":
 		return common.CallResAsInt64(source)
+	case "int128":
+		return common.CallResAsInt128(source)
 	case "float32":
 		return BytesToFloat32(source)
 	case "float64":
@@ -118,6 +121,8 @@ func BytesConverter(source []byte, t string) interface{} {
 		} else {
 			return string(source[64:])
 		}
+	case "uint128":
+		return common.CallResAsUint128(source)
 	case "uint64":
 		return common.CallResAsUint64(source)
 	case "uint32":
@@ -135,6 +140,17 @@ func StringConverter(source string, t string) ([]byte, error) {
 	case "int64", "uint64":
 		dest, err := strconv.ParseInt(source, 10, 64)
 		return Int64ToBytes(dest), err
+	case "int128", "uint128":
+		I, success := new(big.Int).SetString(source, 10)
+		if !success {
+			return []byte(source), errors.New("parse string to int error")
+		}
+		b, success := common.BigToByte128(I)
+		if !success {
+			return []byte(source), errors.New("parse string to int error")
+		}
+		bytes := append(b[8:], b[:8]...)
+		return bytes, nil
 	case "float32":
 		dest, err := strconv.ParseFloat(source, 32)
 		return Float32ToBytes(float32(dest)), err

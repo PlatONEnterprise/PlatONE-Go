@@ -2,6 +2,7 @@ package common
 
 import (
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"math/big"
 )
 
 var (
@@ -20,7 +21,7 @@ func InnerCall(conAddr Address, funcName string, params []interface{}) ([]byte, 
 	}
 }
 
-func GenCallData(funcName string, params []interface{}) ([]byte) {
+func GenCallData(funcName string, params []interface{}) []byte {
 	data := [][]byte{}
 	data = append(data, Int64ToBytes(2)) // tx type, 2 for normal
 	data = append(data, []byte(funcName))
@@ -69,7 +70,18 @@ func GenCallData(funcName string, params []interface{}) ([]byte) {
 	}
 }
 
-func CallResAsUint64(bts []byte) (uint64) {
+func CallResAsUint128(bts []byte) *big.Int {
+
+	if len(bts) < 16 {
+		return new(big.Int).SetInt64(0)
+	}
+	//little endian to big endian
+	RevertBytes(bts)
+
+	return Byte128ToBig(bts, false)
+}
+
+func CallResAsUint64(bts []byte) uint64 {
 	if len(bts) < 32 {
 		return 0
 	}
@@ -81,7 +93,7 @@ func CallResAsUint64(bts []byte) (uint64) {
 	return n
 }
 
-func CallResAsUint32(bts []byte) (uint32) {
+func CallResAsUint32(bts []byte) uint32 {
 	if len(bts) < 32 {
 		return 0
 	}
@@ -93,7 +105,18 @@ func CallResAsUint32(bts []byte) (uint32) {
 	return n
 }
 
-func CallResAsInt64(bts []byte) (int64) {
+func CallResAsInt128(bts []byte) *big.Int {
+
+	if len(bts) < 16 {
+		return new(big.Int).SetInt64(0)
+	}
+	//little endian to big endian
+	RevertBytes(bts)
+
+	return Byte128ToBig(bts, true)
+}
+
+func CallResAsInt64(bts []byte) int64 {
 	if len(bts) < 32 {
 		return 0
 	}
@@ -105,7 +128,7 @@ func CallResAsInt64(bts []byte) (int64) {
 	return n
 }
 
-func CallResAsInt32(bts []byte) (int32) {
+func CallResAsInt32(bts []byte) int32 {
 	if len(bts) < 32 {
 		return 0
 	}
@@ -117,7 +140,7 @@ func CallResAsInt32(bts []byte) (int32) {
 	return n
 }
 
-func CallResAsBool(bts []byte) (bool) {
+func CallResAsBool(bts []byte) bool {
 	if len(bts) < 32 {
 		return false
 	}
@@ -129,7 +152,7 @@ func CallResAsBool(bts []byte) (bool) {
 	}
 }
 
-func CallResAsString(bts []byte) (string) {
+func CallResAsString(bts []byte) string {
 	if len(bts) < 64 {
 		return ""
 	}
@@ -139,4 +162,14 @@ func CallResAsString(bts []byte) (string) {
 		return ""
 	}
 	return string(bts[64 : 64+slen])
+}
+
+func RevertBytes(bts []byte) {
+	for i, j := 0, len(bts)-1; i < j; {
+		temp := bts[i]
+		bts[i] = bts[j]
+		bts[j] = temp
+		i++
+		j--
+	}
 }

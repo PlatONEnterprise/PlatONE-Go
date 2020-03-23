@@ -205,7 +205,7 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 		if txType == 0 {
 			return nil, nil
 		}
-		if returnType == "float128" {
+		if returnType == "float128" || returnType == "uint128" || returnType == "int128" {
 			params = append([]int64{resolver.Malloc128(lvm)}, params...)
 		}
 	}
@@ -257,11 +257,11 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 		}
 		finalRes := utils.Align32BytesLittleEndian(bytes)
 		return finalRes, nil
-	case "float128":
+	case "float128", "uint128", "int128":
+		// little endian
+		// float128 satisfy IEEE 754 Quadruple precision
 		returnBytes := lvm.Memory.Memory[params[0] : params[0]+16]
-		//if txType == common.CALL_CANTRACT_FLAG{
 		return returnBytes, nil
-		//}
 		//TODO dont know why we should align 32 bytes,it seems ok right now.
 	case "string":
 		returnBytes := make([]byte, 0)
@@ -445,6 +445,22 @@ func parseInputFromAbi(vm *exec.VirtualMachine, input []byte, abi []byte) (txTyp
 				return -1, "", nil, returnType, fmt.Errorf("invalid parameter: want 8 bytes but got %d bytes", len(bts))
 			}
 			params = append(params, int64(binary.BigEndian.Uint64(bts)))
+		case "int128", "uint128":
+			if len(bts) > 16 {
+				return -1, "", nil, returnType, fmt.Errorf("invalid parameter: want 16 bytes but got %d bytes", len(bts))
+			}
+			var l, h int64
+			if len(bts) <= 8 {
+				l = int64(binary.BigEndian.Uint64(bts))
+			} else {
+				l = int64(binary.BigEndian.Uint64(bts[:8]))
+			}
+			if len(bts) > 8 {
+				h = int64(binary.BigEndian.Uint64(bts[8:]))
+			} else {
+				h = int64(0)
+			}
+			params = append(params, l, h)
 		case "float32":
 			if len(bts) > 4 {
 				return -1, "", nil, returnType, fmt.Errorf("invalid parameter: want 4 bytes but got %d bytes", len(bts))
