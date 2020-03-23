@@ -7,6 +7,48 @@
         "type": "function"
     },
     {
+        "name": "addLong",
+        "inputs": [
+            {
+                "name": "i1",
+                "type": "int128"
+            },
+            {
+                "name": "i2",
+                "type": "int128"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "int128"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "addUlong",
+        "inputs": [
+            {
+                "name": "i1",
+                "type": "uint128"
+            },
+            {
+                "name": "i2",
+                "type": "uint128"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint128"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
         "name": "addFloat",
         "inputs": [
             {
