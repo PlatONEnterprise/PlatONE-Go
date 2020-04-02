@@ -18,6 +18,7 @@ func init() {
 
 	// Initialize the CLI app
 	app.Commands = []cli.Command{
+		/*
 		core.DeployCmd,
 		core.InvokeCmd,
 		core.CnsInvokeCmd,
@@ -28,15 +29,35 @@ func init() {
 		core.StabilityCmd,
 		core.StabPrepareCmd,
 		core.FwInvokeCmd,
-		core.MigrateCmd,
+		core.MigrateCmd,*/
+
+		core.AccountCmd,
+		core.ContractCmd,
+		core.AdminCmd,
+		core.CnsCmd,
+		core.FwCmd,
+
 	}
+
+	app.Flags = []cli.Flag{
+		core.AccountCmdFlags,
+		core.GasCmdFlags,
+		core.GasPriceCmdFlags,
+		core.KeystoreCmdFlags,
+		core.LocalCmdFlags,
+		core.SyncCmdFlags,
+	}
+
 	sort.Sort(cli.CommandsByName(app.Commands))
+	sort.Sort(cli.FlagsByName(app.Flags))
+
 	app.After = func(ctx *cli.Context) error {
 		return nil
 	}
 }
 
 func main() {
+
 	if err := app.Run(os.Args); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)

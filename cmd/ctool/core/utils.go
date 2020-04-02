@@ -3,6 +3,7 @@ package core
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"io/ioutil"
@@ -15,14 +16,25 @@ const (
 	transfer       = 0
 	deployContract = 1
 	invokeContract = 2
-	vote           = 3
-	permission     = 4
+	// vote           = 3
+	// permission     = 4
 
 	cnsTxType = 0x11 // Used for sending transactions without address
 	fwTxType  = 0x12 // Used fot sending transactions  about firewall
 	migTxType = 0x13 //Used for update system contract.
 
 	DefaultConfigFilePath = "/config.json"
+
+	DefaultAccountAdress = "0x0000000000000000000000000000000000000000"
+
+	cnsProxyAddress = "0x0000000000000000000000000000000000000011"
+
+	TxReceiptStatus_Success = "0x1"
+	TxReceiptStatus_Failed = "0x0"
+
+	DefaultConfigPath = "../../release/linux/conf/ctool.json"
+	DefaultContractPath = "../../release/linux/conf/contracts/"
+	DefaultPath = "../../release/linux/data/node-0/keystore"
 )
 
 var (
@@ -37,8 +49,8 @@ type JsonParam struct {
 }
 
 type TxParams struct {
-	From     string `json:"from"`
-	To       string `json:"to"`
+	From     common.Address `json:"from"`
+	To       *common.Address `json:"to"`
 	Gas      string `json:"gas"`
 	GasPrice string `json:"gasPrice"`
 	Value    string `json:"value"`
@@ -103,8 +115,32 @@ type Receipt struct {
 		To                string `json:"to"`
 		TransactionHash   string `json:"transactionHash"`
 		TransactionIndex  string `json:"transactionIndex"`
+		Logs			  []struct{
+			Address			string 		`json:"address"`
+			Topics			[]string 	`json:"topics"`
+			Data			string 		`json:"data"`
+		} `json:"logs"`
+		Status		  	string `json:"status"`
 	} `json:"result"`
 }
+
+//----------------3.31---------------------------
+
+type keystoreJson struct {
+	Address string `json:"address""`
+	Crypto  string `json:"crypto"`
+}
+
+/*
+type logs struct {
+	logs	[]*Log
+}
+
+type Log struct {
+	Address			string `json"address"`
+	Topics			[]string `json:"topics"`
+	Data			[]byte `json:"data"`
+}*/
 
 func parseConfigJson(configPath string) error {
 	if configPath == "" {
@@ -225,7 +261,7 @@ func GetFuncNameAndParams(funcAndParams string) (string, []string) {
 			}
 		}
 	}
-	params := []string{}
+	params := make([]string,0)
 	lastPos := 0
 	for _, i := range splitPos {
 		params = append(params, paramString[lastPos:i])
@@ -279,4 +315,41 @@ func encodeParam(abiPath string, funcName string, funcParams string) error {
 	fmt.Printf(hexutil.Encode(paramBytes))
 
 	return nil
+}
+
+
+//---------------03.31 newly added--------------------------------
+
+func parseFileToBytesDemo(filePath string) ([]byte, error) {
+
+	fmt.Printf("In parseFileFunction\n")
+
+	if filePath == ""{
+		return nil, fmt.Errorf("file path cannot be null, %s")
+	}
+
+	if !filepath.IsAbs(filePath) {
+		filePath, _ = filepath.Abs(filePath)
+	}
+
+	fmt.Printf("In IsAbs %s\n", filePath)
+
+	file, err := os.Stat(filePath) //os.O_RDONLY, os.ModeDir
+
+	if file.IsDir() {
+		pathSep := string(os.PathSeparator)
+		fileInfo, _ := ioutil.ReadDir(filePath)
+		//f, _ := os.OpenFile(file.Name(), os.O_RDONLY, os.ModeDir)
+		//fileInfo, _ := f.Readdir(-1)
+		if fileInfo != nil {filePath = filePath + pathSep + fileInfo[0].Name()}
+		fmt.Printf("In IsDir %s\n", filePath)
+	}
+
+	fmt.Printf("after IsDir %s\n", filePath)
+
+	bytes, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("parse file error, %s", err.Error())
+	}
+	return bytes, nil
 }

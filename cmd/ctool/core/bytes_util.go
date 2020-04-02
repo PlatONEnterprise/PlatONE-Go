@@ -34,6 +34,14 @@ func Int64ToBytes(n int64) []byte {
 	return bytesBuffer.Bytes()
 }
 
+/*
+func Int256ToBytes(n int256) []byte {
+	tmp := int256(n)
+	bytesBuffer := bytes.NewBuffer([]byte{})
+	binary.Write(bytesBuffer, binary.BigEndian, tmp)
+	return bytesBuffer.Bytes()
+}*/
+
 func BytesToInt64(b []byte) int64 {
 	bytesBuffer := bytes.NewBuffer(b)
 	var tmp int64
@@ -107,6 +115,11 @@ func StringConverter(source string, t string) ([]byte, error) {
 	case "int64", "uint64":
 		dest, err := strconv.ParseInt(source, 10, 64)
 		return Int64ToBytes(dest), err
+		/*
+	case "int256", "uint256":
+		dest, err := strconv.ParseInt(source, 10, 256)
+		return Int256ToBytes(dest), err
+		*/
 	case "float32":
 		dest, err := strconv.ParseFloat(source, 32)
 		return Float32ToBytes(float32(dest)), err
@@ -123,4 +136,15 @@ func StringConverter(source string, t string) ([]byte, error) {
 		return []byte(source), nil
 	}
 
+}
+
+//------------------0326 new added---------------------------------
+
+func isWasmContract(codeBytes []byte) bool {
+
+	if bytes.Equal(codeBytes[:8], []byte{0, 97, 115, 109, 1, 0, 0, 0}) {
+		return true
+	}
+
+	return false
 }

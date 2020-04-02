@@ -27,10 +27,11 @@ var (
 		Value: 10,
 		Usage: "account size",
 	}
+	/*
 	TxJsonDataFlag = cli.StringFlag{
 		Name:  "data",
 		Usage: "transaction data",
-	}
+	}*/
 	ContractWasmFilePathFlag = cli.StringFlag{
 		Name:  "code",
 		Usage: "wasm file path",
@@ -78,11 +79,96 @@ var (
 		Usage: "transfer value",
 	}
 
+	// newly added
+	ContractFlag = cli.StringFlag{
+		Name:  "contract",
+		Usage: "contract address or name",
+	}
+
+	RolesFlag = cli.StringFlag{
+		Name:  "roles",
+		Usage: "roles to be registered",
+	}
+
+	//
+
+	AccountCmdFlags = cli.StringFlag{
+		Name:  "account",
+		Usage: "account flag test",
+	}
+
+	GasCmdFlags = cli.StringFlag{
+		Name:  "gas",
+		//Value: "",
+		Usage: "",
+	}
+
+	GasPriceCmdFlags = cli.StringFlag{
+		Name:  "gasPrice",
+		//Value: "",
+		Usage: "",
+	}
+
+	LocalCmdFlags = cli.BoolFlag{
+		Name:  "local",
+		Usage: "",
+	}
+
+	KeystoreCmdFlags = cli.StringFlag{
+		Name:  "keystore",
+		Usage: "",
+	}
+
+	SyncCmdFlags = cli.BoolFlag{
+		Name:  "sync",
+		Usage: "",
+		// Destination: &isSync,
+	}
+
+	// ---------------------------------------------
+
+	tmpCmdFlags = []cli.Flag{
+		ContractAddrFlag,
+	}
+
+	globalCmdFlags = []cli.Flag{
+		AccountCmdFlags,
+		GasCmdFlags,
+		GasPriceCmdFlags,
+		LocalCmdFlags,
+		KeystoreCmdFlags,
+		SyncCmdFlags,
+	}
+
+	//
+
+	executecmdFlags = []cli.Flag{
+		ContractFlag,
+		ContractFuncNameFlag, // temporary
+		ContractParamFlag,
+		ContractAbiFilePathFlag,
+	}
+
+	executeCmdFlags = append(executecmdFlags, globalCmdFlags...)
+
+
+
+	/*
+	fwCmdFlags = []cli.Flag{
+		AccountCmdFlags,
+		GasCmdFlags,
+		GasPriceCmdFlags,
+		SignCmdFlags,
+		SyncCmdFlags,
+	}*/
+// ----------------------------------------------
+
 	deployCmdFlags = []cli.Flag{
 		ContractWasmFilePathFlag,
 		ContractAbiFilePathFlag,
 		ConfigPathFlag,
 	}
+
 	invokeCmdFlags = []cli.Flag{
 		ContractFuncNameFlag,
 		ContractParamFlag,
@@ -99,6 +185,8 @@ var (
 		ContractAbiFilePathFlag,
 		ConfigPathFlag,
 		TransactionTypeFlag,
+
+		ContractFlag,
 	}
 
 	fwInvokeCmdFlags = []cli.Flag{
