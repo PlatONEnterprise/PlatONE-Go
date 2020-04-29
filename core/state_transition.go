@@ -221,7 +221,7 @@ func GetCnsAddr(evm *vm.EVM, msg Message, cnsName string) (*common.Address, erro
 // the gas used (which includes gas refunds) and an error if it failed. An error always
 // indicates a core error meaning that the message would always fail for that particular
 // state and would never be accepted within a block.
-func ApplyMessage(evm *vm.EVM, msg Message, gp *GasPool) ([]byte, uint64, bool, error) {
+func ApplyMessage(evm *vm.EVM, msg Message, gp *GasPool) ([]byte, uint64, int64,  bool, error) {
 
 	if msg.TxType() == types.CnsTxType {
 		cnsRawData := msg.Data()
@@ -230,23 +230,23 @@ func ApplyMessage(evm *vm.EVM, msg Message, gp *GasPool) ([]byte, uint64, bool, 
 		if err := rlp.DecodeBytes(cnsRawData, &cnsData); err != nil {
 			log.Warn("Decode cnsRawData failed", "err", err)
 			evm.StateDB.SetNonce(msg.From(), evm.StateDB.GetNonce(msg.From())+1)
-			return nil, 0, true, nil
+			return nil, 0, 0, true, nil
 		}
 
 		if len(cnsData) < 3 {
 			evm.StateDB.SetNonce(msg.From(), evm.StateDB.GetNonce(msg.From())+1)
-			return nil, 0, true, nil
+			return nil, 0, 0, true, nil
 		}
 
 		addr, err := GetCnsAddr(evm, msg, string(cnsData[1]))
 		if err != nil {
 			log.Warn("GetCnsAddr failed", "err", err)
 			evm.StateDB.SetNonce(msg.From(), evm.StateDB.GetNonce(msg.From())+1)
-			return nil, 0, true, nil
+			return nil, 0, 0, true, nil
 		}
 
 		if *addr == ZeroAddress {
-			return nil, 0, true, CnsQueryErr
+			return nil, 0, 0, true, CnsQueryErr
 		}
 
 		msg.SetTo(*addr)
@@ -256,7 +256,7 @@ func ApplyMessage(evm *vm.EVM, msg Message, gp *GasPool) ([]byte, uint64, bool, 
 		if err != nil {
 			log.Warn("Encode Cns Data failed", "err", err)
 			evm.StateDB.SetNonce(msg.From(), evm.StateDB.GetNonce(msg.From())+1)
-			return nil, 0, true, nil
+			return nil, 0, 0, true, nil
 		}
 
 		msg.SetData(cnsRawData)
@@ -688,7 +688,7 @@ func (st *StateTransition) getContractAddr(contractName string) (feeContractAddr
 // TransitionDb will transition the state by applying the current message and
 // returning the result including the used gas. It returns an error if failed.
 // An error indicates a consensus issue.
-func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bool, err error) {
+func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, gasPrice int64, failed bool, err error) {
 	var (
 		evm = st.evm
 		// vm errors do not effect consensus and are therefor
@@ -703,12 +703,13 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 	var (
 		isUseContractToken = false
 		feeContractAddr    = ""
+
 	)
 
 	//TODO comment temporarily for performance test
-	feeContractAddr, isUseContractToken,err = st.ifUseContractTokenAsFee()
+	feeContractAddr, isUseContractToken, err = st.ifUseContractTokenAsFee()
 	if nil != err{
-		return nil, 0, false, err
+		return nil, 0, 0,false, err
 	}
 
 	//Call method invoke
@@ -718,8 +719,15 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 		// init initialGas value = txMsg.gas
 		if err = st.preContractGasCheck(feeContractAddr); err != nil {
 			log.Error("PreContractGasCheck", "err:", err)
-			return nil, 0, false, err
+			return nil, 0, 0,false, err
 		}
+		params := []interface{}{}
+		ret, _, err := st.doCallContract(feeContractAddr, "getGasPrice", params)
+		if nil != err {
+			log.Error("get gas price error", "err", err.Error())
+			return nil, 0, 0,false, err
+		}
+		gasPrice = utils.BytesToInt64(ret)
 	} else {
 		// init initialGas value = txMsg.gas
 		if err = st.preCheck(); err != nil {
@@ -735,11 +743,11 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 	gas, err := IntrinsicGas(st.data, contractCreation)
 	log.Debug("IntrinsicGas amount", "IntrinsicGas:", gas)
 	if err != nil {
-		return nil, 0, false, err
+		return nil, 0, gasPrice,false, err
 	}
 	if err = st.useGas(gas); err != nil {
 		log.Error("GasLimitTooLow", "err:", err)
-		return nil, 0, false, err
+		return nil, 0, gasPrice, false, err
 	}
 	if contractCreation {
 		//check sender permisson
@@ -747,11 +755,11 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 		if err != nil {
 			st.state.SetNonce(msg.From(), st.state.GetNonce(sender.Address())+1)
 			log.Debug("VM returned with error", "err", vmerr)
-			return nil, 0, true, nil
+			return nil, 0, gasPrice, true, nil
 		}
 		if !res {
 			st.state.SetNonce(msg.From(), st.state.GetNonce(sender.Address())+1)
-			return nil, 0, true, PermissionErr
+			return nil, 0, gasPrice, true, PermissionErr
 		}
 
 		if msg.TxType() == types.MigDpType {
@@ -785,7 +793,7 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 		// sufficient balance to make the transfer happen. The first
 		// balance transfer may never fail.
 		if vmerr == vm.ErrInsufficientBalance {
-			return nil, 0, false, vmerr
+			return nil, 0, gasPrice,false, vmerr
 		}
 	}
 
@@ -796,7 +804,7 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 		//st.state.AddBalance(st.evm.Coinbase, new(big.Int).Mul(new(big.Int).SetUint64(st.gasUsed()), st.gasPrice))
 	}
 
-	return ret, st.gasUsed(), vmerr != nil, err
+	return ret, st.gasUsed(), gasPrice, vmerr != nil, err
 }
 
 func (st *StateTransition) doCallContract(address, funcName string, funcParams []interface{}) (ret []byte, leftOverGas uint64, err error) {

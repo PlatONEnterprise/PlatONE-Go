@@ -104,7 +104,7 @@ func InitInnerCallFunc(ethPtr *Ethereum) {
 		// Setup the gas pool (also for unmetered requests)
 		// and apply the message.
 		gp := new(core.GasPool).AddGas(math.MaxUint64)
-		res, _, _, err := core.ApplyMessage(evm, msg, gp)
+		res, _, _, _, err := core.ApplyMessage(evm, msg, gp)
 		if err := vmError(); err != nil {
 			return nil, err
 		}
