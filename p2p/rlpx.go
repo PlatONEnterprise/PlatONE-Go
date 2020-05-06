@@ -25,10 +25,8 @@ import (
 	"crypto/hmac"
 	"crypto/rand"
 	"encoding/binary"
-	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"hash"
 	"io"
 	"io/ioutil"
@@ -41,7 +39,6 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto/ecies"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto/secp256k1"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto/sha3"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"github.com/golang/snappy"
@@ -305,40 +302,6 @@ func initiatorEncHandshake(conn io.ReadWriter, prv *ecdsa.PrivateKey, remoteID d
 	if err := h.handleAuthResp(authRespMsg); err != nil {
 		return s, err
 	}
-
-	// verification remote id
-	// send rand 32 bytes to remote id
-	msgHash := make([]byte, 32)
-	rand.Read(msgHash)
-	if _, err = conn.Write(msgHash); err != nil {
-		log.Warn("initiatorEncHandshake send msgHash fail")
-		return s, err
-	}
-	// receive sign(rand 32 bytes) by remote private key
-	signature := make([]byte, 65)
-	if _, err := io.ReadFull(conn, signature); err != nil {
-		log.Warn("initiatorEncHandshake receive msgSig error: ", "error", err)
-		return s, err
-	}
-	// checkout
-	recoveredPub, _ := crypto.Ecrecover(msgHash, signature)
-	remotePubStr := hex.EncodeToString(recoveredPub[1:])
-	if remoteID.String() != remotePubStr {
-		log.Warn("initiatorEncHandshake signature fail ", "cur remoteId", remoteID.String(), "remotePubStr", remotePubStr)
-		return s, err
-	}
-
-	// prove myself
-	if _, err := io.ReadFull(conn, msgHash); err != nil {
-		log.Warn("receiverEncHandshake receive msgHash", "error", err)
-		return s, err
-	}
-	signature, _ = crypto.Sign(msgHash, prv)
-	if _, err = conn.Write(signature); err != nil {
-		log.Warn("receiverEncHandshake send sign data fail")
-		return s, err
-	}
-
 	return h.secrets(authPacket, authRespPacket)
 }
 
@@ -416,44 +379,7 @@ func receiverEncHandshake(conn io.ReadWriter, prv *ecdsa.PrivateKey) (s secrets,
 	if _, err = conn.Write(authRespPacket); err != nil {
 		return s, err
 	}
-
-	// prove myself
-	msgHash := make([]byte, 32)
-	if _, err := io.ReadFull(conn, msgHash); err != nil {
-		log.Warn("receiverEncHandshake receive msgHash", "error", err)
-		return s, err
-	}
-	signature, _ := crypto.Sign(msgHash, prv)
-	if _, err = conn.Write(signature); err != nil {
-		log.Warn("receiverEncHandshake send sign data fail")
-		return s, err
-	}
-
-	// verification remote public key is in node list
-	rand.Read(msgHash)
-	if _, err = conn.Write(msgHash); err != nil {
-		log.Warn("receiverEncHandshake send msgHash fail")
-		return s, err
-	}
-	signature = make([]byte, 65)
-	if _, err := io.ReadFull(conn, signature); err != nil {
-		log.Warn("receiverEncHandshake receive msgSig", "error", err)
-		return s, err
-	}
-
-	recoveredPub, err := crypto.Ecrecover(msgHash, signature)
-	if err != nil {
-		log.Warn("receiverEncHandshake ecrecover publickey", "error", err)
-		return s, err
-	}
-
-	pubStr := hex.EncodeToString(recoveredPub[1:])
-	if common.SysCfg.IsValidJoinNode(pubStr) {
-		log.Info("receiverEncHandshake success", "PeerInfo_pubStr", pubStr)
-		return h.secrets(authPacket, authRespPacket)
-	}
-	log.Info("receiverEncHandshake fail: joined node is a invalid node ", "pubStr", pubStr)
-	return s, errors.New("join node is a invalid node")
+	return h.secrets(authPacket, authRespPacket)
 }
 
 func (h *encHandshake) handleAuthMsg(msg *authMsgV4, prv *ecdsa.PrivateKey) error {
