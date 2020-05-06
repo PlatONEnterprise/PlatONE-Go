@@ -19,8 +19,10 @@ package p2p
 
 import (
 	"crypto/ecdsa"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"net"
 	"strings"
 	"sync"
@@ -1104,6 +1106,17 @@ func (srv *Server) setupConn(c *conn, flags connFlag, dialDest *discover.Node) e
 		clog.Trace("Wrong devp2p handshake identity", "err", phs.ID)
 		return DiscUnexpectedIdentity
 	}
+	
+	pubk,err := c.id.Pubkey()
+	pubkr := crypto.FromECDSAPub(pubk)
+	pubStr := hex.EncodeToString(pubkr[1:])
+	if dialDest != nil || common.SysCfg.IsValidJoinNode(pubStr) {
+		log.Info("setupConn success", "PeerInfo_pubStr", pubStr)
+	} else {
+		log.Info("setupConn fail: joined node is a invalid node ", "pubStr", pubStr)
+		return errors.New("Invalid Node Connection")
+	}
+
 	c.caps, c.name = phs.Caps, phs.Name
 	err = srv.checkpoint(c, srv.addpeer)
 	if err != nil {
