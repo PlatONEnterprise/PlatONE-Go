@@ -1,9 +1,11 @@
 # Changelog
 
-## [unkown]
+## [0.9.10] 2020-05-07
 ### Breaking Changes
 ### Improvements
 ### Features
+* [chain] 交易处理執行時gasPrice寫入receipt功能。 --潘晨
+
 ### Bug Fixes
 * [chain] import功能bug修复。  --葛鑫
 * [chain] 解决PlatONE终端log输出时，日志等级设置失效问题。 --汤勇
