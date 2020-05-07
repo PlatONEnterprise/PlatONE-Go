@@ -1,0 +1,32 @@
+[
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "retreive",
+		"outputs": [
+			{
+				"internalType": "int32",
+				"name": "",
+				"type": "int32"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"internalType": "int32",
+				"name": "num",
+				"type": "int32"
+			}
+		],
+		"name": "store",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	}
+]

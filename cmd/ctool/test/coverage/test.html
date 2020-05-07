@@ -1,0 +1,4322 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/cmd_account.go (0.0%)</option>
+				
+				<option value="file1">github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/cmd_admin.go (0.0%)</option>
+				
+				<option value="file2">github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/cmd_cns.go (0.0%)</option>
+				
+				<option value="file3">github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/cmd_contract.go (0.0%)</option>
+				
+				<option value="file4">github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/cmd_firewall.go (0.0%)</option>
+				
+				<option value="file5">github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/common.go (20.2%)</option>
+				
+				<option value="file6">github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/config.go (62.5%)</option>
+				
+				<option value="file7">github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/flags.go (100.0%)</option>
+				
+				<option value="file8">github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/main.go (50.0%)</option>
+				
+				<option value="file9">github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/packet/data_combine.go (33.3%)</option>
+				
+				<option value="file10">github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/packet/data_interpreter.go (84.9%)</option>
+				
+				<option value="file11">github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/packet/rpc_calls.go (58.2%)</option>
+				
+				<option value="file12">github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/packet/tx_utils.go (20.8%)</option>
+				
+				<option value="file13">github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/test/httpmock.go (0.0%)</option>
+				
+				<option value="file14">github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/utils/bytes_convert.go (68.2%)</option>
+				
+				<option value="file15">github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/utils/chain_convert.go (83.9%)</option>
+				
+				<option value="file16">github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/utils/log.go (83.3%)</option>
+				
+				<option value="file17">github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/utils/param_valid.go (74.6%)</option>
+				
+				<option value="file18">github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/utils/privatekey.go (0.0%)</option>
+				
+				<option value="file19">github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/utils/rpc_http.go (51.7%)</option>
+				
+				<option value="file20">github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/utils/rpc_ws(TODO).go (0.0%)</option>
+				
+				<option value="file21">github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/utils/utils.go (57.6%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package main
+
+import (
+        "fmt"
+        "github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/packet"
+        utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/utils"
+        "github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
+        "github.com/PlatONEnetwork/PlatONE-Go/common"
+        "gopkg.in/urfave/cli.v1"
+        "reflect"
+)
+
+var (
+        // account
+        AccountCmd = cli.Command{
+                Name:      "account",
+                Usage:     "Manage accounts",
+                ArgsUsage: "",
+                Category:  "account",
+                Description: `
+        `,
+                Subcommands: []cli.Command{
+                        TransferCmd,
+                        RegisterUserCmd,
+                        RegisterRoleCmd,
+                        //SetDefaultCmd,
+                        UpdateUserCmd,
+                        QueryUserCmd,
+                        StateUserCmd,
+                },
+        }
+
+        //TODO figure out utils.MigrateFlags
+        TransferCmd = cli.Command{
+                Name:      "transfer",
+                Usage:     "Transfer value to another account",
+                ArgsUsage: "&lt;to&gt;",
+                Action:    transfer,
+                Flags:     transferCmdFlags,
+                Description: `
+                The input value can be either hexadecimal ("0xDE0B6B3A7640000") or decimal format ("") 
+                The unit conversion table are as follows:
+                &lt;TODO&gt;"`,
+        }
+
+        RegisterUserCmd = cli.Command{
+                Name:      "register-user",
+                Usage:     "Register a user account to user platform.",
+                ArgsUsage: "&lt;account&gt; &lt;name&gt; &lt;tel&gt; &lt;email&gt;",
+                Action:    registerUser,
+                Flags:     userRegisterCmdFlags,
+                Description: `
+                The roles could be attached by --roles flag when registering the user account, 
+                the roles registration request will be approved once the user registration is accepted.`,
+        }
+
+        RegisterRoleCmd = cli.Command{
+                Name:      "register-role",
+                Usage:     "Register roles for a user account",
+                ArgsUsage: "&lt;roles&gt;",
+                Action:    registerRole,
+                Flags:     globalCmdFlags,
+                Description: `
+                The roles are listed below:
+                chainCreator: the first account of the chain is defaulted to chainCreator. There is only one chainCreator in the chain.
+                chainAdmin: The chainAdmin has the right to add or delete ...&lt;TODO&gt;
+                contractAdmin: &lt;TODO&gt;
+                contractDeployer: The contractDeployer has the right to deploy and destroy the contracts
+                nodeAdmin: The nodeAdmin has the right to add, delete, and update the node to the nodelist.
+                `,
+        }
+
+        UpdateUserCmd = cli.Command{
+                Name:      "update",
+                Usage:     "Update the email and mobile info of a user account",
+                ArgsUsage: "&lt;account&gt;",
+                Action:    updateUser,
+                Flags:     userUpdateCmdFlags,
+                // Description: ,
+        }
+
+        QueryUserCmd = cli.Command{
+                Name:      "query",
+                Usage:     "Query the user Info by user name or address",
+                ArgsUsage: "&lt;account&gt;",
+                Action:    queryUser,
+                Flags:     globalCmdFlags,
+                Description: `
+                null `,
+        }
+
+        StateUserCmd = cli.Command{
+                Name:      "state",
+                Usage:     "Trace a user's current registration state by user name or address",
+                ArgsUsage: "&lt;account&gt;",
+                Action:    stateUser,
+                Flags:     globalCmdFlags,
+                Description: `
+                The tracing has one of the following results:
+                1. the user application is under approving
+                2. the user application is rejected
+                3. the user is invalid
+                4. the user is valid: the user is a normal user(no role)
+                5. the user is valid: has Role(s): ...
+                6. the user is valid: has Role(s): ...
+                Role(s) in registration: ...`,
+        }
+)
+
+// transfer value from one account to another
+func transfer(c *cli.Context) <span class="cov0" title="0">{
+        to := c.Args().First()
+        value := c.String("value")
+
+        value = utl.ChainParamConvert(value, "value").(string)
+        toNew := utl.ChainParamConvert(to, "to").(common.Address)
+
+        call := packet.NewContractCallDemo(nil, "", 0)
+        result := messageCall(c, call, &amp;toNew, value, packet.TRANSFER)
+        fmt.Printf("result: %v\n", result)
+}</span>
+
+func registerUser(c *cli.Context) <span class="cov0" title="0">{
+        // 必填
+        var strMustArray = []string{"account", "name", "tel", "email"}
+        var strJson = "{\"roles\":\"\",\"remark\":\"user platform application\"}"
+
+        //paramNumCheck(len(strMustArray), len(c.Args()))
+
+        str := combineJson(c, strMustArray, []byte(strJson))
+
+        funcParams := []string{
+                str,
+        }
+
+        result := contractCommon(c, funcParams, "registerUser", "__sys_UserRegister")
+        fmt.Printf("result: %v\n", result)
+}</span>
+
+func registerRole(c *cli.Context) <span class="cov0" title="0">{
+
+        roles := c.Args().First()
+
+        if roles == "" </span><span class="cov0" title="0">{
+                utils.Fatalf("the input &lt;roles&gt; cannot be empty")
+        }</span>
+
+        <span class="cov0" title="0">funcParams := []string{
+                roles,
+        }
+
+        result := contractCommon(c, funcParams, "registerRole", "__sys_RoleRegister")
+        fmt.Printf("result: %v\n", result)</span>
+}
+
+func updateUser(c *cli.Context) <span class="cov0" title="0">{
+        account := c.Args().First()
+        utl.ParamValid(account, "address")
+
+        strJson := "{\"mobile\":\"\",\"email\":\"\"}"
+        str := combineJson(c, nil, []byte(strJson))
+
+        funcParams := CombineFuncParams(account, str)
+
+        result := contractCommon(c, funcParams, "update", "__sys_UserManager")
+        fmt.Printf("result: %v\n", result)
+}</span>
+
+func queryUser(c *cli.Context) <span class="cov0" title="0">{
+        var funcName string
+        user := c.Args().First()
+
+        isAddress := ParamParse(user, "user").(bool)
+        if isAddress </span><span class="cov0" title="0">{
+                funcName = "getAccountByAddress"
+        }</span> else<span class="cov0" title="0"> {
+                funcName = "getAccountByName"
+        }</span>
+
+        <span class="cov0" title="0">result := contractCommon(c, []string{user}, funcName, "__sys_UserManager")
+
+        fmt.Printf("result: %v\n", result)</span>
+}
+
+func stateUser(c *cli.Context) <span class="cov0" title="0">{
+        //TODO user name
+        account := c.Args().First()
+        utl.ParamValid(account, "address")
+
+        funcParams := []string{
+                account,
+        }
+
+        // check the user status if the user registration is approved
+        result := contractCommon(c, funcParams, "getStatusByAddress", "__sys_UserRegister")
+        switch result.(int32) </span>{
+        case 1:<span class="cov0" title="0">
+                fmt.Printf("the user application is under approving\n")
+                return</span>
+        case 3:<span class="cov0" title="0">
+                fmt.Printf("the user application is rejected\n")
+                return</span>
+        default:<span class="cov0" title="0">
+                result = contractCommon(c, funcParams, "isValidUser", "__sys_UserManager")</span>
+        }
+
+        // get the user roles is the user is valid
+        <span class="cov0" title="0">if result.(int32) == 1 </span><span class="cov0" title="0">{
+                fmt.Printf("the user is valid\n")
+                result = contractCommon(c, funcParams, "getRolesByAddress", "__sys_RoleManager")
+        }</span> else<span class="cov0" title="0"> {
+                fmt.Printf("the user is invalid: ")
+                return
+        }</span>
+
+        // print the roles owned by the user
+        <span class="cov0" title="0">resultBytes := []byte(result.(string))
+        result2 := packet.ParseSysContractResult(resultBytes)
+        if result2.Code == 0 </span><span class="cov0" title="0">{
+                fmt.Printf("has Roles: %v\n", reflect.ValueOf(result2.Data))
+        }</span> else<span class="cov0" title="0"> {
+                fmt.Printf("the user is a normal user(no roles)\n")
+        }</span>
+
+        // get the user roles in registeration
+        <span class="cov0" title="0">result = contractCommon(c, funcParams, "getRegisterInfoByAddress", "__sys_RoleRegister")
+        resultBytes = []byte(result.(string))
+        result2 = packet.ParseSysContractResult(resultBytes)
+        if result2.Code == 0 </span><span class="cov0" title="0">{
+                fmt.Printf("Roles in registration: %v\n", reflect.ValueOf(result2.Data))
+        }</span>
+
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package main
+
+import (
+        "fmt"
+        utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/utils"
+        "github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
+        "gopkg.in/urfave/cli.v1"
+)
+
+var (
+        // admin
+        AdminCmd = cli.Command{
+                Name:  "admin",
+                Usage: "Manage administrator rights",
+
+                Subcommands: []cli.Command{
+                        NodeCmd,
+                        AdminContractCmd,
+                        AdminUserCmd,
+                        AdminSupCmd,
+                        SysConfigCmd,
+                },
+        }
+
+        //----------------------------------------------------------------
+        NodeCmd = cli.Command{
+                Name:  "node",
+                Usage: "Manage nodes in PlatONE network",
+
+                Subcommands: []cli.Command{
+                        NodeAddCmd,
+                        NodeDeleteCmd,
+                        NodeQueryCmd,
+                        NodeStatCmd,
+                        NodeUpdateCmd,
+                },
+        }
+
+        NodeAddCmd = cli.Command{
+                Name:      "add",
+                Usage:     "Add a node to the node list",
+                ArgsUsage: "&lt;name&gt; &lt;publicKey&gt; &lt;externalIP&gt; &lt;internalIP&gt;",
+                Action:    nodeAdd,
+                Flags:     nodeAddCmdFlags,
+                Description: `
+                The newly added nodes can only be observer type.`,
+        }
+
+        NodeDeleteCmd = cli.Command{
+                Name:      "delete",
+                Usage:     "Delete a node from the node list, the deleted node can no longer receiving and synchronizing blocks",
+                ArgsUsage: "&lt;name&gt;",
+                Action:    nodeDelete,
+                Flags:     globalCmdFlags,
+        }
+
+        NodeUpdateCmd = cli.Command{
+                Name:      "update",
+                Usage:     "Update the description, delay number, and node type of a node",
+                ArgsUsage: "&lt;name&gt;",
+                Action:    nodeUpdate,
+                Flags:     nodeUpdateCmdFlags,
+        }
+
+        NodeQueryCmd = cli.Command{
+                Name:  "query",
+                Usage: "Query the node Info by the search key provided",
+                //ArgsUsage: "&lt;name&gt;",
+                Action: nodeQuery,
+                Flags:  nodeQueryCmdFlasg,
+        }
+
+        NodeStatCmd = cli.Command{
+                Name:   "stat",
+                Usage:  "Statistic the node Info by the search key provided",
+                Action: nodeStat,
+                Flags:  nodeStatCmdFlags,
+        }
+        //--------------------------------------------------
+        //TODO delete?
+        AdminContractCmd = cli.Command{
+                Name:  "contract",
+                Usage: "Manage contract deployers &lt;TODO: deprecated?&gt;",
+                Subcommands: []cli.Command{
+                        ContractApprove,
+                        ContractAdd,
+                        ContractDelete,
+                        ContractList,
+                },
+        }
+
+        ContractApprove = cli.Command{
+                Name:      "approve",
+                Usage:     "show a refactoring contractDeployer approve demo",
+                ArgsUsage: "&lt;address&gt; &lt;operation&gt;",
+                Action:    contractApprove,
+                Flags:     globalCmdFlags,
+        }
+
+        ContractAdd = cli.Command{
+                Name:      "add",
+                Usage:     "show a refactoring contractDeployer add demo",
+                ArgsUsage: "&lt;name&gt; &lt;address&gt;",
+                Action:    contractAdd,
+                Flags:     globalCmdFlags,
+        }
+
+        ContractDelete = cli.Command{
+                Name:      "delete",
+                Usage:     "show a refactoring contractDeployer delete demo",
+                ArgsUsage: "&lt;address&gt; &lt;roles&gt;",
+                Action:    contractDelete,
+                Flags:     globalCmdFlags,
+        }
+
+        ContractList = cli.Command{
+                Name:   "list",
+                Usage:  "show a refactoring contractDeployer list demo",
+                Action: contractList,
+                Flags:  globalCmdFlags,
+        }
+        //-------------------------------------------------
+
+        AdminUserCmd = cli.Command{
+                Name:  "user",
+                Usage: "Manager user accounts registered in the user platform",
+
+                Subcommands: []cli.Command{
+                        UserApprove,
+                        UserAdd,
+                        UserDelete,
+                        UserEnable,
+                        UserDisable,
+                        UserUpdate,
+                        UserList,
+                },
+        }
+
+        UserApprove = cli.Command{
+                Name:      "approve",
+                Usage:     "Approve the user registration",
+                ArgsUsage: "&lt;address&gt; &lt;operation&gt;",
+                Action:    userApprove,
+                Flags:     globalCmdFlags,
+        }
+
+        UserAdd = cli.Command{
+                Name:      "add",
+                Usage:     "Add a user to the user platform",
+                ArgsUsage: "&lt;address&gt; &lt;name&gt; &lt;tel&gt; &lt;email&gt;",
+                Action:    userAdd,
+                Flags:     globalCmdFlags,
+        }
+
+        UserDelete = cli.Command{
+                Name:      "delete",
+                Usage:     "Delete a user from user platform. The user becomes invalid and ",
+                ArgsUsage: "&lt;address&gt;",
+                Action:    userDelete,
+                Flags:     globalCmdFlags,
+        }
+
+        UserEnable = cli.Command{
+                Name:      "enable",
+                Usage:     "Enable a user from disable",
+                ArgsUsage: "&lt;address&gt;",
+                Action:    userEnable,
+                Flags:     globalCmdFlags,
+        }
+
+        UserDisable = cli.Command{
+                Name:      "disable",
+                Usage:     "Disable a user. The user becomes invalid. The disabled user can be enabled by the enable command",
+                ArgsUsage: "&lt;address&gt;",
+                Action:    userDisable,
+                Flags:     globalCmdFlags,
+        }
+
+        //TODO 这个命令有什么意义
+        UserUpdate = cli.Command{
+                Name:      "update",
+                Usage:     "Update the mobile and email info of a user",
+                ArgsUsage: "&lt;address&gt;",
+                Action:    userUpdate,
+                Flags:     userUpdateCmdFlags,
+        }
+
+        UserList = cli.Command{
+                Name:  "list",
+                Usage: "&lt;TODO&gt;",
+                //ArgsUsage: "&lt;address&gt;",
+                Action: userList,
+                //Flags:  globalCmdFlags,
+        }
+        //-------------------------------------------------
+
+        AdminSupCmd = cli.Command{
+                Name:  "sup",
+                Usage: "&lt;TODO&gt;",
+
+                Subcommands: []cli.Command{
+                        SupApprove,
+                        SupAdd,
+                        SupDelete,
+                        SupList,
+                },
+        }
+
+        SupApprove = cli.Command{
+                Name:      "approve",
+                Usage:     "Approve the role registration of a user",
+                ArgsUsage: "&lt;address&gt; &lt;operation&gt;",
+                Action:    supApprove,
+                Flags:     globalCmdFlags,
+        }
+
+        SupAdd = cli.Command{
+                Name:      "add",
+                Usage:     "Add a role to a user",
+                ArgsUsage: "&lt;name&gt; &lt;address&gt; &lt;roles&gt;",
+                Action:    supAdd,
+                Flags:     globalCmdFlags,
+        }
+
+        SupDelete = cli.Command{
+                Name:      "delete",
+                Usage:     "Delete a role of a user",
+                ArgsUsage: "&lt;address&gt; &lt;roles&gt;",
+                Action:    supDelete,
+                Flags:     globalCmdFlags,
+        }
+
+        SupList = cli.Command{
+                Name:   "list",
+                Usage:  "&lt;TODO&gt;",
+                Action: supList,
+                Flags:  supAdminCmdFlags,
+        }
+        //-----------------------------------------
+
+        SysConfigCmd = cli.Command{
+                Name:  "sysconfig",
+                Usage: "&lt;TODO: currently unavailable&gt;",
+
+                Subcommands: []cli.Command{
+                        ConsensusConfig,
+                        AccessControlConfig,
+                        GasFeeConfig,
+                },
+        }
+
+        ConsensusConfig = cli.Command{
+                Name:  "consensus",
+                Usage: "&lt;TODO: currently unavailable&gt;",
+                //ArgsUsage: "",
+                //Action: ,
+                Flags: globalCmdFlags,
+        }
+
+        AccessControlConfig = cli.Command{
+                Name:  "add",
+                Usage: "&lt;TODO: currently unavailable&gt;",
+                //ArgsUsage: "",
+                //Action: ,
+                Flags: globalCmdFlags,
+        }
+
+        GasFeeConfig = cli.Command{
+                Name:  "gasfee",
+                Usage: "&lt;TODO: currently unavailable&gt;",
+                //ArgsUsage: "",
+                //Action: ,
+                Flags: globalCmdFlags,
+        }
+)
+
+func nodeAdd(c *cli.Context) <span class="cov0" title="0">{
+
+        // required value
+        var strMustArray = []string{"name", "publicKey", "externalIP", "internalIP"}
+
+        // default or user input value
+        var strConst = "\"owner\":\"todo\",\"status\":1,\"type\":0,"
+        var strDefault = "\"rpcPort\":6791,\"p2pPort\":1800,\"desc\":\"add node to the list\","
+        var strOption = "\"delayNum\":\"\""
+
+        var strJson = fmt.Sprintf("{%s%s%s}", strConst, strDefault, strOption)
+
+        //utl.ParamNumCheck(len(strMustArray), len(c.Args())) //TODO bug fix
+
+        // combine to json format
+        str := combineJson(c, strMustArray, []byte(strJson))
+
+        funcParams := []string{
+                str,
+        }
+
+        result := contractCommon(c, funcParams, "add", "__sys_NodeManager")
+        fmt.Printf("result: %s\n", result)
+}</span>
+
+func nodeDelete(c *cli.Context) <span class="cov0" title="0">{
+
+        name := c.Args().First()
+        utl.ParamValid(name, "name")
+
+        funcParams := []string{
+                name,
+        }
+
+        result := contractCommon(c, funcParams, "update", "__sys_NodeManager")
+        fmt.Printf("result: %s\n", result)
+}</span>
+
+func nodeUpdate(c *cli.Context) <span class="cov0" title="0">{
+
+        // 可选(必填or必填)
+        var strJson = "{\"type\":\"\",\"delayNum\":\"\",\"desc\":\"\"}"
+
+        str := combineJson(c, nil, []byte(strJson))
+
+        name := c.Args().First()
+        utl.ParamValid(name, "name")
+
+        funcParams := CombineFuncParams(name, str)
+
+        result := contractCommon(c, funcParams, "update", "__sys_NodeManager")
+        fmt.Printf("result: %s\n", result)
+}</span>
+
+//TODO enode
+func nodeQuery(c *cli.Context) <span class="cov0" title="0">{
+        //var strOptionArray = []string{"status", "type", "name", "publicKey"}
+        var strJson = "{\"type\":\"\",\"status\":\"\",\"name\":\"\",\"publicKey\":\"\"}"
+
+        all := c.Bool("all")
+        if all </span><span class="cov0" title="0">{
+                _ = contractCommon(c, nil, "getAllNodes", "__sys_NodeManager")
+                return
+        }</span>
+
+        <span class="cov0" title="0">str := combineJson(c, nil, []byte(strJson))
+        funcParams := CombineFuncParams(str)
+
+        result := contractCommon(c, funcParams, "getNodes", "__sys_NodeManager")
+        fmt.Printf("result: %s\n", result)</span>
+}
+
+func nodeStat(c *cli.Context) <span class="cov0" title="0">{
+        var strJson = "{\"type\":\"\",\"status\":\"\"}"
+
+        str := combineJson(c, nil, []byte(strJson))
+        funcParams := CombineFuncParams(str)
+
+        result := contractCommon(c, funcParams, "nodesNum", "__sys_NodeManager")
+        fmt.Printf("result: %s\n", result)
+}</span>
+
+//------------------------------------------------------------------------------------
+func contractApprove(c *cli.Context) <span class="cov0" title="0">{
+        account := c.Args().First()
+        statusString := c.Args().Get(1)
+
+        //utl.ParamNumCheck(2,len(c.Args()))
+        utl.ParamValid(account, "address")
+        status := ParamParse(statusString, "operation").(string)
+
+        funcParams := CombineFuncParams(account, status)
+
+        result := contractCommon(c, funcParams, "approveRole", "__sys_RoleRegister")
+        fmt.Printf("result: %s\n", result)
+}</span>
+
+func contractAdd(c *cli.Context) <span class="cov0" title="0">{
+        name := c.Args().First()
+        account := c.Args().Get(1)
+
+        //paramNumCheck(2,len(c.Args()))
+        utl.ParamValid(account, "address")
+
+        funcParams := CombineFuncParams(name, account, "[\"contractDeployer\"]")
+
+        result := contractCommon(c, funcParams, "addRole", "__sys_RoleManager")
+        fmt.Printf("result: %s\n", result)
+}</span>
+
+func contractDelete(c *cli.Context) <span class="cov0" title="0">{
+        account := c.Args().First()
+        utl.ParamValid(account, "address")
+
+        funcParams := CombineFuncParams(account, "[\"contractDeployer\"]")
+
+        result := contractCommon(c, funcParams, "removeRole", "__sys_RoleManager")
+        fmt.Printf("result: %s\n", result)
+}</span>
+
+// future feature
+// func contractAudit(c *cli.Context){}
+
+//TODO refactory
+func contractList(c *cli.Context) <span class="cov0" title="0">{
+        var result interface{}
+        del := c.Bool("delete")
+        approve := c.Bool("approve")
+
+        if del &amp;&amp; approve </span><span class="cov0" title="0">{
+                utils.Fatalf("please select one operation at one time")
+        }</span>
+
+        <span class="cov0" title="0">switch </span>{
+        case approve:<span class="cov0" title="0">
+                funcParams := []string{
+                        "1",  // status
+                        "0",  // pageNum
+                        "10", // pageSize
+                }
+
+                _ = contractCommon(c, funcParams, "getRegisterInfosByStatus", "__sys_RoleRegister")</span>
+        case del:<span class="cov0" title="0">
+                //role paramcheck
+
+                funcParams := []string{
+                        "contractDeployer",
+                }
+
+                result = contractCommon(c, funcParams, "getAccountsByRole", "__sys_RoleManager")</span>
+        default:<span class="cov0" title="0">
+                panic(fmt.Sprintf(utl.PanicUnexpSituation, "contractList"))</span>
+        }
+        <span class="cov0" title="0">fmt.Printf("result: %s\n", result)</span>
+}
+
+//---------------------------------------------------------------------------
+func userApprove(c *cli.Context) <span class="cov0" title="0">{
+        account := c.Args().First()
+        statusString := c.Args().Get(1)
+
+        //utl.ParamNumCheck(2,len(c.Args()))
+        utl.ParamValid(account, "address")
+        status := ParamParse(statusString, "operation").(string)
+
+        funcParams := []string{
+                account,
+                status,
+        }
+
+        result := contractCommon(c, funcParams, "approve", "__sys_UserRegister")
+        fmt.Printf("result: %s\n", result)
+}</span>
+
+func userAdd(c *cli.Context) <span class="cov0" title="0">{
+        var strMustArray = []string{"address", "name", "tel", "email"}
+
+        //paramNumCheck(len(strMustArray), len(c.Args()))
+
+        //str := combineJson2(c,strMustArray,nil,nil,nil)
+        str := combineJson(c, strMustArray, nil)
+
+        funcParams := []string{
+                str,
+        }
+
+        result := contractCommon(c, funcParams, "addUser", "__sys_UserManager")
+        fmt.Printf("result: %s\n", result)
+}</span>
+
+func userDelete(c *cli.Context) <span class="cov0" title="0">{
+        account := c.Args().First()
+        utl.ParamValid(account, "address")
+
+        funcParams := []string{
+                account,
+        }
+
+        result := contractCommon(c, funcParams, "delUser", "__sys_UserManager")
+        fmt.Printf("result: %s\n", result)
+}</span>
+
+func userEnable(c *cli.Context) <span class="cov0" title="0">{
+        account := c.Args().First()
+        utl.ParamValid(account, "address")
+
+        funcParams := []string{
+                account,
+        }
+
+        result := contractCommon(c, funcParams, "enable", "__sys_UserManager")
+        fmt.Printf("result: %s\n", result)
+}</span>
+
+func userDisable(c *cli.Context) <span class="cov0" title="0">{
+        account := c.Args().First()
+        utl.ParamValid(account, "address")
+
+        funcParams := []string{
+                account,
+        }
+
+        result := contractCommon(c, funcParams, "disable", "__sys_UserManager")
+        fmt.Printf("result: %s\n", result)
+}</span>
+
+func userUpdate(c *cli.Context) <span class="cov0" title="0">{
+        updateUser(c)
+}</span>
+
+//TODO ?
+func userList(c *cli.Context) <span class="cov0" title="0">{
+        //del enable disable
+        _ = contractCommon(c, []string{}, "getAccountBystatus", "__sys_UserRegister")
+        // approve
+        _ = contractCommon(c, []string{}, "getAccountBystatus", "__sys_UserRegister")
+}</span>
+
+//------------------------------------------------------------------------------
+func supApprove(c *cli.Context) <span class="cov0" title="0">{
+        contractApprove(c)
+}</span>
+
+func supAdd(c *cli.Context) <span class="cov0" title="0">{
+        name := c.Args().First()
+        account := c.Args().Get(1)
+        roles := c.Args().Get(2)
+
+        //paramNumCheck(3,len(c.Args()))
+        utl.ParamValid(name, "name")
+        utl.ParamValid(account, "address")
+        utl.ParamValid(roles, "roles")
+
+        funcParams := CombineFuncParams(name, account, roles)
+
+        result := contractCommon(c, funcParams, "addRole", "__sys_RoleManager")
+        fmt.Printf("result: %s\n", result)
+}</span>
+
+func supDelete(c *cli.Context) <span class="cov0" title="0">{
+        account := c.Args().First()
+        roles := c.Args().Get(1)
+
+        //paramNumCheck(2,len(c.Args()))
+        utl.ParamValid(account, "address")
+
+        funcParams := CombineFuncParams(account, roles)
+
+        result := contractCommon(c, funcParams, "removeRole", "__sys_RoleManager")
+        fmt.Printf("result: %s\n", result)
+}</span>
+
+func supList(c *cli.Context) <span class="cov0" title="0">{
+        var result interface{}
+        role := c.String("delete")
+        approve := c.Bool("approve")
+
+        if role != "" &amp;&amp; approve </span><span class="cov0" title="0">{
+                utils.Fatalf("please select one operation at one time")
+        }</span>
+
+        <span class="cov0" title="0">switch </span>{
+        case approve:<span class="cov0" title="0">
+                funcParams := []string{
+                        "1",  // status
+                        "0",  // pageNum
+                        "10", // pageSize
+                }
+
+                result = contractCommon(c, funcParams, "getRegisterInfosByStatus", "__sys_RoleRegister")</span>
+        case role != "":<span class="cov0" title="0">
+                //role paramcheck
+
+                funcParams := []string{
+                        role,
+                }
+
+                result = contractCommon(c, funcParams, "getAccountsByRole", "__sys_RoleManager")</span>
+        }
+
+        <span class="cov0" title="0">fmt.Printf("result: %s\n", result)</span>
+}
+
+//----------------------------------------------
+//TODO system parameter contract
+//func sysconfigCon(c *cli.Context) {}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package main
+
+import (
+        "fmt"
+        "github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/packet"
+        utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/utils"
+        "gopkg.in/urfave/cli.v1"
+)
+
+var (
+
+        // cns
+        CnsCmd = cli.Command{
+                Name:     "cns",
+                Usage:    "Manage Contract Named Sevice",
+                Category: "cns",
+                Subcommands: []cli.Command{
+                        CnsResolveCmd,
+                        CnsRegisterCmd,
+                        CnsUnregisterCmd,
+                        CnsQueryCmd,
+                        CnsStateCmd,
+                },
+        }
+
+        CnsRegisterCmd = cli.Command{
+                Name:      "register",
+                Usage:     "Register a contract to the CNS",
+                ArgsUsage: "&lt;name&gt; &lt;version&gt; &lt;address&gt;",
+                Action:    cnsRegister,
+                Flags:     globalCmdFlags,
+                //Description:``,
+        }
+
+        CnsUnregisterCmd = cli.Command{
+                Name:      "unregister",
+                Usage:     "Unregister a contract name in the CNS by specifying the version",
+                ArgsUsage: "&lt;name&gt; &lt;version&gt;",
+                Action:    cnsUnregister,
+                Flags:     globalCmdFlags,
+        }
+
+        CnsResolveCmd = cli.Command{
+                Name:      "resolve",
+                Usage:     "Shows the latest version (default) contract address binded with a name ",
+                ArgsUsage: "&lt;name&gt;",
+                Action:    cnsResolve,
+                Flags:     cnsResolveCmdFlags,
+        }
+
+        //TODO 仔细梳理
+        CnsQueryCmd = cli.Command{
+                Name:   "query",
+                Usage:  "Query the CNS Info by the search key provided",
+                Action: cnsQuery,
+                Flags:  cnsQueryCmdFlags,
+                Description: `
+                List all the data object matching the search key. 
+                The --all flag has the highest priority than the other flags`,
+        }
+
+        CnsStateCmd = cli.Command{
+                Name:      "state",
+                Usage:     "Show the registration status of a contract name or contract address",
+                ArgsUsage: "&lt;contract&gt;",
+                Action:    cnsState,
+                Flags:     globalCmdFlags,
+        }
+)
+
+func cnsRegister(c *cli.Context) <span class="cov0" title="0">{
+        name := c.Args().First()
+        ver := c.Args().Get(1)
+        address := c.Args().Get(2)
+
+        //paramNumCheck(3,len(c.Args()))
+        utl.ParamValid(name, "name")
+        utl.ParamValid(ver, "version")
+        utl.ParamValid(address, "address")
+
+        funcParams := []string{
+                name,
+                ver,
+                address,
+        }
+
+        // __sys_CnsManager不能进行名字访问 未注册
+        result := contractCommon(c, funcParams, "cnsRegister", packet.CNS_PROXY_ADDRESS)
+        fmt.Printf("result: %s\n", result)
+}</span>
+
+func cnsUnregister(c *cli.Context) <span class="cov0" title="0">{
+        name := c.Args().First()
+        ver := c.Args().Get(1)
+
+        //paramNumCheck(2,len(c.Args()))
+        utl.ParamValid(name, "name")
+        utl.ParamValid(ver, "version")
+
+        funcParams := []string{
+                name,
+                ver,
+        }
+
+        // __sys_CnsManager不能进行名字访问 未注册
+        result := contractCommon(c, funcParams, "cnsUnregister", packet.CNS_PROXY_ADDRESS)
+        fmt.Printf("result: %s\n", result)
+}</span>
+
+func cnsResolve(c *cli.Context) <span class="cov0" title="0">{
+
+        name := c.Args().First()
+        ver := c.String("version")
+
+        utl.ParamValid(name, "name")
+        if ver != "latest" </span><span class="cov0" title="0">{
+                utl.ParamValid(ver, "version")
+        }</span>
+
+        <span class="cov0" title="0">funcParams := []string{
+                name,
+                ver,
+        }
+
+        // __sys_CnsManager不能进行名字访问 未注册
+        result := contractCommon(c, funcParams, "getContractAddress", packet.CNS_PROXY_ADDRESS)
+        fmt.Printf("result: %s\n", result)</span>
+
+}
+
+func cnsQuery(c *cli.Context) <span class="cov0" title="0">{
+        var funcName string
+        var result interface{}
+        all := c.Bool("all")
+        contract := c.String("contract")
+        //pageNum := c.String("pageNum")
+        //pageSize := c.String("pageSize")
+
+        switch </span>{
+        case all:<span class="cov0" title="0">
+                funcParams := []string{
+                        "0",  //
+                        "10", //
+                }
+                result = contractCommon(c, funcParams, "getRegisteredContracts", packet.CNS_PROXY_ADDRESS)</span>
+        case contract != "":<span class="cov0" title="0">
+                isAddress := ParamParse(contract, "contract").(bool)
+                if isAddress </span><span class="cov0" title="0">{
+                        funcName = "getContractInfoByAddress"
+                }</span> else<span class="cov0" title="0"> {
+                        funcName = "getHistoryContractsByName"
+                }</span>
+                <span class="cov0" title="0">result = contractCommon(c, []string{contract}, funcName, packet.CNS_PROXY_ADDRESS)</span>
+
+        default:<span class="cov0" title="0">
+                result = "no search key provided!"</span>
+        }
+
+        <span class="cov0" title="0">fmt.Printf("result: %s\n", result)</span>
+}
+
+func cnsState(c *cli.Context) <span class="cov0" title="0">{
+        var funcName string
+        contract := c.Args().First()
+
+        // __sys_CnsManager不能进行名字访问 未注册
+        isAddress := ParamParse(contract, "contract").(bool)
+        if isAddress </span><span class="cov0" title="0">{
+                funcName = "ifRegisteredByAddress"
+        }</span> else<span class="cov0" title="0"> {
+                funcName = "ifRegisteredByName"
+        }</span>
+
+        <span class="cov0" title="0">funcParams := CombineFuncParams(contract)
+        result := contractCommon(c, funcParams, funcName, packet.CNS_PROXY_ADDRESS)
+
+        if result.(int32) == 1 </span><span class="cov0" title="0">{
+                fmt.Printf("result: the contract is registered in CNS\n")
+        }</span> else<span class="cov0" title="0"> {
+                fmt.Printf("result: the contract is not registered in CNS\n")
+        }</span>
+
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package main
+
+import (
+        "encoding/json"
+        "fmt"
+        "github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/packet"
+        utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/utils"
+        "github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
+        "gopkg.in/urfave/cli.v1"
+        "strings"
+)
+
+var (
+        // contract
+        ContractCmd = cli.Command{
+                Name:      "contract",
+                Usage:     "Manage contracts",
+                ArgsUsage: "",
+                Category:  "contract",
+                Subcommands: []cli.Command{
+                        ExecuteCmd,
+                        MethodCmd,
+                        MigrateCmd,
+                        DeployCmd,
+                        ReceiptCmd,
+                },
+                Description: `
+                Currently PlatONE supports two types of contracts:  wasm and evm 
+                Use --vm flag to select the correct interpreter when deploy and 
+                execute contracts on PlatONE`,
+        }
+
+        DeployCmd = cli.Command{
+                Name:      "deploy",
+                Usage:     "Deploy a wasm or evm contract",
+                ArgsUsage: "&lt;codeFile&gt;",
+                Action:    deploy,
+                Flags:     contractDeployCmdFlags,
+                Description: `
+                Modify the genesis.json file 'interpreter' tag to support evm contract deployment
+                Evm: only support byzantium version 
+                Wasm: --abi flag is also needed when deploy wasm contract`,
+        }
+
+        ExecuteCmd = cli.Command{
+                Name:      "execute",
+                Usage:     "Execute a method of contract",
+                ArgsUsage: "&lt;contract&gt; &lt;function&gt;",
+                Action:    execute,
+                Flags:     contractExecuteCmdFlags,
+        }
+
+        MigrateCmd = cli.Command{
+                Name:      "migrate",
+                Usage:     "Migrate the storage trie of a contract to a new address",
+                ArgsUsage: "&lt;address&gt; &lt;to&gt;",
+                Action:    migrate,
+                Flags:     globalCmdFlags,
+        }
+
+        MethodCmd = cli.Command{
+                Name:      "method",
+                Usage:     "List all the exported methods of a contract by &lt;TODO: abi?address?&gt;",
+                ArgsUsage: "&lt;abi&gt;",
+                Action:    contractMethod,
+        }
+
+        ReceiptCmd = cli.Command{
+                Name:      "receipt",
+                Usage:     "Get the transaction receipt by transaction hash",
+                ArgsUsage: "&lt;tx hash&gt;",
+                Action:    contractReceipt,
+        }
+)
+
+func contractReceipt(c *cli.Context) <span class="cov0" title="0">{
+
+        //TODO 是否还能优化？
+        setUrl(c)
+
+        txHash := c.Args().First()
+        //paramValid(txHash, "txHash") //TODO
+
+        result, err := packet.GetTransactionReceipt(txHash)
+        if err != nil </span><span class="cov0" title="0">{
+                utils.Fatalf("get receipt failed: %s\n", err.Error())
+        }</span> else<span class="cov0" title="0"> {
+                resultBytes, _ := json.Marshal(result)
+                utl.PrintJson(resultBytes)
+        }</span>
+}
+
+// deploy a contract
+func deploy(c *cli.Context) <span class="cov0" title="0">{
+        var abiBytes []byte
+
+        codePath := c.Args().First() // 必选参数
+        abiPath := c.String("abi")   // 可选参数
+        vm := c.String("vm")
+
+        codeBytes := ParamParse(codePath, "code").([]byte)
+        if abiPath != "" </span><span class="cov0" title="0">{
+                abiBytes = ParamParse(abiPath, "abi").([]byte)
+        }</span>
+
+        <span class="cov0" title="0">call := packet.NewDeployCall(codeBytes, abiBytes, packet.DEPLOY_CONTRACT)
+        call.SetInterpreter(vm) // set the virtual machine interpreter
+        result := messageCall(c, call, nil, "", packet.DEPLOY_CONTRACT)
+        fmt.Printf("result: %s\n", result)</span>
+}
+
+// execute a method in the contract(evm or wasm).
+func execute(c *cli.Context) <span class="cov0" title="0">{
+
+        contract := c.Args().First()
+        funcName := c.Args().Get(1)
+        funcParams := c.StringSlice("param")
+
+        //TODO bug fix
+        /*
+                if len(c.Args()) != 2 {
+                        utils.Fatalf("param check error, required %d inputs, recieved %d\n",2, len(c.Args()))
+                }*/
+
+        result := contractCommon(c, funcParams, funcName, contract)
+        fmt.Printf("result: %v\n", result)
+        //utl.PrintJson([]byte(result.(string))) //TODO
+}</span>
+
+//TODO test
+func migrate(c *cli.Context) <span class="cov0" title="0">{
+
+        funcName := "migrateFrom"     // 内置
+        sourceAddr := c.Args().Get(1) // 必选参数
+
+        if sourceAddr != "" </span><span class="cov0" title="0">{
+                txType := packet.MIG_TX_TYPE
+                // paramNumCheck(2,len(c.Args())) //TODO bug fix
+                utl.ParamValid(sourceAddr, "address")
+                funcParams := []string{
+                        sourceAddr,
+                }
+                result := innerCall(c, funcName, funcParams, txType, 2)
+                fmt.Printf("result: %s\n", result)
+        }</span> else <span class="cov0" title="0">{
+                // future feature
+                // txType := MIG_DP_TYPE
+        }</span>
+}
+
+func contractMethod(c *cli.Context) <span class="cov0" title="0">{
+        var strInput []string
+        var strOutput []string
+
+        abi := c.Args().First()
+        //contract:= c.Args()
+
+        abiBytes := ParamParse(abi, "abi").([]byte)
+        //abiBytes := abiParse(abi, contract) //TODO
+
+        abiFuncs, err := packet.ParseAbiFromJson(abiBytes)
+        if err != nil </span>{<span class="cov0" title="0">
+                //
+        }</span>
+
+        <span class="cov0" title="0">fmt.Printf("-------------------contract methods list------------------------\n")
+
+        for i, function := range abiFuncs </span><span class="cov0" title="0">{
+                strInput = []string{}
+                strOutput = []string{}
+                for _, param := range function.Inputs </span><span class="cov0" title="0">{
+                        strInput = append(strInput, param.Name+" "+param.Type)
+                }</span>
+                <span class="cov0" title="0">for _, param := range function.Outputs </span><span class="cov0" title="0">{
+                        strOutput = append(strOutput, param.Name+" "+param.Type)
+                }</span>
+                <span class="cov0" title="0">fmt.Printf("Method %d:", i+1)
+                fmt.Printf("%s(%s)%s\n", function.Name, strings.Join(strInput, ","), strings.Join(strOutput, ","))</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package main
+
+import (
+        "fmt"
+        "github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/packet"
+        utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/utils"
+        "github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
+        "gopkg.in/urfave/cli.v1"
+)
+
+const (
+        DEFAULT_FIREWALL_FILE_PATH = "../config/fireWall.json"
+)
+
+var (
+        // fire wall
+        FwCmd = cli.Command{
+                Name:     "fw",
+                Usage:    "Manage contract fire wall",
+                Category: "fw",
+                Subcommands: []cli.Command{
+                        FwStatusCmd,
+                        FwStartCmd,
+                        FwStopCmd,
+                        FwExportCmd,
+                        FwImportCmd,
+                        FwNewCmd,
+                        FwDeleteCmd,
+                        FwResetCmd,
+                        FwClearCmd,
+                },
+        }
+
+        FwStartCmd = cli.Command{
+                Name:      "start",
+                Usage:     "Start the fire wall of an specific contract",
+                ArgsUsage: "&lt;address&gt;",
+                Action:    fwStart,
+                Flags:     globalCmdFlags,
+        }
+
+        FwStopCmd = cli.Command{
+                Name:      "stop",
+                Usage:     "Stop the fire wall of an specific contract",
+                ArgsUsage: "&lt;address&gt;",
+                Action:    fwStop,
+                Flags:     globalCmdFlags,
+        }
+
+        FwStatusCmd = cli.Command{
+                Name:      "query",
+                Usage:     "Show the fire wall Info of a contract",
+                ArgsUsage: "&lt;address&gt;",
+                Action:    fwStatus,
+                Flags:     globalCmdFlags,
+        }
+
+        FwExportCmd = cli.Command{
+                Name:      "export",
+                Usage:     "Export all the fire wall rules of a contract",
+                ArgsUsage: "&lt;address&gt;",
+                Action:    fwExport,
+                Flags:     fwImportCmdFlags,
+        }
+
+        FwImportCmd = cli.Command{
+                Name:      "import",
+                Usage:     "Import fire wall rules to a contract",
+                ArgsUsage: "&lt;address&gt;",
+                Action:    fwImport,
+                Flags:     fwImportCmdFlags,
+        }
+
+        FwNewCmd = cli.Command{
+                Name:      "new",
+                Usage:     "New a fire wall rule",
+                ArgsUsage: "&lt;address&gt; &lt;action&gt; &lt;account&gt; &lt;api&gt;",
+                Action:    fwNew,
+                Flags:     globalCmdFlags,
+        }
+
+        FwDeleteCmd = cli.Command{
+                Name:      "delete",
+                Usage:     "Delete a fire wall rule",
+                ArgsUsage: "&lt;address&gt; &lt;action&gt; &lt;account&gt; &lt;api&gt;",
+                Action:    fwDelete,
+                Flags:     globalCmdFlags,
+        }
+
+        FwResetCmd = cli.Command{
+                Name:      "reset",
+                Usage:     "Reset all the fire wall rules of an action",
+                ArgsUsage: "&lt;address&gt; &lt;action&gt; &lt;account&gt; &lt;api&gt;",
+                Action:    fwReset,
+                Flags:     globalCmdFlags,
+        }
+
+        FwClearCmd = cli.Command{
+                Name:      "clear",
+                Usage:     "Clear all the fire wall rules of an action",
+                ArgsUsage: "&lt;address&gt;",
+                Action:    fwClear,
+                Flags:     fwClearCmdFlags,
+        }
+)
+
+func fwStart(c *cli.Context) <span class="cov0" title="0">{
+        funcName := "__sys_FwOpen"
+        //fw(c, funcName, []string{})
+        result := innerCall(c, funcName, []string{}, packet.FW_TX_TYPE, 1)
+        fmt.Printf("result: %s\n", result)
+}</span>
+
+func fwStop(c *cli.Context) <span class="cov0" title="0">{
+        funcName := "__sys_FwClose"
+        //fw(c, funcName, []string{})
+        result := innerCall(c, funcName, []string{}, packet.FW_TX_TYPE, 1)
+        fmt.Printf("result: %s\n", result)
+}</span>
+
+func fwStatus(c *cli.Context) <span class="cov0" title="0">{
+        funcName := "__sys_FwStatus"
+        //fw(c, funcName, []string{})
+        result := innerCall(c, funcName, []string{}, packet.FW_TX_TYPE, 1)
+        utl.PrintJson([]byte(result.(string)))
+}</span>
+
+func fwExport(c *cli.Context) <span class="cov0" title="0">{
+        funcName := "__sys_FwStatus"
+        filePath := c.String("file")
+        //fw(c, funcName, []string{})
+        result := innerCall(c, funcName, []string{}, packet.FW_TX_TYPE, 1)
+        utl.OverrideFile([]byte(result.(string)), filePath)
+}</span>
+
+func fwImport(c *cli.Context) <span class="cov0" title="0">{
+        funcName := "__sys_FwImport"
+        filePath := c.String("file")
+
+        //innerCall(c, "__sys_FwOpen", []string{}, FW_TX_TYPE, 1) //TODO
+
+        //paramNumCheck(2, len(c.Args())) //TODO bug fix
+        fileBytes, err := utl.ParseFileToBytes(filePath)
+        if err != nil </span><span class="cov0" title="0">{
+                //utils.Fatalf("parse %s file error, %s","fire wall", err.Error())
+                utils.Fatalf(utl.ErrParseFileFormat, "fire wall", err.Error())
+        }</span>
+
+        <span class="cov0" title="0">funcParams := []string{
+                string(fileBytes),
+        }
+
+        //fw(c, funcName, funcParams)
+        result := innerCall(c, funcName, funcParams, packet.FW_TX_TYPE, 1)
+        fmt.Printf("result: %s\n", result)</span>
+}
+
+func fwCommon(c *cli.Context, funcName string) <span class="cov0" title="0">{
+
+        action := c.Args().Get(1)
+        addr := c.Args().Get(2)
+        api := c.Args().Get(3)
+
+        //paramNumCheck(4, len(c.Args())) //TODO bug fix
+        //paramCheck(action,"action")
+        utl.ParamValid(action, "action")
+        utl.ParamValid(addr, "fw")
+
+        rules := CombineRule(addr, api) //TODO batch rules
+        // stringslice --rule addr1:func1 --rule addr2:func2
+        // string --rule addr1:func1|addr2:func2|...
+        // string --addr addr1 --api func1
+
+        funcParams := []string{
+                action,
+                rules,
+        }
+
+        //fw(c, funcName, funcParams)
+        result := innerCall(c, funcName, funcParams, packet.FW_TX_TYPE, 4)
+        fmt.Printf("result: %s\n", result)
+}</span>
+
+func fwNew(c *cli.Context) <span class="cov0" title="0">{
+        //innerCall(c, "__sys_FwOpen", []string{}, FW_TX_TYPE, 1) //TODO
+        funcName := "__sys_FwAdd"
+        fwCommon(c, funcName)
+}</span>
+
+func fwDelete(c *cli.Context) <span class="cov0" title="0">{
+        funcName := "__sys_FwDel"
+        fwCommon(c, funcName)
+}</span>
+
+func fwClear(c *cli.Context) <span class="cov0" title="0">{
+        funcName := "__sys_FwClear"
+        action := c.String("action")
+        all := c.Bool("all")
+
+        //paramNumCheck(2, len(c.Args())) //TODO bug fix
+        switch </span>{
+        case all:<span class="cov0" title="0">
+                //TODO bug
+                result1 := innerCall(c, funcName, []string{"accept"}, packet.FW_TX_TYPE, 1)
+                result2 := innerCall(c, funcName, []string{"reject"}, packet.FW_TX_TYPE, 1)
+                if result1 != result2 &amp;&amp; result1 != "Operation Succeeded" </span>{<span class="cov0" title="0">
+                        //
+                }</span>
+        case action != "":<span class="cov0" title="0">
+                utl.ParamValid(action, "action")
+
+                funcParams := []string{
+                        action,
+                }
+
+                result := innerCall(c, funcName, funcParams, packet.FW_TX_TYPE, 1)
+                fmt.Printf("result: %s\n", result)</span>
+        default:<span class="cov0" title="0">
+                fmt.Printf("no action specified.")</span>
+        }
+}
+
+func fwReset(c *cli.Context) <span class="cov0" title="0">{
+        funcName := "__sys_FwSet"
+        fwCommon(c, funcName)
+        return
+}</span>
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package main
+
+import (
+        "encoding/json"
+        "errors"
+        "fmt"
+        "github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/packet"
+        utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/utils"
+        "github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
+        "github.com/PlatONEnetwork/PlatONE-Go/common"
+        "gopkg.in/urfave/cli.v1"
+        "strconv"
+)
+
+// convert,
+type convert struct {
+        key1      string
+        key2      string
+        value1    interface{}
+        value2    interface{}
+        paramName string
+}
+
+// innerCall extract the common parts of the actions of fw and mig calls
+func innerCall(c *cli.Context, funcName string, funcParams []string, txType int, paramNum int) interface{} <span class="cov0" title="0">{
+        addr := c.Args().First()
+        to := utl.ChainParamConvert(addr, "to").(common.Address)
+
+        call := packet.InnerCallCommon(funcName, funcParams, txType)
+        return messageCall(c, call, &amp;to, "", call.TxType)
+}</span>
+
+// contractCommon extract the common parts of the actions of contract execution
+func contractCommon(c *cli.Context, funcParams []string, funcName, contract string) interface{} <span class="cov0" title="0">{
+        abiPath := c.String("abi")
+        vm := c.String("vm")
+        value := c.String("value")
+        value = utl.ChainParamConvert(value, "value").(string)
+
+        call, to := packet.ContractCallCommon(funcName, funcParams, abiPath, contract, vm)
+        return messageCall(c, call, &amp;to, value, call.TxType)
+}</span>
+
+// messageCall extract the common parts of the transaction based calls
+// including eth_call, eth_sendTransaction, and eth_sendRawTransaction
+func messageCall(c *cli.Context, call packet.MessageCallDemo, to *common.Address, value string, txType int) interface{} <span class="cov0" title="0">{
+
+        // get the global parameters
+        address, keystore, gas, gasPrice, isSync, isDefault := getGlobalParam(c)
+        from := common.HexToAddress(address)
+
+        // combine the data based on the types of the calls (contract call, inner call or deploy call)
+        data, outputType, isWrite, err := call.CombineData()
+        if err != nil </span><span class="cov0" title="0">{
+                utils.Fatalf(utl.ErrPackDataFormat, err.Error())
+        }</span>
+
+        // packet the transaction and select the transaction based calls
+        <span class="cov0" title="0">tx := packet.NewTxParams(from, to, value, gas, gasPrice, data, txType)
+        params, action := tx.SendMode(isWrite, keystore)
+
+        // print the RPC JSON param to the terminal
+        utl.PrintRequest(params)
+
+        // send the RPC calls
+        resp, err := packet.RpcCalls(action, params)
+        if err != nil </span><span class="cov0" title="0">{
+                utils.Fatalf(utl.ErrSendTransacionFormat, err.Error())
+        }</span>
+
+        <span class="cov0" title="0">setDefault(address, keystore, isDefault)
+
+        return packet.ParseTxResponse(resp, outputType, isWrite, isSync)</span>
+}
+
+// CombineRule combines firewall rules
+func CombineRule(addr, api string) string <span class="cov0" title="0">{
+        return addr + ":" + api
+}</span>
+
+// CombineFuncParams combines the function parameters
+func CombineFuncParams(args ...string) []string <span class="cov0" title="0">{
+        var strArray []string
+
+        for _, value := range args </span><span class="cov0" title="0">{
+                strArray = append(strArray, value)
+        }</span>
+
+        <span class="cov0" title="0">return strArray</span>
+}
+
+// getGlobalParam gets and converts the global parameters
+func getGlobalParam(c *cli.Context) (string, string, string, string, bool, bool) <span class="cov0" title="0">{
+
+        // set the url for http request
+        setUrl(c)
+
+        // get the global parameters from cli.context
+        //TODO 分类规划???
+        gas := c.String("gas")
+        gasPrice := c.String("gasPrice")
+
+        address := c.String("account")
+        keystore := c.String("keystore")
+        isLocal := c.Bool("local")
+        isDefault := c.Bool("default")
+
+        isSync := !c.Bool("sync")
+
+        // check and covert the global parameters
+        utl.OptionParamValid(address, "address")
+        keystore = getKeystore(keystore, isLocal)
+        if address == "" &amp;&amp; keystore == "" </span><span class="cov0" title="0">{
+                address = config.Account
+                keystore = config.Keystore
+        }</span>
+
+        <span class="cov0" title="0">gas = utl.ChainParamConvert(gas, "gas").(string)
+        gasPrice = utl.ChainParamConvert(gasPrice, "gasPrice").(string)
+
+        return address, keystore, gas, gasPrice, isSync, isDefault</span>
+}
+
+// setUrl sets the url for http request
+func setUrl(c *cli.Context) <span class="cov0" title="0">{
+        url := c.String("url")
+
+        runPath := utl.GetRunningTimePath()
+
+        switch </span>{
+        case url != "":<span class="cov0" title="0">
+                utl.ParamValid(url, "url")
+                config.Url = url
+                WriteConfigFile(runPath+DEFAULT_CONFIG_FILE_PATH, "url", config.Url)</span>
+        case config.Url == "":<span class="cov0" title="0">
+                utils.Fatalf("Please set url first.\n")</span>
+        default:<span class="cov0" title="0"></span>
+                //utils.Fatalf(utl.PanicUnexpSituation, "SetUrl")
+        }
+
+        <span class="cov0" title="0">utl.SetHttpUrl(config.Url)</span>
+}
+
+// getKeystore gets the path of keystore file based on the keystore and isLocal flags
+func getKeystore(keystore string, isLocal bool) string <span class="cov0" title="0">{
+        if isLocal &amp;&amp; keystore == "" </span><span class="cov0" title="0">{
+                keystore, _ = utl.GetFileInDirt(DEFAULT_KEYSTORE_DIRT)
+        }</span>
+        <span class="cov0" title="0">return keystore</span>
+}
+
+// setDefault write values of account and keystore to config file if default flag provided
+func setDefault(account, keystore string, isDefault bool) <span class="cov0" title="0">{
+        if isDefault </span><span class="cov0" title="0">{
+
+                runPath := utl.GetRunningTimePath()
+
+                WriteConfigFile(runPath+DEFAULT_CONFIG_FILE_PATH, "account", account)
+                WriteConfigFile(runPath+DEFAULT_CONFIG_FILE_PATH, "keystore", keystore)
+        }</span>
+}
+
+// Some of the contract function inputs are in complex json format,
+// To simplify the user input, the user only need to input the values of the json keys,
+// and the function will packet multiple user inputs into json format
+func combineJson(c *cli.Context, arrayMust []string, bytes []byte) string <span class="cov0" title="0">{
+        m := make(map[string]interface{}, 0)
+        mTemp := make(map[string]interface{}, 0)
+
+        _ = json.Unmarshal(bytes, &amp;mTemp)
+
+        for key := range mTemp </span><span class="cov0" title="0">{
+                // default value
+                if mTemp[key] != "" </span><span class="cov0" title="0">{
+                        m[key] = mTemp[key]
+                }</span>
+                // user input
+                <span class="cov0" title="0">tmp := c.String(key)
+                if tmp != "" </span><span class="cov0" title="0">{
+                        utl.ParamValid(tmp, key)
+                        temp := ParamParse(tmp, key)
+                        m[key] = temp
+                }</span>
+        }
+
+        // required value
+        <span class="cov0" title="0">for i, key := range arrayMust </span><span class="cov0" title="0">{
+                m[key] = c.Args().Get(i)
+                ParamParse(m[key].(string), key)
+        }</span>
+
+        <span class="cov0" title="0">if len(m) == 0 </span><span class="cov0" title="0">{
+                utils.Fatalf(utl.ErrInputNullFormat, "json combination result")
+        }</span>
+
+        <span class="cov0" title="0">bytes, _ = json.Marshal(m)
+        utl.Logger.Printf("the combine json is %s\n", bytes)
+
+        return string(bytes)</span>
+}
+
+// ParamParse convert the user inputs to the value needed
+func ParamParse(param, paramName string) interface{} <span class="cov8" title="1">{
+        var err error
+        var i interface{}
+
+        switch paramName </span>{
+        case "contract", "user":<span class="cov8" title="1">
+                i, err = utl.IsNameOrAddress(param)</span>
+        case "delayNum", "p2pPort", "rpcPort":<span class="cov8" title="1">
+                if utl.IsInRange(param, 65535) </span><span class="cov8" title="1">{
+                        i, err = strconv.ParseInt(param, 10, 0)
+                }</span> else<span class="cov0" title="0"> {
+                        err = errors.New("value out of range")
+                }</span>
+        case "operation", "status", "type":<span class="cov8" title="1">
+                i, err = convertSelect(param, paramName)</span>
+        case "code", "abi":<span class="cov0" title="0">
+                i, err = utl.ParseFileToBytes(param)</span>
+        default:<span class="cov8" title="1">
+                i, err = param, nil</span>
+        }
+
+        <span class="cov8" title="1">if err != nil </span><span class="cov0" title="0">{
+                utils.Fatalf(utl.ErrParamParseFormat, paramName, err.Error())
+        }</span>
+
+        <span class="cov8" title="1">return i</span>
+}
+
+// Some of the contract function inputs are numbers,
+// these numbers are hard for users to remember the meanings behind them,
+// Thus, to simplify the user input, we convert the meaningful strings to number automatically
+// For example, if user input: "valid", the converter will convert the string to 1
+func newConvert(key1, key2 string, value1, value2 interface{}, paramName string) *convert <span class="cov8" title="1">{
+        return &amp;convert{
+                key1:      key1,
+                key2:      key2,
+                value1:    value1,
+                value2:    value2,
+                paramName: paramName,
+        }
+}</span>
+
+func convertSelect(param, paramName string) (interface{}, error) <span class="cov8" title="1">{
+        var conv *convert
+
+        switch paramName </span>{
+        case "operation":<span class="cov8" title="1">
+                conv = newConvert("approve", "reject", "2", "3", paramName)</span>
+        case "status":<span class="cov8" title="1"> // node status
+                conv = newConvert("valid", "invalid", 1, 2, paramName)</span>
+        case "type":<span class="cov8" title="1"> // node type
+                conv = newConvert("consensus", "observer", 1, 0, paramName)</span>
+        default:<span class="cov0" title="0">
+                utils.Fatalf("")</span>
+        }
+
+        <span class="cov8" title="1">return conv.typeConvert(param)</span>
+}
+
+func (conv *convert) typeConvert(param string) (interface{}, error) <span class="cov8" title="1">{
+        if param != conv.key1 &amp;&amp; param != conv.key2 </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("the %s should be either \"%s\" or \"%s\"", conv.paramName, conv.key1, conv.key2)
+        }</span>
+
+        <span class="cov8" title="1">if param == conv.key1 </span><span class="cov8" title="1">{
+                return conv.value1, nil
+        }</span> else<span class="cov8" title="1"> {
+                return conv.value2, nil
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package main
+
+import (
+        "encoding/json"
+        utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/utils"
+        "github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
+        "io/ioutil"
+        "os"
+)
+
+// Config store the values from config.json file
+type Config struct {
+        Account string `json:"account"` // the address used to send the transaction
+        //Gas      string `json:"gas,omitempty"`                 //future feature
+        //GasPrice string `json:"gasPrice,omitempty"`
+        Url      string `json:"url"`      // the ip address of the remote node
+        Keystore string `json:"keystore"` // the path of the keystore file
+}
+
+var config = &amp;Config{}
+
+const (
+        DEFAULT_CONFIG_FILE_PATH = "./config/config.json"
+        DEFAULT_KEYSTORE_DIRT    = "../../release/linux/data/node-0/keystore" //TODO temp keystore path
+)
+
+// configInit read values from config file
+func configInit() <span class="cov0" title="0">{
+        runPath := utl.GetRunningTimePath()
+
+        // create the config folder if it is not exist
+        utl.FileDirectoryInit(runPath + "./config")
+
+        _, err := os.Stat(runPath + DEFAULT_CONFIG_FILE_PATH)
+        if !os.IsNotExist(err) </span><span class="cov0" title="0">{
+                parseConfigJson()
+        }</span>
+}
+
+// isConfigKeys limits the keys of the config.json
+func isConfigKeys(key string) bool <span class="cov8" title="1">{
+        var isMatch bool
+        var m = []string{"account", "url", "keystore"}
+
+        for _, v := range m </span><span class="cov8" title="1">{
+                if key == v </span><span class="cov8" title="1">{
+                        return true
+                }</span>
+        }
+
+        <span class="cov0" title="0">return isMatch</span>
+}
+
+// WriteConfigFile writes data into config.json
+func WriteConfigFile(filePath, key, value string) <span class="cov8" title="1">{
+        var m = make(map[string]string)
+
+        if !isConfigKeys(key) </span><span class="cov0" title="0">{
+                utils.Fatalf("The %s can not be written into %s", key, filePath)
+        }</span>
+
+        // Open or create file
+        <span class="cov8" title="1">file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE, 0666)
+        if err != nil </span><span class="cov0" title="0">{
+                utils.Fatalf(utl.ErrOpenFileFormat, "config", err.Error())
+        }</span>
+        <span class="cov8" title="1">defer file.Close()
+
+        // Read file
+        fileBytes, err := ioutil.ReadFile(filePath)
+        if err != nil </span><span class="cov0" title="0">{
+                utils.Fatalf(utl.ErrReadFileFormat, filePath, err.Error())
+        }</span>
+
+        // file is not null
+        <span class="cov8" title="1">if string(fileBytes) != "" </span><span class="cov8" title="1">{
+                err = json.Unmarshal(fileBytes, &amp;m)
+                if err != nil </span><span class="cov0" title="0">{
+                        utils.Fatalf(utl.ErrUnmarshalBytesFormat, "config", err.Error())
+                }</span>
+        }
+
+        // update config value
+        <span class="cov8" title="1">m[key] = value
+        fileBytes, _ = json.Marshal(m)
+
+        // write file
+        _ = file.Truncate(0)
+        _, err = file.Write(fileBytes)
+        if err != nil </span><span class="cov0" title="0">{
+                utils.Fatalf(utl.ErrWriteFileFormat, err.Error())
+        }</span>
+}
+
+// ParseConfigJson parses the data in config.json to Config object
+func ParseConfigJson(configPath string) *Config <span class="cov8" title="1">{
+
+        var config = &amp;Config{}
+
+        configBytes, err := utl.ParseFileToBytes(configPath)
+        if err != nil </span><span class="cov0" title="0">{
+                utils.Fatalf(utl.ErrParseFileFormat, configPath, err.Error())
+        }</span>
+
+        <span class="cov8" title="1">if len(configBytes) == 0 </span><span class="cov0" title="0">{
+                return config
+        }</span>
+
+        <span class="cov8" title="1">err = json.Unmarshal(configBytes, &amp;config)
+        if err != nil </span><span class="cov0" title="0">{
+                utils.Fatalf(utl.ErrUnmarshalBytesFormat, configPath, err.Error())
+        }</span>
+
+        // file may be modified by the user incorrectly, reset the value if it is incorrect
+        <span class="cov8" title="1">if !utl.IsUrl(config.Url) </span><span class="cov8" title="1">{
+                config.Url = ""
+        }</span>
+        <span class="cov8" title="1">if !utl.IsMatch(config.Account, "address") </span><span class="cov0" title="0">{
+                config.Account = ""
+        }</span>
+
+        <span class="cov8" title="1">return config</span>
+}
+
+// parseConfigJson parses the config.json file from default path
+func parseConfigJson() <span class="cov0" title="0">{
+
+        runPath := utl.GetRunningTimePath()
+        configFile := runPath + DEFAULT_CONFIG_FILE_PATH
+
+        config = ParseConfigJson(configFile)
+}</span>
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package main
+
+import (
+        "gopkg.in/urfave/cli.v1"
+        "sort"
+)
+
+var (
+        // global flags
+        UrlFlags = cli.StringFlag{
+                Name: "url",
+                Usage: `Specify the remote node IP trying to connect, 
+        the url choice will be remembered util the --url flag provided next time
+        url format: &lt;ip&gt;:&lt;port&gt;, eg: 127.0.0.1:6791`,
+        }
+        AccountFlags = cli.StringFlag{
+                Name:  "account",
+                Usage: "Specify the local or remote account address used to send the message calls",
+        }
+        GasFlags = cli.StringFlag{
+                Name: "gas",
+                //Value: "0x10",
+                Usage: "Specify the gas allowance for the code execution",
+        }
+        GasPriceFlags = cli.StringFlag{
+                Name: "gasPrice",
+                //Value: "",
+                Usage: "Specify the number of &lt;Token&gt; to simulate paying for each unit of gas during execution", //TODO correct
+        }
+        LocalFlags = cli.BoolFlag{
+                Name: "local",
+                Usage: `Use default local account to send the message call, 
+        the default local account keystore file locates at "&lt;future feature&gt;"`,
+        }
+        KeystoreFlags = cli.StringFlag{
+                Name:  "keystore",
+                Usage: "Use local account to send the message call by specifying the keystore file",
+        }
+        SyncFlags = cli.BoolFlag{
+                Name:  "sync",
+                Usage: "Wait for the result of polling the Tx Receipt after executing the commands",
+        }
+        DefaultFlags = cli.BoolFlag{
+                Name: "default",
+                Usage: `Default the account settings by storing the
+        current values of --account, --keystore, and --local flags  to "./config/config.json"`,
+        }
+
+        // transfer
+        TransferValueFlag = cli.StringFlag{
+                Name: "value",
+                //Value: "0xDE0B6B3A7640000", //one
+                Usage: "Amount of &lt;Token&gt; to transfer",
+        }
+
+        // contract
+        ContractParamFlag = cli.StringSliceFlag{
+                Name:  "param",
+                Usage: "Specify parameters of a contract method if needed, usage: --param \"p1\" --param \"p2\"",
+        }
+        ContractAbiFilePathFlag = cli.StringFlag{
+                Name:  "abi",
+                Usage: "Specify the wasm or evm abi file path",
+        }
+        ContractVmFlags = cli.StringFlag{
+                Name:  "vm",
+                Value: "wasm",
+                Usage: `Choose the virtual machine interpreter for the contract execution and deployment, 
+        The error may occur if the interpreter does not match.`,
+        }
+        ContractAddrKeyFlag = cli.StringFlag{
+                Name:  "contract",
+                Usage: "Search by contract name or address",
+        }
+
+        // user
+        RolesFlag = cli.StringFlag{
+                Name:  "roles",
+                Usage: "Register user roles",
+        }
+        TelFlags = cli.StringFlag{
+                Name:  "mobile",
+                Usage: "User mobile info",
+        }
+        EmailFlags = cli.StringFlag{
+                Name:  "email",
+                Usage: "User email info",
+        }
+        UserRemarkFlags = cli.StringFlag{
+                Name:  "remark",
+                Usage: "User remark info",
+        }
+
+        // node
+        P2pPortFlags = cli.StringFlag{
+                Name:  "p2pPort",
+                Value: "16791",
+                Usage: "Specify the node p2p port number",
+        }
+        RpcPortFlags = cli.StringFlag{
+                Name:  "rpcPort",
+                Value: "6791",
+                Usage: "Specify the node rpc port number",
+        }
+        NodeDelayNumFlags = cli.StringFlag{
+                Name:  "delayNum",
+                Usage: "Switch the node type to consensus after &lt;delayNum&gt; numbers of blocks generated",
+        }
+        NodePublicKeyFlags = cli.StringFlag{
+                Name:  "publickey",
+                Usage: "Node's public key for secure p2p communication",
+        }
+        NodeDescFlags = cli.StringFlag{
+                Name:  "desc",
+                Usage: "The description of a node",
+        }
+        NodeTypeFlags = cli.StringFlag{
+                Name:  "type",
+                Usage: "The node type can be either \"observer\" or \"consensus\"",
+        }
+        NameFlags = cli.StringFlag{
+                Name:  "name",
+                Usage: "Node name, the name is unique",
+        }
+        NodeStatusFlags = cli.StringFlag{
+                Name:  "status",
+                Usage: "Status of a node: \"valid\" or \"invalid\"",
+        }
+
+        // common?
+        ShowAllFlags = cli.BoolFlag{
+                Name:  "all",
+                Usage: "List all the valid data object",
+        }
+        FwClearAllFlags = cli.BoolFlag{
+                Name:  "all",
+                Usage: "Clear the fire wall rules of all actions",
+        }
+
+        FilePathFlags = cli.StringFlag{
+                Name:  "file",
+                Value: DEFAULT_FIREWALL_FILE_PATH,
+                Usage: "Specify the fire wall file path to be imported or exported",
+        }
+
+        // cns
+        CnsVersionFlags = cli.StringFlag{
+                Name:  "version",
+                Value: "latest",
+                Usage: `Specify the version of the cns name. 
+        Usgae: --version X.X.X.X, where X is number between 0 and 9`,
+        }
+
+        //TODO
+        // admin
+        AdminApproveFlags = cli.BoolFlag{
+                Name:  "approve",
+                Usage: "",
+        }
+
+        AdminDeleteFlags = cli.StringFlag{
+                Name:  "delete",
+                Usage: "",
+        }
+
+        //fw
+        FwActionFlags = cli.StringFlag{
+                Name:  "action",
+                Usage: "Specify the fire wall rule action, the fire wall action can be either \"accept\" or \"reject\".",
+        }
+
+        //=============================================================================
+
+        globalCmdFlags = []cli.Flag{
+                UrlFlags,
+                AccountFlags,
+                GasFlags,
+                GasPriceFlags,
+                LocalFlags,
+                KeystoreFlags,
+                SyncFlags,
+                DefaultFlags,
+        }
+
+        // transfer
+        transferCmdFlags = append(globalCmdFlags, TransferValueFlag)
+        // user
+        userUpdateCmdFlags   = append(globalCmdFlags, TelFlags, EmailFlags)
+        userRegisterCmdFlags = append(globalCmdFlags, RolesFlag, UserRemarkFlags)
+
+        // node
+        nodeUpdateCmdFlags = append(globalCmdFlags, NodeDescFlags, NodeDelayNumFlags, NodeTypeFlags)
+        nodeStatCmdFlags   = append(globalCmdFlags, NodeStatusFlags, NodeTypeFlags)
+        nodeAddCmdFlags    = append(globalCmdFlags, P2pPortFlags, RpcPortFlags, NodeDelayNumFlags, NodeDescFlags)
+        nodeQueryCmdFlasg  = append(
+                globalCmdFlags,
+                ShowAllFlags,
+                NodeTypeFlags,
+                NodeStatusFlags,
+                NodePublicKeyFlags,
+                NameFlags)
+
+        // contract
+        contractDeployCmdFlags  = append(globalCmdFlags, ContractAbiFilePathFlag, ContractVmFlags)
+        contractExecuteCmdFlags = append(
+                globalCmdFlags,
+                ContractAbiFilePathFlag,
+                ContractParamFlag,
+                ContractVmFlags,
+                TransferValueFlag)
+
+        // sup
+        supAdminCmdFlags = append(globalCmdFlags, AdminApproveFlags, AdminDeleteFlags)
+
+        // cns
+        cnsResolveCmdFlags = append(globalCmdFlags, CnsVersionFlags)
+        cnsQueryCmdFlags   = append(globalCmdFlags, ShowAllFlags, ContractAddrKeyFlag)
+
+        //fw
+        fwImportCmdFlags = append(globalCmdFlags, FilePathFlags)
+        fwClearCmdFlags  = append(globalCmdFlags, FwActionFlags, FwClearAllFlags)
+)
+
+func init() <span class="cov8" title="1">{
+        sort.Sort(cli.FlagsByName(globalCmdFlags))
+}</span>
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">package main
+
+import (
+        "fmt"
+        "github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
+        "gopkg.in/urfave/cli.v1"
+        "os"
+        "sort"
+)
+
+var (
+        app = utils.NewApp("", "the wasm command line interface")
+)
+
+func init() <span class="cov8" title="1">{
+
+        // Initialize the CLI app
+        app.Commands = []cli.Command{
+
+                AccountCmd,
+                ContractCmd,
+                AdminCmd,
+                CnsCmd,
+                FwCmd,
+        }
+
+        app.Flags = []cli.Flag{
+                UrlFlags,
+                AccountFlags,
+                GasFlags,
+                GasPriceFlags,
+                LocalFlags,
+                KeystoreFlags,
+                SyncFlags,
+                DefaultFlags,
+        }
+
+        sort.Sort(cli.CommandsByName(app.Commands))
+        sort.Sort(cli.FlagsByName(app.Flags))
+
+        app.After = func(ctx *cli.Context) error </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+
+        //TODO 重新写
+        //utl.LogFileSetup()
+}
+
+func main() <span class="cov0" title="0">{
+
+        configInit()
+
+        if err := app.Run(os.Args); err != nil </span><span class="cov0" title="0">{
+                fmt.Fprintln(os.Stderr, err)
+                os.Exit(1)
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file9" style="display: none">package packet
+
+import (
+        "bytes"
+        "fmt"
+        utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/utils"
+        "github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
+        "github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
+        "github.com/PlatONEnetwork/PlatONE-Go/crypto"
+        "github.com/PlatONEnetwork/PlatONE-Go/rlp"
+        "strings"
+)
+
+// CombineData of Contractcall data struct is used for packeting the data of wasm or evm contracts execution
+// Implement the MessageCallDemo interface
+func (call *ContractCallDemo) CombineData() (string, string, bool, error) <span class="cov0" title="0">{
+
+        // only transfer value, no data provided
+        if call.data == nil </span><span class="cov0" title="0">{
+                return "", "", true, nil
+        }</span>
+
+        // packet contract method and input parameters
+        <span class="cov0" title="0">outputType, isWrite, funcBytes, err := call.combineFunc()
+        if err != nil </span><span class="cov0" title="0">{
+                return "", "", false, err
+        }</span>
+
+        // packet contract data
+        <span class="cov0" title="0">data, err := call.combineContractData(funcBytes)
+        return data, outputType, isWrite, err</span>
+}
+
+// combineContractData selects the interpreter for combining the contract call data
+func (call *ContractCallDemo) combineContractData(funcBytes [][]byte) (string, error) <span class="cov0" title="0">{
+        return call.Interp.combineData(funcBytes)
+}</span>
+
+// combineData packet the data in the way defined by the evm virtual mechine
+// Implement the Interpreter interface
+func (i EvmInterpreter) combineData(funcBytes [][]byte) (string, error) <span class="cov0" title="0">{
+        utl.Logger.Printf("combine data in evm")
+        return hexutil.Encode(bytes.Join(funcBytes, []byte(""))), nil
+}</span>
+
+// combineData packet the data in the way defined by the wasm virtual mechine
+// Implement the Interpreter interface
+func (i WasmInterpreter) combineData(funcBytes [][]byte) (string, error) <span class="cov0" title="0">{
+        dataParams := make([][]byte, 0)
+        dataParams = append(dataParams, utl.Int64ToBytes(int64(i.txType)))
+
+        if i.cnsName != "" </span><span class="cov0" title="0">{
+                dataParams = append(dataParams, []byte(i.cnsName))
+        }</span>
+
+        // apend function params (contract method and parameters) to data
+        <span class="cov0" title="0">dataParams = append(dataParams, funcBytes...)
+        utl.Logger.Printf("combine data in wasm, dataParam is %v", dataParams)
+        return rlpEncode(dataParams)</span>
+}
+
+// combineFunc of Contractcall data struct is used for combining the
+func (call *ContractCallDemo) combineFunc() (string, bool, [][]byte, error) <span class="cov0" title="0">{
+        var outputType string
+
+        // Judging whether this method exists or not by abi file
+        abiFunc, err := ParseFuncFromAbi(call.data.funcAbi, call.data.funcName) //修改
+        if err != nil </span><span class="cov0" title="0">{
+                return "", false, nil, err
+        }</span>
+
+        // Judging whether the number of inputs matches
+        <span class="cov0" title="0">if len(abiFunc.Inputs) != len(call.data.funcParams) </span><span class="cov0" title="0">{
+                return "", false, nil, fmt.Errorf(utl.ErrParamNumCheckFormat, len(abiFunc.Inputs), len(call.data.funcParams))
+        }</span>
+
+        // encode the function and get the function constant
+        <span class="cov0" title="0">funcByte, isWrite := call.encodeFunction(abiFunc)
+
+        // Get the function output type for further use
+        if len(abiFunc.Outputs) != 0 </span><span class="cov0" title="0">{
+                outputType = abiFunc.Outputs[0].Type
+        }</span>
+
+        <span class="cov0" title="0">return outputType, isWrite, funcByte, nil</span>
+}
+
+// encodeFunction converts the function params to bytes and combine them by specific encoding rules
+func (call *ContractCallDemo) encodeFunction(abiFunc *FuncDesc) ([][]byte, bool) <span class="cov0" title="0">{
+
+        funcByte := make([][]byte, 1)
+
+        // converts the function params to bytes
+        for i, v := range call.data.funcParams </span><span class="cov0" title="0">{
+                input := abiFunc.Inputs[i]
+                p, err := call.Interp.StringConverter(v, input.Type)
+                if err != nil </span><span class="cov0" title="0">{
+                        utils.Fatalf(utl.ErrParamTypeFormat, v, i)
+                }</span>
+
+                <span class="cov0" title="0">funcByte = append(funcByte, p)</span>
+        }
+
+        // encode the contract method
+        <span class="cov0" title="0">funcByte[0] = call.Interp.encodeFuncName(call.data.funcName)
+
+        // get the function constant
+        isWrite := call.Interp.setIsWrite(abiFunc)
+
+        utl.Logger.Printf("the function byte is %v, the write operation is %v\n", funcByte, isWrite)
+        return funcByte, isWrite</span>
+}
+
+// encodeFuncName encodes the contract method in the way defined by the wasm virtual mechine
+// Implement the Interpreter interface
+func (i *WasmInterpreter) encodeFuncName(funcName string) []byte <span class="cov0" title="0">{
+        utl.Logger.Printf("combine functoin in wasm")
+        return []byte(funcName)
+}</span>
+
+// encodeFuncName encodes the contract method in the way defined by the evm virtual mechine
+// Implement the Interpreter interface
+func (i *EvmInterpreter) encodeFuncName(funcName string) []byte <span class="cov0" title="0">{
+        funcNameStr := fmt.Sprintf("%v(%v)", funcName, strings.Join(i.str, ","))
+        utl.Logger.Printf("the function is %s\n", funcNameStr)
+        funcNameHash := crypto.Keccak256([]byte(funcNameStr))[:4]
+        funcByte := funcNameHash
+        utl.Logger.Printf("the function byte is %v\n", funcByte)
+
+        return funcByte
+}</span>
+
+// CombineData of InnerCall data struct is used for packeting the data of the inner calls including fw, mig, etc.
+// Implement the MessageCallDemo interface
+func (call *InnerCallDemo) CombineData() (string, string, bool, error) <span class="cov8" title="1">{
+        outputType, isWrite, funcBytes, err := call.combineFunc()
+        data, err := call.combineInnerData(funcBytes)
+
+        return data, outputType, isWrite, err
+}</span>
+
+func (call *InnerCallDemo) combineFunc() (string, bool, [][]byte, error) <span class="cov8" title="1">{
+        var outputType string
+        var isWrite = true
+
+        // combine the function method and parameters
+        funcByte := [][]byte{
+                []byte(call.data.funcName),
+        }
+
+        for _, input := range call.data.funcParams </span><span class="cov8" title="1">{
+                funcByte = append(funcByte, []byte(input))
+        }</span>
+
+        // get the inner call method constant and output type
+        <span class="cov8" title="1">if call.data.funcName == "__sys_FwStatus" </span><span class="cov0" title="0">{
+                isWrite = false
+                outputType = "string"
+        }</span>
+
+        <span class="cov8" title="1">return outputType, isWrite, funcByte, nil</span>
+}
+
+func (call InnerCallDemo) combineInnerData(funcBytes [][]byte) (string, error) <span class="cov8" title="1">{
+        dataParams := make([][]byte, 0)
+        dataParams = append(dataParams, utl.Int64ToBytes(int64(call.TxType)))
+        dataParams = append(dataParams, funcBytes...)
+
+        return rlpEncode(dataParams)
+}</span>
+
+// CombineData of DeployCall data struct is used for packeting the data of wasm or evm contracts deployment
+// Implement the MessageCallDemo interface
+func (call DeployCall) CombineData() (string, string, bool, error) <span class="cov8" title="1">{
+        data, err := call.Interpreter.combineDeployData() //TODO seperate?
+        return data, "", true, err
+}</span>
+
+// combineDeployData packet the data in the way defined by the evm virtual mechine
+// Implement the Interpreter interface
+func (i *EvmInterpreter) combineDeployData() (string, error) <span class="cov0" title="0">{
+        return "0x" + string(i.codeBytes), nil
+}</span>
+
+// combineDeployData packet the data in the way defined by the wasm virtual mechine
+// Implement the Interpreter interface
+func (i *WasmInterpreter) combineDeployData() (string, error) <span class="cov8" title="1">{
+        utl.Logger.Printf("int wasm combineDeployData()")
+
+        dataParams := make([][]byte, 0)
+        dataParams = append(dataParams, utl.Int64ToBytes(int64(i.txType)))
+        dataParams = append(dataParams, i.codeBytes)
+        dataParams = append(dataParams, i.abiBytes)
+
+        return rlpEncode(dataParams)
+}</span>
+
+// rlpEncode encode the input value by RLP and convert the output bytes to hex string
+func rlpEncode(val interface{}) (string, error) <span class="cov8" title="1">{
+
+        dataRlp, err := rlp.EncodeToBytes(val)
+        if err != nil </span><span class="cov0" title="0">{
+                return "", fmt.Errorf(utl.ErrRlpEncodeFormat, err.Error())
+        }</span>
+
+        <span class="cov8" title="1">return hexutil.Encode(dataRlp), nil</span>
+
+}
+</pre>
+		
+		<pre class="file" id="file10" style="display: none">package packet
+
+import (
+        "bytes"
+        "errors"
+        utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/utils"
+        "github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
+        "math/big"
+        "strconv"
+)
+
+// MessageCallDemo, the interface for different types of data package methods
+type MessageCallDemo interface {
+        CombineData() (string, string, bool, error)
+}
+
+// ContractCallDemo, used for combining the data of contract execution
+type ContractCallDemo struct {
+        data   *RawData
+        TxType int
+        name   string
+        Interp Interpreter
+}
+
+// InnerCallDemo, used for combining the data of inner call methods (fw, mig, etc.)
+type InnerCallDemo struct {
+        data   *RawData
+        TxType int
+}
+
+// RawData, used to store function methods and abi
+type RawData struct {
+        funcName   string
+        funcParams []string
+        funcAbi    []byte
+}
+
+// DeployCall, used for combining the data of contract deployment
+type DeployCall struct {
+        codeBytes   []byte
+        abiBytes    []byte
+        TxType      int
+        Interpreter Interpreter
+}
+
+// EvmInterpreter, packet data in the way defined by the evm virtual machine
+type EvmInterpreter struct {
+        str       []string
+        codeBytes []byte // code bytes for evm contract deployment
+}
+
+// WasmInterpreter, packet data in the way defined by the evm virtual machine
+type WasmInterpreter struct {
+        cnsName   string // contract name for contract execution by contract name
+        codeBytes []byte // code bytes for wasm contract deployment
+        abiBytes  []byte // abi bytes for wasm contract deployment
+        txType    int    // transaction type for contract deployment and execution
+}
+
+// Interpreter, the interface for different types of virtual machine(wasm or evm)
+type Interpreter interface {
+        encodeFuncName(string) []byte
+        setIsWrite(*FuncDesc) bool
+        combineData([][]byte) (string, error)
+        combineDeployData() (string, error)
+        StringConverter(string, string) ([]byte, error)
+}
+
+// NewData new a RawData object
+func NewData(funcName string, funcParams []string, funcAbi []byte) *RawData <span class="cov8" title="1">{
+        return &amp;RawData{
+                funcName:   funcName,
+                funcParams: funcParams,
+                funcAbi:    funcAbi,
+        }
+}</span>
+
+// NewContractCallDemo new a ContractCallDemo object
+func NewContractCallDemo(data *RawData, name string, txType int) *ContractCallDemo <span class="cov8" title="1">{
+
+        call := &amp;ContractCallDemo{
+                data:   data,
+                name:   name,
+                TxType: txType,
+        }
+
+        return call
+}</span>
+
+// NewInnerCallDemo new a InnerCallDemo object
+func NewInnerCallDemo(data *RawData, txType int) *InnerCallDemo <span class="cov8" title="1">{
+
+        call := &amp;InnerCallDemo{
+                data:   data,
+                TxType: txType,
+        }
+
+        return call
+}</span>
+
+// NewDeployCall new a DeployCall object
+func NewDeployCall(codeBytes, abiBytes []byte, txType int) *DeployCall <span class="cov8" title="1">{
+
+        call := &amp;DeployCall{
+                codeBytes: codeBytes,
+                abiBytes:  abiBytes,
+                TxType:    txType,
+        }
+
+        return call
+}</span>
+
+// SetInterpreter set the interpreter of ContractCallDemo object
+func (call *ContractCallDemo) SetInterpreter(vm string) <span class="cov8" title="1">{
+        switch vm </span>{
+        case "wasm":<span class="cov8" title="1">
+                call.Interp = &amp;WasmInterpreter{cnsName: call.name, txType: call.TxType}</span>
+        case "evm":<span class="cov8" title="1">
+                call.Interp = &amp;EvmInterpreter{}</span>
+        default:<span class="cov0" title="0">
+                call.Interp = &amp;WasmInterpreter{cnsName: call.name, txType: call.TxType}</span>
+        }
+}
+
+// SetInterpreter set the interpreter of DeployCall object
+func (call *DeployCall) SetInterpreter(vm string) <span class="cov8" title="1">{
+        switch vm </span>{
+        case "wasm":<span class="cov8" title="1">
+                if !IsWasmContract(call.codeBytes) </span><span class="cov0" title="0">{
+                        utils.Fatalf("the input  is not wasm byte code")
+                }</span>
+                <span class="cov8" title="1">call.Interpreter = &amp;WasmInterpreter{
+                        codeBytes: call.codeBytes,
+                        abiBytes:  call.abiBytes,
+                }</span>
+        case "evm":<span class="cov0" title="0">
+                if IsWasmContract(call.codeBytes) </span><span class="cov0" title="0">{
+                        utils.Fatalf("the input  is not evm byte code")
+                }</span>
+                <span class="cov0" title="0">call.Interpreter = &amp;EvmInterpreter{codeBytes: call.codeBytes}</span>
+
+        }
+}
+
+// IsWasmContract judge whether the bytes satisfy the code format of wasm virtual machine
+func IsWasmContract(codeBytes []byte) bool <span class="cov8" title="1">{
+        if bytes.Equal(codeBytes[:8], []byte{0, 97, 115, 109, 1, 0, 0, 0}) </span><span class="cov8" title="1">{
+                return true
+        }</span>
+        <span class="cov0" title="0">return false</span>
+}
+
+// setIsWrite judge the constant of the contract method based on evm
+// Implement the Interpreter interface
+func (i EvmInterpreter) setIsWrite(abiFunc *FuncDesc) bool <span class="cov0" title="0">{
+        return abiFunc.StateMutability != "pure" &amp;&amp; abiFunc.StateMutability != "view"
+}</span>
+
+// setIsWrite judge the constant of the contract method based on wasm
+// Implement the Interpreter interface
+func (i WasmInterpreter) setIsWrite(abiFunc *FuncDesc) bool <span class="cov0" title="0">{
+        return abiFunc.Constant != "true"
+}</span>
+
+// set append all the function parameters and type into an array in EvmInterpreter object
+func (i *EvmInterpreter) set(s string) <span class="cov8" title="1">{
+        i.str = append(i.str, s)
+}</span>
+
+// StringConverter encodes different types of function parameters into bytes in the way defined by the evm virtual machine
+// Implement the Interpreter interface
+func (i *EvmInterpreter) StringConverter(source string, t string) ([]byte, error) <span class="cov8" title="1">{
+        i.set(t)
+
+        switch t </span>{
+        case "uint32", "uint16", "uint8", "uint":<span class="cov8" title="1">
+                dest, err := strconv.Atoi(source)
+                return utl.U256(new(big.Int).SetUint64(uint64(dest))), err</span>
+        case "int", "int8", "int16", "int32":<span class="cov8" title="1">
+                dest, err := strconv.Atoi(source)
+                return utl.U256(big.NewInt(int64(dest))), err</span>
+        case "int64", "uint64":<span class="cov8" title="1">
+                dest, err := strconv.ParseInt(source, 10, 64)
+                return utl.Int64ToBytes(dest), err</span>
+        case "float32":<span class="cov8" title="1">
+                dest, err := strconv.ParseFloat(source, 32)
+                return utl.Float32ToBytes(float32(dest)), err</span>
+        case "float64":<span class="cov8" title="1">
+                dest, err := strconv.ParseFloat(source, 64)
+                return utl.Float64ToBytes(dest), err</span>
+        case "bool":<span class="cov8" title="1">
+                if "true" == source || "false" == source </span><span class="cov8" title="1">{
+                        return utl.BoolToBytes("true" == source), nil
+                }</span> else<span class="cov8" title="1"> {
+                        return []byte{}, errors.New("invalid boolean param")
+                }</span>
+        default:<span class="cov8" title="1">
+                return []byte(source), nil</span>
+        }
+}
+
+// StringConverter encodes different types of function parameters into bytes in the way defined by the wasm virtual machine
+// Implement the Interpreter interface
+func (i WasmInterpreter) StringConverter(source string, t string) ([]byte, error) <span class="cov8" title="1">{
+        switch t </span>{
+        case "int32", "uint32", "uint", "int":<span class="cov8" title="1">
+                dest, err := strconv.Atoi(source)
+                return utl.Int32ToBytes(int32(dest)), err</span>
+        case "int64", "uint64":<span class="cov8" title="1">
+                dest, err := strconv.ParseInt(source, 10, 64)
+                return utl.Int64ToBytes(dest), err</span>
+        case "float32":<span class="cov8" title="1">
+                dest, err := strconv.ParseFloat(source, 32)
+                return utl.Float32ToBytes(float32(dest)), err</span>
+        case "float64":<span class="cov8" title="1">
+                dest, err := strconv.ParseFloat(source, 64)
+                return utl.Float64ToBytes(dest), err</span>
+        case "bool":<span class="cov8" title="1">
+                if "true" == source || "false" == source </span><span class="cov8" title="1">{
+                        return utl.BoolToBytes("true" == source), nil
+                }</span> else<span class="cov8" title="1"> {
+                        return []byte{}, errors.New("invalid boolean param")
+                }</span>
+        default:<span class="cov8" title="1">
+                return []byte(source), nil</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file11" style="display: none">package packet
+
+import (
+        "bytes"
+        "fmt"
+        utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/utils"
+        "github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
+        "github.com/PlatONEnetwork/PlatONE-Go/common"
+        "github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
+)
+
+// Receipt, eth_getTransactionReceipt return data struct
+type Receipt struct {
+        BlockHash         string `json:"blockHash"`          // hash of the block
+        BlockNumber       string `json:"blockNumber"`        // height of the block
+        ContractAddress   string `json:"contractAddress"`    // contract address of the contract deployment. otherwise null
+        CumulativeGasUsed string `json:"cumulativeGas_used"` //
+        From              string `json:"from"`               // the account address used to send the transaction
+        GasUsed           string `json:"gasUsed"`            // gas used by executing the transaction
+        Root              string `json:"root"`
+        To                string `json:"to"`               // the address the transaction is sent to
+        TransactionHash   string `json:"transactionHash"`  // the hash of the transaction
+        TransactionIndex  string `json:"transactionIndex"` // the index of the transaction
+        Logs              []struct {
+                Address string   `json:"address"`
+                Topics  []string `json:"topics"`
+                Data    string   `json:"data"`
+        } `json:"logs"`
+        Status string `json:"status"` // the execution status of the transaction, "0x1" for success
+}
+
+// InnerCallCommon
+// extract the common part of all the inner calls
+func InnerCallCommon(funcName string, funcParams []string, txType int) *InnerCallDemo <span class="cov0" title="0">{
+        // parse the function parameters
+        funcName, funcParams = utl.FuncParse(funcName, funcParams)
+
+        // new an inner call
+        data := NewData(funcName, funcParams, nil)
+        call := NewInnerCallDemo(data, txType)
+
+        return call
+}</span>
+
+// ContractCallCommon
+// extract the common part of all the contract calls
+func ContractCallCommon(funcName string, funcParams []string, abiPath, to, vm string) (*ContractCallDemo, common.Address) <span class="cov0" title="0">{
+        // parse the function parameters
+        funcName, funcParams = utl.FuncParse(funcName, funcParams)
+
+        // get the abi bytes of the contracts
+        funcAbi := AbiParse(abiPath, to)
+
+        // judge whether the input string is contract address or contract name
+        cns := CnsParse(to)
+        toNew := utl.ChainParamConvert(cns.to, "to").(common.Address)
+
+        // new an contract call, set the interpreter(wasm or evm contract)
+        data := NewData(funcName, funcParams, funcAbi)
+        call := NewContractCallDemo(data, cns.name, cns.txType)
+        call.SetInterpreter(vm) //TODO
+
+        return call, toNew
+}</span>
+
+// RpcCalls
+func RpcCalls(action string, params []interface{}) (interface{}, error) <span class="cov8" title="1">{
+
+        // new a rpc json data struct
+        rpcJson := utl.NewRpcJson(action, params)
+
+        // post http request
+        response, err := utl.HttpPost(rpcJson)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf(utl.ErrHttpSendFormat, err.Error())
+        }</span>
+
+        // parse the result from Rpc response
+        <span class="cov8" title="1">result, err := utl.ParseRpcResponse(response)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf(utl.ErrRpcExecuationFormat, action, err.Error())
+        }</span>
+
+        //Logger.Printf("response json: %v\n", result)
+        <span class="cov8" title="1">return result, nil</span>
+}
+
+// CombineParams combines multiple rpc json parameters into an array
+func CombineParams(args ...interface{}) []interface{} <span class="cov8" title="1">{
+        params := make([]interface{}, 0)
+        params = append(params, args...)
+        return params
+}</span>
+
+// GetTransactionReceipt wraps the RpcCalls used to get the transaction receipt
+func GetTransactionReceipt(txHash string) (*Receipt, error) <span class="cov8" title="1">{
+
+        params := CombineParams(txHash)
+
+        response, err := RpcCalls("eth_getTransactionReceipt", params)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        // parse the rpc response
+        <span class="cov8" title="1">receipt := ParseTxReceipt(response)
+        return receipt, nil</span>
+}
+
+// GetNonce wraps the RpcCalls used to get the nonce based on the latest block number
+func GetNonce(addr common.Address) uint64 <span class="cov8" title="1">{
+
+        params := CombineParams(addr, "latest")
+
+        response, err := RpcCalls("eth_getTransactionCount", params)
+        if err != nil </span><span class="cov0" title="0">{
+                utl.LogErr.Println(err.Error())
+                utils.Fatalf(utl.ErrTODO, utl.DEFAULT_LOG_DIRT)
+        }</span>
+
+        // parse the rpc response
+        <span class="cov8" title="1">nonce, _ := hexutil.DecodeBig(response.(string))
+        return nonce.Uint64()</span>
+}
+
+// getCodeByAddress wraps the RpcCalls used to get the code of an contract by contract address
+func getCodeByAddress(addr string) (string, error) <span class="cov0" title="0">{
+
+        params := CombineParams(addr, "latest")
+
+        response, err := RpcCalls("eth_getCode", params)
+        if err != nil </span><span class="cov0" title="0">{
+                return "", err
+        }</span>
+
+        // parse the rpc response and return
+        <span class="cov0" title="0">return response.(string), nil</span>
+}
+
+// GetAddressByName wraps the RpcCalls used to get the contract address by cns name
+// the parameters are packet into transaction before packet into rpc json data struct
+func GetAddressByName(name string) (string, error) <span class="cov8" title="1">{
+
+        // chain defined data type convert
+        to := common.HexToAddress(CNS_PROXY_ADDRESS)
+        from := common.HexToAddress("")
+
+        // packet the contract all data
+        rawData := NewData("getContractAddress", []string{name, "latest"}, nil)
+        call := NewInnerCallDemo(rawData, EXECUTE_CONTRACT)
+        data, _, _, _ := call.CombineData()
+
+        tx := NewTxParams(from, &amp;to, "", "", "", data, call.TxType)
+        params := CombineParams(tx, "latest")
+
+        response, err := RpcCalls("eth_call", params)
+        if err != nil </span><span class="cov0" title="0">{
+                return "", err
+        }</span>
+
+        // parse the rpc response
+        <span class="cov8" title="1">resultBytes, _ := hexutil.Decode(response.(string))
+        bytesTrim := bytes.TrimRight(resultBytes, "\x00")
+        result := utl.BytesConverter(bytesTrim, "string")
+
+        return result.(string), nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file12" style="display: none">/*
+utils for packet Transactions
+*/
+
+package packet
+
+import (
+        "bytes"
+        "encoding/json"
+        "fmt"
+        utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/utils"
+        "github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
+        "github.com/PlatONEnetwork/PlatONE-Go/common"
+        "github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
+        "github.com/PlatONEnetwork/PlatONE-Go/core/types"
+        "strings"
+        "time"
+)
+
+const (
+        // Transaction types
+        TRANSFER         = 0
+        DEPLOY_CONTRACT  = 1
+        EXECUTE_CONTRACT = 2
+        CNS_TX_TYPE      = 0x11 // Used for sending transactions without address
+        FW_TX_TYPE       = 0x12 // Used fot sending transactions  about firewall
+        MIG_TX_TYPE      = 0x13 // Used for update system contract.
+        MIG_DP_TYPE      = 0x14 // Used for update system contract without create a new contract manually
+        // Currently it's under developing
+
+        DEFAULT_SYSTEM_CONTRACT_PATH = "../../release/linux/conf/contracts/"
+
+        CNS_PROXY_ADDRESS = "0x0000000000000000000000000000000000000011"
+
+        TX_RECEIPT_STATUS_SUCCESS = "0x1"
+        TX_RECEIPT_STATUS_FAILURE = "0x0"
+
+        SLEEP_TIME = 5000000000 // 5 seconds
+)
+
+// TxParamsDemo, the object of the eth_call, eth_sendTransaction
+type TxParams struct {
+        From     common.Address  `json:"from"` // the address used to send the transaction
+        To       *common.Address `json:"to"`   // the address receives the transactions
+        Gas      string          `json:"gas"`
+        GasPrice string          `json:"gasPrice"`
+        Value    string          `json:"value"`
+        Data     string          `json:"data"`
+        TxType   int             `json:"txType"`
+}
+
+// ContractReturn, system contract return object
+type ContractReturn struct {
+        Code int         `json:"code"`
+        Msg  string      `json:"msg"`
+        Data interface{} `json:"data"`
+}
+
+// FuncDesc, the object of the contract abi files
+type FuncDesc struct {
+        Name   string `json:"name"`
+        Inputs []struct {
+                Name         string `json:"name"`
+                Type         string `json:"type"`
+                InternalType string `json:"internalType,omitempty"`
+        } `json:"inputs"`
+        Outputs []struct {
+                Name string `json:"name"`
+                Type string `json:"type"`
+        } `json:"outputs"`
+        Constant        interface{} `json:"constant"` // ???
+        Type            string      `json:"type"`
+        StateMutability string      `json:"stateMutability,omitempty"` // tag for solidity ver &gt; 0.6.0
+}
+
+// Cns,
+type Cns struct {
+        to     string
+        name   string // the cns name of contract
+        txType int    // the transaction type of the contract execution (EXECUTE_CONTRACT or CNS_TX_TYPE)
+}
+
+// ParseFuncFromAbi searches the function names in the []FuncDesc object array
+func ParseFuncFromAbi(abiBytes []byte, funcName string) (*FuncDesc, error) <span class="cov8" title="1">{
+        funcs, err := ParseAbiFromJson(abiBytes)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">for _, value := range funcs </span><span class="cov8" title="1">{
+                if value.Name == funcName </span><span class="cov8" title="1">{
+                        return &amp;value, nil
+                }</span>
+        }
+        <span class="cov0" title="0">return nil, fmt.Errorf("function %s not found in %s", funcName, abiBytes)</span>
+}
+
+// ParseAbiFromJson parses the application binary interface(abi) files to []FuncDesc object array
+func ParseAbiFromJson(abiBytes []byte) ([]FuncDesc, error) <span class="cov8" title="1">{
+        var a []FuncDesc
+        if err := json.Unmarshal(abiBytes, &amp;a); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf(utl.ErrUnmarshalBytesFormat, "abi", err.Error())
+        }</span>
+        <span class="cov8" title="1">return a, nil</span>
+}
+
+// CnsParse judge whether the input string is contract address or contract name
+// and return the corresponding infos
+func CnsParse(contract string) *Cns <span class="cov0" title="0">{
+        isAddress, _ := utl.IsNameOrAddress(contract)
+
+        if isAddress </span><span class="cov0" title="0">{
+                return NewCns(contract, "", EXECUTE_CONTRACT)
+        }</span> else<span class="cov0" title="0"> {
+                return NewCns("", contract, CNS_TX_TYPE)
+        }</span>
+}
+
+func NewCns(to, name string, txType int) *Cns <span class="cov0" title="0">{
+        return &amp;Cns{
+                to:     to,
+                name:   name,
+                txType: txType,
+        }
+}</span>
+
+// AbiParse gets the abi bytes by the input parameters provided
+// The abi file can be obtained through following ways:
+// 1. user provide the abi file path
+// 2. get the abi files from default file locations (for example, the system contracts are
+// all stored in ./PlatONE/release/linux/conf/contracts)
+// 3. get the abi bytes on chain (wasm contract only).
+func AbiParse(abiFilePath, str string) []byte <span class="cov0" title="0">{
+        var err error
+        var abiBytes []byte
+
+        if abiFilePath != "" </span><span class="cov0" title="0">{
+                abiBytes, err = utl.ParseFileToBytes(abiFilePath)
+        }</span> else<span class="cov0" title="0"> {
+                abiFilePath = getAbiFileFromLocal(str)
+                if abiFilePath != "" </span><span class="cov0" title="0">{
+                        abiBytes, err = utl.ParseFileToBytes(abiFilePath)
+                }</span> else<span class="cov0" title="0"> {
+                        abiBytes, err = getAbiOnchain(str)
+                        if err != nil </span><span class="cov0" title="0">{
+                                utils.Fatalf(utl.ErrGetFromChainFormat, "abi data", err.Error())
+                        }</span>
+                }
+        }
+        <span class="cov0" title="0">if err != nil </span><span class="cov0" title="0">{
+                utils.Fatalf(utl.ErrParseFileFormat, "abi", err.Error())
+        }</span>
+
+        <span class="cov0" title="0">return abiBytes</span>
+}
+
+// getAbiFileFromLocal get the abi files from default directory by file name
+// currently it is designed to get the system contract abi files
+func getAbiFileFromLocal(str string) string <span class="cov0" title="0">{
+
+        // (patch) convert CNS_PROXY_ADDRESS to cnsManager system contract
+        if str == CNS_PROXY_ADDRESS </span><span class="cov0" title="0">{
+                str = "__sys_CnsManager"
+        }</span>
+
+        <span class="cov0" title="0">sysFileName := strings.ToLower(str[6:7]) + str[7:] + ".cpp.abi.json"
+
+        runPath := utl.GetRunningTimePath()
+
+        if strings.HasPrefix(str, "__sys_") </span><span class="cov0" title="0">{
+                abiFilePath := runPath + DEFAULT_SYSTEM_CONTRACT_PATH + sysFileName
+                return abiFilePath
+        }</span>
+
+        <span class="cov0" title="0">return ""</span>
+}
+
+// getAbiFileFromLocal get the abi files from chain
+// it is only available for wasm contracts
+func getAbiOnchain(addr string) ([]byte, error) <span class="cov0" title="0">{
+        var abiBytes []byte
+        var err error
+
+        utl.ParamValid(addr, "contract")
+
+        // if the input parameter is a contract name, convert the name to address by executing cns
+        if utl.IsMatch(addr, "name") </span><span class="cov0" title="0">{
+                addr, err = GetAddressByName(addr)
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+        }
+
+        // get the contract code by address through eth_getCode
+        <span class="cov0" title="0">code, err := getCodeByAddress(addr)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        // parse the encoding contract code and get abi bytes
+        <span class="cov0" title="0">abiBytes, _ = hexutil.Decode(code)
+        _, abiBytes, _, err = common.ParseWasmCodeRlpData(abiBytes)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf(utl.ErrRlpDecodeFormat, "abi data", err.Error())
+        }</span>
+
+        <span class="cov0" title="0">return abiBytes, nil</span>
+}
+
+// ParseSysContractResult parsed the result to ContractReturn object
+func ParseSysContractResult(result []byte) *ContractReturn <span class="cov0" title="0">{
+        a := ContractReturn{} //删除？
+        err := json.Unmarshal(result, &amp;a)
+        if err != nil </span><span class="cov0" title="0">{
+                utils.Fatalf(utl.ErrUnmarshalBytesFormat, "contract return", err.Error())
+        }</span>
+
+        <span class="cov0" title="0">return &amp;a</span>
+}
+
+// ParseSysContractResult parsed the rpc response to Receipt object
+func ParseTxReceipt(response interface{}) *Receipt <span class="cov8" title="1">{
+        var receipt = &amp;Receipt{}
+
+        temp, _ := json.Marshal(response)
+        err := json.Unmarshal(temp, receipt)
+        if err != nil </span><span class="cov0" title="0">{
+                utl.LogErr.Printf(utl.ErrUnmarshalBytesFormat, "transaction receipt", err.Error())
+                utils.Fatalf(utl.ErrTODO, utl.DEFAULT_LOG_DIRT)
+        }</span>
+
+        <span class="cov8" title="1">return receipt</span>
+}
+
+// NewTxParams news a TxParams object
+func NewTxParams(from common.Address, to *common.Address, value, gas, gasPrice, data string, txType int) *TxParams <span class="cov8" title="1">{
+
+        tx := &amp;TxParams{
+                From:     from,
+                To:       to,
+                GasPrice: gasPrice,
+                Gas:      gas,
+                Value:    value,
+                Data:     data,
+                TxType:   txType,
+        }
+
+        return tx
+}</span>
+
+// SendMode selects the rpc calls (eth_call, eth_sendTransaction, and eth_sendRawTransaction)
+func (tx *TxParams) SendMode(isWrite bool, keystore string) ([]interface{}, string) <span class="cov8" title="1">{
+        var action string
+        var params = make([]interface{}, 0)
+
+        switch </span>{
+        case !isWrite:<span class="cov0" title="0">
+                params = append(params, tx)
+                params = append(params, "latest")
+                action = "eth_call"</span>
+        case keystore != "":<span class="cov0" title="0">
+                signedTx := tx.GetSignedTx(keystore)
+                params = append(params, signedTx)
+                action = "eth_sendRawTransaction"</span>
+        default:<span class="cov8" title="1">
+                params = append(params, tx)
+                action = "eth_sendTransaction"</span>
+        }
+
+        <span class="cov8" title="1">return params, action</span>
+}
+
+// GetSignedTx gets the signed transaction
+func (tx *TxParams) GetSignedTx(keystore string) string <span class="cov0" title="0">{
+
+        var txSign *types.Transaction
+
+        // convert the TxParams object to types.Transaction object
+        nonce := GetNonce(tx.From)
+        value, _ := hexutil.DecodeBig(tx.Value)
+        gas, _ := hexutil.DecodeUint64(tx.Gas)
+        gasPrice, _ := hexutil.DecodeBig(tx.GasPrice)
+        data, _ := hexutil.Decode(tx.Data)
+        txType := uint64(tx.TxType)
+
+        if tx.To == nil </span><span class="cov0" title="0">{
+                txSign = types.NewContractCreation(nonce, value, gas, gasPrice, data)
+        }</span> else<span class="cov0" title="0"> {
+                txSign = types.NewTransaction(nonce, *tx.To, value, gas, gasPrice, data, txType)
+        }</span>
+
+        // extract pk from keystore file and sign the transaction
+        <span class="cov0" title="0">priv := utl.GetPrivateKey(tx.From, keystore)
+        txSign, _ = types.SignTx(txSign, types.HomesteadSigner{}, priv)
+        utl.Logger.Printf("the signed transaction is %v\n", txSign)
+
+        str, _ := rlpEncode(txSign)
+        return str</span>
+}
+
+// ParseTxResponse parse result based on the function constant and output type
+// if the isSync is ture, the function will get the receipt of the transaction in further
+func ParseTxResponse(resp interface{}, outputType string, isWrite, isSync bool) interface{} <span class="cov0" title="0">{
+
+        var respStr string
+
+        //TODO
+        temp, _ := json.Marshal(resp)
+        _ = json.Unmarshal(temp, &amp;respStr)
+
+        switch </span>{
+        case !isWrite:<span class="cov0" title="0">
+                return ParseNonConstantRespose(respStr, outputType)</span>
+        case isSync:<span class="cov0" title="0">
+                return GetResponseByReceipt(respStr)</span>
+        default:<span class="cov0" title="0">
+                return fmt.Sprintf("trasaction hash is %s\n", respStr)</span>
+        }
+}
+
+// ParseNonConstantRespose wraps the utl.BytesConverter,
+// it converts the hex string response based the output type provided
+func ParseNonConstantRespose(respStr, outputType string) interface{} <span class="cov0" title="0">{
+        if outputType != "" </span><span class="cov0" title="0">{
+                b, _ := hexutil.Decode(respStr)
+                bytesTrim := bytes.TrimRight(b, "\x00")
+                return utl.BytesConverter(bytesTrim, outputType)
+                //utl.Logger.Printf("result: %v\n\n", result)
+        }</span> else<span class="cov0" title="0"> {
+                return fmt.Sprintf("message call has no return value\n")
+        }</span>
+}
+
+// GetReceiptByPolling creates a channel to get the transaction receipt by polling
+// The timeout is setted to 10 seconds
+func GetResponseByReceipt(respStr string) interface{} <span class="cov0" title="0">{
+        ch := make(chan string, 1)
+        go GetReceiptByPolling(respStr, ch)
+
+        select </span>{
+        case str := &lt;-ch:<span class="cov0" title="0">
+                utl.Logger.Printf("result: %s\n\n", str)
+                return str</span>
+        case &lt;-time.After(time.Second * 10):<span class="cov0" title="0">
+                temp1 := fmt.Sprintf("\nget contract receipt timeout...more than 10 second.\n")
+                temp2 := fmt.Sprintf("trasaction hash is %s\n", respStr)
+                return temp1 + temp2</span>
+        }
+}
+
+// GetReceiptByPolling gets transaction receipt by polling. After getting the receipt, it
+// parses the receipt and get the infos (contract address, transaction status, logs, etc.)
+// The sleep time is designed to limit the times of the polling
+func GetReceiptByPolling(txHash string, ch chan string) <span class="cov8" title="1">{
+
+        for </span><span class="cov8" title="1">{
+                receipt, err := GetTransactionReceipt(txHash)
+                if err != nil </span><span class="cov0" title="0">{
+                        fmt.Println(err.Error())
+                        fmt.Printf("try again 5s later...")
+                        time.Sleep(SLEEP_TIME)
+                        fmt.Printf("try again...\n")
+                }</span>
+
+                <span class="cov8" title="1">switch </span>{
+                case receipt.Status == TX_RECEIPT_STATUS_FAILURE:<span class="cov0" title="0">
+                        ch &lt;- "Operation Failed"
+                        break</span>
+                case receipt.ContractAddress != "":<span class="cov0" title="0">
+                        ch &lt;- "contract address is " + receipt.ContractAddress
+                        break</span>
+                case len(receipt.Logs) != 0:<span class="cov0" title="0">
+                        tmp, _ := hexutil.Decode(receipt.Logs[0].Data)
+                        ch &lt;- string(tmp)
+                        break</span>
+                case receipt.Status == TX_RECEIPT_STATUS_SUCCESS:<span class="cov8" title="1">
+                        ch &lt;- "Operation Succeeded"
+                        break</span>
+                }
+        }
+
+}
+</pre>
+		
+		<pre class="file" id="file13" style="display: none">package test
+
+import (
+        "encoding/json"
+        "fmt"
+        "github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
+        "github.com/PlatONEnetwork/PlatONE-Go/common"
+        "github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
+        "github.com/PlatONEnetwork/PlatONE-Go/rlp"
+        "io/ioutil"
+        "net/http"
+        "net/http/httptest"
+)
+
+const (
+        TEST_TX_HASH = "0x31bbe55da1e59a9a0b79204afc7d89ccc8a5cea9722b252036cdcc6286a334ee"
+        TEST_ACCOUNT = "0x60ceca9c1290ee56b98d4e160ef0453f7c40d219"
+        TEST_RESULT  = "0x0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002a30783165366334633432366466633365643234333566373236666439613063323939356466316166633700000000000000000000000000000000000000000000"
+)
+
+type f func(rw http.ResponseWriter, r *http.Request)
+
+type JsonParam struct {
+        Jsonrpc string      `json:"jsonrpc"`
+        Method  string      `json:"method"`
+        Params  interface{} `json:"params"`
+        Id      int         `json:"id"`
+}
+
+type Response struct {
+        Jsonrpc string      `json:"jsonrpc"`
+        Result  interface{} `json:"result"`
+        Id      int         `json:"id"`
+        Error   struct {
+                Code    int32  `json:"code"`
+                Message string `json:"message"`
+        } `json:"error"`
+}
+
+type Receipt struct {
+        ContractAddress string `json:"contractAddress"`
+        Logs            []struct {
+                Address string   `json:"address"`
+                Topics  []string `json:"topics"`
+                Data    string   `json:"data"`
+        } `json:"logs"`
+        Status string `json:"status"`
+}
+
+// MockServer mocks a server for http testing
+// It could either test the http post or the rpc calls
+func MockServer(s string) *httptest.Server <span class="cov0" title="0">{
+
+        var funcSelect f
+
+        switch s </span>{
+        case "http":<span class="cov0" title="0">
+                funcSelect = httpServer</span>
+        case "rpc":<span class="cov0" title="0">
+                funcSelect = rpcCallsServer</span>
+        }
+
+        <span class="cov0" title="0">return httptest.NewServer(http.HandlerFunc(funcSelect))</span>
+}
+
+// httpServer mocks multiple http response for http post testing
+var httpServer = func(rw http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        var request = JsonParam{}
+        var response interface{}
+        //var response = Response{Id:1}
+
+        data, _ := ioutil.ReadAll(r.Body)
+        fmt.Printf("http data is %s\n", data)
+        _ = json.Unmarshal(data, &amp;request)
+
+        switch request.Method </span>{
+        case "test1":<span class="cov0" title="0">
+                //rw.WriteHeader(http.StatusOK)
+                rw.Write(nil)
+                response = nil</span>
+
+        case "test2":<span class="cov0" title="0">
+                rw.Header().Set("Content-type", "application/json")
+                rw.WriteHeader(http.StatusBadRequest)
+                response = "test2"</span>
+
+        case "test3":<span class="cov0" title="0">
+                rw.WriteHeader(http.StatusOK)
+                response = "test3 Success"</span>
+
+        }
+
+        <span class="cov0" title="0">rw.Header().Set("Content-type", "application/json")
+        _ = json.NewEncoder(rw).Encode(response)</span>
+
+}
+
+// rpcCallsServer mocks multiple responses for testing
+// based on the specific RPC APIs (eth_call, eth_getTransactionCount, etc.)
+var rpcCallsServer = func(rw http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        var request = JsonParam{}
+        var response = Response{
+                Jsonrpc: "2.0",
+                Id:      1,
+        }
+
+        // read the body of the http request and get the JSON RPC object
+        data, _ := ioutil.ReadAll(r.Body)
+        //fmt.Printf("rpc data is %s\n", data)
+        _ = json.Unmarshal(data, &amp;request)
+
+        // mocks the responses based on the specific RPC calls
+        switch request.Method </span>{
+        case "eth_getTransactionCount":<span class="cov0" title="0">
+                response.Result = "0x17"
+                response.Error.Code = 0
+                response.Error.Message = "success"</span>
+
+        case "eth_call":<span class="cov0" title="0">
+                var dataBytes = make([][]byte, 0)
+
+                i := request.Params.([]interface{})[0]
+                data := i.(map[string]interface{})["data"]
+
+                tempBytes, _ := hexutil.Decode(data.(string))
+                _ = rlp.DecodeBytes(tempBytes, &amp;dataBytes)
+
+                if string(dataBytes[2]) == "tofu" </span><span class="cov0" title="0">{
+                        response.Result = TEST_RESULT
+                        response.Error.Code = 0
+                        response.Error.Message = "success"
+                }</span> else<span class="cov0" title="0"> {
+                        response.Error.Code = 1
+                        response.Error.Message = "failed"
+                }</span>
+
+        case "eth_sendTransaction":<span class="cov0" title="0">
+
+                i := request.Params.([]interface{})[0]
+                data := i.(map[string]interface{})["data"]
+                tempBytes, _ := hexutil.Decode(data.(string))
+                _, _, _, err := common.ParseWasmCodeRlpData(tempBytes)
+
+                if err != nil </span><span class="cov0" title="0">{
+                        response.Error.Code = 1
+                        response.Error.Message = "failed"
+                }</span> else<span class="cov0" title="0"> {
+                        response.Result = TEST_TX_HASH
+                        response.Error.Code = 0
+                        response.Error.Message = "success"
+                }</span>
+
+        case "eth_getTransactionReceipt":<span class="cov0" title="0">
+                recpt := Receipt{Status: "0x1"}
+                response.Result = recpt
+                response.Error.Code = 0
+                response.Error.Message = "success"</span>
+                /*
+                        recpt := Receipt{Status: "0x1",}
+                        response.Result = recpt
+                        response.Error.Code = 1
+                        response.Error.Message = "success"*/
+
+        }
+
+        // write the http response
+        <span class="cov0" title="0">rw.Header().Set("Content-type", "application/json")
+        rw.WriteHeader(http.StatusOK)
+        err := json.NewEncoder(rw).Encode(response)
+        if err != nil </span><span class="cov0" title="0">{
+                utils.Fatalf("%s\n", err.Error())
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file14" style="display: none">package utils
+
+import (
+        "bytes"
+        "encoding/binary"
+        "github.com/PlatONEnetwork/PlatONE-Go/common"
+        ethmath "github.com/PlatONEnetwork/PlatONE-Go/common/math"
+        "math"
+        "math/big"
+)
+
+func BytesCombine(pBytes ...[]byte) []byte <span class="cov0" title="0">{
+        return bytes.Join(pBytes, []byte(""))
+}</span>
+
+func Int32ToBytes(n int32) []byte <span class="cov8" title="1">{
+        tmp := int32(n)
+        bytesBuffer := bytes.NewBuffer([]byte{})
+        _ = binary.Write(bytesBuffer, binary.BigEndian, tmp)
+        return bytesBuffer.Bytes()
+}</span>
+
+func BytesToInt32(b []byte) int32 <span class="cov0" title="0">{
+        bytesBuffer := bytes.NewBuffer(b)
+        var tmp int32
+        _ = binary.Read(bytesBuffer, binary.BigEndian, &amp;tmp)
+        return int32(tmp)
+}</span>
+
+func Int64ToBytes(n int64) []byte <span class="cov8" title="1">{
+        tmp := int64(n)
+        bytesBuffer := bytes.NewBuffer([]byte{})
+        _ = binary.Write(bytesBuffer, binary.BigEndian, tmp)
+        return bytesBuffer.Bytes()
+}</span>
+
+func BytesToInt64(b []byte) int64 <span class="cov0" title="0">{
+        bytesBuffer := bytes.NewBuffer(b)
+        var tmp int64
+        _ = binary.Read(bytesBuffer, binary.BigEndian, &amp;tmp)
+        return int64(tmp)
+}</span>
+
+func BytesToUint64(b []byte) uint64 <span class="cov0" title="0">{
+        return binary.BigEndian.Uint64(b)
+}</span>
+
+func Float32ToBytes(float float32) []byte <span class="cov8" title="1">{
+        bits := math.Float32bits(float)
+        b := make([]byte, 4)
+        binary.LittleEndian.PutUint32(b, bits)
+        return b
+}</span>
+
+func BytesToFloat32(bytes []byte) float32 <span class="cov8" title="1">{
+        bits := binary.LittleEndian.Uint32(bytes)
+        return math.Float32frombits(bits)
+}</span>
+
+func Float64ToBytes(float float64) []byte <span class="cov8" title="1">{
+        bits := math.Float64bits(float)
+        b := make([]byte, 8)
+        binary.LittleEndian.PutUint64(b, bits)
+        return b
+}</span>
+
+func BytesToFloat64(bytes []byte) float64 <span class="cov8" title="1">{
+        bits := binary.LittleEndian.Uint64(bytes)
+        return math.Float64frombits(bits)
+}</span>
+
+func BoolToBytes(b bool) []byte <span class="cov0" title="0">{
+        buf := bytes.NewBuffer([]byte{})
+        _ = binary.Write(buf, binary.BigEndian, b)
+        return buf.Bytes()
+}</span>
+
+// BytesConverter converts the bytes to the specific data type
+func BytesConverter(source []byte, t string) interface{} <span class="cov8" title="1">{
+        switch t </span>{
+        case "int32":<span class="cov8" title="1">
+                return common.CallResAsInt32(source)</span>
+        case "int64":<span class="cov8" title="1">
+                return common.CallResAsInt64(source)</span>
+        case "float32":<span class="cov8" title="1">
+                return BytesToFloat32(source)</span>
+        case "float64":<span class="cov8" title="1">
+                return BytesToFloat64(source)</span>
+        case "string":<span class="cov8" title="1">
+                if len(source) &lt; 64 </span><span class="cov8" title="1">{
+                        return string(source[:])
+                }</span> else<span class="cov8" title="1"> {
+                        return string(source[64:])
+                }</span>
+        case "uint64":<span class="cov8" title="1">
+                return common.CallResAsUint64(source)</span>
+        default:<span class="cov8" title="1">
+                return source</span>
+        }
+}
+
+// U256 converts a big Int into a 256bit EVM number.
+func U256(n *big.Int) []byte <span class="cov0" title="0">{
+        return ethmath.PaddedBigBytes(ethmath.U256(n), 32)
+}</span>
+</pre>
+		
+		<pre class="file" id="file15" style="display: none">package utils
+
+import (
+        "fmt"
+        "github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
+        "github.com/PlatONEnetwork/PlatONE-Go/common"
+        "github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
+        "math/big"
+        "strconv"
+        "strings"
+)
+
+// ChainParamConvert convert the string to chain defined type
+func ChainParamConvert(param, paramName string) interface{} <span class="cov8" title="1">{
+        var err error
+        var i interface{}
+
+        switch paramName </span>{
+        case "value", "gasPrice":<span class="cov8" title="1">
+                i, err = IntValueConvert(param)</span>
+        case "gas":<span class="cov8" title="1">
+                i, err = UintValueConvert(param)</span>
+        case "address", "to", "from":<span class="cov8" title="1">
+                i, err = AddressConvert(param)</span>
+        default:<span class="cov0" title="0">
+                i, err = param, nil</span> //TODO
+        }
+
+        <span class="cov8" title="1">if err != nil </span><span class="cov0" title="0">{
+                utils.Fatalf(ErrParamParseFormat, paramName, err.Error())
+        }</span>
+
+        <span class="cov8" title="1">return i</span>
+}
+
+//TODO optimize ?
+func IntValueConvert(value string) (string, error) <span class="cov8" title="1">{
+        var err error
+        var intValue int64
+
+        if value == "" </span><span class="cov0" title="0">{
+                return "", nil
+        }</span>
+
+        //TODO
+        <span class="cov8" title="1">if !strings.HasPrefix(value, "0x") </span><span class="cov8" title="1">{
+                intValue, err = strconv.ParseInt(value, 10, 64)
+        }</span> else<span class="cov8" title="1"> {
+                intValue, err = strconv.ParseInt(value, 0, 64)
+        }</span>
+
+        <span class="cov8" title="1">value = hexutil.EncodeBig(big.NewInt(intValue))
+
+        return value, err</span>
+}
+
+func UintValueConvert(value string) (string, error) <span class="cov8" title="1">{
+        var err error
+        var intValue uint64
+
+        if value == "" </span><span class="cov0" title="0">{
+                return "", nil
+        }</span>
+
+        <span class="cov8" title="1">if !strings.HasPrefix(value, "0x") </span><span class="cov8" title="1">{
+                intValue, err = strconv.ParseUint(value, 10, 64)
+        }</span> else<span class="cov8" title="1"> {
+                intValue, err = strconv.ParseUint(value, 0, 64)
+        }</span>
+
+        <span class="cov8" title="1">value = hexutil.EncodeUint64(intValue)
+
+        return value, err</span>
+}
+
+// AddressConvert converts hex string format address to byte format address
+// when the input is null, the output address is [0 0 ... 0]
+func AddressConvert(address string) (interface{}, error) <span class="cov8" title="1">{
+        //ParamValid(address, "to")
+        if address == "" || IsMatch(address, "address") </span><span class="cov8" title="1">{
+                return common.HexToAddress(address), nil
+        }</span>
+
+        <span class="cov0" title="0">return nil, fmt.Errorf("TODO")</span>
+}
+</pre>
+		
+		<pre class="file" id="file16" style="display: none">package utils
+
+import (
+        "github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
+        "log"
+        "os"
+        "path/filepath"
+        "time"
+)
+
+var Logger *log.Logger
+var LogErr *log.Logger
+var LogDeg *log.Logger
+var logPath string
+
+const (
+        LOG_FILE_CLEAR_TIME = 3600 * 24 * 7 // 7 Days
+        DEFAULT_LOG_DIRT    = "./log"
+)
+
+//TODO LogFileSetup
+func init() <span class="cov8" title="1">{
+        runPath := GetRunningTimePath()
+        logPath = runPath + DEFAULT_LOG_DIRT
+
+        FileDirectoryInit(logPath)
+        pathSep := string(os.PathSeparator)
+        logFilePath := logPath + pathSep + time.Now().Format("2006-01-02") + ".log"
+
+        // create or append
+        logFile, err := os.OpenFile(logFilePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0777)
+        if err != nil </span><span class="cov0" title="0">{
+                utils.Fatalf(ErrOpenFileFormat, "log", err.Error())
+        }</span>
+        //defer logFile.Close()
+
+        <span class="cov8" title="1">Logger = log.New(logFile, "[INFO] ", log.Ldate|log.Ltime|log.Lshortfile)
+        LogErr = log.New(logFile, "[ERROR] ", log.Ldate|log.Ltime|log.Lshortfile)
+        LogDeg = log.New(logFile, "[DEBUG] ", log.Ldate|log.Ltime|log.Lshortfile)
+
+        logStart := log.New(logFile, "", 0)
+        logStart.Println("")
+
+        DeleteOldLogFile()</span>
+}
+
+func DeleteOldLogFile() <span class="cov8" title="1">{
+        currentTime := time.Now().Unix()
+
+        err := filepath.Walk(logPath, func(path string, fileInfo os.FileInfo, err error) error </span><span class="cov8" title="1">{
+
+                if fileInfo == nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+                <span class="cov8" title="1">fileTime := fileInfo.ModTime().Unix()
+
+                if (currentTime - fileTime) &gt; LOG_FILE_CLEAR_TIME </span><span class="cov0" title="0">{
+                        _ = os.RemoveAll(path)
+                }</span>
+
+                <span class="cov8" title="1">return nil</span>
+        })
+
+        <span class="cov8" title="1">if err != nil </span><span class="cov0" title="0">{
+                LogErr.Printf("Delete log file error: %s\n", err.Error())
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file17" style="display: none">package utils
+
+import (
+        "github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
+        "regexp"
+        "strconv"
+        "strings"
+)
+
+//TODO delete
+//===================================================================
+func paramNumCheck(need, receive int) <span class="cov0" title="0">{
+        if need != receive </span><span class="cov0" title="0">{
+                //utils.Fatalf("param check error, required %d inputs, recieved %d\n", need, receive)
+                utils.Fatalf(ErrParamNumCheckFormat, need, receive)
+        }</span>
+}
+
+/*
+func paramCheck(param, paramName string){
+        if param == ""{
+                //utils.Fatalf("the input &lt;%s&gt; cannot be empty!\n", paramName)
+                utils.Fatalf(ErrParamCheckFormat, paramName)
+        }
+}*/
+//==================================================================
+
+// OptionParamValid wraps ParamValid, it allows the input to be null
+func OptionParamValid(param, paramName string) <span class="cov0" title="0">{
+        if param != "" </span><span class="cov0" title="0">{
+                ParamValid(param, paramName)
+        }</span>
+}
+
+// ParamValid check if the input is valid
+func ParamValid(param, paramName string) <span class="cov8" title="1">{
+        var valid = true
+
+        switch paramName </span>{
+        case "fw":<span class="cov8" title="1">
+                if param != "*" </span><span class="cov8" title="1">{
+                        valid = IsMatch(param, "address")
+                }</span>
+        case "to":<span class="cov0" title="0">
+                valid = param == "" || IsMatch(param, "address")</span>
+        case "contract":<span class="cov8" title="1">
+                valid = IsMatch(param, "address") || IsMatch(param, "name")</span>
+        case "action":<span class="cov8" title="1">
+                valid = param == "accept" || param == "reject"</span>
+        case "url":<span class="cov8" title="1">
+                valid = IsUrl(param)</span>
+        case "externalIP", "internalIP":<span class="cov8" title="1">
+                valid = IsUrl(param + ":0")</span>
+        case "roles":<span class="cov8" title="1">
+                valid = isValidRoles(param)</span>
+        case "email", "mobile", "name", "version", "address":<span class="cov8" title="1">
+                valid = IsMatch(param, paramName)</span>
+        default:<span class="cov0" title="0">
+                Logger.Printf("param valid function used but not validate the &lt;%s&gt; param\n", paramName)</span>
+        }
+
+        <span class="cov8" title="1">if !valid </span><span class="cov0" title="0">{
+                utils.Fatalf(ErrParamInValidSyntax, paramName)
+        }</span>
+}
+
+// regMatch check if string matches the pattern by regular expression
+func regMatch(param, pattern string) bool <span class="cov8" title="1">{
+        result, _ := regexp.MatchString(pattern, param)
+        return result
+}</span>
+
+// IsMatch selects different patterns by the paramName
+func IsMatch(param, paramName string) bool <span class="cov8" title="1">{
+        var pattern string
+
+        switch paramName </span>{
+        case "name":<span class="cov8" title="1">
+                pattern = `^(__sys_){0,1}[a-zA-Z]\w{2,15}$`</span> //english name: Alice_02 or __sys_NodeManager
+        case "num":<span class="cov8" title="1">
+                pattern = `^\d+$`</span> //1823...
+        case "email":<span class="cov8" title="1">
+                pattern = `^[a-zA-Z\d][\w-.]{2,15}@[\w]+(.[a-zA-Z]{2,6}){1,2}$`</span> //alice@wxblockchain.com
+        case "mobile":<span class="cov8" title="1">
+                pattern = "^1(3[0-9]|4[57]|[0-35-9]|7[06-8])\\d{8}$"</span> //136xxxxxxxx
+        case "version":<span class="cov8" title="1">
+                pattern = `^([\d]\.){3}[\d]$`</span> //0.0.0.1
+        case "address":<span class="cov8" title="1">
+                pattern = `^0[x|X][\da-fA-F]{40}$`</span> //0x00...00
+        default:<span class="cov0" title="0">
+                pattern = `[\s~!@#\$%^&amp;*\(\)\{\}\[\]\|\,\?]`</span>
+        }
+
+        <span class="cov8" title="1">return regMatch(param, pattern)</span>
+}
+
+// IsUrl check if the input is an Url, for examplt 127.0.0.1:6791
+func IsUrl(url string) bool <span class="cov8" title="1">{
+        var port string
+        var ip string
+
+        array := strings.Split(url, ":")
+        if len(array) == 2 </span><span class="cov8" title="1">{
+                port = array[1]
+                ip = array[0]
+        }</span> else<span class="cov0" title="0"> {
+                Logger.Printf("verify url error, invalid url syntax &lt;ip&gt;:&lt;port&gt; %s", url)
+                return false
+        }</span>
+
+        <span class="cov8" title="1">if !IsInRange(port, 65535) </span><span class="cov0" title="0">{
+                return false
+        }</span>
+
+        <span class="cov8" title="1">arrayIP := strings.Split(ip, ".")
+        if len(arrayIP) == 4 </span><span class="cov8" title="1">{
+                for _, data := range arrayIP </span><span class="cov8" title="1">{
+                        if !IsInRange(data, 255) </span><span class="cov0" title="0">{
+                                return false
+                        }</span>
+                }
+        } else<span class="cov0" title="0"> {
+                return false
+        }</span>
+
+        <span class="cov8" title="1">return true</span>
+}
+
+// IsInRange check the value is in the range selected
+func IsInRange(value string, num int64) bool <span class="cov8" title="1">{
+
+        if IsMatch(value, "num") </span><span class="cov8" title="1">{
+                intValue, _ := strconv.ParseInt(value, 10, 0)
+                if intValue &lt;= num &amp;&amp; intValue &gt;= 0 </span><span class="cov8" title="1">{
+                        return true
+                }</span>
+        }
+
+        <span class="cov0" title="0">return false</span>
+}
+
+// isValidRoles wraps isRoleMatch, it extracts the roles in the array and validates the roles
+func isValidRoles(roles string) bool <span class="cov8" title="1">{
+        rolesArray := strings.Split(roles, "\"")
+        for i := 1; i &lt; len(rolesArray); i = i + 2 </span><span class="cov8" title="1">{
+                if !isRoleMatch(rolesArray[i]) </span><span class="cov0" title="0">{
+                        return false
+                }</span>
+        }
+        <span class="cov8" title="1">return true</span>
+}
+
+// isRoleMatch checks if the input role is valid
+func isRoleMatch(role string) bool <span class="cov8" title="1">{
+        var roleList = []string{"chainAdmin", "nodeAdmin", "contractAdmin", "contractDeployer"}
+        role = strings.Trim(role, " ")
+
+        for _, value := range roleList </span><span class="cov8" title="1">{
+                if role == value </span><span class="cov8" title="1">{
+                        return true
+                }</span>
+        }
+
+        <span class="cov0" title="0">return false</span>
+}
+</pre>
+		
+		<pre class="file" id="file18" style="display: none">package utils
+
+import (
+        "crypto/ecdsa"
+        "encoding/json"
+        "github.com/PlatONEnetwork/PlatONE-Go/accounts/keystore"
+        "github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
+        "github.com/PlatONEnetwork/PlatONE-Go/common"
+        "github.com/PlatONEnetwork/PlatONE-Go/console"
+        "strings"
+)
+
+const DEFAULT_ACCOUNT_ADDRESS = "0x0000000000000000000000000000000000000000"
+
+type KeystoreJson struct {
+        Address string `json:"address"`
+        Crypto  string `json:"crypto"`
+}
+
+// GetPrivateKey gets the private key by decrypting the keystore file
+func GetPrivateKey(account common.Address, keyfilepath string) *ecdsa.PrivateKey <span class="cov0" title="0">{
+
+        // Load the keyfile.
+        keyJson, err := ParseFileToBytes(keyfilepath)
+        if err != nil </span><span class="cov0" title="0">{
+                utils.Fatalf("Failed to read the keyfile at '%s': %v", keyfilepath, err)
+        }</span>
+
+        <span class="cov0" title="0">keyfile := KeystoreJson{}
+        _ = json.Unmarshal(keyJson, &amp;keyfile)
+
+        // check if the account address is matched
+        addr := account.String()
+        if addr != DEFAULT_ACCOUNT_ADDRESS &amp;&amp; !strings.EqualFold(keyfile.Address, addr[2:]) </span><span class="cov0" title="0">{
+                utils.Fatalf("the keystore file mismatches the account address")
+        }</span>
+
+        // Decrypt key with passphrase.
+        <span class="cov0" title="0">passphrase := promptPassphrase(true)
+        key, err := keystore.DecryptKey(keyJson, passphrase)
+        if err != nil </span><span class="cov0" title="0">{
+                utils.Fatalf("Error decrypting key: %v", err)
+        }</span>
+
+        <span class="cov0" title="0">return key.PrivateKey</span>
+}
+
+// TODO
+// promptPassphrase prompt the hint in the terminal to let user to input the password
+func promptPassphrase(confirmation bool) string <span class="cov0" title="0">{
+        passphrase, err := console.Stdin.PromptPassword("Passphrase: ")
+        if err != nil </span><span class="cov0" title="0">{
+                utils.Fatalf("Failed to read passphrase: %v", err)
+        }</span>
+
+        <span class="cov0" title="0">if confirmation </span><span class="cov0" title="0">{
+                confirm, err := console.Stdin.PromptPassword("Repeat passphrase: ")
+                if err != nil </span><span class="cov0" title="0">{
+                        utils.Fatalf("Failed to read passphrase confirmation: %v", err)
+                }</span>
+                <span class="cov0" title="0">if passphrase != confirm </span><span class="cov0" title="0">{
+                        utils.Fatalf("Passphrases do not match")
+                }</span>
+        }
+
+        <span class="cov0" title="0">return passphrase</span>
+}
+</pre>
+		
+		<pre class="file" id="file19" style="display: none">package utils
+
+import (
+        "bytes"
+        "encoding/json"
+        "fmt"
+        "github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
+        "io/ioutil"
+        "net/http"
+        "strings"
+)
+
+// JsonParam, JSON-RPC request
+type JsonParam struct {
+        Jsonrpc string      `json:"jsonrpc"`
+        Method  string      `json:"method"`
+        Params  interface{} `json:"params"`
+        Id      int         `json:"id"`
+}
+
+// Response, the response of JSON-RPC
+type Response struct {
+        Jsonrpc string      `json:"jsonrpc"`
+        Result  interface{} `json:"result"`
+        Id      int         `json:"id"`
+        Error   struct {
+                Code    int32  `json:"code"`
+                Message string `json:"message"`
+        } `json:"error"`
+}
+
+var url string
+
+// SetHttpUrl set the url for HttpPost
+func SetHttpUrl(str string) <span class="cov8" title="1">{
+        if strings.HasPrefix(str, "http://") </span><span class="cov8" title="1">{
+                str = str[7:]
+        }</span>
+
+        <span class="cov8" title="1">if !IsUrl(str) </span><span class="cov0" title="0">{
+                utils.Fatalf(ErrParamInValidSyntax, "url")
+        }</span>
+        <span class="cov8" title="1">url = str</span>
+}
+
+// NewRpcJson new a JsonParam object
+func NewRpcJson(action string, params interface{}) JsonParam <span class="cov0" title="0">{
+
+        if action == "" </span>{<span class="cov0" title="0">
+                // error?
+        }</span>
+
+        <span class="cov0" title="0">param := JsonParam{
+                Jsonrpc: "2.0",
+                Method:  action,
+                Params:  params,
+                Id:      1,
+        }
+
+        return param</span>
+}
+
+// HttpPost post a http request, parse the response and return the body
+func HttpPost(param JsonParam) (string, error) <span class="cov8" title="1">{
+
+        client := &amp;http.Client{}
+        req, _ := json.Marshal(param)
+        reqNew := bytes.NewBuffer(req)
+
+        request, _ := http.NewRequest("POST", "http://"+url, reqNew)
+        request.Header.Set("Content-type", "application/json")
+        response, err := client.Do(request)
+
+        switch </span>{
+        case response == nil &amp;&amp; err != nil:<span class="cov0" title="0">
+                return "", fmt.Errorf(ErrHttpNoResponseFormat, err.Error())</span>
+        case err == nil &amp;&amp; response.StatusCode == 200:<span class="cov8" title="1">
+                body, err := ioutil.ReadAll(response.Body)
+                if err != nil </span><span class="cov0" title="0">{
+                        utils.Fatalf(ErrTODO, DEFAULT_LOG_DIRT)
+                }</span>
+                <span class="cov8" title="1">return string(body), nil</span>
+        default:<span class="cov8" title="1">
+                return "", fmt.Errorf(ErrHttpResponseStatusFormat, response.Status)</span>
+        }
+}
+
+// ParseRpcResponse parse the response of the RPC-JSON and
+// return the result field of Response object if there is no error
+func ParseRpcResponse(r string) (interface{}, error) <span class="cov0" title="0">{
+        var resp = Response{}
+
+        err := json.Unmarshal([]byte(r), &amp;resp)
+        Logger.Printf("the rpc response is %+v\n", resp)
+
+        switch </span>{
+        case err != nil:<span class="cov0" title="0">
+                LogErr.Printf(ErrUnmarshalBytesFormat, "http response", err.Error())
+                return nil, fmt.Errorf(ErrTODO, DEFAULT_LOG_DIRT)</span>
+        case resp.Error.Code != 0:<span class="cov0" title="0">
+                return nil, fmt.Errorf(resp.Error.Message)</span>
+        default:<span class="cov0" title="0">
+                return resp.Result, nil</span>
+        }
+
+}
+</pre>
+		
+		<pre class="file" id="file20" style="display: none">package utils
+
+func A() {<span class="cov0" title="0">
+
+        //client, err := ethclient.Dial(url)
+        //return
+}</span>
+</pre>
+		
+		<pre class="file" id="file21" style="display: none">package utils
+
+import (
+        "encoding/json"
+        "fmt"
+        "github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
+        "io/ioutil"
+        "os"
+        "path/filepath"
+        "strings"
+)
+
+// get the path where the executable is executed
+func GetRunningTimePath() string <span class="cov8" title="1">{
+        cur, _ := os.Executable()
+
+        path := os.Args[0]
+        if cur == path </span><span class="cov8" title="1">{
+                return ""
+        }</span> else<span class="cov0" title="0"> {
+                index := strings.Index(path, "/")
+                path = path[index+1:]
+                return cur[:len(cur)-len(path)]
+        }</span>
+
+}
+
+// PrintJson reformats the json printing style, easier for users to read
+func PrintJson(marshalJson []byte) <span class="cov0" title="0">{
+
+        var addBytes = []byte{'\n'}
+        var newJson = make([]byte, 0)
+
+        for _, v := range marshalJson </span><span class="cov0" title="0">{
+                switch v </span>{
+                case '}':<span class="cov0" title="0">
+                        addBytes = addBytes[:len(addBytes)-1]
+                        newJson = append(newJson, addBytes...)
+                        newJson = append(newJson, v)</span>
+                case '{':<span class="cov0" title="0">
+                        addBytes = append(addBytes, byte('\t'))
+                        newJson = append(newJson, v)
+                        newJson = append(newJson, addBytes...)</span>
+                case ',':<span class="cov0" title="0">
+                        newJson = append(newJson, v)
+                        newJson = append(newJson, addBytes...)</span>
+                default:<span class="cov0" title="0">
+                        newJson = append(newJson, v)</span>
+                }
+
+        }
+
+        <span class="cov0" title="0">fmt.Printf("result:\n%s\n", newJson)</span>
+}
+
+// PrintRequest print the request to terminal or log for debugging usage
+// it will limit the printing length if the request is too long
+func PrintRequest(params interface{}) <span class="cov0" title="0">{
+        paramJson, _ := json.Marshal(params)
+
+        if len(paramJson) &gt; 500 </span><span class="cov0" title="0">{
+                fmt.Printf("\nrequest json data: %s... ...is too long\n", string(paramJson)[:500])
+                path, _ := filepath.Abs(DEFAULT_LOG_DIRT)
+                fmt.Printf("see full info at %s\n", path)
+        }</span> else<span class="cov0" title="0"> {
+                fmt.Printf("\nrequest json data: %s\n", string(paramJson))
+        }</span>
+        <span class="cov0" title="0">Logger.Printf("request json data: %s\n", string(paramJson))</span>
+}
+
+// OverrideFile overrides the data in the file
+func OverrideFile(fileBytes []byte, filePath string) <span class="cov0" title="0">{
+        file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
+        if err != nil </span><span class="cov0" title="0">{
+                utils.Fatalf(ErrOpenFileFormat, filePath, err.Error())
+        }</span>
+
+        <span class="cov0" title="0">_, err = file.Write(fileBytes)
+        if err != nil </span><span class="cov0" title="0">{
+                utils.Fatalf(ErrWriteFileFormat, err.Error())
+        }</span>
+}
+
+// FileDirectoryInit creates a new folder if the file directory is not exist
+func FileDirectoryInit(filedirt string) <span class="cov8" title="1">{
+        _, err := os.Stat(filedirt)
+        if os.IsNotExist(err) </span><span class="cov0" title="0">{
+                _ = os.Mkdir(filedirt, os.ModePerm)
+        }</span>
+}
+
+// TODO
+// IsNameOrAddress Judge whether the input string is an address or a name
+func IsNameOrAddress(str string) (bool, error) <span class="cov0" title="0">{
+        var valid bool
+        var err error
+
+        switch </span>{
+        case IsMatch(str, "address"):<span class="cov0" title="0">
+                valid = true</span>
+        case IsMatch(str, "name"):<span class="cov0" title="0">
+                valid = false</span>
+        default:<span class="cov0" title="0">
+                err = fmt.Errorf(ErrParamInValidSyntax, "contract address")</span>
+        }
+
+        <span class="cov0" title="0">return valid, err</span>
+}
+
+// GetFileInDirt get the first file at the file directory
+func GetFileInDirt(fileDirt string) (string, error) <span class="cov0" title="0">{
+
+        var filePath string
+
+        file, err := os.Stat(fileDirt)
+        if err != nil </span><span class="cov0" title="0">{
+                return "", err
+        }</span>
+
+        <span class="cov0" title="0">if file.IsDir() </span><span class="cov0" title="0">{
+                pathSep := string(os.PathSeparator)
+                fileInfo, _ := ioutil.ReadDir(fileDirt)
+                if fileInfo != nil </span><span class="cov0" title="0">{
+                        filePath = fileDirt + pathSep + fileInfo[0].Name()
+                }</span>
+        } else<span class="cov0" title="0"> {
+                filePath = fileDirt
+        }</span>
+
+        <span class="cov0" title="0">return filePath, nil</span>
+}
+
+// ParseFileToBytes read the file and return the file bytes
+func ParseFileToBytes(filePath string) ([]byte, error) <span class="cov8" title="1">{
+
+        if filePath == "" </span><span class="cov8" title="1">{
+                return nil, ErrFileNull
+        }</span>
+
+        <span class="cov8" title="1">if !filepath.IsAbs(filePath) </span><span class="cov8" title="1">{
+                filePath, _ = filepath.Abs(filePath)
+        }</span>
+
+        <span class="cov8" title="1">_, err := os.Stat(filePath)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, fmt.Errorf(ErrFindFileFormat, err.Error())
+        }</span>
+        <span class="cov8" title="1">Logger.Printf("the file being parsed: %s\n", filePath)
+
+        bytes, err := ioutil.ReadFile(filePath)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, fmt.Errorf(ErrReadFileFormat, filePath, err.Error())
+        }</span>
+        <span class="cov0" title="0">return bytes, nil</span>
+}
+
+// FuncParse wraps the GetFuncNameAndParams
+// it separates the function method name and the parameters
+func FuncParse(funcName string, funcParams []string) (string, []string) <span class="cov8" title="1">{
+        var funcParamsNew []string
+
+        if funcName == "" </span><span class="cov0" title="0">{
+                utils.Fatalf(ErrInputNullFormat, "function")
+        }</span>
+
+        <span class="cov8" title="1">funcName, funcParamsNew = GetFuncNameAndParams(funcName)
+        if funcParamsNew != nil &amp;&amp; funcParams != nil </span><span class="cov0" title="0">{
+                utils.Fatalf(ErrParamInValidSyntax, "function")
+        }</span>
+        <span class="cov8" title="1">funcParams = append(funcParams, funcParamsNew...)
+
+        Logger.Printf("after function parse, the function is %s, %s", funcName, funcParams)
+        return funcName, funcParams</span>
+}
+
+// GetFuncNameAndParams parse the function params from the input string
+func GetFuncNameAndParams(funcAndParams string) (string, []string) <span class="cov8" title="1">{
+        // eliminate space
+        strNoSpace := strings.Split(funcAndParams, " ")
+        f := strings.Join(strNoSpace, "")
+
+        hasBracket := strings.Contains(f, "(") &amp;&amp; strings.Contains(f, ")")
+        if !hasBracket </span><span class="cov8" title="1">{
+                return f, nil
+        }</span>
+
+        <span class="cov8" title="1">funcName := f[0:strings.Index(f, "(")]
+        paramString := f[strings.Index(f, "(")+1 : strings.LastIndex(f, ")")]
+        if paramString == "" </span><span class="cov8" title="1">{
+                return funcName, nil
+        }</span>
+
+        <span class="cov8" title="1">splitPos := recordFuncParamSplitPos(paramString)
+        params := splitFuncParamByPos(paramString, splitPos)
+
+        return funcName, params</span>
+}
+
+// splitFuncParamByPos splits the function params which is in string format
+// by the position index recorded by the recordFuncParamSplitPos method
+func splitFuncParamByPos(paramString string, splitPos []int) []string <span class="cov8" title="1">{
+        params := make([]string, 0)
+        lastPos := 0
+        for _, i := range splitPos </span><span class="cov8" title="1">{
+                params = append(params, paramString[lastPos:i])
+                lastPos = i + 1
+        }</span>
+        <span class="cov8" title="1">params = append(params, paramString[lastPos:])
+
+        //params := strings.Split(paramString, ",")
+        for index, param := range params </span><span class="cov8" title="1">{
+                if strings.HasPrefix(param, "\"") </span><span class="cov8" title="1">{
+                        params[index] = param[strings.Index(param, "\"")+1 : strings.LastIndex(param, "\"")]
+                }</span>
+                <span class="cov8" title="1">if strings.HasPrefix(param, "'") </span><span class="cov8" title="1">{
+                        params[index] = param[strings.Index(param, "'")+1 : strings.LastIndex(param, "'")]
+                }</span>
+        }
+
+        <span class="cov8" title="1">return params</span>
+}
+
+// recordFuncParamSplitPos record the index of the end of each parameter
+func recordFuncParamSplitPos(paramString string) []int <span class="cov8" title="1">{
+        var symStack []rune
+        var splitPos []int
+
+        for i, s := range paramString </span><span class="cov8" title="1">{
+                switch s </span>{
+                case ',':<span class="cov8" title="1">
+                        if len(symStack) == 0 </span><span class="cov8" title="1">{
+                                splitPos = append(splitPos, i)
+                        }</span>
+                case '{':<span class="cov8" title="1">
+                        symStack = append(symStack, '{')</span>
+                case '}':<span class="cov8" title="1">
+                        if len(symStack) &lt; 1 </span><span class="cov0" title="0">{
+                                panic("parameter's format is not write!!!")</span>
+                        }
+                        <span class="cov8" title="1">if symStack[len(symStack)-1] == '{' </span><span class="cov8" title="1">{
+                                symStack = symStack[:len(symStack)-1]
+                        }</span>
+                case '[':<span class="cov8" title="1">
+                        symStack = append(symStack, '[')</span>
+                case ']':<span class="cov8" title="1">
+                        if len(symStack) &lt; 1 </span><span class="cov0" title="0">{
+                                panic("parameter's format is not write!!!")</span>
+                        }
+                        <span class="cov8" title="1">if symStack[len(symStack)-1] == '[' </span><span class="cov8" title="1">{
+                                symStack = symStack[:len(symStack)-1]
+                        }</span>
+                case '(':<span class="cov8" title="1">
+                        symStack = append(symStack, '(')</span>
+                case ')':<span class="cov8" title="1">
+                        if len(symStack) &lt; 1 </span><span class="cov0" title="0">{
+                                panic("parameter's format is not write!!!")</span>
+                        }
+                        <span class="cov8" title="1">if symStack[len(symStack)-1] == '(' </span><span class="cov8" title="1">{
+                                symStack = symStack[:len(symStack)-1]
+                        }</span>
+                case '"':<span class="cov8" title="1">
+                        if len(symStack) &lt; 1 </span><span class="cov8" title="1">{
+                                symStack = append(symStack, '"')
+                        }</span> else<span class="cov8" title="1"> {
+                                if symStack[len(symStack)-1] == '"' </span><span class="cov8" title="1">{
+                                        symStack = symStack[:len(symStack)-1]
+                                }</span> else<span class="cov8" title="1"> {
+                                        symStack = append(symStack, '"')
+                                }</span>
+                        }
+                case '\'':<span class="cov8" title="1">
+                        if len(symStack) &lt; 1 </span><span class="cov8" title="1">{
+                                symStack = append(symStack, '\'')
+                        }</span> else<span class="cov8" title="1"> {
+                                if symStack[len(symStack)-1] == '\'' </span><span class="cov8" title="1">{
+                                        symStack = symStack[:len(symStack)-1]
+                                }</span> else<span class="cov0" title="0"> {
+                                        symStack = append(symStack, '\'')
+                                }</span>
+                        }
+                }
+        }
+
+        <span class="cov8" title="1">return splitPos</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

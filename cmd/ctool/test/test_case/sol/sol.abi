@@ -1,0 +1,53 @@
+[
+	{
+		"inputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "age",
+		"outputs": [
+			{
+				"internalType": "int32",
+				"name": "",
+				"type": "int32"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "getNum",
+		"outputs": [
+			{
+				"internalType": "int32",
+				"name": "",
+				"type": "int32"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"internalType": "int32",
+				"name": "num",
+				"type": "int32"
+			}
+		],
+		"name": "setNum",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	}
+]
