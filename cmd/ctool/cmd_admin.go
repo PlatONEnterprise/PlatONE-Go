@@ -447,7 +447,7 @@ func contractList(c *cli.Context) {
 		funcParams := []string{"contractDeployer"}
 		result = contractCommon(c, funcParams, "getAccountsByRole", "__sys_RoleManager")
 	default:
-		panic(fmt.Sprintf(utl.PanicUnexpSituation, "contractList"))
+		utils.Fatalf("no flag provided")
 	}
 
 	utl.PrintJson([]byte(result.(string)))

@@ -10,7 +10,7 @@ const(
 )
 
 func init(){
-	DeleteOldFile(DEAFAULT_ABI_DIRT)
+	_ = DeleteOldFile(DEAFAULT_ABI_DIRT)
 }
 
 // StoreAbiFile stores the abi files in the default abi file directory

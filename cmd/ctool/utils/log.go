@@ -32,7 +32,6 @@ func init() {
 	if err != nil {
 		utils.Fatalf(ErrOpenFileFormat, "log", err.Error())
 	}
-	//defer logFile.Close()
 
 	Logger = log.New(logFile, "[INFO] ", log.Ldate|log.Ltime|log.Lshortfile)
 	LogErr = log.New(logFile, "[ERROR] ", log.Ldate|log.Ltime|log.Lshortfile)
@@ -41,13 +40,16 @@ func init() {
 	logStart := log.New(logFile, "", 0)
 	logStart.Println("")
 
-	DeleteOldFile(logFileDirt)
+	err = DeleteOldFile(logFileDirt)
+	if err != nil {
+		LogErr.Printf("Delete %s file error: %s\n", logFileDirt, err.Error())
+	}
 }
 
-func DeleteOldFile(fileDirt string) {
+func DeleteOldFile(fileDirt string) error {
 	currentTime := time.Now().Unix()
 
-	err := filepath.Walk(fileDirt, func(path string, fileInfo os.FileInfo, err error) error {
+	return filepath.Walk(fileDirt, func(path string, fileInfo os.FileInfo, err error) error {
 
 		if fileInfo == nil {
 			return err
@@ -60,8 +62,4 @@ func DeleteOldFile(fileDirt string) {
 
 		return nil
 	})
-
-	if err != nil {
-		LogErr.Printf("Delete %s file error: %s\n", fileDirt, err.Error())
-	}
 }

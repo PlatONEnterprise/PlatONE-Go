@@ -56,15 +56,21 @@ var AppHelpFlagGroups = []flagGroup{
 		},
 	},
 	{
+		Name: "COMMON",
+		Flags: []cli.Flag{
+
+		},
+	},
+	{
 		Name: "ACCOUNT",
 		Flags: []cli.Flag{
-			RolesFlag,
 			UserRemarkFlags,
 			TelFlags,
 			EmailFlags,
+			AddressFlags,
 			UserIDFlags,
 			UserRoleFlag,
-			UserStatusFlag,
+			RolesFlag,
 		},
 	},
 	{
@@ -73,38 +79,30 @@ var AppHelpFlagGroups = []flagGroup{
 			NodeDescFlags,
 			NodeDelayNumFlags,
 			NodeTypeFlags,
-			NodeStatusFlags,
-			P2pPortFlags,
-			RpcPortFlags,
-			ShowAllFlags,
+			NodeP2pPortFlags,
+			NodeRpcPortFlags,
 			NodePublicKeyFlags,
 			NameFlags,
 
 			AdminApproveFlags,
 			AdminDeleteFlags,
-			ContractAdminDeleteFlags,
 		},
 	},
 	{
 		Name: "CONTRACT",
 		Flags: []cli.Flag{
 			ContractParamFlag,
+			ContractAddrKeyFlag,
 			ContractAbiFilePathFlag,
 			ContractVmFlags,
 			TransferValueFlag,
 			ShowContractMethodsFlag,
-			ContractAddrKeyFlag,
 		},
 	},
 	{
 		Name: "CNS",
 		Flags: []cli.Flag{
 			CnsVersionFlags,
-			ShowAllFlags,
-			ContractAddrKeyFlag,
-			UserFlags,
-			PageNumFlags,
-			PageSizeFlags,
 		},
 	},
 	{
@@ -112,11 +110,17 @@ var AppHelpFlagGroups = []flagGroup{
 		Flags: []cli.Flag{
 			FilePathFlags,
 			FwActionFlags,
-			FwClearAllFlags,
 		},
 	},
 	{
 		Name: "MISC",
+		// list the flags that are not categorized
+		// ShowAllFlags,
+		// FwClearAllFlags,
+		// NodeStatusFlags,
+		// UserStatusFlag,
+		// PageNumFlags,
+		// PageSizeFlags,
 	},
 }
 

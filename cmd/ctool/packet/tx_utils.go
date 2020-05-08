@@ -187,6 +187,7 @@ func getAbiFileFromLocal(str string) string {
 	return abiFilePath
 }
 
+// GetAbiFile gets the abi file that matches the keywords provided
 func GetAbiFile(key string) string {
 	fileName := utl.GetFileByKey(utl.DEAFAULT_ABI_DIRT, key)
 
@@ -196,7 +197,6 @@ func GetAbiFile(key string) string {
 
 	return ""
 }
-
 
 // TODO
 // getAbiFileFromLocal get the abi files from chain

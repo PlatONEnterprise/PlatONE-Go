@@ -2,7 +2,6 @@ package main
 
 import (
 	"gopkg.in/urfave/cli.v1"
-	"sort"
 )
 
 var (
@@ -49,7 +48,7 @@ var (
 	// transfer
 	TransferValueFlag = cli.StringFlag{
 		Name: "value",
-		//Value: "0xDE0B6B3A7640000", //one
+		//Value: "0xDE0B6B3A7640000", // one
 		Usage: "Amount of <Token> to transfer",
 	}
 
@@ -74,17 +73,14 @@ var (
 	}
 
 	// user
-	RolesFlag = cli.StringFlag{
-		Name:  "roles",
-		Usage: "Register user roles",
-	}
+
 	TelFlags = cli.StringFlag{
 		Name:  "mobile",
-		Usage: "User mobile info",
+		Usage: "The mobile number of a user",
 	}
 	EmailFlags = cli.StringFlag{
 		Name:  "email",
-		Usage: "User email info",
+		Usage: "The email address of a user",
 	}
 	UserRemarkFlags = cli.StringFlag{
 		Name:  "remark",
@@ -96,7 +92,11 @@ var (
 	}
 	UserRoleFlag = cli.StringFlag{
 		Name:  "role",
-		Usage: "A role of a user",
+		Usage: "A role of a user, e.g. --role <userRole>",
+	}
+	RolesFlag = cli.StringFlag{
+		Name:  "roles",
+		Usage: "Register user roles, e.g. --roles '[\"<role1>\",\"<role2>\"]'",
 	}
 	UserStatusFlag = cli.StringFlag{
 		Name:  "status",
@@ -104,12 +104,12 @@ var (
 	}
 
 	// node
-	P2pPortFlags = cli.StringFlag{
+	NodeP2pPortFlags = cli.StringFlag{
 		Name:  "p2pPort",
 		Value: "16791",
 		Usage: "Specify the node p2p port number",
 	}
-	RpcPortFlags = cli.StringFlag{
+	NodeRpcPortFlags = cli.StringFlag{
 		Name:  "rpcPort",
 		Value: "6791",
 		Usage: "Specify the node rpc port number",
@@ -140,8 +140,8 @@ var (
 	}
 
 	// user
-	UserFlags = cli.StringFlag{
-		Name:  "user",
+	AddressFlags = cli.StringFlag{
+		Name:  "addr",
 		Usage: "The address of the user registered in the user platform",
 	}
 
@@ -169,21 +169,17 @@ var (
 		Usage: --version X.X.X.X, where X is number between 0 and 9`,
 	}
 
+
 	//TODO
 	// admin
 	AdminApproveFlags = cli.BoolFlag{
 		Name:  "approve",
-		Usage: "",
+		Usage: "list the registration to be approved",
 	}
 
 	AdminDeleteFlags = cli.StringFlag{
 		Name:  "delete",
-		Usage: "",
-	}
-
-	ContractAdminDeleteFlags = cli.BoolFlag{
-		Name:  "delete",
-		Usage: "",
+		Usage: "list the data object can be deleted",
 	}
 
 	//fw
@@ -224,7 +220,6 @@ var (
 	}
 
 	// transfer
-	// transferCmdFlags = append(globalCmdFlags, TransferValueFlag)
 
 	// user
 	userUpdateCmdFlags   = append(globalCmdFlags, TelFlags, EmailFlags)
@@ -234,7 +229,13 @@ var (
 	// node
 	nodeUpdateCmdFlags = append(globalCmdFlags, NodeDescFlags, NodeDelayNumFlags, NodeTypeFlags)
 	nodeStatCmdFlags   = append(globalCmdFlags, NodeStatusFlags, NodeTypeFlags)
-	nodeAddCmdFlags    = append(globalCmdFlags, P2pPortFlags, RpcPortFlags, NodeDelayNumFlags, NodeDescFlags)
+	nodeAddCmdFlags    = append(
+		globalCmdFlags,
+		NodeP2pPortFlags,
+		NodeRpcPortFlags,
+		NodeDelayNumFlags,
+		NodeDescFlags)
+
 	nodeQueryCmdFlasg  = append(
 		globalCmdFlags,
 		ShowAllFlags,
@@ -256,7 +257,7 @@ var (
 
 	// sup
 	supAdminCmdFlags = append(globalCmdFlags, AdminApproveFlags, AdminDeleteFlags)
-	contractAdminCmdFlags = append(globalCmdFlags, AdminApproveFlags, ContractAdminDeleteFlags)
+	contractAdminCmdFlags = append(globalCmdFlags, AdminApproveFlags, AdminDeleteFlags)
 	userListCmdFlags = append(globalCmdFlags, AdminApproveFlags)
 
 	// cns
@@ -265,7 +266,7 @@ var (
 		globalCmdFlags,
 		ShowAllFlags,
 		ContractAddrKeyFlag,
-		UserFlags,
+		AddressFlags,
 		PageNumFlags,
 		PageSizeFlags)
 
@@ -273,7 +274,3 @@ var (
 	fwImportCmdFlags = append(globalCmdFlags, FilePathFlags)
 	fwClearCmdFlags  = append(globalCmdFlags, FwActionFlags, FwClearAllFlags)
 )
-
-func init() {
-	sort.Sort(cli.FlagsByName(globalCmdFlags))
-}
