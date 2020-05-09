@@ -56,10 +56,8 @@ var AppHelpFlagGroups = []flagGroup{
 		},
 	},
 	{
-		Name: "COMMON",
-		Flags: []cli.Flag{
-
-		},
+		Name:  "COMMON",
+		Flags: []cli.Flag{},
 	},
 	{
 		Name: "ACCOUNT",

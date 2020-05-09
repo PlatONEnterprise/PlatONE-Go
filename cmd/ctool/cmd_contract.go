@@ -65,10 +65,10 @@ Wasm: --abi flag is also needed when deploy wasm contract`,
 	}
 
 	MethodCmd = cli.Command{
-		Name:      "methods",
-		Usage:     "List all the exported methods of a contract by its abi file or contract address",
-		Action:    contractMethods,
-		Flags:     contractMethodsCmd,
+		Name:   "methods",
+		Usage:  "List all the exported methods of a contract by its abi file or contract address",
+		Action: contractMethods,
+		Flags:  contractMethodsCmd,
 		Description: `
 		ctool contract methods
 
@@ -96,7 +96,7 @@ func contractReceipt(c *cli.Context) {
 	txHash := c.Args().First()
 	//paramValid(txHash, "txHash") //TODO
 
-	result, err := packet.GetTransactionReceipt(txHash)
+	result, err := utl.GetTransactionReceipt(txHash)
 	if err != nil {
 		utils.Fatalf("get receipt failed: %s\n", err.Error())
 	} else {
@@ -109,8 +109,8 @@ func contractReceipt(c *cli.Context) {
 func deploy(c *cli.Context) {
 	var abiBytes []byte
 
-	codePath := c.Args().First() 		// 必选参数
-	abiPath := c.String("abi")   	// 可选参数
+	codePath := c.Args().First() // 必选参数
+	abiPath := c.String("abi")   // 可选参数
 	vm := c.String("vm")
 
 	codeBytes := ParamParse(codePath, "code").([]byte)
@@ -124,8 +124,8 @@ func deploy(c *cli.Context) {
 	result := messageCall(c, call, nil, "", call.TxType)
 	fmt.Printf("result: contract address is %s\n", result)
 
-	if utl.IsMatch(result.(string), "address"){
-		utl.StoreAbiFile(result.(string), abiBytes)
+	if utl.IsMatch(result.(string), "address") {
+		storeAbiFile(result.(string), abiBytes)
 	}
 }
 
@@ -137,19 +137,19 @@ func execute(c *cli.Context) {
 	funcParams := c.StringSlice("param")
 	isListMethods := c.Bool("methods")
 
-	utl.ParamValid(contract,"contract")
+	utl.ParamValid(contract, "contract")
 
-	if isListMethods{
-		abiPath := packet.GetAbiFile(contract)
+	if isListMethods {
+		abiPath := getAbiFile(contract)
 		_ = listAbiFunctions(abiPath)
 		return
 	}
 
 	//TODO bug fix
 	/*
-	if len(c.Args()) != 2 {
-		utils.Fatalf("param check error, required %d inputs, recieved %d\n",2, len(c.Args()))
-	}*/
+		if len(c.Args()) != 2 {
+			utils.Fatalf("param check error, required %d inputs, recieved %d\n",2, len(c.Args()))
+		}*/
 
 	result := contractCommon(c, funcParams, funcName, contract)
 	fmt.Printf("result: %v\n", result)
@@ -159,8 +159,8 @@ func execute(c *cli.Context) {
 //TODO test
 func migrate(c *cli.Context) {
 
-	funcName := "migrateFrom"     		// 内置
-	sourceAddr := c.Args().Get(1) 	// 必选参数
+	funcName := "migrateFrom"     // 内置
+	sourceAddr := c.Args().Get(1) // 必选参数
 
 	if sourceAddr != "" {
 		utl.ParamValid(sourceAddr, "address")
@@ -185,13 +185,13 @@ func contractMethods(c *cli.Context) {
 	case abi != "":
 		abiPath = abi
 	case contract != "":
-		abiPath = packet.GetAbiFile(contract)
+		abiPath = getAbiFile(contract)
 	default:
 		utils.Fatalf("no argument provided\n")
 	}
 
 	err := listAbiFunctions(abiPath)
-	if err != nil{
+	if err != nil {
 		utils.Fatalf("list contract methods error: %s\n", err.Error())
 	}
 }

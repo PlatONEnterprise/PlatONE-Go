@@ -17,13 +17,11 @@ var (
 		Usage: "Specify the local or remote account address used to send the message calls",
 	}
 	GasFlags = cli.StringFlag{
-		Name: "gas",
-		//Value: "0x10",
+		Name:  "gas",
 		Usage: "Specify the gas allowance for the code execution",
 	}
 	GasPriceFlags = cli.StringFlag{
-		Name: "gasPrice",
-		//Value: "",
+		Name:  "gasPrice",
 		Usage: "Specify the number of <Token> to simulate paying for each unit of gas during execution", //TODO correct
 	}
 	LocalFlags = cli.BoolFlag{
@@ -47,8 +45,7 @@ var (
 
 	// transfer
 	TransferValueFlag = cli.StringFlag{
-		Name: "value",
-		//Value: "0xDE0B6B3A7640000", // one
+		Name:  "value",
 		Usage: "Amount of <Token> to transfer",
 	}
 
@@ -73,7 +70,6 @@ var (
 	}
 
 	// user
-
 	TelFlags = cli.StringFlag{
 		Name:  "mobile",
 		Usage: "The mobile number of a user",
@@ -169,8 +165,6 @@ var (
 		Usage: --version X.X.X.X, where X is number between 0 and 9`,
 	}
 
-
-	//TODO
 	// admin
 	AdminApproveFlags = cli.BoolFlag{
 		Name:  "approve",
@@ -207,7 +201,6 @@ var (
 	}
 
 	//=============================================================================
-
 	globalCmdFlags = []cli.Flag{
 		UrlFlags,
 		AccountFlags,
@@ -224,7 +217,7 @@ var (
 	// user
 	userUpdateCmdFlags   = append(globalCmdFlags, TelFlags, EmailFlags)
 	userRegisterCmdFlags = append(globalCmdFlags, RolesFlag, UserRemarkFlags)
-	userQueryCmdFlags = append(globalCmdFlags, UserIDFlags, UserRoleFlag, UserStatusFlag)
+	userQueryCmdFlags    = append(globalCmdFlags, UserIDFlags, UserRoleFlag, UserStatusFlag)
 
 	// node
 	nodeUpdateCmdFlags = append(globalCmdFlags, NodeDescFlags, NodeDelayNumFlags, NodeTypeFlags)
@@ -236,7 +229,7 @@ var (
 		NodeDelayNumFlags,
 		NodeDescFlags)
 
-	nodeQueryCmdFlasg  = append(
+	nodeQueryCmdFlasg = append(
 		globalCmdFlags,
 		ShowAllFlags,
 		NodeTypeFlags,
@@ -256,9 +249,9 @@ var (
 	contractMethodsCmd = append([]cli.Flag{}, ContractAbiFilePathFlag, ContractAddrKeyFlag)
 
 	// sup
-	supAdminCmdFlags = append(globalCmdFlags, AdminApproveFlags, AdminDeleteFlags)
+	supAdminCmdFlags      = append(globalCmdFlags, AdminApproveFlags, AdminDeleteFlags)
 	contractAdminCmdFlags = append(globalCmdFlags, AdminApproveFlags, AdminDeleteFlags)
-	userListCmdFlags = append(globalCmdFlags, AdminApproveFlags)
+	userListCmdFlags      = append(globalCmdFlags, AdminApproveFlags)
 
 	// cns
 	cnsResolveCmdFlags = append(globalCmdFlags, CnsVersionFlags)

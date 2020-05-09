@@ -87,7 +87,7 @@ var (
 		ArgsUsage: "<address> <action> <account> <api>",
 		Action:    fwNew,
 		Flags:     globalCmdFlags,
-		Description:`
+		Description: `
 		ctool fw new <address> <action> <account> <api>
 
 Example: ./ctool fw new 0xcce493dcb135a19928627a7d5a0df0b1477fbce7 \
@@ -203,16 +203,16 @@ func fwClear(c *cli.Context) {
 	all := c.Bool("all")
 
 	switch {
-	case all:				// clear all fire wall rules
+	case all: // clear all fire wall rules
 		result1 := innerCall(c, funcName, []string{"accept"}, packet.FW_TX_TYPE)
 		result2 := innerCall(c, funcName, []string{"reject"}, packet.FW_TX_TYPE)
 		if result1 == result2 && result1 == "Operation Succeeded" {
 			fmt.Printf("result: Operation Succeeded\n")
-		}else{
+		} else {
 			fmt.Printf("result: something wrong happens, only part of the rules are cleared\n")
 
 		}
-	case action != "":		// clear the fire wall rules of a specific action
+	case action != "": // clear the fire wall rules of a specific action
 		utl.ParamValid(action, "action")
 
 		funcParams := []string{action}

@@ -14,10 +14,10 @@ import (
 
 // convert, convert user input from key to value
 type convert struct {
-	key1      string		// user input 1
-	key2      string		// user input 2
-	value1    interface{}	// the convert value of user input 1
-	value2    interface{}	// the convert value of user input 2
+	key1      string      // user input 1
+	key2      string      // user input 2
+	value1    interface{} // the convert value of user input 1
+	value2    interface{} // the convert value of user input 2
 	paramName string
 }
 
@@ -40,7 +40,7 @@ func contractCommon(c *cli.Context, funcParams []string, funcName, contract stri
 	value = utl.ChainParamConvert(value, "value").(string)
 
 	// get the abi bytes of the contracts
-	funcAbi := packet.AbiParse(abiPath, contract)
+	funcAbi := AbiParse(abiPath, contract)
 
 	// judge whether the input string is contract address or contract name
 	cns := packet.CnsParse(contract)
@@ -76,7 +76,7 @@ func messageCall(c *cli.Context, call packet.MessageCall, to *common.Address, va
 	utl.PrintRequest(params)
 
 	// send the RPC calls
-	resp, err := packet.RpcCalls(action, params)
+	resp, err := utl.RpcCalls(action, params)
 	if err != nil {
 		utils.Fatalf(utl.ErrSendTransacionFormat, err.Error())
 	}
@@ -152,7 +152,7 @@ func setUrl(c *cli.Context) {
 	case url != "":
 		utl.ParamValid(url, "url")
 		config.Url = url
-		WriteConfigFile(runPath + DEFAULT_CONFIG_FILE_PATH, "url", config.Url)
+		WriteConfigFile(runPath+DEFAULT_CONFIG_FILE_PATH, "url", config.Url)
 	case config.Url == "":
 		utils.Fatalf("Please set url first.\n")
 	default:
@@ -267,11 +267,11 @@ func convertSelect(param, paramName string) (interface{}, error) {
 	var conv *convert
 
 	switch paramName {
-	case "operation": 	// registration operation
+	case "operation": // registration operation
 		conv = newConvert("approve", "reject", "2", "3", paramName)
-	case "status": 		// node status
+	case "status": // node status
 		conv = newConvert("valid", "invalid", 1, 2, paramName)
-	case "type": 		// node type
+	case "type": // node type
 		conv = newConvert("consensus", "observer", 1, 0, paramName)
 	default:
 		utils.Fatalf("")
@@ -291,4 +291,3 @@ func (conv *convert) typeConvert(param string) (interface{}, error) {
 		return conv.value2, nil
 	}
 }
-

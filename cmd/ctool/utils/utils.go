@@ -22,7 +22,6 @@ func GetRunningTimePath() string {
 		path = path[index+1:]
 		return cur[:len(cur)-len(path)]
 	}
-
 }
 
 // PrintJson reformats the json printing style, easier for users to read
@@ -47,7 +46,6 @@ func PrintJson(marshalJson []byte) {
 		default:
 			newJson = append(newJson, v)
 		}
-
 	}
 
 	fmt.Printf("result:\n%s\n", newJson)
@@ -105,6 +103,25 @@ func IsNameOrAddress(str string) (bool, error) {
 	}
 
 	return valid, err
+}
+
+// GetFileByKey search the file in the file directory by the search keywords provided
+// if found, return the file name
+func GetFileByKey(fileDirt, key string) string {
+
+	fileList, _ := ioutil.ReadDir(fileDirt)
+
+	for _, file := range fileList {
+
+		switch {
+		case file.IsDir():
+			continue
+		case strings.Contains(file.Name(), key):
+			return file.Name()
+		}
+	}
+
+	return ""
 }
 
 // GetFileInDirt get the first file at the file directory
@@ -289,4 +306,3 @@ func recordFuncParamSplitPos(paramString string) []int {
 
 	return splitPos
 }
-

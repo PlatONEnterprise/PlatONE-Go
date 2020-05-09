@@ -44,10 +44,4 @@ func TestStringConverter(t *testing.T) {
 		t.Logf("--------------------End-----------------------\n")
 	}
 
-	//buf := bytes.NewBuffer([]byte{})
-	//binary.Write(buf, binary.BigEndian, "true")
-	//fmt.Println(buf.Bytes())
-	//fmt.Println(len(buf.Bytes()))
-
-	//fmt.Printf("%v",i)
 }

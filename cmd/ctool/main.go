@@ -29,27 +29,19 @@ func init() {
 	}
 	sort.Sort(cli.CommandsByName(app.Commands))
 
-	//app.Flags = append(app.Flags, globalCmdFlags...)
-	//app.Flags = append(app.Flags, contractFlags...)
-
-	app.Version = "0.0.1 - Beta"
-
-	//sort.Sort(cli.FlagsByName(app.Flags))
-
 	app.After = func(ctx *cli.Context) error {
 		return nil
 	}
 
-	//TODO 重新写
-	//utl.LogFileSetup()
+	// Initialize the related file
+	configInit()
+	abiInit()
 }
 
 func main() {
 
-	configInit()
-
 	if err := app.Run(os.Args); err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		_, _ = fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }

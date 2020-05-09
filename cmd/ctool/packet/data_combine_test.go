@@ -32,7 +32,7 @@ func TestDeploy(t *testing.T) {
 
 	//fmt.Printf("action is %s, params are %+v\n", action, params)
 
-	response, err := RpcCalls(action, params)
+	response, err := utl.RpcCalls(action, params)
 
 	if err != nil {
 		fmt.Printf("FAILED, error is %s\n", err.Error())

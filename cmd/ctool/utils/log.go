@@ -14,8 +14,8 @@ var LogDeg *log.Logger
 var logFileDirt string
 
 const (
-	FILE_CLEAR_TIME = 3600 * 24 * 7 // 7 Days
-	DEFAULT_LOG_DIRT    = "./log"
+	FILE_CLEAR_TIME  = 3600 * 24 * 7 // 7 Days
+	DEFAULT_LOG_DIRT = "./log"
 )
 
 //TODO LogFileSetup
@@ -38,7 +38,7 @@ func init() {
 	LogDeg = log.New(logFile, "[DEBUG] ", log.Ldate|log.Ltime|log.Lshortfile)
 
 	logStart := log.New(logFile, "", 0)
-	logStart.Println("")
+	logStart.Println("[Record of cmd]")
 
 	err = DeleteOldFile(logFileDirt)
 	if err != nil {

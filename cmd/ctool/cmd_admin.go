@@ -71,8 +71,8 @@ The newly added nodes can only be observer type.`,
 	}
 
 	NodeQueryCmd = cli.Command{
-		Name:  "query",
-		Usage: "Query the node Info by the search key provided",
+		Name:   "query",
+		Usage:  "Query the node Info by the search key provided",
 		Action: nodeQuery,
 		Flags:  nodeQueryCmdFlasg,
 		Description: `
@@ -218,8 +218,8 @@ Except --all flag, other search keys can be combined.`,
 	}
 
 	UserList = cli.Command{
-		Name:  "list",
-		Usage: "<TODO>",
+		Name:   "list",
+		Usage:  "<TODO>",
 		Action: userList,
 		Flags:  userListCmdFlags,
 		Description: `
@@ -593,7 +593,7 @@ func supList(c *cli.Context) {
 		result = contractCommon(c, funcParams, "getRegisterInfosByStatus", "__sys_RoleRegister")
 	case role != "":
 		role = strings.TrimSpace(role)
-		if !utl.IsRoleMatch(role){
+		if !utl.IsRoleMatch(role) {
 			utils.Fatalf("the input role is invalid\n")
 		}
 

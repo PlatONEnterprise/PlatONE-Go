@@ -76,7 +76,7 @@ func HttpPost(param JsonParam) (string, error) {
 	case response == nil && err != nil:
 		return "", fmt.Errorf(ErrHttpNoResponseFormat, err.Error())
 	case err == nil && response == nil:
-		return "", nil	// TODO no response
+		return "", nil // TODO no response
 	case err == nil && response.StatusCode == 200:
 		body, err := ioutil.ReadAll(response.Body)
 		if err != nil {

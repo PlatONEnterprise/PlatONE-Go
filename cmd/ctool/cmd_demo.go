@@ -8,19 +8,18 @@ import (
 )
 
 type nodeJson struct {
-	Name	string		`json:"name"`
-	Owner	string		`json:"owner"`
-	Desc	string		`json:"desc"`
-	Type	int			`json:"type"`
-	Publickey	string	`json:"publickey"`
-	ExternalIP	string	`json:"externalIP"`
-	InternalIP	string	`json:"internalIP"`
-	RpcPort		int		`json:"rpcPort"`
-	P2pPort		int		`json:"p2pPort"`
-	Status		int		`json:"status"`
-	DelayNum	int		`json:"delayNum,omitempty"`
+	Name       string `json:"name"`
+	Owner      string `json:"owner"`
+	Desc       string `json:"desc"`
+	Type       int    `json:"type"`
+	Publickey  string `json:"publickey"`
+	ExternalIP string `json:"externalIP"`
+	InternalIP string `json:"internalIP"`
+	RpcPort    int    `json:"rpcPort"`
+	P2pPort    int    `json:"p2pPort"`
+	Status     int    `json:"status"`
+	DelayNum   int    `json:"delayNum,omitempty"`
 }
-
 
 // TODO combineJson refactory
 func nodeAddDemo(c *cli.Context) {
@@ -36,14 +35,14 @@ func nodeAddDemo(c *cli.Context) {
 	var strJson = fmt.Sprintf("{%s%s%s}", strConst, strDefault, strOption)
 
 	/*
-	var nodeJsonStr = nodeJson{
-		Status: 1,
-		Type: 0,
-		RpcPort: 6791,
-		P2pPort: 1800,
-	}
+		var nodeJsonStr = nodeJson{
+			Status: 1,
+			Type: 0,
+			RpcPort: 6791,
+			P2pPort: 1800,
+		}
 
-	nodeJsonBytes, _ := json.Marshal(nodeJsonStr)*/
+		nodeJsonBytes, _ := json.Marshal(nodeJsonStr)*/
 
 	// combine to json format
 	str := combineJson(c, strMustArray, []byte(strJson))

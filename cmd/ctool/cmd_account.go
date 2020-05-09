@@ -85,10 +85,10 @@ nodeAdmin: The nodeAdmin has the right to add, delete, and update the node to th
 	}
 
 	QueryUserCmd = cli.Command{
-		Name:      "query",
-		Usage:     "Query the user Info by user name or address",
-		Action:    queryUser,
-		Flags:     userQueryCmdFlags,
+		Name:   "query",
+		Usage:  "Query the user Info by user name or address",
+		Action: queryUser,
+		Flags:  userQueryCmdFlags,
 		Description: `
 		ctool account query`,
 	}
@@ -128,7 +128,7 @@ func transfer(c *cli.Context) {
 
 func registerUser(c *cli.Context) {
 
-	var strMustArray = []string{"account", "name", "tel", "email"}				// 必填
+	var strMustArray = []string{"account", "name", "tel", "email"} // 必填
 	var strJson = "{\"roles\":\"\",\"remark\":\"user platform application\"}"
 
 	str := combineJson(c, strMustArray, []byte(strJson))

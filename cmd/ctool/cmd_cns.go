@@ -140,7 +140,7 @@ func cnsQuery(c *cli.Context) {
 	pageNum := c.String("pageNum")
 	pageSize := c.String("pageSize")
 
-	if user != "" && contract != ""{
+	if user != "" && contract != "" {
 		utils.Fatalf("please select one search key")
 	}
 
