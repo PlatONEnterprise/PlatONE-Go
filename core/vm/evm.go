@@ -30,6 +30,7 @@ import (
 // emptyCodeHash is used by create to ensure deployment is disallowed to already
 // deployed contract addresses (relevant after the account abstraction).
 var emptyCodeHash = crypto.Keccak256Hash(nil)
+// var emptyContractError = errors.New("Empty Contract")
 
 type (
 	// CanTransferFunc is the signature of a transfer guard function
@@ -53,8 +54,14 @@ func run(evm *EVM, contract *Contract, input []byte, readOnly bool) ([]byte, err
 		}
 	}
 
+	/*if input != nil && contract.Code == nil{
+		return nil,emptyContractError
+	}*/
+
 	for _, interpreter := range evm.interpreters {
-		if interpreter.CanRun(contract.Code) {
+		var ok bool
+		ok, input = interpreter.CanRun(contract.Code, input, contract)
+		if ok {
 			if evm.interpreter != interpreter {
 				// Ensure that the interpreter pointer is set back
 				// to its current value upon return.
@@ -222,6 +229,7 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas 
 			evm.vmConfig.Tracer.CaptureEnd(ret, gas-contract.Gas, time.Since(start), err)
 		}()
 	}
+
 	ret, err = run(evm, contract, input, false)
 
 	// When an error was returned by the EVM or when setting the creation code
@@ -300,7 +308,11 @@ func (evm *EVM) DelegateCall(caller ContractRef, addr common.Address, input []by
 	contract := NewContract(caller, to, nil, gas).AsDelegate()
 	contract.SetCallCode(&addr, evm.StateDB.GetCodeHash(addr), evm.StateDB.GetCode(addr))
 
-	ret, err = run(evm, contract, input, false)
+	input, err = parseSolCallWasmInput(evm, addr, input)
+	if err == nil {
+		ret, err = run(evm, contract, input, false)
+	}
+
 	if err != nil {
 		evm.StateDB.RevertToSnapshot(snapshot)
 		if err != errExecutionReverted {

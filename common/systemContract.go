@@ -50,13 +50,14 @@ type NodeInfo struct {
 }
 
 type SystemParameter struct {
-	BlockGasLimit   int64
-	TxGasLimit      int64
-	CBFTTime        CBFTProduceBlockCfg
-	GasContractName string
-	GasContractAddr Address
+	BlockGasLimit                 int64
+	TxGasLimit                    int64
+	CBFTTime                      CBFTProduceBlockCfg
+	GasContractName               string
+	GasContractAddr               Address
 	CheckContractDeployPermission int64
-	IsProduceEmptyBlock bool
+	IsTxUseGas 			  		  bool
+	IsProduceEmptyBlock           bool
 }
 
 type SystemConfig struct {
@@ -67,7 +68,20 @@ type SystemConfig struct {
 	ContractAddress map[string]Address
 }
 
-var SysCfg *SystemConfig
+var SysCfg  = &SystemConfig{
+	SystemConfigMu: &sync.RWMutex{},
+	Nodes:          make([]NodeInfo, 0),
+	HighsetNumber:  new(big.Int).SetInt64(0),
+	SysParam: &SystemParameter{
+		BlockGasLimit: 0xffffffffffff,
+		TxGasLimit:    100000000000000,
+		CBFTTime: CBFTProduceBlockCfg{
+			ProduceDuration: int32(10),
+			BlockInterval:   int32(1),
+		},
+	},
+	ContractAddress: make(map[string]Address),
+}
 
 func InitSystemconfig(root NodeInfo) {
 	SysCfg = &SystemConfig{
@@ -100,16 +114,22 @@ func (sc *SystemConfig) UpdateSystemConfig() {
 	sysContractCall(sc)
 }
 
-func (sc *SystemConfig) IsProduceEmptyBlock() bool{
+func (sc *SystemConfig) IsProduceEmptyBlock() bool {
 	sc.SystemConfigMu.RLock()
 	defer sc.SystemConfigMu.RUnlock()
 	return sc.SysParam.IsProduceEmptyBlock
 }
 
-func (sc *SystemConfig) IfCheckContractDeployPermission() int64{
+func (sc *SystemConfig) IfCheckContractDeployPermission() int64 {
 	sc.SystemConfigMu.RLock()
 	defer sc.SystemConfigMu.RUnlock()
 	return sc.SysParam.CheckContractDeployPermission
+}
+
+func (sc *SystemConfig) GetIsTxUseGas() bool {
+	sc.SystemConfigMu.RLock()
+	defer sc.SystemConfigMu.RUnlock()
+	return sc.SysParam.IsTxUseGas
 }
 
 func (sc *SystemConfig) GetBlockGasLimit() int64 {
@@ -193,16 +213,23 @@ func (sc *SystemConfig) GetConsensusNodes() []NodeInfo {
 	return consensusNodes
 }
 
-func (sc *SystemConfig) GetConsensusNodesFilterDelay(number uint64) []NodeInfo {
+func (sc *SystemConfig) GetConsensusNodesFilterDelay(number uint64, nodes []NodeInfo, isOldBlock bool) []NodeInfo {
 	sc.SystemConfigMu.RLock()
 	defer sc.SystemConfigMu.RUnlock()
+	var nodesInfos []NodeInfo
+	if isOldBlock {
+		nodesInfos = nodes
+	} else {
+		nodesInfos = sc.Nodes
+	}
 
 	consensusNodes := make([]NodeInfo, 0)
-	for _, node := range sc.Nodes {
+	for _, node := range nodesInfos {
 		if node.Status == 1 && node.Types == 1 && node.DelayNum <= number {
 			consensusNodes = append(consensusNodes, node)
 		}
 	}
+
 	return consensusNodes
 }
 

@@ -64,14 +64,16 @@ type nodeInfo struct {
 // new a dpos and miner a new block
 func getConsensusNodesList(chain consensus.ChainReader, sb *backend, headers []*types.Header, number uint64) ([]discover.NodeID, error) {
 	var tmp []common.NodeInfo
-	if common.SysCfg == nil {
-		loadLastConsensusNodesList(chain, sb, headers)
+	isOldBlock := number < chain.CurrentHeader().Number.Uint64()
 
-		common.SysCfg.UpdateSystemConfig()
-		log.Info("UpdateSystemConfig successful in getConsensusNodesList function")
+	if !isOldBlock {
+		tmp = common.SysCfg.GetConsensusNodesFilterDelay(number, []common.NodeInfo{}, isOldBlock)
+	} else {
+		res := CallSystemContractAtBlockNumber(chain, sb, number, "__sys_NodeManager", CallSystemContractRes)
+		nodes := ParseResultToNodeInfos(res)
+		tmp = common.SysCfg.GetConsensusNodesFilterDelay(number, nodes, isOldBlock)
 	}
 
-	tmp = common.SysCfg.GetConsensusNodesFilterDelay(number)
 	nodeIDs := make([]discover.NodeID, 0, len(tmp))
 	for _, dataObj := range tmp {
 		if pubKey := dataObj.PublicKey; len(pubKey) > 0 {
@@ -81,12 +83,63 @@ func getConsensusNodesList(chain consensus.ChainReader, sb *backend, headers []*
 			}
 		}
 	}
-
 	return nodeIDs, nil
 }
 
-func loadLastConsensusNodesList(chain consensus.ChainReader, sb *backend, headers []*types.Header) {
+func ParseResultToNodeInfos(res []byte) []common.NodeInfo {
+	strRes := common.CallResAsString(res)
+	var tmp common.CommonResult
+	if err := json.Unmarshal(utils.String2bytes(strRes), &tmp); err != nil {
+		log.Warn("ParseResultToNodeInfos: unmarshal consensus node list failed", "result", strRes, "err", err.Error())
+		return nil
+	} else if tmp.RetCode != 0 {
+		log.Debug("ParseResultToNodeInfos: contract inner error", "code", tmp.RetCode, "msg", tmp.RetMsg)
+		return nil
+	} else {
+		return tmp.Data
+	}
+}
 
+func CallSystemContractRes(conAddr common.Address, callContract func(conAddr common.Address, data []byte) []byte) []byte {
+	return callContract(conAddr, common.GenCallData("getAllNodes", []interface{}{}))
+}
+
+func CallSystemContractAtBlockNumber(
+	chain consensus.ChainReader,
+	sb *backend,
+	number uint64,
+	sysContractName string,
+	fn func(conAddr common.Address, callContract func(conAddr common.Address, data []byte) []byte) []byte,
+) []byte {
+	_state, _ := state.New(chain.GetHeaderByNumber(number).Root, state.NewDatabase(sb.db))
+	if _state == nil {
+		log.Warn("load state fail at block number", "number", number)
+		return nil
+	}
+	msg := types.NewMessage(common.Address{}, nil, 1, big.NewInt(1), 0x1, big.NewInt(1), nil, false, types.NormalTxType)
+	cc := ChainContext{&chain, sb}
+	context := core.NewEVMContext(msg, chain.CurrentHeader(), &cc, nil)
+	evm := vm.NewEVM(context, _state, chain.Config(), vm.Config{})
+	callContract := func(conAddr common.Address, data []byte) []byte {
+		res, _, err := evm.Call(vm.AccountRef(common.Address{}), conAddr, data, uint64(0xffffffffff), big.NewInt(0))
+		if err != nil {
+			return nil
+		}
+		return res
+	}
+
+	callParams := []interface{}{sysContractName, "latest"}
+	btsRes := callContract(common.HexToAddress(core.CnsManagerAddr), common.GenCallData("getContractAddress", callParams))
+	strRes := common.CallResAsString(btsRes)
+	if len(strRes) == 0 || common.IsHexZeroAddress(strRes) {
+		log.Warn("call system contract address fail")
+		return nil
+	}
+	contractAddr := common.HexToAddress(strRes)
+	return fn(contractAddr, callContract)
+}
+
+func loadLastConsensusNodesList(chain consensus.ChainReader, sb *backend, headers []*types.Header) {
 	innerCall := func(conAddr common.Address, data []byte) ([]byte, error) {
 		//ctx := context.Background()
 		if sb == nil {
@@ -97,7 +150,7 @@ func loadLastConsensusNodesList(chain consensus.ChainReader, sb *backend, header
 		// Get the state
 		state, err := state.New(chain.CurrentHeader().Root, state.NewDatabase(sb.db))
 		if state == nil {
-			return nil,err
+			return nil, err
 		}
 
 		from := common.Address{}
@@ -123,7 +176,7 @@ func loadLastConsensusNodesList(chain consensus.ChainReader, sb *backend, header
 		// Setup the gas pool (also for unmetered requests)
 		// and apply the message.
 		gp := new(core.GasPool).AddGas(math.MaxUint64)
-		res, _, _, err := core.ApplyMessage(evm, msg, gp)
+		res, _, _, _,err := core.ApplyMessage(evm, msg, gp)
 		if err != nil {
 			return nil, err
 		}

@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/math"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
@@ -376,10 +377,11 @@ func (c *ContractTypeInputParsing) Run(input []byte) ([]byte, error) {
 		return nil, err
 	}
 	switch ip.CT {
-	case ContractTypeWasm:
-		return GenerateInputData(&WasmInput{}, []byte(input))
-	case ContractTypeSolidity:
-		return GenerateInputData(&SolInput{}, []byte(input))
+	case abi.ContractTypeWasm:
+		return abi.GenerateInputData(&abi.WasmInput{}, []byte(input))
+	case abi.ContractTypeSolidity:
+		input, err := abi.GenerateInputData(&abi.SolInput{}, []byte(input))
+		return abi.SetInputLength(input), err
 	default:
 		return nil, fmt.Errorf("Dont has this Contract Type: %s\n", ip.CT)
 	}

@@ -301,8 +301,11 @@ func ToBytes(source interface{}) ([]byte, error) {
 }
 
 func WasmCallResultCompatibleSolString(res []byte) []byte {
+	// The first 32 bits are offsets, and the next 32 bits are string lengths
 	rl := len(res)
+	// Sol contract string type return value, longer than 64, and the first byte value is 0
 	if rl >= 64 && res[0] == byte(0) && strings.EqualFold(GetCurrentInterpreterType(), "all") {
+		// Get string length
 		lengthBytes := bytes.TrimLeft(res[32:64], "\x00")
 		length := 0
 		for i := 0; i < len(lengthBytes); i++ {
@@ -311,6 +314,7 @@ func WasmCallResultCompatibleSolString(res []byte) []byte {
 		if rl < 64+length {
 			return res
 		}
+		// Intercept string
 		res = res[64 : 64+length]
 		res = append(res, byte(0))
 	}
@@ -318,28 +322,34 @@ func WasmCallResultCompatibleSolString(res []byte) []byte {
 }
 
 func WasmCallResultCompatibleSolInt64(res []byte) []byte {
-	if !strings.EqualFold(GetCurrentInterpreterType(), "all") {
+	if !strings.EqualFold(GetCurrentInterpreterType(), "all") || len(res) != 32 {
 		return res
 	}
-	defer func() {
-		if err := recover(); err != nil {
-			ErrPrintln("############# WasmCallResultCompatibleSolInt64 error:", err)
-		}
-	}()
-	if len(res) != 32 {
-		return res
+	// The first 24 bytes are all 255 for negative numbers, all 0 for positive numbers
+	if !bytes.Equal(bytes.Repeat([]byte{255}, 24), res[:24]) && !bytes.Equal(res[:24], make([]byte, 24)) {
+		return nil
 	}
-	// filter int64 out of bounds solidity return value
-	if !(bytes.Equal(res[:24], make([]byte, 24)) && res[24] <= 127){
-		return []byte{}
+	return res[24:]
+}
+
+func IsSafeNumber(number string, bit int, isUnsigned bool) (res bool) {
+	if bit%8 != 0 {
+		return
 	}
-	valueBytes := bytes.TrimLeft(res, "\x00")
-	value := int64(0)
-	for i := 0; i < len(valueBytes); i++ {
-		value += int64(valueBytes[i]) * int64(math.Pow(256, float64(len(valueBytes)-1-i)))
+	count := bit / 8
+	var max, min *big.Int
+	if isUnsigned {
+		max = big.NewInt(0).SetBytes(bytes.Repeat([]byte{255}, count))
+		min = big.NewInt(0)
+	} else {
+		max = big.NewInt(0).SetBytes(bytes.Repeat([]byte{255}, count))
+		max = max.Div(big.NewInt(0).Sub(max, big.NewInt(1)), big.NewInt(2))
+		min = big.NewInt(0).Neg(big.NewInt(0).Add(max, big.NewInt(1)))
 	}
-	if value > int64(math.MaxInt64) {
-		return res
+	fmt.Println(max, min)
+	src, ok := big.NewInt(0).SetString(number, 10)
+	if !ok {
+		return
 	}
-	return Int64ToBytes(value)
+	return src.Cmp(min) >= 0 && src.Cmp(max) <= 0
 }

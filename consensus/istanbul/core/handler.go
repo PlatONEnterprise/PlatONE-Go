@@ -52,7 +52,7 @@ func (c *core) subscribeEvents() {
 	c.events = c.backend.EventMux().Subscribe(
 		// external events
 		istanbul.RequestEvent{},
-		istanbul.MessageEvent{},
+		// istanbul.MessageEvent{},
 		// internal events
 		backlogEvent{},
 	)
@@ -62,6 +62,9 @@ func (c *core) subscribeEvents() {
 	c.finalCommittedSub = c.backend.EventMux().Subscribe(
 		istanbul.FinalCommittedEvent{},
 	)
+
+	c.msgCh = make(chan istanbul.MessageEvent)
+	c.msgFeedSub = c.backend.MsgFeed().Subscribe(c.msgCh)
 }
 
 // Unsubscribe all events
@@ -69,6 +72,7 @@ func (c *core) unsubscribeEvents() {
 	c.events.Unsubscribe()
 	c.timeoutSub.Unsubscribe()
 	c.finalCommittedSub.Unsubscribe()
+	c.msgFeedSub.Unsubscribe()
 }
 
 func (c *core) handleEvents() {
@@ -82,6 +86,12 @@ func (c *core) handleEvents() {
 
 	for {
 		select {
+		case ev := <-c.msgCh:
+			if err := c.handleMsg(ev.Payload); err == nil {
+				c.backend.Gossip(c.valSet, ev.Payload)
+			}
+		case <- c.msgFeedSub.Err():
+			return
 		case event, ok := <-c.events.Chan():
 			if !ok {
 				return
@@ -91,15 +101,16 @@ func (c *core) handleEvents() {
 			case istanbul.RequestEvent:
 				r := &istanbul.Request{
 					Proposal: ev.Proposal,
+					Round:    c.currentView().Round,
 				}
 				err := c.handleRequest(r)
 				if err == errFutureMessage {
 					c.storeRequestMsg(r)
 				}
-			case istanbul.MessageEvent:
-				if err := c.handleMsg(ev.Payload); err == nil {
-					c.backend.Gossip(c.valSet, ev.Payload)
-				}
+			//case istanbul.MessageEvent:
+			//	if err := c.handleMsg(ev.Payload); err == nil {
+			//		c.backend.Gossip(c.valSet, ev.Payload)
+			//	}
 			case backlogEvent:
 				// No need to check signature for internal messages
 				if err := c.handleCheckedMsg(ev.msg, ev.src); err == nil {

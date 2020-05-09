@@ -19,8 +19,10 @@ package p2p
 
 import (
 	"crypto/ecdsa"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"net"
 	"strings"
 	"sync"
@@ -198,7 +200,7 @@ type peerDrop struct {
 type connFlag int32
 
 const (
-	dynDialedConn       connFlag = 1 << iota
+	dynDialedConn connFlag = 1 << iota
 	staticDialedConn
 	inboundConn
 	trustedConn
@@ -208,7 +210,7 @@ const (
 // conn wraps a network connection with information gathered
 // during the two handshakes.
 type conn struct {
-	fd    net.Conn
+	fd net.Conn
 	transport
 	flags connFlag
 	cont  chan error      // The run loop uses cont to signal errors to SetupConn.
@@ -303,6 +305,7 @@ func GetRootNode() (node *discover.Node) {
 }
 
 var bootNodes []*discover.Node
+var BootNodesNotExempt bool
 
 func SetBootNodes(bn []*discover.Node) {
 	bootNodes = bn
@@ -310,6 +313,25 @@ func SetBootNodes(bn []*discover.Node) {
 
 func GetBootNodes() []*discover.Node {
 	return bootNodes
+}
+
+func IsNodeInBootNodes(id string) bool {
+	for _, bn := range GetBootNodes() {
+		if bn.ID.String() == id {
+			return true
+		}
+	}
+	return false
+}
+
+func IsSelfServerNode(id string) bool {
+	for {
+		if server != nil && server.running {
+			break
+		}
+		time.Sleep(time.Millisecond)
+	}
+	return server.Self().ID.String() == id
 }
 
 // Peers returns all connected peers.
@@ -369,7 +391,6 @@ func UpdatePeer() {
 	for _, peer := range server.PeersInfo() {
 		en := fmt.Sprintf("enode://%s@%s", peer.ID, peer.Network.RemoteAddress)
 		joinNodes = append(joinNodes, en)
-		//log.Info("joined peer", "index", i, "curPeer", en)
 	}
 	log.Info("********** current joinNodes length **********", "len", len(joinNodes))
 	if err := server.ExcludeDelNodes(joinNodes); err != nil {
@@ -383,18 +404,11 @@ func (srv *Server) ExcludeDelNodes(joinNodes []string) (err error) {
 	for _, eNode := range delENodes {
 		delEn := fmt.Sprintf("enode://%s@%s:%d", eNode.PublicKey, eNode.ExternalIP, eNode.P2pPort)
 		if node, err := discover.ParseNode(delEn); err == nil {
-			if srv.Self().ID.String() == node.ID.String() {
-				log.Warn("to remove all node")
-				err = errServerSelfInDelList
-				for _, joinNode := range joinNodes {
-					if n, err := discover.ParseNode(joinNode); err == nil {
-						srv.RemovePeer(n)
-					}
-				}
-				break
-			}
 			for _, joinNode := range joinNodes {
 				if strings.Contains(joinNode, node.ID.String()) {
+					if !BootNodesNotExempt && IsNodeInBootNodes(node.ID.String()) {
+						continue
+					}
 					log.Info("remove del node", "nodePubKey", node.ID.String())
 					srv.RemovePeer(node)
 				}
@@ -622,9 +636,9 @@ func (srv *Server) Start() (err error) {
 	srv.peerOpDone = make(chan struct{})
 
 	var (
-		conn      *net.UDPConn
+		conn *net.UDPConn
 		//sconn     *sharedUDPConn
-		realaddr  *net.UDPAddr
+		realaddr *net.UDPAddr
 		//unhandled chan discover.ReadPacket
 	)
 
@@ -1039,9 +1053,8 @@ func (srv *Server) SetupConn(fd net.Conn, flags connFlag, dialDest *discover.Nod
 
 	deleted := common.SysCfg.GetDeletedNodes()
 	for _, node := range deleted {
-		if node.PublicKey == srv.Self().ID.String() {
-			srv.log.Warn("setupConn: I am in blacklist: ", "pubKey", node.PublicKey)
-			return errors.New("shutdown")
+		if !BootNodesNotExempt && IsNodeInBootNodes(node.PublicKey) {
+			continue
 		}
 		if dialDest != nil && dialDest.ID.String() == node.PublicKey {
 			srv.log.Warn("setupConn: dialDest in blacklist: ", "pubKey", node.PublicKey)
@@ -1093,6 +1106,17 @@ func (srv *Server) setupConn(c *conn, flags connFlag, dialDest *discover.Node) e
 		clog.Trace("Wrong devp2p handshake identity", "err", phs.ID)
 		return DiscUnexpectedIdentity
 	}
+	
+	pubk,err := c.id.Pubkey()
+	pubkr := crypto.FromECDSAPub(pubk)
+	pubStr := hex.EncodeToString(pubkr[1:])
+	if dialDest != nil || common.SysCfg.IsValidJoinNode(pubStr) {
+		log.Info("setupConn success", "PeerInfo_pubStr", pubStr)
+	} else {
+		log.Info("setupConn fail: joined node is a invalid node ", "pubStr", pubStr)
+		return errors.New("Invalid Node Connection")
+	}
+
 	c.caps, c.name = phs.Caps, phs.Name
 	err = srv.checkpoint(c, srv.addpeer)
 	if err != nil {

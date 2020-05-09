@@ -12,6 +12,8 @@ DISENABLE=""
 NODE_ID=0
 cd ${CURRENT_PATH}
 
+VERSION=`${BIN_PATH}/platone --version`
+
 function usage() {
 cat <<EOF
 #h0    DESCRIPTION
@@ -140,9 +142,10 @@ cat <<EOF
 #c15       createacc OPTIONS
 #c15           --nodeid, -n                 create account for specified node
 #c15           --help, -h                   show help
+#c0        version                          show platone release version
 #c0===============================================================
 #c0    INFORMATION
-#c0        version         ${SCRIPT_NAME} 1.0.0
+#c0        version         PlatONE Version: ${VERSION}
 #c0        author
 #c0        copyright       Copyright
 #c0        license
@@ -232,9 +235,14 @@ function saveConf() {
     if [[ $3 == "" ]];then
         return
     fi
+
+    if ! [[ -f "${node_conf}" ]];then
+        touch "${node_conf}"
+    fi
+
     res=`cat ${node_conf} | grep "$2"`
     if [[ ${res} != "" ]];then
-        cat $node_conf | sed "s/${2}=.*/${2}=${3}/g" | cat > $node_conf_tmp
+        cat $node_conf | sed "s#${2}=.*#${2}=${3}#g" | cat > $node_conf_tmp
         mv $node_conf_tmp $node_conf
     else
         echo "${2}=${3}" >> ${node_conf}
@@ -617,6 +625,10 @@ function createAcc() {
     esac
 }
 
+function showVersion() {
+    echo "${VERSION}"
+}
+
 case $1 in
 init) shift; init "$@";;
 one) shift; one;;
@@ -631,6 +643,7 @@ createacc) shift; createAcc "$@";;
 setupgen) shift; setupGenesis "$@";;
 addnode) shift; addNode "$@";;
 unlock) shift; unlock "$@";;
+version | -v) showVersion;;
 status) shift; show "$@";;
 clear) shift; clear "$@";;
 get) shift; getAllNodes;;

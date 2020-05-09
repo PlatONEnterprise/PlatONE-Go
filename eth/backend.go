@@ -104,7 +104,7 @@ func InitInnerCallFunc(ethPtr *Ethereum) {
 		// Setup the gas pool (also for unmetered requests)
 		// and apply the message.
 		gp := new(core.GasPool).AddGas(math.MaxUint64)
-		res, _, _, err := core.ApplyMessage(evm, msg, gp)
+		res, _, _, _, err := core.ApplyMessage(evm, msg, gp)
 		if err := vmError(); err != nil {
 			return nil, err
 		}
@@ -187,6 +187,13 @@ func InitInnerCallFunc(ethPtr *Ethereum) {
 			if res != nil {
 				ret := common.CallResAsInt64(res)
 				sc.SysParam.IsProduceEmptyBlock = ret == 1
+			}
+			funcName = "getIsTxUseGas"
+			funcParams = []interface{}{}
+			res = callContract(paramAddr, common.GenCallData(funcName, funcParams))
+			if res != nil {
+				ret := common.CallResAsInt64(res)
+				sc.SysParam.IsTxUseGas = ret == 1
 			}
 
 			funcName = "getCBFTTimeParam"
@@ -774,7 +781,7 @@ func (s *Ethereum) Start(srvr *p2p.Server) error {
 
 	if _, ok := s.engine.(consensus.Istanbul); ok {
 		for _, n := range p2p.GetBootNodes() {
-			srvr.AddConsensusPeer(discover.NewNode(n.ID, n.IP, n.UDP, n.TCP))
+			srvr.AddPeer(discover.NewNode(n.ID, n.IP, n.UDP, n.TCP))
 		}
 	} else if engine, ok := s.engine.(consensus.Bft); ok {
 		engine.SetPrivateKey(srvr.Config.PrivateKey)

@@ -317,6 +317,7 @@ func (sb *backend) VerifySeal(chain consensus.ChainReader, header *types.Header)
 // Prepare initializes the consensus fields of a block header according to the
 // rules of a particular engine. The changes are executed inline.
 func (sb *backend) Prepare(chain consensus.ChainReader, header *types.Header) error {
+
 	// unused fields, force to set to empty
 	header.Coinbase = common.Address{}
 	header.Nonce = emptyNonce
@@ -441,7 +442,7 @@ func (sb *backend) Seal(chain consensus.ChainReader, block *types.Block, sealRes
 	go func() {
 		for {
 			select {
-			case result := <- sb.commitCh:
+			case result := <-sb.commitCh:
 				// if the block hash and the hash from channel are the same,
 				// return the result. Otherwise, keep waiting the next hash.
 				if result == nil {
@@ -553,8 +554,6 @@ func (sb *backend) snapshot(chain consensus.ChainReader, number uint64, hash com
 		}
 		// If we're at block zero, make a snapshot
 		if number == 0 {
-			// linqi
-
 			genesis := chain.GetHeaderByNumber(0)
 
 			if err := sb.VerifyHeader(chain, genesis, false); err != nil {
@@ -567,8 +566,12 @@ func (sb *backend) snapshot(chain consensus.ChainReader, number uint64, hash com
 			//}
 
 			addrs := make([]common.Address, 0)
-			for _, nodeId := range sb.config.ValidatorNodes[:1] {
 
+			if len(sb.config.ValidatorNodes) == 0 {
+				log.Crit("genesis.json not specified ValidatorNodes")
+			}
+
+			for _, nodeId := range sb.config.ValidatorNodes[:1] {
 				prefix := make([]byte, 1)
 				prefix[0] = 4
 				nodeID := append(prefix, nodeId.ID[:]...)

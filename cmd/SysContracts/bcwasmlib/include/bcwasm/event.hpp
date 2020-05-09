@@ -140,6 +140,16 @@ namespace bcwasm {
      * @brief Specify event type field serialization
      * 
      * @param stream RLP stream
+     * @param num int type
+     */
+    void event(RLPStream &stream, int num) {
+        stream << (uint64_t)num;
+    }
+
+    /**
+     * @brief Specify event type field serialization
+     * 
+     * @param stream RLP stream
      * @param num int16_t type
      */
     void event(RLPStream &stream, int16_t num) {

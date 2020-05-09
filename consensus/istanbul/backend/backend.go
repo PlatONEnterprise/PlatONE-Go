@@ -21,6 +21,7 @@ import (
 	"errors"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"math/big"
 	"sync"
@@ -55,6 +56,7 @@ func New(config *params.IstanbulConfig, privateKey *ecdsa.PrivateKey, db ethdb.D
 		backend := &backend{
 			config:           config,
 			istanbulEventMux: new(event.TypeMux),
+			msgFeed:		  new(event.Feed),
 			privateKey:       privateKey,
 			address:          common.BytesToAddress([]byte("0x0000000000000000000000000000000000000112")),
 			logger:           log.New(),
@@ -72,6 +74,7 @@ func New(config *params.IstanbulConfig, privateKey *ecdsa.PrivateKey, db ethdb.D
 	backend := &backend{
 		config:           config,
 		istanbulEventMux: new(event.TypeMux),
+		msgFeed:		  new(event.Feed),
 		privateKey:       privateKey,
 		address:          crypto.PubkeyToAddress(privateKey.PublicKey),
 		logger:           log.New(),
@@ -93,9 +96,9 @@ type environment struct {
 	signer types.Signer
 	block  *types.Block
 
-	state     *state.StateDB // apply state changes here
-	tcount    int            // tx count in cycle
-	gasPool   *core.GasPool  // available gas used to pack transactions
+	state   *state.StateDB // apply state changes here
+	tcount  int            // tx count in cycle
+	gasPool *core.GasPool  // available gas used to pack transactions
 
 	header   *types.Header
 	txs      []*types.Transaction
@@ -105,6 +108,7 @@ type environment struct {
 type backend struct {
 	config           *params.IstanbulConfig
 	istanbulEventMux *event.TypeMux
+	msgFeed 		 *event.Feed
 	privateKey       *ecdsa.PrivateKey
 	address          common.Address
 	core             istanbulCore.Engine
@@ -113,7 +117,7 @@ type backend struct {
 	chain            consensus.ChainReader
 	currentBlock     func() *types.Block
 	hasBadBlock      func(hash common.Hash) bool
-	current 		 *environment
+	current          *environment
 
 	// the channels for istanbul engine notifications
 	commitCh          chan *types.Block
@@ -159,7 +163,7 @@ func (sb *backend) Broadcast(valSet istanbul.ValidatorSet, payload []byte) error
 	msg := istanbul.MessageEvent{
 		Payload: payload,
 	}
-	go sb.istanbulEventMux.Post(msg)
+	go sb.msgFeed.Send(msg)
 	return nil
 }
 
@@ -199,17 +203,23 @@ func (sb *backend) Gossip(valSet istanbul.ValidatorSet, payload []byte) error {
 	return nil
 }
 
-func (sb *backend) writeCommitedBlockWithState(block *types.Block) error{
+func (sb *backend) writeCommitedBlockWithState(block *types.Block) error {
 	var (
 		chain    *core.BlockChain
-		receipts= make([]*types.Receipt, len(sb.current.receipts))
+		receipts = make([]*types.Receipt, len(sb.current.receipts))
 		logs     []*types.Log
-		events []interface{}
-		ok 	bool
+		events   []interface{}
+		ok       bool
 	)
 
 	if chain, ok = sb.chain.(*core.BlockChain); !ok {
 		return errors.New("sb.chain not a core.BlockChain")
+	}
+	if sb.current == nil {
+		return errors.New("sb.current is nil")
+	}
+	if chain.HasBlock(block.Hash(), block.NumberU64()){
+		return nil
 	}
 
 	for i, receipt := range sb.current.receipts {
@@ -223,17 +233,20 @@ func (sb *backend) writeCommitedBlockWithState(block *types.Block) error{
 		logs = append(logs, receipt.Logs...)
 	}
 
-	stat, _ := chain.WriteBlockWithState(block, sb.current.receipts, sb.current.state)
-	sb.EventMux().Post(core.NewMinedBlockEvent{Block: block})
+	stat, err := chain.WriteBlockWithState(block, sb.current.receipts, sb.current.state)
+	if err != nil {
+		return err
+	}
+	go sb.EventMux().Post(core.NewMinedBlockEvent{Block: block})
 
 	switch stat {
-		case core.CanonStatTy:
-			log.Debug("Prepare Events, WriteStatus=CanonStatTy")
-			events = append(events, core.ChainEvent{Block: block, Hash: block.Hash(), Logs: logs})
-			events = append(events, core.ChainHeadEvent{Block: block})
-		case core.SideStatTy:
-			log.Debug("Prepare Events, WriteStatus=SideStatTy")
-			events = append(events, core.ChainSideEvent{Block: block})
+	case core.CanonStatTy:
+		log.Debug("Prepare Events, WriteStatus=CanonStatTy")
+		events = append(events, core.ChainEvent{Block: block, Hash: block.Hash(), Logs: logs})
+		events = append(events, core.ChainHeadEvent{Block: block})
+	case core.SideStatTy:
+		log.Debug("Prepare Events, WriteStatus=SideStatTy")
+		events = append(events, core.ChainSideEvent{Block: block})
 	}
 
 	chain.PostChainEvents(events, logs)
@@ -246,7 +259,7 @@ func (sb *backend) Commit(proposal istanbul.Proposal, seals [][]byte) error {
 	block := &types.Block{}
 	block, ok := proposal.(*types.Block)
 	if !ok {
-		sb.logger.Error("Invalid proposal",  "proposal", proposal)
+		sb.logger.Error("Invalid proposal", "proposal", proposal)
 		return errInvalidProposal
 	}
 
@@ -261,7 +274,7 @@ func (sb *backend) Commit(proposal istanbul.Proposal, seals [][]byte) error {
 	isEmpty := block.Transactions().Len() == 0
 	isProduceEmptyBlock := common.SysCfg.IsProduceEmptyBlock()
 
-	if !isEmpty || isProduceEmptyBlock{
+	if !isEmpty || isProduceEmptyBlock {
 		sb.logger.Info("Committed", "address", sb.Address(), "hash", proposal.Hash(), "number", proposal.Number().Uint64())
 	}
 	// - if the proposed and committed blocks are the same, send the proposed hash
@@ -272,8 +285,12 @@ func (sb *backend) Commit(proposal istanbul.Proposal, seals [][]byte) error {
 	// -- otherwise, a error will be returned and a round change event will be fired.
 	if sb.proposedBlockHash == block.Hash() {
 		sb.proposedBlockHash = common.Hash{}
+		if err := sb.CheckFirstNodeCommitAtWrongTime(); err != nil {
+			sb.commitCh <- nil
+			return istanbulCore.ErrFirstCommitAtWrongTime
+		}
 		// feed block hash to Seal() and wait the Seal() result
-		if isEmpty && !isProduceEmptyBlock{
+		if isEmpty && !isProduceEmptyBlock {
 			sb.commitCh <- nil
 			return istanbulCore.ErrEmpty
 		}
@@ -281,15 +298,20 @@ func (sb *backend) Commit(proposal istanbul.Proposal, seals [][]byte) error {
 		return nil
 	}
 
+	if err := sb.CheckFirstNodeCommitAtWrongTime(); err != nil {
+		return istanbulCore.ErrFirstCommitAtWrongTime
+	}
+
 	if sb.current != nil && sb.current.block != nil && sb.current.block.Hash() == block.Hash() {
 		if isEmpty && !isProduceEmptyBlock {
 			return istanbulCore.ErrEmpty
 		}
 
-		if err:= sb.writeCommitedBlockWithState(block); err!= nil{
+		if err := sb.writeCommitedBlockWithState(block); err != nil {
+			sb.logger.Error("writeCommitedBlockWithState() failed", "error", err.Error())
 			return err
 		}
-	}else {
+	} else {
 		if isEmpty && !isProduceEmptyBlock {
 			return istanbulCore.ErrEmpty
 		}
@@ -306,22 +328,27 @@ func (sb *backend) EventMux() *event.TypeMux {
 	return sb.istanbulEventMux
 }
 
+// EventMux implements istanbul.Backend.EventMux
+func (sb *backend) MsgFeed() *event.Feed {
+	return sb.msgFeed
+}
+
 // makeCurrent creates a new environment for the current cycle.
 func (sb *backend) makeCurrent(parentRoot common.Hash, header *types.Header) error {
 	var (
 		state *state.StateDB
-		gp = new(core.GasPool)
+		gp    = new(core.GasPool)
 		chain *core.BlockChain
 		err   error
-		ok bool
+		ok    bool
 	)
 	gp.AddGas(header.GasLimit)
 
-	if chain,ok = sb.chain.(*core.BlockChain); !ok {
+	if chain, ok = sb.chain.(*core.BlockChain); !ok {
 		return errors.New("invalid chainReader in consensus engine")
 	}
 
-	if state, err = chain.StateAt(parentRoot);err != nil {
+	if state, err = chain.StateAt(parentRoot); err != nil {
 		return err
 	}
 
@@ -330,6 +357,7 @@ func (sb *backend) makeCurrent(parentRoot common.Hash, header *types.Header) err
 		state:     state,
 		header:    header,
 		gasPool:   gp,
+		txs: make([]*types.Transaction,0),
 	}
 
 	// Keep track of transactions which return errors so they can be removed
@@ -338,62 +366,50 @@ func (sb *backend) makeCurrent(parentRoot common.Hash, header *types.Header) err
 	return nil
 }
 
-func (sb *backend) excuteBlock(proposal istanbul.Proposal) error{
-	var(
-		block *types.Block
-		chain *core.BlockChain
+func (sb *backend) excuteBlock(proposal istanbul.Proposal) error {
+	var (
+		block  *types.Block
+		chain  *core.BlockChain
 		parent *types.Block
 		header *types.Header
-		number = big.NewInt(0)
-		ok bool
-		err error
+		ok     bool
+		err    error
 	)
 
 	if block, ok = proposal.(*types.Block); !ok {
 		return errors.New("invalid proposal")
 	}
 
-	if chain, ok = sb.chain.(*core.BlockChain); !ok{
+	if chain, ok = sb.chain.(*core.BlockChain); !ok {
 		return errors.New("sb.chain not a core.BlockChain")
 	}
 
-	if sb.current == nil || sb.current.block == nil || sb.current.block.Hash() != block.Hash(){
-		parent = chain.CurrentBlock()
-		header = &types.Header{
-			ParentHash: parent.Hash(),
-			Number:     number.Add(parent.Number(), big.NewInt(1)),
-			GasLimit:   core.CalcGasLimit(parent, 0, 0),
-			Time:       big.NewInt(0),
-		}
+	header = block.Header()
 
-		if err = sb.makeCurrent(chain.CurrentBlock().Root(), header);err != nil{
-			return err
-		}
+	if parent = chain.GetBlockByHash(header.ParentHash); parent == nil {
+		return errors.New("Proposal's parent block is not in current chain")
+	}
 
-		if err = sb.Prepare(chain, header); err != nil{
-			return err
-		}
-		header.Coinbase = sb.address
-
-		statedb := sb.current.state
-
+	if err = sb.makeCurrent(parent.Root(), header);err != nil{
+		return err
+	}else{
 		// Iterate over and process the individual transactios
 		txsMap := make(map[common.Hash]struct{})
 		for _, tx := range block.Transactions() {
 			sb.current.state.Prepare(tx.Hash(), common.Hash{}, sb.current.tcount)
 			snap := sb.current.state.Snapshot()
-			if r :=  chain.GetReceiptsByHash(tx.Hash()); r!=nil{
+			if r := chain.GetReceiptsByHash(tx.Hash()); r != nil {
 				return errors.New("Already executed tx")
 			}
-			if _,ok := txsMap[tx.Hash()]; ok{
+			if _, ok := txsMap[tx.Hash()]; ok {
 				return errors.New("Repeated tx in one block")
-			}else{
+			} else {
 				txsMap[tx.Hash()] = struct{}{}
 			}
 
-			receipt, _, err := core.ApplyTransaction(chain.Config(), chain, &sb.address, sb.current.gasPool, statedb, sb.current.header, tx, &sb.current.header.GasUsed, vm.Config{})
+			receipt, _, err := core.ApplyTransaction(chain.Config(), chain, &sb.address, sb.current.gasPool, sb.current.state, sb.current.header, tx, &sb.current.header.GasUsed, vm.Config{})
 			if err != nil {
-				statedb.RevertToSnapshot(snap)
+				sb.current.state.RevertToSnapshot(snap)
 				return err
 			}
 			sb.current.txs = append(sb.current.txs, tx)
@@ -401,13 +417,14 @@ func (sb *backend) excuteBlock(proposal istanbul.Proposal) error{
 			sb.current.tcount++
 
 			if chain.Config().IsByzantium(chain.CurrentHeader().Number) {
-				statedb.Finalise(true)
+				sb.current.state.Finalise(true)
 			} else {
-				statedb.IntermediateRoot(chain.Config().IsEIP158(chain.CurrentHeader().Number))
+				sb.current.state.IntermediateRoot(chain.Config().IsEIP158(chain.CurrentHeader().Number))
 			}
 		}
 
-		if statedb.IntermediateRoot(true) != block.Root(){
+		if sb.current.state.IntermediateRoot(true) != block.Root() {
+			sb.current = nil
 			return errors.New("Invalid block root")
 		}
 		sb.current.block = block
@@ -442,9 +459,9 @@ func (sb *backend) Verify(proposal istanbul.Proposal, isProposer bool) (time.Dur
 	//}
 
 	// If this node is proposer and the proposal is mined by this node, need not to execute the block
-	if (block.Coinbase() != sb.address) || !isProposer{
+	if (block.Coinbase() != sb.address) || !isProposer {
 		//excute txs in block
-		if err := sb.excuteBlock(proposal); err!= nil{
+		if err := sb.excuteBlock(proposal); err != nil {
 			return 0, err
 		}
 	}
@@ -548,4 +565,21 @@ func (sb *backend) ShouldSeal() bool {
 	header := sb.currentBlock().Header()
 	sb.getValidators(header.Number.Uint64(), header.Hash())
 	return sb.core.CanPropose()
+}
+
+// Check if the first node of the network is allowed to produce blocks
+func (sb *backend) CheckFirstNodeCommitAtWrongTime() error {
+	block := sb.currentBlock()
+	if block.NumberU64() != 0 || len(sb.config.ValidatorNodes) == 0 {
+		return nil
+	}
+	nodeId := sb.config.ValidatorNodes[0].ID.String()
+	// 1. self is the first node of validatorNodes in genesis
+	// 2. The node startup specifies bootNodes,
+	// 	  and if it is not specified itself, no block generation is performed.
+	if p2p.IsSelfServerNode(nodeId) &&
+		len(p2p.GetBootNodes()) != 0 && !p2p.IsNodeInBootNodes(nodeId) {
+		return istanbulCore.ErrFirstCommitAtWrongTime
+	}
+	return nil
 }

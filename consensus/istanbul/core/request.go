@@ -54,9 +54,15 @@ func (c *core) checkRequestMsg(request *istanbul.Request) error {
 		return errOldMessage
 	} else if c < 0 {
 		return errFutureMessage
-	} else {
-		return nil
 	}
+
+	if r := c.currentView().Round.Cmp(request.Round); r > 0 {
+		return errOldMessage
+	} else if r < 0 {
+		return errFutureMessage
+	}
+
+	return nil
 }
 
 func (c *core) storeRequestMsg(request *istanbul.Request) {

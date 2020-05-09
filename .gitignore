@@ -14,6 +14,10 @@
 */**/*tx_database*
 */**/*dapps*
 build/_vendor/pkg
+life/resolver/sig/openssl/*
+life/resolver/sig/*.a
+life/resolver/sig/sig/*.o
+life/resolver/sm2
 
 #*
 .#*
@@ -58,12 +62,13 @@ coverage.txt
 go.sum
 
 life/resolver/builtins/build
+life/resolver/softfloat/build
 # life/resolver/softfloat/*
 
 # SysContracts
 
 cmd/SysContracts/build/
-md/SysContracts/buildTest/
+cmd/SysContracts/buildTest/
 cmd/SysContracts/cmake-build-debug/
 cmd/SysContracts/buildUnitTest/
 cmd/SysContracts/database/

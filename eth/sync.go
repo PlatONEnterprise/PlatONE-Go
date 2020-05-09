@@ -31,7 +31,7 @@ import (
 
 const (
 	forceSyncCycle      = 5 * time.Second // Time interval to force syncs, even if few peers are available
-	minDesiredPeerCount = 5                // Amount of peers desired to start syncing
+	minDesiredPeerCount = 5               // Amount of peers desired to start syncing
 
 	// This is the target size for the packs of transactions sent by txsyncLoop.
 	// A pack can get larger than this if a single transactions exceeds this size.
@@ -161,6 +161,33 @@ func (pm *ProtocolManager) syncer() {
 	}
 }
 
+func (pm *ProtocolManager) isUnNormalBootNodes() bool {
+	if !p2p.BootNodesNotExempt {
+		for _, peer := range pm.peers.Peers() {
+			if p2p.IsNodeInBootNodes(pm.peers.Peer(peer.id).Peer.Info().ID) &&
+				peer.bn.Uint64() <= pm.blockchain.CurrentBlock().NumberU64() {
+				p2p.BootNodesNotExempt = true
+				p2p.UpdatePeer()
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (pm *ProtocolManager) isUnNormalBootNodesAtPeer(peer *peer) bool {
+	if p2p.BootNodesNotExempt {
+		return false
+	}
+	if key := pm.peers.Peer(peer.id).Peer.Info().ID; p2p.IsNodeInBootNodes(key) &&
+		peer.bn.Uint64() <= pm.blockchain.CurrentBlock().NumberU64() && !common.SysCfg.IsValidJoinNode(key) {
+		p2p.BootNodesNotExempt = true
+		p2p.UpdatePeer()
+		return true
+	}
+	return false
+}
+
 // synchronise tries to sync up our local block chain with a remote peer.
 func (pm *ProtocolManager) synchronise(peer *peer) {
 	// Short circuit if no peers are available
@@ -169,8 +196,9 @@ func (pm *ProtocolManager) synchronise(peer *peer) {
 	}
 	// Make sure the peer's TD is higher than our own
 	currentBlock := pm.blockchain.CurrentBlock()
-	//bn := currentBlock.Number()
-
+	if pm.isUnNormalBootNodes() {
+		log.Info("boot nodes is unnormal nodes: ", "local", "at sync")
+	}
 	pHead, pBn := peer.Head()
 	//modified by platone
 	//diff := new(big.Int).Sub(pBn, bn)

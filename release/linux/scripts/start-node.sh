@@ -1,6 +1,6 @@
 #!/bin/bash
 function help() {
-    echo 
+    echo
     echo "
 USAGE: platonectl.sh start [options]
     OPTIONS:
@@ -106,13 +106,6 @@ function readFile() {
         exit
     fi
 
-    if [ -d ${LOG_DIR} ]; then
-        echo "logdir: ${LOG_DIR}"
-    else
-        mkdir -p ${LOG_DIR}
-        echo "logdir: ${LOG_DIR}"
-    fi
-
     if [ -f ${NODE_DIR}/node.ip ]; then
         IP=`cat ${NODE_DIR}/node.ip`
         echo "node.ip: ${IP}"
@@ -157,6 +150,14 @@ function readFile() {
     readConf $NODE_ID "logsize"
     readConf $NODE_ID "logdir"
     readConf $NODE_ID "extraoptions"
+
+
+    if [ -d ${LOG_DIR} ]; then
+        echo "logdir: ${LOG_DIR}"
+    else
+        mkdir -p ${LOG_DIR}
+        echo "logdir: ${LOG_DIR}"
+    fi
 }
 
 readFile
@@ -182,7 +183,7 @@ nohup ${BIN_PATH}/platone --identity platone ${flag_datadir}  --nodiscover \
         --port ${P2P_PORT}  ${flag_nodekey} ${flag_rpc} --rpccorsdomain \""*"\" ${flag_ws} \
         --wsorigins \""*"\" ${flag_logs} ${flag_ipc} \
         --bootnodes ${BOOTNODES} \
-        --moduleLogParams '{\"platone\": [\"/\"], \"__dir__\": [\"${LOG_DIR}\"], \"__size__\": [\"${LOG_SIZE}\"]}' ${flag_gcmode} ${EXTRA_OPTIONS} \
+        --moduleLogParams '{\"platone_log\": [\"/\"], \"__dir__\": [\"${LOG_DIR}\"], \"__size__\": [\"${LOG_SIZE}\"]}' ${flag_gcmode} ${EXTRA_OPTIONS} \
         1>/dev/null 2>${LOG_DIR}/platone_error.log &
 "
 
@@ -192,6 +193,7 @@ mkdir -p ${LOG_DIR}
 if [ -f ${LOG_DIR}/node-${NODE_ID}.log ]; then
     mv ${LOG_DIR}/node-${NODE_ID}.log ${LOG_DIR}/node-${NODE_ID}.log.bak.$ts
 fi
+
 
 nohup ${BIN_PATH}/platone --identity platone ${flag_datadir}  --nodiscover \
         --port ${P2P_PORT}  ${flag_nodekey} ${flag_rpc} --rpccorsdomain "*" ${flag_ws} \

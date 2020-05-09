@@ -329,20 +329,22 @@ namespace systemContract
             curNode.Parse(nodeStr.c_str());
             bcwasm::println("NodeManager update:", name, nodeJsonStr, nodeStr);
             int status_flag = 1;
+            /*
             // 非正常状态的节点, 不能进行更新
             if ( curNode["status"].GetInt() != 1 )
             {
                 bcwasm::println("NodeManager update failed! The node being updated is in an abnormal state");
                 status_flag = 0;
             }
+            */
             for (Value::ConstMemberIterator itr = inNode.MemberBegin(); itr != inNode.MemberEnd(); ++itr)
             {
                 std::string key = std::string(itr->name.GetString());
-                // 节点status 只能从1更新为2
-                if( key == "status" && inNode["status"] != 2)
+                // 节点status 只能在1和2之间进行更新
+                if( key == "status" && inNode["status"] != 1 && inNode["status"] != 2)
                 {
                     status_flag = 0;
-                    bcwasm::println("Node status can only be updated from 1 to 2");
+                    bcwasm::println("Node status only be updated at 1 or 2");
                 }
 
                 // 节点type 只能在0和1之间进行更新

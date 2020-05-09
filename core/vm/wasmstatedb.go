@@ -128,3 +128,7 @@ func (self *WasmStateDB) DelegateCall(addr, param []byte) ([]byte, error) {
 	ret, _, err := self.evm.DelegateCall(self.contract, common.HexToAddress(hex.EncodeToString(addr)), param, self.contract.Gas)
 	return ret, err
 }
+
+func (self*WasmStateDB) GetCode (addr common.Address) []byte {
+	return self.evm.StateDB.GetCode(addr)
+}

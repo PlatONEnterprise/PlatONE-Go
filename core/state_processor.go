@@ -31,9 +31,6 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
 )
 
-func init() {
-	log.StandardLog()
-}
 
 // StateProcessor is a basic Processor, which takes care of transitioning
 // state from one point to another.
@@ -207,7 +204,7 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	// about the transaction and calling mechanisms.
 	vmenv := vm.NewEVM(context, statedb, config, cfg)
 	// Apply the transaction to the current state (included in the env)
-	_, gas, failed, err := ApplyMessage(vmenv, msg, gp)
+	_, gas, gasPrice, failed, err := ApplyMessage(vmenv, msg, gp)
 
 	if err != nil {
 		switch err {
@@ -223,11 +220,35 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 				BlockNumber: vmenv.BlockNumber.Uint64(),
 			}
 			statedb.AddLog(log)
+		case CnsQueryErr:
+			data :=[][]byte{}
+			data = append(data, []byte(err.Error()))
+			encodeData,_:= rlp.EncodeToBytes(data)
+			topics := []common.Hash{common.BytesToHash(crypto.Keccak256([]byte("CnsQueryErr")))}
+			log := &types.Log{
+				Address:     msg.From(),
+				Topics:      topics,
+				Data:        encodeData,
+				BlockNumber: vmenv.BlockNumber.Uint64(),
+			}
+			statedb.AddLog(log)
 		default:
 			return nil, 0, err
 		}
 	}
-
+	if common.SysCfg.GetIsTxUseGas() {
+		data :=[][]byte{}
+		data = append(data, []byte(common.Int64ToBytes(gasPrice)))
+		encodeData,_:= rlp.EncodeToBytes(data)
+		topics := []common.Hash{common.BytesToHash(crypto.Keccak256([]byte("GasPrice")))}
+		log := &types.Log{
+			Address:     msg.From(),
+			Topics:      topics,
+			Data:        encodeData,
+			BlockNumber: vmenv.BlockNumber.Uint64(),
+		}
+		statedb.AddLog(log)
+	}
 	// Update the state with pending changes
 	var root []byte
 	if config.IsByzantium(header.Number) {
@@ -247,6 +268,7 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 		receipt.ContractAddress = crypto.CreateAddress(vmenv.Context.Origin, statedb.GetNonce(msg.From()) - 1)
 	}
 	// Set the receipt logs and create a bloom for filtering
+
 	receipt.Logs = statedb.GetLogs(tx.Hash())
 	receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
 

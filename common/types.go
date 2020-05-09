@@ -40,6 +40,12 @@ const (
 	BlockConfirmSignLength = 65
 )
 
+// tx-type
+const (
+	CALL_CANTRACT_FLAG = 9
+	TxTypeCallSollCompatibleWasm = 14
+)
+
 var (
 	hashT    = reflect.TypeOf(Hash{})
 	addressT = reflect.TypeOf(Address{})
@@ -395,14 +401,4 @@ func NewBlockConfirmSign(signSlice []byte) *BlockConfirmSign {
 	var sign BlockConfirmSign
 	copy(sign[:], signSlice[:])
 	return &sign
-}
-
-var currentInterpreterType string
-
-func SetCurrentInterpreterType(cit string) {
-	currentInterpreterType = cit
-}
-
-func GetCurrentInterpreterType() string {
-	return currentInterpreterType
 }
