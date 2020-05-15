@@ -21,19 +21,25 @@ func TestParseFuncFromAbi(t *testing.T) {
 		abiBytes []byte
 		funcName string
 	}{
-		{nil, ""},
-		{nil, "atransfer"},
-		{abiBytes, "atransfer"},
-		{abiBytes, ""},
+		{abiBytes, "atransfer"},                 // case 1: correct
+		{nil, ""},                               // case 2: null
+		{abiBytes, ""},                          // case 3: null
+		{abiBytes, " atran sfer "},              // case 4: function name invalid
+		{[]byte{32, 13, 14, 23}, " atransfer "}, // case 5: abi bytes invalid
+		{[]byte{}, " atransfer "},               // case 6: abi bytes invalid
+
 	}
 
 	for i, data := range testCase {
-		t.Logf("case %d: \n", i)
 		funcDesc, err := ParseFuncFromAbi(data.abiBytes, data.funcName)
-		if err != nil {
-			utils.Fatalf("%s\n", err.Error())
-		} else {
-			t.Logf("%s %s %s %s\n", funcDesc.Name, funcDesc.Inputs, funcDesc.Outputs, funcDesc.Constant)
+
+		switch {
+		case err != nil:
+			t.Logf("case %d: %s\n", i+1, err.Error())
+		case funcDesc != nil && funcDesc.Name == data.funcName:
+			t.Logf("case %d: %s %s %s %s\n", i+1, funcDesc.Name, funcDesc.Inputs, funcDesc.Outputs, funcDesc.Constant)
+		default:
+			t.Fail()
 		}
 	}
 }

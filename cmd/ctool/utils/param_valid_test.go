@@ -26,6 +26,10 @@ func TestParamValid(t *testing.T) {
 		{"fd.deng@wxblockchain.com", "email"},
 		{"13240283946", "mobile"},
 		{"0.0.0.1", "version"},
+		{"-123", "num"},
+		{"+13", "num"},
+		{"12459234", "num"},
+		// {"+-123", "num"},
 	}
 
 	for i, data := range testCase {

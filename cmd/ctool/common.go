@@ -32,7 +32,7 @@ func innerCall(c *cli.Context, funcName string, funcParams []string, txType int)
 
 // contractCommon extract the common parts of the actions of contract execution
 func contractCommon(c *cli.Context, funcParams []string, funcName, contract string) interface{} {
-	abiPath := c.String("abi")
+	abiPath := c.String(ContractAbiFilePathFlag.Name)
 	vm := c.String("vm")
 	value := c.String("value")
 

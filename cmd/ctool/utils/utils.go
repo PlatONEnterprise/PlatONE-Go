@@ -183,7 +183,7 @@ func FuncParse(funcName string, funcParams []string) (string, []string) {
 	var funcParamsNew []string
 
 	if funcName == "" {
-		utils.Fatalf(ErrInputNullFormat, "function")
+		return "", nil
 	}
 
 	funcName, funcParamsNew = GetFuncNameAndParams(funcName)

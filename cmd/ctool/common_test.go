@@ -20,29 +20,39 @@ func TestWriteConfigFile(t *testing.T) {
 }
 
 func TestParamParse(t *testing.T) {
+	var r string
+
 	testCase := []struct {
 		param     string
 		paramName string
+		result    interface{}
 	}{
-		{TEST_ACCOUNT, "contract"},
-		{"Alice_02", "contract"},
+		{TEST_ACCOUNT, "contract", true},
+		{"Alice_02", "contract", false},
 		//{"Alice.bob", "contract"},
 		//{"na*&2", "contract"},
 		//{"-1", "p2pPort"},
-		{"123", "p2pPort"},
+		{"123", "p2pPort", 123},
 		//{"123456", "p2pPort"},
-		{"123456", ""},
-		{"invalid", "status"},
-		{"approve", "operation"},
-		{"observer", "type"},
+		{"123456", "", "123456"},
+		{"invalid", "status", 2},
+		{"approve", "operation", 2},
+		{"observer", "type", 0},
 	}
 
 	for i, data := range testCase {
 		result := ParamParse(data.param, data.paramName)
-		t.Logf("case %d: Before: (%v) %s, After convert: (%v) %v\n", i, reflect.TypeOf(data.param), data.param, reflect.TypeOf(result), result)
+		if reflect.ValueOf(result) == data.result {
+			r = "SUCCESS"
+		} else {
+			r = "FAILED"
+			// t.Failed()
+		}
+
+		t.Logf("%s: case %d: Before: (%v) %s, After convert: (%v) %v\n", r, i, reflect.TypeOf(data.param), data.param, reflect.TypeOf(result), result)
 	}
 }
 
 func TestMessageCall(t *testing.T) {
-	messageCall(nil, nil, nil, "", 0)
+	// messageCall(nil, nil, nil, "", 0)
 }

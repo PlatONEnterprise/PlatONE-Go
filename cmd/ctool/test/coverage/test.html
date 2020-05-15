@@ -1211,7 +1211,7 @@ func deploy(c *cli.Context) <span class="cov0" title="0">{
         var abiBytes []byte
 
         codePath := c.Args().First() // 必选参数
-        abiPath := c.String("abi")   // 可选参数
+        abiPath := c.String(ContractAbiFilePathFlag.Name)   // 可选参数
         vm := c.String("vm")
 
         codeBytes := ParamParse(codePath, "code").([]byte)

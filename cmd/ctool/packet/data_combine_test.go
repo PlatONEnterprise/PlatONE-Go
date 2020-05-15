@@ -1,7 +1,6 @@
 package packet
 
 import (
-	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/test"
 	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
@@ -35,8 +34,8 @@ func TestDeploy(t *testing.T) {
 	response, err := utl.RpcCalls(action, params)
 
 	if err != nil {
-		fmt.Printf("FAILED, error is %s\n", err.Error())
+		t.Logf("FAILED, error is %s\n", err.Error())
 	} else {
-		fmt.Printf("SUCCESS, transaction hash is %s\n", response.(string))
+		t.Logf("SUCCESS, transaction hash is %s\n", response.(string))
 	}
 }

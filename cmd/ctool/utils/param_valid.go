@@ -62,7 +62,7 @@ func IsMatch(param, paramName string) bool {
 	case "name":
 		pattern = `^(__sys_){0,1}[a-zA-Z]\w{2,15}$` //english name: Alice_02 or __sys_NodeManager
 	case "num":
-		pattern = `^\d+$` //1823...
+		pattern = `^[+-]{0,1}\d+$` //1823..., +1, -123
 	case "email":
 		pattern = `^[a-zA-Z\d][\w-.]{2,15}@[\w]+(.[a-zA-Z]{2,6}){1,2}$` //alice@wxblockchain.com
 	case "mobile":
@@ -72,7 +72,7 @@ func IsMatch(param, paramName string) bool {
 	case "address":
 		pattern = `^0[x|X][\da-fA-F]{40}$` //0x00...00
 	default:
-		pattern = `[\s~!@#\$%^&*\(\)\{\}\[\]\|\,\?]`
+		pattern = `[\s~!@#\$%^&*\(\)\{\}\[\]\|\,\?]` //special char
 	}
 
 	return regMatch(param, pattern)
@@ -144,7 +144,13 @@ func isValidRoles(roles string) bool {
 
 // isRoleMatch checks if the input role is valid
 func IsRoleMatch(role string) bool {
-	var roleList = []string{"chainCreator", "chainAdmin", "nodeAdmin", "contractAdmin", "contractDeployer"}
+	var roleList = []string{
+		"chainCreator",
+		"chainAdmin",
+		"nodeAdmin",
+		"contractAdmin",
+		"contractDeployer",
+	}
 	role = strings.Trim(role, " ")
 
 	for _, value := range roleList {

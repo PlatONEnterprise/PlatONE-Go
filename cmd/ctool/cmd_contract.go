@@ -109,9 +109,9 @@ func contractReceipt(c *cli.Context) {
 func deploy(c *cli.Context) {
 	var abiBytes []byte
 
-	codePath := c.Args().First() // 必选参数
-	abiPath := c.String("abi")   // 可选参数
-	vm := c.String("vm")
+	codePath := c.Args().First()                      // 必选参数
+	abiPath := c.String(ContractAbiFilePathFlag.Name) // 可选参数
+	vm := c.String(ContractVmFlags.Name)
 
 	codeBytes := ParamParse(codePath, "code").([]byte)
 	if abiPath != "" {
@@ -176,7 +176,7 @@ func migrate(c *cli.Context) {
 func contractMethods(c *cli.Context) {
 	var abiPath string
 
-	abi := c.String("abi")
+	abi := c.String(ContractAbiFilePathFlag.Name)
 	contract := c.String("contract")
 
 	utl.ParamValid(contract, "address")

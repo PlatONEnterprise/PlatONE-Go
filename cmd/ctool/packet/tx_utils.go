@@ -7,6 +7,7 @@ package packet
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
@@ -96,9 +97,15 @@ func ParseFuncFromAbi(abiBytes []byte, funcName string) (*FuncDesc, error) {
 // ParseAbiFromJson parses the application binary interface(abi) files to []FuncDesc object array
 func ParseAbiFromJson(abiBytes []byte) ([]FuncDesc, error) {
 	var a []FuncDesc
+
+	if abiBytes == nil {
+		return nil, errors.New("abiBytes are null")
+	}
+
 	if err := json.Unmarshal(abiBytes, &a); err != nil {
 		return nil, fmt.Errorf(utl.ErrUnmarshalBytesFormat, "abi", err.Error())
 	}
+
 	return a, nil
 }
 

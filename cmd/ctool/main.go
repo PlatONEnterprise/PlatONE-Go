@@ -33,12 +33,13 @@ func init() {
 		return nil
 	}
 
-	// Initialize the related file
-	configInit()
-	abiInit()
 }
 
 func main() {
+
+	// Initialize the related file
+	configInit()
+	abiInit()
 
 	if err := app.Run(os.Args); err != nil {
 		_, _ = fmt.Fprintln(os.Stderr, err)

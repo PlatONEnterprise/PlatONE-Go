@@ -2,6 +2,7 @@ package utils
 
 import (
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"strconv"
 	"testing"
 )
 
@@ -9,7 +10,7 @@ const (
 	TEST_LONG_STRING = "11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111 "
 )
 
-func ByteConvertSwitch(value interface{}, strType string) (interface{}, bool) {
+func ByteConvertSwitch(value, expectValue interface{}, strType string) (interface{}, bool) {
 	var result interface{}
 	var skip bool
 
@@ -38,10 +39,10 @@ func ByteConvertSwitch(value interface{}, strType string) (interface{}, bool) {
 		skip = true
 	}
 
-	return result, skip || result == value
+	return result, skip || result == expectValue
 }
 
-func TestByteConvert(t *testing.T) {
+func TestBytesConvert(t *testing.T) {
 
 	var i int32 = -121
 	var i2 int32 = 121
@@ -54,38 +55,47 @@ func TestByteConvert(t *testing.T) {
 	var str string
 
 	var testCase = []struct {
-		value   interface{}
-		strType string
+		value     interface{}
+		strType   string
+		expResult interface{}
 	}{
 
-		{f, "float32"},
-		{f2, "float32"},
-		{d, "float64"},
-		{i, "int32"},
-		{i2, "int32"},
-		{i3, "int64"},
-		{u, "uint64"},
-		{"123456", "string"},
-		{TEST_LONG_STRING, "string"},
-		{[]byte("wxblockchain"), "[]byte"},
+		{f, "float32", f},
+		{f2, "float32", f2},
+		{d, "float64", d},
+		{i, "int32", i},
+		{i2, "int32", i2},
+		{i3, "int64", i3},
+		{u, "uint64", u},
+		{"123456", "string", "123456"},
+		{TEST_LONG_STRING, "string", TEST_LONG_STRING[64:]},
+		{[]byte("wxblockchain"), "[]byte", []byte{119, 120, 98, 108, 111, 99, 107, 99, 104, 97, 105, 110}},
 	}
 
 	for j, data := range testCase {
 
-		result, isCorrect := ByteConvertSwitch(data.value, data.strType)
+		result, isCorrect := ByteConvertSwitch(data.value, data.expResult, data.strType)
 		if isCorrect {
 			str = "SUCCESS"
 		} else {
 			str = "FAILED"
+			t.Fail()
 		}
 		t.Logf("case %d: %s (%s) %v convert result: %v", j, str, data.strType, data.value, result)
 		//t.Logf("(%s) %v convert result: %v", data.strType, data.value, result)
 
 	}
 
-	hash := Float32ToBytes(1.875262675)
+	// expected input is "1.875262675" (float64), the abi file is "float32"
+	dest, err := strconv.ParseFloat("1.875262675", 32)
+	if err != nil {
+		t.Log(err)
+	}
+	t.Logf("the result is %v\n", dest)
+
+	hash := Float32ToBytes(float32(dest))
 	result := BytesConverter(hash, "float32")
-	t.Logf("(%s) %v convert result: %v\n", "float32", 1.875262675, result)
+	t.Logf("(%s) %v convert result: %v\n", "float32", 1.8752626, result)
 
 }
 

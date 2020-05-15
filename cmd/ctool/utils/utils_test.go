@@ -1,29 +1,46 @@
 package utils
 
 import (
+	"bytes"
+	"errors"
 	"testing"
 )
 
 const (
-	TEST_PARSE_FILE_PATH = "./test_case/wasm/contracta.wasm"
+	TEST_PARSE_FILE_PATH = "../test/test_case/wasm/contracta.wasm"
 )
 
 func TestParseFileToBytes(t *testing.T) {
-	filePath := []string{
-		TEST_PARSE_FILE_PATH,
-		"",
-		"../test_case", //file directory
-		".//",          //TODO bug fix
-		"../test_case/config.txt",
-		"../test/config.json",
+	var testErr = errors.New("error is not nil")
+	var nullFile = make([]byte, 0)
+
+	testCase := []struct {
+		path      string
+		fileBytes []byte
+		err       error
+	}{
+		{TEST_PARSE_FILE_PATH, []byte("test"), nil},        // case 0: correct
+		{"", nil, testErr},                                 // case 1: path is null
+		{"../test/test_case", nil, testErr},                // case 2: file directory
+		{".//", nil, testErr},                              // case 3: ?
+		{"../test/test_case/config.txt", nil, testErr},     // case 4: file not exist
+		{"../test/test_case/test_null.txt", nullFile, nil}, // case 5: content of file is null
+		{".@\"", nil, testErr},                             // case 6: invalid input
 	}
 
-	for i, path := range filePath {
-		_, err := ParseFileToBytes(path)
-		if err != nil {
-			t.Logf("case %d test file path %s: the error is %v\n", i, path, err.Error())
-		} else {
-			t.Logf("case %d test file path %s: no error\n", i, path)
+	for i, data := range testCase {
+		fileBytes, err := ParseFileToBytes(data.path)
+
+		errCorrect := (err != nil) == (data.err != nil)
+		fileBytesCorrect := bytes.EqualFold(fileBytes, data.fileBytes) || len(data.fileBytes) > 0
+
+		switch {
+		case err != nil && errCorrect:
+			t.Logf("case %d: test file path %s: the error is %v\n", i, data.path, err.Error())
+		case fileBytesCorrect:
+			t.Logf("case %d: test file path %s: no error\n", i, data.path)
+		default:
+			t.Fail()
 		}
 	}
 }

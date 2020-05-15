@@ -2,11 +2,7 @@ package packet
 
 import (
 	"bytes"
-	"errors"
-	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/ctool/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
-	"math/big"
-	"strconv"
 )
 
 // MessageCallDemo, the interface for different types of data package methods
@@ -45,7 +41,9 @@ type DeployCall struct {
 
 // EvmInterpreter, packet data in the way defined by the evm virtual machine
 type EvmInterpreter struct {
-	str       []string
+	typeName []string // contract parameter types
+	typeCat  []bool   // categories of the types: dynamic(true) or static(false)
+
 	codeBytes []byte // code bytes for evm contract deployment
 }
 
@@ -162,68 +160,4 @@ func (i EvmInterpreter) setIsWrite(abiFunc *FuncDesc) bool {
 // Implement the Interpreter interface
 func (i WasmInterpreter) setIsWrite(abiFunc *FuncDesc) bool {
 	return abiFunc.Constant != "true"
-}
-
-// set append all the function parameters and type into an array in EvmInterpreter object
-func (i *EvmInterpreter) set(s string) {
-	i.str = append(i.str, s)
-}
-
-// StringConverter encodes different types of function parameters into bytes in the way defined by the evm virtual machine
-// Implement the Interpreter interface
-func (i *EvmInterpreter) StringConverter(source string, t string) ([]byte, error) {
-	i.set(t)
-
-	switch t {
-	case "uint32", "uint16", "uint8", "uint":
-		dest, err := strconv.Atoi(source)
-		return utl.U256(new(big.Int).SetUint64(uint64(dest))), err
-	case "int", "int8", "int16", "int32":
-		dest, err := strconv.Atoi(source)
-		return utl.U256(big.NewInt(int64(dest))), err
-	case "int64", "uint64":
-		dest, err := strconv.ParseInt(source, 10, 64)
-		return utl.Int64ToBytes(dest), err
-	case "float32":
-		dest, err := strconv.ParseFloat(source, 32)
-		return utl.Float32ToBytes(float32(dest)), err
-	case "float64":
-		dest, err := strconv.ParseFloat(source, 64)
-		return utl.Float64ToBytes(dest), err
-	case "bool":
-		if "true" == source || "false" == source {
-			return utl.BoolToBytes("true" == source), nil
-		} else {
-			return []byte{}, errors.New("invalid boolean param")
-		}
-	default:
-		return []byte(source), nil
-	}
-}
-
-// StringConverter encodes different types of function parameters into bytes in the way defined by the wasm virtual machine
-// Implement the Interpreter interface
-func (i WasmInterpreter) StringConverter(source string, t string) ([]byte, error) {
-	switch t {
-	case "int32", "uint32", "uint", "int":
-		dest, err := strconv.Atoi(source)
-		return utl.Int32ToBytes(int32(dest)), err
-	case "int64", "uint64":
-		dest, err := strconv.ParseInt(source, 10, 64)
-		return utl.Int64ToBytes(dest), err
-	case "float32":
-		dest, err := strconv.ParseFloat(source, 32)
-		return utl.Float32ToBytes(float32(dest)), err
-	case "float64":
-		dest, err := strconv.ParseFloat(source, 64)
-		return utl.Float64ToBytes(dest), err
-	case "bool":
-		if "true" == source || "false" == source {
-			return utl.BoolToBytes("true" == source), nil
-		} else {
-			return []byte{}, errors.New("invalid boolean param")
-		}
-	default:
-		return []byte(source), nil
-	}
 }

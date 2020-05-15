@@ -9,7 +9,12 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"strconv"
 	"strings"
+)
+
+const (
+	EVM_ENCODE_LENGHT = 32
 )
 
 // CombineData of Contractcall data struct is used for packeting the data of wasm or evm contracts execution
@@ -118,6 +123,9 @@ func (call *ContractCall) encodeFunction(abiFunc *FuncDesc) ([][]byte, bool) {
 	// encode the contract method
 	funcByte[0] = call.Interp.encodeFuncName(call.data.funcName)
 
+	// sort the funcByte (under developing)
+	/// funcByte = call.Interp.funcByteSort(funcByte)
+
 	// get the function constant
 	isWrite := call.Interp.setIsWrite(abiFunc)
 
@@ -135,11 +143,10 @@ func (i *WasmInterpreter) encodeFuncName(funcName string) []byte {
 // encodeFuncName encodes the contract method in the way defined by the evm virtual mechine
 // Implement the Interpreter interface
 func (i *EvmInterpreter) encodeFuncName(funcName string) []byte {
-	funcNameStr := fmt.Sprintf("%v(%v)", funcName, strings.Join(i.str, ","))
-	utl.Logger.Printf("the function is %s\n", funcNameStr)
+
+	funcNameStr := fmt.Sprintf("%v(%v)", funcName, strings.Join(i.typeName, ","))
 	funcNameHash := crypto.Keccak256([]byte(funcNameStr))[:4]
 	funcByte := funcNameHash
-	utl.Logger.Printf("the function byte is %v\n", funcByte)
 
 	return funcByte
 }
@@ -228,4 +235,107 @@ func rlpEncode(val interface{}) (string, error) {
 
 	return hexutil.Encode(dataRlp), nil
 
+}
+
+// set append all the contract parameters type info into an array in EvmInterpreter object
+func (i *EvmInterpreter) set(t string, isDynamic bool) {
+	i.typeName = append(i.typeName, t)
+	i.typeCat = append(i.typeCat, isDynamic)
+}
+
+// funcByteSort sorts the order of the function bytes by the rule
+// defined in Solidity: contract ABI specification
+func (i *EvmInterpreter) funcByteSort(funcByte [][]byte) [][]byte {
+	var length = len(i.typeCat)
+	var offset = length * EVM_ENCODE_LENGHT
+	var newFuncByte = funcByte
+
+	for j, value := range funcByte[1:] {
+		if i.typeCat[j] {
+			newFuncByte = append(newFuncByte, value)
+			newFuncByte[j+1] = utl.EncodeOffset(offset)
+			offset += len(value)
+		} else {
+			offset += 0 // do nothing
+		}
+	}
+
+	return newFuncByte
+}
+
+// funcByteSort sorts the order of the function bytes by the predefined rule
+// for wasm, there is no need for sorting
+func (i *WasmInterpreter) funcByteSort(funcByte [][]byte) [][]byte {
+	return funcByte
+}
+
+// StringConverter encodes different types of function parameters into bytes in the way defined by the wasm virtual machine
+// Implement the Interpreter interface
+func (i WasmInterpreter) StringConverter(source string, t string) ([]byte, error) {
+	switch t {
+	case "int32", "uint32", "uint", "int":
+		dest, err := strconv.Atoi(source)
+		return utl.Int32ToBytes(int32(dest)), err
+	case "int64", "uint64":
+		dest, err := strconv.ParseInt(source, 10, 64)
+		return utl.Int64ToBytes(dest), err
+	case "float32":
+		dest, err := strconv.ParseFloat(source, 32)
+		return utl.Float32ToBytes(float32(dest)), err
+	case "float64":
+		dest, err := strconv.ParseFloat(source, 64)
+		return utl.Float64ToBytes(dest), err
+	case "bool":
+		if "true" == source || "false" == source {
+			return utl.BoolToBytes("true" == source), nil
+		} else {
+			return []byte{}, errors.New("invalid boolean param")
+		}
+	default:
+		return []byte(source), nil
+	}
+}
+
+// StringConverter encodes different types of function parameters into bytes
+// in the way defined by the evm virtual machine
+// Implement the Interpreter interface
+// Currently there is only one dynamic type (string) implemented
+// The complex data type is not supported currently
+func (i *EvmInterpreter) StringConverter(source string, t string) ([]byte, error) {
+	var resultBytes []byte
+	var resultErr error
+	var isDynamic bool
+	var isIntegerNum = strings.HasPrefix(t, "int") || strings.HasPrefix(t, "uint")
+
+	switch {
+	// static types
+	case t == "int", t == "uint":
+		resultBytes, resultErr = utl.EncodeInt(source)
+		t = t + "256"
+	case isIntegerNum && utl.IsValidEvmIntType(t):
+		resultBytes, resultErr = utl.EncodeInt(source)
+	case strings.HasPrefix(t, "bytes"):
+		resultBytes, resultErr = utl.EncodeBytesType(source, t)
+	case t == "address":
+		resultBytes, resultErr = utl.EncodeAddressType(source)
+	case t == "bool":
+		resultBytes, resultErr = utl.EncodeBoolType(source)
+	case t == "function":
+		// 用户如何输入？
+
+	// dynamic types
+	case t == "string":
+		isDynamic = true
+
+		strRunes := []rune(source)
+		strBytes := utl.RuneToBytesArray(strRunes)
+		resultBytes, resultErr = utl.EncodeBytesType(string(strBytes), "bytes")
+		// return packBytesSlice([]byte(source), len(source)), nil
+	default:
+		panic(fmt.Sprintf("abi: the type %s is not supported by ctool", t))
+	}
+
+	i.set(t, isDynamic)
+
+	return resultBytes, resultErr
 }
