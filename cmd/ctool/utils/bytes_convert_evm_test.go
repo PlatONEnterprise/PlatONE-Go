@@ -28,10 +28,6 @@ func TestStringConverterDemo(t *testing.T) {
 		{"false", "bool", EVM_FALSE},
 		{"true", "bool", EVM_TRUE},
 		{"", "bool", ""},
-		//{"1.87526", "float32", []byte{133, 8, 240, 63}},
-		//{"1.87526", "float64", []byte{140, 243, 55, 161, 16, 1, 254, 63}},
-		//{"1.875262675", "float32", []byte{155, 8, 240, 63}}, 	// 1.8752626 155?
-		//{"1.875262675", "float64", []byte{56, 141, 72, 111, 19, 1, 254, 63}},
 		{"-69", "int32", EVM_MINUS69},
 		{"69", "uint32", EVM_69},
 		{"-121", "int", EVM_MINUS121},

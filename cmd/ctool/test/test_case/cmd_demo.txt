@@ -13,9 +13,9 @@ contract address: 0xb16756ec299ca4e849cddeaac925c65515e5440e
 ./ctool contract deploy ./test/test_case/sol/storage_byzantium_065.bin --vm evm // 修改genesis.json interpreter字段为"all"
 result: contract address is 
 
-./ctool contract execute 0xae424cb71d6bc33728cc1333ab8930d63898cd4a store --param 5 --abi ./test/test_case/sol/storage_byzantium_065.abi --vm evm
+./ctool contract execute 0x0eafa1794fb5c127848a704c957e415e0055e9a6 store --param 5 --abi ./test/test_case/sol/storage_byzantium_065.abi --vm evm
 
-./ctool contract execute 0xae424cb71d6bc33728cc1333ab8930d63898cd4a retreive --abi ./test/test_case/sol/storage_byzantium_065.abi --vm evm
+./ctool contract execute 0x0eafa1794fb5c127848a704c957e415e0055e9a6 retreive --abi ./test/test_case/sol/storage_byzantium_065.abi --vm evm
 
 3.
 ./ctool fw query 0x419670144e793ba73cbcaadebbda6194cdb33057

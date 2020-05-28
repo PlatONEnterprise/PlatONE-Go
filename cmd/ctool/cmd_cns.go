@@ -97,7 +97,7 @@ func cnsRegister(c *cli.Context) {
 func cnsUnregister(c *cli.Context) {
 
 	name := c.Args().First()
-	ver := c.String("version")
+	ver := c.String(CnsVersionFlags.Name)
 
 	//paramNumCheck(2,len(c.Args()))
 	utl.ParamValid(name, "name")
@@ -115,7 +115,7 @@ func cnsUnregister(c *cli.Context) {
 func cnsResolve(c *cli.Context) {
 
 	name := c.Args().First()
-	ver := c.String("version")
+	ver := c.String(CnsVersionFlags.Name)
 
 	utl.ParamValid(name, "name")
 	if ver != "latest" {
@@ -134,11 +134,11 @@ func cnsQuery(c *cli.Context) {
 	var funcName string
 	var result interface{}
 
-	all := c.Bool("all")
-	contract := c.String("contract")
-	user := c.String("user")
-	pageNum := c.String("pageNum")
-	pageSize := c.String("pageSize")
+	all := c.Bool(ShowAllFlags.Name)
+	contract := c.String(ContractIDFlag.Name)
+	user := c.String(AddressFlags.Name)
+	pageNum := c.String(PageNumFlags.Name)
+	pageSize := c.String(PageSizeFlags.Name)
 
 	if user != "" && contract != "" {
 		utils.Fatalf("please select one search key")

@@ -134,8 +134,8 @@ func execute(c *cli.Context) {
 
 	contract := c.Args().First()
 	funcName := c.Args().Get(1)
-	funcParams := c.StringSlice("param")
-	isListMethods := c.Bool("methods")
+	funcParams := c.StringSlice(ContractParamFlag.Name)
+	isListMethods := c.Bool(ShowContractMethodsFlag.Name)
 
 	utl.ParamValid(contract, "contract")
 
@@ -144,12 +144,6 @@ func execute(c *cli.Context) {
 		_ = listAbiFunctions(abiPath)
 		return
 	}
-
-	//TODO bug fix
-	/*
-		if len(c.Args()) != 2 {
-			utils.Fatalf("param check error, required %d inputs, recieved %d\n",2, len(c.Args()))
-		}*/
 
 	result := contractCommon(c, funcParams, funcName, contract)
 	fmt.Printf("result: %v\n", result)
@@ -177,7 +171,7 @@ func contractMethods(c *cli.Context) {
 	var abiPath string
 
 	abi := c.String(ContractAbiFilePathFlag.Name)
-	contract := c.String("contract")
+	contract := c.String(ContractIDFlag.Name)
 
 	utl.ParamValid(contract, "address")
 

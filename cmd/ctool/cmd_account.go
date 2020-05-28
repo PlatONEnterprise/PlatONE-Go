@@ -167,9 +167,9 @@ func queryUser(c *cli.Context) {
 	var contract string
 	var funcParams []string
 
-	user := c.String("user")
-	role := c.String("role")
-	status := c.String("status")
+	user := c.String(UserIDFlags.Name)
+	role := c.String(UserRoleFlag.Name)
+	status := c.String(UserStatusFlag.Name)
 
 	if len(c.Args()) > 1 {
 		utils.Fatalf("please use one search key at a time")

@@ -14,6 +14,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	"math/rand"
 	"strings"
 	"time"
 )
@@ -173,7 +174,7 @@ func (tx *TxParams) GetSignedTx(keystore string) string {
 	var txSign *types.Transaction
 
 	// convert the TxParams object to types.Transaction object
-	nonce := utl.GetNonce(tx.From)
+	nonce := getNonceRand()
 	value, _ := hexutil.DecodeBig(tx.Value)
 	gas, _ := hexutil.DecodeUint64(tx.Gas)
 	gasPrice, _ := hexutil.DecodeBig(tx.GasPrice)
@@ -193,6 +194,13 @@ func (tx *TxParams) GetSignedTx(keystore string) string {
 
 	str, _ := rlpEncode(txSign)
 	return str
+}
+
+// getNonceRand generate a random nonce
+// Warning: if the design of the nonce mechanism is modified
+// this part should be modified as well
+func getNonceRand() uint64 {
+	return rand.Uint64()
 }
 
 // ParseTxResponse parse result based on the function constant and output type

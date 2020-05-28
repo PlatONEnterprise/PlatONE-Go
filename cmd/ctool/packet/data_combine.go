@@ -124,7 +124,7 @@ func (call *ContractCall) encodeFunction(abiFunc *FuncDesc) ([][]byte, bool) {
 	funcByte[0] = call.Interp.encodeFuncName(call.data.funcName)
 
 	// sort the funcByte (under developing)
-	/// funcByte = call.Interp.funcByteSort(funcByte)
+	funcByte = call.Interp.funcByteSort(funcByte)
 
 	// get the function constant
 	isWrite := call.Interp.setIsWrite(abiFunc)
@@ -330,7 +330,6 @@ func (i *EvmInterpreter) StringConverter(source string, t string) ([]byte, error
 		strRunes := []rune(source)
 		strBytes := utl.RuneToBytesArray(strRunes)
 		resultBytes, resultErr = utl.EncodeBytesType(string(strBytes), "bytes")
-		// return packBytesSlice([]byte(source), len(source)), nil
 	default:
 		panic(fmt.Sprintf("abi: the type %s is not supported by ctool", t))
 	}

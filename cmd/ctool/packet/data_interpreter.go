@@ -62,6 +62,7 @@ type Interpreter interface {
 	combineData([][]byte) (string, error)
 	combineDeployData() (string, error)
 	StringConverter(string, string) ([]byte, error)
+	funcByteSort(funcByte [][]byte) [][]byte
 }
 
 // NewData new a RawData object

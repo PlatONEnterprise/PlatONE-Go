@@ -148,14 +148,14 @@ func fwStatus(c *cli.Context) {
 
 func fwExport(c *cli.Context) {
 	funcName := "__sys_FwStatus"
-	filePath := c.String("file")
+	filePath := c.String(FilePathFlags.Name)
 	result := innerCall(c, funcName, []string{}, packet.FW_TX_TYPE)
 	utl.WriteFile([]byte(result.(string)), filePath)
 }
 
 func fwImport(c *cli.Context) {
 	funcName := "__sys_FwImport"
-	filePath := c.String("file")
+	filePath := c.String(FilePathFlags.Name)
 
 	fileBytes, err := utl.ParseFileToBytes(filePath)
 	if err != nil {
@@ -199,8 +199,8 @@ func fwDelete(c *cli.Context) {
 
 func fwClear(c *cli.Context) {
 	funcName := "__sys_FwClear"
-	action := c.String("action")
-	all := c.Bool("all")
+	action := c.String(FwActionFlags.Name)
+	all := c.Bool(FwClearAllFlags.Name)
 
 	switch {
 	case all: // clear all fire wall rules

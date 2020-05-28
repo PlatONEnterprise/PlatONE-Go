@@ -90,7 +90,7 @@ var AppHelpFlagGroups = []flagGroup{
 		Name: "CONTRACT",
 		Flags: []cli.Flag{
 			ContractParamFlag,
-			ContractAddrKeyFlag,
+			ContractIDFlag,
 			ContractAbiFilePathFlag,
 			ContractVmFlags,
 			TransferValueFlag,

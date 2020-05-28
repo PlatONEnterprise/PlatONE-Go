@@ -144,7 +144,7 @@ Except --all flag, other search keys can be combined.`,
 	//-------------------------------------------------
 	AdminUserCmd = cli.Command{
 		Name:  "user",
-		Usage: "Manager user accounts registered in the user platform",
+		Usage: "Manage user accounts registered in the user platform",
 
 		Subcommands: []cli.Command{
 			UserApprove,
@@ -229,7 +229,7 @@ Except --all flag, other search keys can be combined.`,
 	//------------------------------------------------
 	AdminSupCmd = cli.Command{
 		Name:  "sup",
-		Usage: "<TODO>",
+		Usage: "Manage the roles of the users",
 
 		Subcommands: []cli.Command{
 			SupApprove,
@@ -367,7 +367,7 @@ func nodeUpdate(c *cli.Context) {
 func nodeQuery(c *cli.Context) {
 	var strJson = "{\"type\":\"\",\"status\":\"\",\"name\":\"\",\"publicKey\":\"\"}"
 
-	all := c.Bool("all")
+	all := c.Bool(ShowAllFlags.Name)
 	if all {
 		result := contractCommon(c, nil, "getAllNodes", "__sys_NodeManager")
 		utl.PrintJson([]byte(result.(string)))
@@ -426,8 +426,8 @@ func contractDelete(c *cli.Context) {
 func contractList(c *cli.Context) {
 	var result interface{}
 
-	del := c.Bool("delete")
-	approve := c.Bool("approve")
+	del := c.Bool(AdminDeleteFlags.Name)
+	approve := c.Bool(AdminApproveFlags.Name)
 
 	if del && approve {
 		utils.Fatalf("please select one operation at one time")
@@ -516,7 +516,7 @@ func userList(c *cli.Context) {
 	// del enable disable
 	// _ = contractCommon(c, []string{}, "getAccountBystatus", "__sys_UserRegister")
 
-	action := c.Bool("approve")
+	action := c.Bool(AdminApproveFlags.Name)
 	switch {
 	case action:
 		status := "1"
@@ -575,8 +575,8 @@ func supDelete(c *cli.Context) {
 
 func supList(c *cli.Context) {
 	var result interface{}
-	role := c.String("delete")
-	approve := c.Bool("approve")
+	role := c.String(AdminDeleteFlags.Name)
+	approve := c.Bool(AdminApproveFlags.Name)
 
 	if role != "" && approve {
 		utils.Fatalf("please select one operation at one time")

@@ -33,8 +33,8 @@ func innerCall(c *cli.Context, funcName string, funcParams []string, txType int)
 // contractCommon extract the common parts of the actions of contract execution
 func contractCommon(c *cli.Context, funcParams []string, funcName, contract string) interface{} {
 	abiPath := c.String(ContractAbiFilePathFlag.Name)
-	vm := c.String("vm")
-	value := c.String("value")
+	vm := c.String(ContractVmFlags.Name)
+	value := c.String(TransferValueFlag.Name)
 
 	utl.ParamValid(vm, "vm")
 	value = utl.ChainParamConvert(value, "value").(string)
@@ -114,15 +114,15 @@ func getGlobalParam(c *cli.Context) (string, string, string, string, bool, bool)
 
 	// get the global parameters from cli.context
 	//TODO 分类规划???
-	gas := c.String("gas")
-	gasPrice := c.String("gasPrice")
+	gas := c.String(GasFlags.Name)
+	gasPrice := c.String(GasPriceFlags.Name)
 
-	address := c.String("account")
-	keystore := c.String("keystore")
-	isLocal := c.Bool("local")
-	isDefault := c.Bool("default")
+	address := c.String(AccountFlags.Name)
+	keystore := c.String(KeystoreFlags.Name)
+	isLocal := c.Bool(LocalFlags.Name)
+	isDefault := c.Bool(DefaultFlags.Name)
 
-	isSync := !c.Bool("sync")
+	isSync := !c.Bool(SyncFlags.Name)
 
 	// check and covert the global parameters
 	utl.OptionParamValid(address, "address")
@@ -144,7 +144,7 @@ func setUrl(c *cli.Context) {
 		panic("the cli.context pointer is nill")
 	}
 
-	url := c.String("url")
+	url := c.String(UrlFlags.Name)
 
 	runPath := utl.GetRunningTimePath()
 

@@ -9,6 +9,9 @@ import (
 	"reflect"
 )
 
+// EncodeBytesType encodes the byte type by the rule defined in solidity doc: contract ABI specification
+// dynamic bytes: "bytes"
+// fixed bytes: "bytes<M>", where 0 < M <= 32
 func EncodeBytesType(source, t string) ([]byte, error) {
 	var index = len("bytes")
 	var sourceBytes = []byte(source)
@@ -31,6 +34,7 @@ func EncodeBytesType(source, t string) ([]byte, error) {
 	}
 }
 
+// EncodeBoolType encodes the bool type by the rule defined in solidity doc: contract ABI specification
 func EncodeBoolType(source string) ([]byte, error) {
 	switch source {
 	case "true":
@@ -42,6 +46,7 @@ func EncodeBoolType(source string) ([]byte, error) {
 	}
 }
 
+// EncodeAddressType encodes the address type by the rule defined in solidity doc: contract ABI specification
 func EncodeAddressType(source string) ([]byte, error) {
 	dest := common.HexToAddress(source)
 
@@ -53,6 +58,7 @@ func EncodeAddressType(source string) ([]byte, error) {
 	return common.LeftPadBytes(reflectValue.Bytes(), 32), nil
 }
 
+// EncodeInt encodes the int type by the rule defined in solidity doc: contract ABI specification
 func EncodeInt(source string) ([]byte, error) {
 
 	// 是否需要检查数据溢出？
@@ -68,15 +74,19 @@ func EncodeInt(source string) ([]byte, error) {
 	return math.PaddedBigBytes(math.U256(n), 32), nil
 }
 
+// EncodeOffset encodes the uint256 type by the rule defined in solidity doc: contract ABI specification
+// it is used to calculate the offset of the arguments
 func EncodeOffset(offset int) []byte {
 	n := new(big.Int).SetInt64(int64((offset)))
 	return math.PaddedBigBytes(math.U256(n), 32)
 }
 
+// TODO
 func IsValidEvmIntType(t string) bool {
 	return true
 }
 
+// RuneToBytesArray
 func RuneToBytesArray(r []rune) []byte {
 	var bytesArray []byte
 

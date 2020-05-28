@@ -64,9 +64,9 @@ var (
 		Usage: `Choose the virtual machine interpreter for the contract execution and deployment, 
 		The error may occur if the interpreter does not match.`,
 	}
-	ContractAddrKeyFlag = cli.StringFlag{
+	ContractIDFlag = cli.StringFlag{
 		Name:  "contract",
-		Usage: "Search by contract name or address",
+		Usage: "Contract name or address",
 	}
 
 	// user
@@ -246,7 +246,7 @@ var (
 		ContractVmFlags,
 		TransferValueFlag,
 		ShowContractMethodsFlag)
-	contractMethodsCmd = append([]cli.Flag{}, ContractAbiFilePathFlag, ContractAddrKeyFlag)
+	contractMethodsCmd = append([]cli.Flag{}, ContractAbiFilePathFlag, ContractIDFlag)
 
 	// sup
 	supAdminCmdFlags      = append(globalCmdFlags, AdminApproveFlags, AdminDeleteFlags)
@@ -258,7 +258,7 @@ var (
 	cnsQueryCmdFlags   = append(
 		globalCmdFlags,
 		ShowAllFlags,
-		ContractAddrKeyFlag,
+		ContractIDFlag,
 		AddressFlags,
 		PageNumFlags,
 		PageSizeFlags)
