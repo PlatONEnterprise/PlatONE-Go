@@ -263,7 +263,7 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 		returnBytes := lvm.Memory.Memory[params[0] : params[0]+16]
 		return returnBytes, nil
 		//TODO dont know why we should align 32 bytes,it seems ok right now.
-	case "string":
+	case "string", "int128_s", "uint128_s", "int256_s", "uint256_s":
 		returnBytes := make([]byte, 0)
 		copyData := lvm.Memory.Memory[res:]
 		for _, v := range copyData {
@@ -407,7 +407,7 @@ func parseInputFromAbi(vm *exec.VirtualMachine, input []byte, abi []byte) (txTyp
 	for i, v := range args {
 		bts := argsRlp[i].([]byte)
 		switch v.Type {
-		case "string":
+		case "string", "int128_s", "uint128_s", "int256_s", "uint256_s":
 			pos := resolver.MallocString(vm, string(bts))
 			params = append(params, pos)
 		case "int8":

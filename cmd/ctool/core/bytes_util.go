@@ -115,7 +115,7 @@ func BytesConverter(source []byte, t string) interface{} {
 		return BytesToFloat64(source)
 	case "float128":
 		return BytesToFloat128(source)
-	case "string":
+	case "string", "int128_s", "uint128_s", "int256_s", "uint256_s":
 		if len(source) < 64 {
 			return string(source[:])
 		} else {
