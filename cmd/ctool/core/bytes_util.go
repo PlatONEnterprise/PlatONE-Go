@@ -57,28 +57,28 @@ func BytesToUint64(b []byte) uint64 {
 func Float32ToBytes(float float32) []byte {
 	bits := math.Float32bits(float)
 	bytes := make([]byte, 4)
-	binary.LittleEndian.PutUint32(bytes, bits)
+	binary.BigEndian.PutUint32(bytes, bits)
 	return bytes
 }
 
 func BytesToFloat32(bytes []byte) float32 {
-	bits := binary.LittleEndian.Uint32(bytes)
+	bits := binary.BigEndian.Uint32(bytes)
 	return math.Float32frombits(bits)
 }
 
 func Float64ToBytes(float float64) []byte {
 	bits := math.Float64bits(float)
 	bytes := make([]byte, 8)
-	binary.LittleEndian.PutUint64(bytes, bits)
+	binary.BigEndian.PutUint64(bytes, bits)
 	return bytes
 }
 
 func BytesToFloat64(bytes []byte) float64 {
-	bits := binary.LittleEndian.Uint64(bytes)
+	bits := binary.BigEndian.Uint64(bytes)
 	return math.Float64frombits(bits)
 }
 
-// bytes is made of 2 uint64 in little endian
+// bytes is made of 2 uint64 in big endian
 func BytesToFloat128(bytes []byte) *big.Float {
 	if len(bytes) < 16 {
 		return &big.Float{}
@@ -87,8 +87,8 @@ func BytesToFloat128(bytes []byte) *big.Float {
 		bytes = bytes[:16]
 	}
 
-	low := binary.LittleEndian.Uint64(bytes[:8])
-	high := binary.LittleEndian.Uint64(bytes[8:])
+	low := binary.BigEndian.Uint64(bytes[8:])
+	high := binary.BigEndian.Uint64(bytes[:8])
 
 	F, _ := math2.NewFromBits(high, low).Big()
 
@@ -110,11 +110,11 @@ func BytesConverter(source []byte, t string) interface{} {
 	case "int128":
 		return common.CallResAsInt128(source)
 	case "float32":
-		return BytesToFloat32(source)
+		return common.CallResAsFloat32(source)
 	case "float64":
-		return BytesToFloat64(source)
+		return common.CallResAsFloat64(source)
 	case "float128":
-		return BytesToFloat128(source)
+		return common.CallResAsFloat128(source)
 	case "string", "int128_s", "uint128_s", "int256_s", "uint256_s":
 		if len(source) < 64 {
 			return string(source[:])
@@ -149,8 +149,7 @@ func StringConverter(source string, t string) ([]byte, error) {
 		if !success {
 			return []byte(source), errors.New("parse string to int error")
 		}
-		bytes := append(b[8:], b[:8]...)
-		return bytes, nil
+		return b, nil
 	case "float32":
 		dest, err := strconv.ParseFloat(source, 32)
 		return Float32ToBytes(float32(dest)), err
@@ -163,7 +162,7 @@ func StringConverter(source string, t string) ([]byte, error) {
 			return []byte{}, err
 		}
 		F128, _ := math2.NewFromBig(F)
-		return append(Uint64ToBytes(F128.Low()), Uint64ToBytes(F128.High())...), nil
+		return append(Uint64ToBytes(F128.High()), Uint64ToBytes(F128.Low())...), nil
 	case "bool":
 		if "true" == source || "false" == source {
 			return BoolToBytes("true" == source), nil

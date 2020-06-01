@@ -1,7 +1,10 @@
 package common
 
 import (
+	"encoding/binary"
+	math2 "github.com/PlatONEnetwork/PlatONE-Go/common/math"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"math"
 	"math/big"
 )
 
@@ -71,14 +74,10 @@ func GenCallData(funcName string, params []interface{}) []byte {
 }
 
 func CallResAsUint128(bts []byte) *big.Int {
-
-	if len(bts) < 16 {
-		return new(big.Int).SetInt64(0)
+	if len(bts) < 32 {
+		return &big.Int{}
 	}
-	//little endian to big endian
-	RevertBytes(bts)
-
-	return Byte128ToBig(bts, false)
+	return Byte128ToBig(bts[len(bts)-16:], false)
 }
 
 func CallResAsUint64(bts []byte) uint64 {
@@ -105,15 +104,42 @@ func CallResAsUint32(bts []byte) uint32 {
 	return n
 }
 
+func CallResAsFloat128(bts []byte) *big.Float {
+	if len(bts) < 32 {
+		return &big.Float{}
+	}
+
+	bytes := bts[len(bts)-16:]
+	low := binary.BigEndian.Uint64(bytes[8:])
+	high := binary.BigEndian.Uint64(bytes[:8])
+
+	F, _ := math2.NewFromBits(high, low).Big()
+
+	return F
+}
+
+func CallResAsFloat64(bts []byte) float64 {
+	if len(bts) < 32 {
+		return 0
+	}
+	bits := binary.BigEndian.Uint64(bts[len(bts)-8:])
+	return math.Float64frombits(bits)
+}
+
+func CallResAsFloat32(bts []byte) float32 {
+	if len(bts) < 32 {
+		return 0
+	}
+	bits := binary.BigEndian.Uint32(bts[len(bts)-4:])
+	return math.Float32frombits(bits)
+}
+
 func CallResAsInt128(bts []byte) *big.Int {
 
-	if len(bts) < 16 {
+	if len(bts) < 32 {
 		return new(big.Int).SetInt64(0)
 	}
-	//little endian to big endian
-	RevertBytes(bts)
-
-	return Byte128ToBig(bts, true)
+	return Byte128ToBig(bts[len(bts)-16:], true)
 }
 
 func CallResAsInt64(bts []byte) int64 {

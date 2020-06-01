@@ -250,19 +250,19 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 		return finalRes, nil
 	case "float32", "float64":
 		bytes := make([]byte, 8)
-		// float in rlp is up to higher-order protocol
-		binary.LittleEndian.PutUint64(bytes, uint64(res))
+		binary.BigEndian.PutUint64(bytes, uint64(res))
 		if txType == common.CALL_CANTRACT_FLAG {
 			return bytes, nil
 		}
-		finalRes := utils.Align32BytesLittleEndian(bytes)
+		finalRes := utils.Align32Bytes(bytes)
 		return finalRes, nil
 	case "float128", "uint128", "int128":
-		// little endian
 		// float128 satisfy IEEE 754 Quadruple precision
+		// wo should revert bytes from little edian to big edian
 		returnBytes := lvm.Memory.Memory[params[0] : params[0]+16]
+		common.RevertBytes(returnBytes)
+		returnBytes = utils.Align32Bytes(returnBytes)
 		return returnBytes, nil
-		//TODO dont know why we should align 32 bytes,it seems ok right now.
 	case "string", "int128_s", "uint128_s", "int256_s", "uint256_s":
 		returnBytes := make([]byte, 0)
 		copyData := lvm.Memory.Memory[res:]
@@ -451,14 +451,14 @@ func parseInputFromAbi(vm *exec.VirtualMachine, input []byte, abi []byte) (txTyp
 			}
 			var l, h int64
 			if len(bts) <= 8 {
-				l = int64(binary.BigEndian.Uint64(bts))
+				h = int64(binary.BigEndian.Uint64(bts))
 			} else {
-				l = int64(binary.BigEndian.Uint64(bts[:8]))
+				h = int64(binary.BigEndian.Uint64(bts[:8]))
 			}
 			if len(bts) > 8 {
-				h = int64(binary.BigEndian.Uint64(bts[8:]))
+				l = int64(binary.BigEndian.Uint64(bts[8:]))
 			} else {
-				h = int64(0)
+				l = int64(0)
 			}
 			params = append(params, l, h)
 		case "float32":
@@ -466,20 +466,20 @@ func parseInputFromAbi(vm *exec.VirtualMachine, input []byte, abi []byte) (txTyp
 				return -1, "", nil, returnType, fmt.Errorf("invalid parameter: want 4 bytes but got %d bytes", len(bts))
 			}
 			//bits bits is the floating-point number corresponding to the IEEE 754 binary representation bts
-			//in rlp float type is up to higher-order protocol,which is littleEndian.
-			bits := binary.LittleEndian.Uint32(bts)
+			bits := binary.BigEndian.Uint32(bts)
 			params = append(params, int64(bits))
 		case "float64":
 			if len(bts) > 8 {
 				return -1, "", nil, returnType, fmt.Errorf("invalid parameter: want 8 bytes but got %d bytes", len(bts))
 			}
-			bits := binary.LittleEndian.Uint64(bts)
+			bits := binary.BigEndian.Uint64(bts)
 			params = append(params, int64(bits))
 		case "float128":
 			if len(bts) != 16 {
 				return -1, "", nil, returnType, fmt.Errorf("invalid parameter: want 16 bytes but got %d bytes", len(bts))
 			}
-			params = append(params, int64(binary.BigEndian.Uint64(bts[:8])), int64(binary.BigEndian.Uint64(bts[8:])))
+			// wasm is little edian
+			params = append(params, int64(binary.BigEndian.Uint64(bts[8:])), int64(binary.BigEndian.Uint64(bts[:8])))
 		case "bool":
 			if len(bts) > 1 {
 				return -1, "", nil, returnType, fmt.Errorf("invalid parameter: want 1 byte but got %d bytes", len(bts))
