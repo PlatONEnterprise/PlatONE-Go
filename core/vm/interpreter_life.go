@@ -206,7 +206,7 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 			return nil, nil
 		}
 		if returnType == "float128" || returnType == "uint128" || returnType == "int128" {
-			params = append([]int64{resolver.Malloc128(lvm)}, params...)
+			params = append([]int64{resolver.Malloc(lvm, 16)}, params...)
 		}
 	}
 	entryID, ok := lvm.GetFunctionExport(funcName)

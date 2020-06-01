@@ -29,11 +29,9 @@ func MallocString(vm *exec.VirtualMachine, str string) int64 {
 	vm.ExternalParams = append(vm.ExternalParams, int64(pos))
 	return int64(pos)
 }
-// Malloc 128 bit Memory for float128 and others
-func Malloc128(vm *exec.VirtualMachine) int64 {
-	mem := vm.Memory
-	size := 128
 
+func Malloc(vm *exec.VirtualMachine,size int) int64 {
+	mem := vm.Memory
 	pos := mem.Malloc(size)
 	vm.ExternalParams = append(vm.ExternalParams, int64(pos))
 	return int64(pos)
