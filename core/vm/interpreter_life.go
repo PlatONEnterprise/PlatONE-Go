@@ -261,6 +261,9 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 		// wo should revert bytes from little edian to big edian
 		returnBytes := lvm.Memory.Memory[params[0] : params[0]+16]
 		common.RevertBytes(returnBytes)
+		if txType == common.CALL_CANTRACT_FLAG {
+			return returnBytes, nil
+		}
 		returnBytes = utils.Align32Bytes(returnBytes)
 		return returnBytes, nil
 	case "string", "int128_s", "uint128_s", "int256_s", "uint256_s":
