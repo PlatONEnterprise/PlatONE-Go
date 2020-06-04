@@ -48,8 +48,17 @@ func Uint64ToBytes(n uint64) []byte {
 func Align32Bytes(b []byte) []byte {
 	tmp := make([]byte, ALIGN_LENGTH)
 	if len(b) > ALIGN_LENGTH {
-		b = b[len(b) - ALIGN_LENGTH:]
+		b = b[len(b)-ALIGN_LENGTH:]
 	}
 	copy(tmp[ALIGN_LENGTH-len(b):], b)
+	return tmp
+}
+
+func Align32BytesLittleEndian(b []byte) []byte {
+	tmp := make([]byte, ALIGN_LENGTH)
+	if len(b) > ALIGN_LENGTH {
+		b = b[:ALIGN_LENGTH]
+	}
+	copy(tmp, b)
 	return tmp
 }

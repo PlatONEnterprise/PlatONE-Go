@@ -5,12 +5,14 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	math2 "github.com/PlatONEnetwork/PlatONE-Go/common/math"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"io/ioutil"
+	"math"
 	"math/big"
 	"math/rand"
 	"testing"
@@ -155,7 +157,6 @@ func BenchmarkWasmInterpreter_Deploy_MockStateDB(bench *testing.B) {
 	wasmRun(bench, stateDB{}, "Deploy", 10000)
 }
 
-
 func wasmRun(bench *testing.B, statedb stateDBer, inputKind string, prepareCount int) {
 	address := common.HexToAddress("0x823140710bf13990e4500136726d8b55")
 	codeBytes, err := ioutil.ReadFile("../../life/contract/getsettest.wasm")
@@ -211,7 +212,7 @@ func wasmRun(bench *testing.B, statedb stateDBer, inputKind string, prepareCount
 		if nil != err {
 			bench.Fatal(err)
 		}
-		
+
 		_, err = statedb.Commit(false)
 		if nil != err {
 			bench.Fatal(err)
@@ -304,4 +305,142 @@ func (stateDB) AddLog(*types.Log) {
 }
 func (stateDB) Commit(deleteEmptyObjects bool) (root common.Hash, err error) {
 	return common.Hash{}, nil
+}
+
+func RunContractAndGetRes(codePath, abiPath string, input [][]byte) ([]byte, error) {
+	//gen contract codes
+	//this contract accepts a float64 and return it by add 1
+	codeBytes, err := ioutil.ReadFile(codePath)
+	if nil != err {
+		return []byte{}, err
+	}
+
+	abiBytes, err := ioutil.ReadFile(abiPath)
+	if nil != err {
+		return []byte{}, err
+	}
+
+	param := [3][]byte{
+		Int64ToBytes(2),
+		codeBytes,
+		abiBytes,
+	}
+	code, err := rlp.EncodeToBytes(param)
+	if err != nil {
+		return []byte{}, err
+	}
+	evm := &EVM{
+		StateDB: stateDB{},
+		Context: Context{
+			GasLimit:    1000000,
+			BlockNumber: big.NewInt(10),
+		},
+	}
+	cfg := Config{}
+
+	wasmInterpreter := NewWASMInterpreter(evm, cfg)
+
+	contract := &Contract{
+		CallerAddress: common.BigToAddress(big.NewInt(88888)),
+		caller:        ContractRefCaller{},
+		self:          ContractRefSelf{},
+		Code:          code,
+		Gas:           math.MaxUint64,
+	}
+
+	buffer := new(bytes.Buffer)
+	rlp.Encode(buffer, input)
+
+	return wasmInterpreter.Run(contract, buffer.Bytes(), true)
+}
+
+func TestFloatInputAndOutput(t *testing.T) {
+	codePath := "../../life/contract/numberstest.wasm"
+	abiPath := "../../life/contract/numberstest.abi.json"
+
+	// build input, {1}{getNum}{num}
+	var input [][]byte
+	input = make([][]byte, 0)
+	input = append(input, common.Int64ToBytes(1))
+	input = append(input, []byte("addDouble"))
+	array := []float64{123456789123456789123456789.12345678901234567890123456789, 123456789123456789123456789.12345678901234567890123456789}
+
+	for _, f := range array {
+		input = append(input, common.Float64ToBytes(f))
+	}
+
+	ret, err := RunContractAndGetRes(codePath, abiPath, input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	retInFloat := common.BytesToFloat64(ret)
+	if retInFloat != array[0]+array[1] {
+		t.Fatal("result not correct")
+	}
+	fmt.Println(common.BytesToFloat64(ret))
+}
+
+func TestFloat128(t *testing.T) {
+	codePath := "../../life/contract/numberstest.wasm"
+	abiPath := "../../life/contract/numberstest.abi.json"
+
+	var input [][]byte
+	input = make([][]byte, 0)
+	input = append(input, common.Int64ToBytes(1))
+	input = append(input, []byte("addLongDouble"))
+
+	// build input, {1}{getNum}{num,num}
+	array := []string{"123456789123456789123456789.12345678901234567890123456789", "123456789123456789123456789.12345678901234567890123456789"}
+	for _, f := range array {
+		F, _, _ := big.ParseFloat(f, 10, 113, big.ToNearestEven)
+		fmt.Println(F)
+		F128, _ := math2.NewFromBig(F)
+
+		bytes := append(common.Uint64ToBytes(F128.Low()), common.Uint64ToBytes(F128.High())...)
+		input = append(input, bytes)
+	}
+
+	ret, err := RunContractAndGetRes(codePath, abiPath, input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	low := binary.LittleEndian.Uint64(ret[:8])
+	high := binary.LittleEndian.Uint64(ret[8:])
+
+	FR := math2.NewFromBits(high, low)
+	FB, _ := FR.Big()
+	fmt.Println(FB)
+}
+
+func TestBigInt(t *testing.T) {
+	codePath := "../../life/contract/numberstest.wasm"
+	abiPath := "../../life/contract/numberstest.abi.json"
+
+	var input [][]byte
+	input = make([][]byte, 0)
+	input = append(input, common.Int64ToBytes(1))
+	input = append(input, []byte("addLong"))
+
+	// build input, {1}{getNum}{num,num}
+	array := []string{"153265412365478951234569874125632", "153265412365478951234569874125632"}
+	for _, integer := range array {
+		I, _ := new(big.Int).SetString(integer, 10)
+		b, _ := common.BigToByte128(I)
+
+		//fmt.Println(b)
+
+		bytes := append(b[8:], b[:8]...)
+		input = append(input, bytes)
+	}
+
+	ret, err := RunContractAndGetRes(codePath, abiPath, input)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r := common.CallResAsInt128(ret)
+
+	if r.String() != "306530824730957902469139748251264" {
+		t.Fatal("result is not correct")
+	}
 }
