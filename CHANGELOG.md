@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.9.11] 2020-06-04
+### Breaking Changes
+### Improvements
+### Features
+* [chain] WASM虚拟机对浮点数和大数的支持 --于宗坤
+
+### Bug Fixes
+
+
 ## [0.9.10] 2020-05-07
 ### Breaking Changes
 ### Improvements
