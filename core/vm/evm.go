@@ -30,6 +30,7 @@ import (
 // emptyCodeHash is used by create to ensure deployment is disallowed to already
 // deployed contract addresses (relevant after the account abstraction).
 var emptyCodeHash = crypto.Keccak256Hash(nil)
+
 // var emptyContractError = errors.New("Empty Contract")
 
 type (
@@ -51,6 +52,22 @@ func run(evm *EVM, contract *Contract, input []byte, readOnly bool) ([]byte, err
 		}
 		if p := precompiles[*contract.CodeAddr]; p != nil {
 			return RunPrecompiledContract(p, input, contract)
+		}
+
+		//new
+		if p := PlatONEPrecompiledContracts[*contract.CodeAddr]; nil != p {
+			switch p.(type) {
+			case *UserManagement:
+				um := &UserManagement{
+					Contract: contract,
+					Evm:      evm,
+				}
+
+				return RunPlatONEPrecompiledContract(um, input, contract)
+
+			default:
+				panic("should not be here")
+			}
 		}
 	}
 
