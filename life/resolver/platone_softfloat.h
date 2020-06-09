@@ -5,39 +5,39 @@
 static  uint32_t inv_float_eps = 0x4B000000;
 static  uint64_t inv_double_eps = 0x4330000000000000;
 
-inline bool f32_sign_bit( float32_t f )   { return f.v >> 31; }
-inline bool f64_sign_bit( float64_t f )   { return f.v >> 63; }
-inline bool f128_sign_bit( float128_t f ) { return f.v[1] >> 63; }
+static inline bool f32_sign_bit( float32_t f )   { return f.v >> 31; }
+static inline bool f64_sign_bit( float64_t f )   { return f.v >> 63; }
+static inline bool f128_sign_bit( float128_t f ) { return f.v[1] >> 63; }
 
-inline bool f32_is_nan( const float32_t f ) {
+static inline bool f32_is_nan( const float32_t f ) {
    return ((f.v & 0x7FFFFFFF) > 0x7F800000);
 }
-inline bool f64_is_nan( const float64_t f ) {
+static inline bool f64_is_nan( const float64_t f ) {
    return ((f.v & 0x7FFFFFFFFFFFFFFF) > 0x7FF0000000000000);
 }
-inline bool f128_is_nan( const float128_t f ) {
+static inline bool f128_is_nan( const float128_t f ) {
    return (((~(f.v[1]) &  0x7FFF000000000000 ) == 0) && (f.v[0] || ((f.v[1]) &  0x0000FFFFFFFFFFFF )));
 }
 
-inline double from_softfloat64( float64_t d ) {
+static inline double from_softfloat64( float64_t d ) {
    double x;
    memcpy(&x, &d, sizeof(d));
    return x;
 }
 
-inline float64_t to_softfloat64( double d ) {
+static inline float64_t to_softfloat64( double d ) {
    float64_t x;
    memcpy(&x, &d, sizeof(d));
    return x;
 }
 
-inline float32_t to_softfloat32( float f ) {
+static inline float32_t to_softfloat32( float f ) {
    float32_t x;
    memcpy(&x, &f, sizeof(f));
    return x;
 }
 
-inline float from_softfloat32( float32_t f ) {
+static inline float from_softfloat32( float32_t f ) {
    float x;
    memcpy(&x, &f, sizeof(f));
    return x;

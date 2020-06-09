@@ -24,3 +24,9 @@ func Test_retrieveFnNameAndParams(t *testing.T) {
 func Test_execSC(t *testing.T) {
 
 }
+
+// hex.encode( rlp.encode( [][]byte{Int64ToBytes(txType), function name,rlp.encode(params[1]), rlp.encode(params[1])...} ) )
+func FakeInput() []byte {
+	//TODO
+	return nil
+}

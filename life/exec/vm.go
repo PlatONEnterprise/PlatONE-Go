@@ -4,7 +4,7 @@ package exec
 #cgo CFLAGS: -I../resolver
 #cgo CXXFLAGS: -std=c++14
 #include "platone_softfloat.h"
-#cgo LDFLAGS: -L../resolver/softfloat/build/softfloat.a
+#cgo LDFLAGS: -L../resolver/softfloat/build -lsoftfloat
 */
 import "C"
 

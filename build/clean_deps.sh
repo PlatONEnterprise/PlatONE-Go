@@ -30,7 +30,7 @@ fi
 # Clean softfloat build files
 cd $SF_BUILD
 $MAKE clean
-cd ..; rm -f libsoftfloatlib.a
+cd ..; rm -f libsoftfloat.a
 
 cd $root/builtins/
 rm -rf build
