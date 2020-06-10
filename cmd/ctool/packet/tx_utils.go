@@ -5,7 +5,6 @@ utils for packet Transactions
 package packet
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -228,9 +227,9 @@ func ParseTxResponse(resp interface{}, outputType string, isWrite, isSync bool) 
 func ParseNonConstantRespose(respStr, outputType string) interface{} {
 	if outputType != "" {
 		b, _ := hexutil.Decode(respStr)
-		bytesTrim := bytes.TrimRight(b, "\x00")
-		return utl.BytesConverter(bytesTrim, outputType)
-		//utl.Logger.Printf("result: %v\n", result)
+		// bytesTrim := bytes.TrimRight(b, "\x00") // TODO
+		// utl.Logger.Printf("result: %v\n", utl.BytesConverter(bytesTrim, outputType))
+		return utl.BytesConverter(b, outputType)
 	} else {
 		return fmt.Sprintf("message call has no return value\n")
 	}

@@ -111,6 +111,13 @@ var AppHelpFlagGroups = []flagGroup{
 		},
 	},
 	{
+		Name: "SYSTEM_CONFIG",
+		Flags: []cli.Flag{
+			BlockGasLimitFlags,
+			TxGasLimitFlags,
+		},
+	},
+	{
 		Name: "MISC",
 		// list the flags that are not categorized
 		// ShowAllFlags,

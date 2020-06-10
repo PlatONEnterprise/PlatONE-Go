@@ -200,6 +200,28 @@ var (
 		Usage: "Used when ---all or --user flag is provided, limit the output to the terminal",
 	}
 
+	// system configurations
+	BlockGasLimitFlags = cli.StringFlag{
+		Name:  "block-gaslimit",
+		Usage: "the gas limit of the block",
+	}
+
+	TxGasLimitFlags = cli.StringFlag{
+		Name:  "tx-gaslimit",
+		// Value: "1500000000",
+		Usage: "the gas limit of transactions",
+	}
+
+	GetTxGasLimitFlags = cli.BoolFlag{
+		Name:  "tx-gaslimit",
+		Usage: "the gas limit of transactions",
+	}
+
+	GetBlockGasLimitFlags = cli.BoolFlag{
+		Name:  "block-gaslimit",
+		Usage: "the gas limit of transactions",
+	}
+
 	//=============================================================================
 	globalCmdFlags = []cli.Flag{
 		UrlFlags,
@@ -211,6 +233,10 @@ var (
 		SyncFlags,
 		DefaultFlags,
 	}
+
+	// system config
+	sysConfigCmdFlags = append(globalCmdFlags, BlockGasLimitFlags, TxGasLimitFlags)
+	getSysConfigCmdFlags = append(globalCmdFlags, GetBlockGasLimitFlags, GetTxGasLimitFlags)
 
 	// transfer
 

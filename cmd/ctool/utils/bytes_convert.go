@@ -45,6 +45,44 @@ func BytesToUint64(b []byte) uint64 {
 	return binary.BigEndian.Uint64(b)
 }
 
+/*
+func BigToByte128(I *big.Int) ([]byte, bool) {
+	if len(I.Bytes()) > 16 {
+		return []byte{}, false
+	}
+	res := make([]byte, 16)
+
+	if I.Sign() == -1 {
+		// invert then add 1 equals to sub 1 then invert
+		Iminus := new(big.Int).Neg(I)
+		Iminus.Sub(Iminus, Big1)
+		copy(res[16-len(Iminus.Bytes()):], Iminus.Bytes())
+		for i := range res {
+			res[i] ^= 0xff
+		}
+	} else {
+		copy(res[16-len(I.Bytes()):], I.Bytes())
+	}
+	return res, true
+}
+
+func Byte128ToBig(b []byte, s bool) *big.Int {
+	r := new(big.Int)
+	if s && b[0]&0x80 != 0 {
+		//invert b
+		for i := range b {
+			b[i] ^= 0xff
+		}
+		r.SetBytes(b)
+		r.Add(r, Big1)
+		r.Neg(r)
+		return r
+	}
+
+	r.SetBytes(b)
+	return r
+}*/
+
 func Float32ToBytes(float float32) []byte {
 	bits := math.Float32bits(float)
 	b := make([]byte, 4)
@@ -69,6 +107,22 @@ func BytesToFloat64(bytes []byte) float64 {
 	return math.Float64frombits(bits)
 }
 
+/*
+// move to common/inner_convert.go?
+func CallResAsFloat128(bts []byte) *big.Float {
+	if len(bts) < 32 {
+		return &big.Float{}
+	}
+
+	bytes := bts[len(bts)-16:]
+	low := binary.BigEndian.Uint64(bytes[8:])
+	high := binary.BigEndian.Uint64(bytes[:8])
+
+	F, _ := math2.NewFromBits(high, low).Big()
+
+	return F
+}*/
+
 func BoolToBytes(b bool) []byte {
 	buf := bytes.NewBuffer([]byte{})
 	_ = binary.Write(buf, binary.BigEndian, b)
@@ -86,7 +140,12 @@ func BytesConverter(source []byte, t string) interface{} {
 		return BytesToFloat32(source)
 	case "float64":
 		return BytesToFloat64(source)
+	/*
+	case "float128":
+		return CallResAsFloat128(source)*/
 	case "string":
+		source = bytes.TrimRight(source, "\x00")
+
 		if len(source) < 64 {
 			return string(source[:])
 		} else {
@@ -95,7 +154,8 @@ func BytesConverter(source []byte, t string) interface{} {
 	case "uint64":
 		return common.CallResAsUint64(source)
 	default:
-		return source
+		// return source
+		return bytes.TrimRight(source, "\x00")
 	}
 }
 

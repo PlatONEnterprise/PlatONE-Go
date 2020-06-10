@@ -279,12 +279,25 @@ func (i WasmInterpreter) StringConverter(source string, t string) ([]byte, error
 	case "int64", "uint64":
 		dest, err := strconv.ParseInt(source, 10, 64)
 		return utl.Int64ToBytes(dest), err
+	/*
+	case "int128", "uint128":
+		dest, err := strconv.ParseInt(source, 10, 64)
+		return utl.BigToByte128(dest), err
+	*/
 	case "float32":
 		dest, err := strconv.ParseFloat(source, 32)
 		return utl.Float32ToBytes(float32(dest)), err
 	case "float64":
 		dest, err := strconv.ParseFloat(source, 64)
 		return utl.Float64ToBytes(dest), err
+	/*
+	case "float128":
+		F, _, err := big.ParseFloat(source, 10, math2.F128Precision, big.ToNearestEven)
+		if err != nil {
+			return []byte{}, err
+		}
+		F128, _ := math2.NewFromBig(F)
+		return append(Uint64ToBytes(F128.High()), Uint64ToBytes(F128.Low())...), nil*/
 	case "bool":
 		if "true" == source || "false" == source {
 			return utl.BoolToBytes("true" == source), nil

@@ -282,38 +282,27 @@ The format of the <roles> is '["<role1>, <role2>, ..."]'`,
 	//-----------------------------------------
 	SysConfigCmd = cli.Command{
 		Name:  "sysconfig",
-		Usage: "<TODO: currently unavailable>",
-
+		Usage: "Manage the system configurations",
 		Subcommands: []cli.Command{
-			ConsensusConfig,
-			AccessControlConfig,
-			GasFeeConfig,
+			setCfg,
+			getCfg,
 		},
 	}
 
-	ConsensusConfig = cli.Command{
-		Name:  "consensus",
-		Usage: "<TODO: currently unavailable>",
-		//ArgsUsage: "",
-		//Action: ,
-		Flags: globalCmdFlags,
+	setCfg = cli.Command{
+		Name:  "set",
+		Usage: "set the system configurations",
+		Action: setSysConfig,
+		Flags: sysConfigCmdFlags,
 	}
 
-	AccessControlConfig = cli.Command{
-		Name:  "add",
-		Usage: "<TODO: currently unavailable>",
-		//ArgsUsage: "",
-		//Action: ,
-		Flags: globalCmdFlags,
+	getCfg = cli.Command{
+		Name:  "get",
+		Usage: "get the system configurations",
+		Action: getSysConfig,
+		Flags: getSysConfigCmdFlags,
 	}
 
-	GasFeeConfig = cli.Command{
-		Name:  "gasfee",
-		Usage: "<TODO: currently unavailable>",
-		//ArgsUsage: "",
-		//Action: ,
-		Flags: globalCmdFlags,
-	}
 )
 
 func nodeAdd(c *cli.Context) {
