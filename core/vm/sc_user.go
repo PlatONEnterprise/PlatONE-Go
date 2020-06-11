@@ -29,7 +29,6 @@ func MakeUserInfo(data []byte) (*UserInfo, error) {
 	return &ui, nil
 }
 
-// RequiredPrice calculates the contract gas use
 func (u *UserManagement) RequiredGas(input []byte) uint64 {
 	if IsEmpty(input) {
 		return 0
@@ -49,8 +48,8 @@ func (u *UserManagement) getState(key []byte) []byte {
 	return u.Evm.StateDB.GetState(*u.Contract.CodeAddr, key)
 }
 
-//export function
-func (u *UserManagement) registerRole() ([]byte, error) {
+// export function
+func (u *UserManagement) registerRole(a, b string) ([]byte, error) {
 	ui, err := u.doRegisterRole()
 	if nil != err {
 		return nil, err

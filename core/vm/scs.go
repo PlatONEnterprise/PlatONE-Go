@@ -8,8 +8,7 @@ import (
 //system contract export functions
 type (
 	SCExportFn     interface{}
-	SCExportFnName string
-	SCExportFns    map[SCExportFnName]SCExportFn
+	SCExportFns    map[string]SCExportFn
 )
 
 var PlatONEPrecompiledContracts = map[common.Address]PrecompiledContract{

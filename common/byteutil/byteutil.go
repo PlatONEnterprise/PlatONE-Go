@@ -8,7 +8,7 @@ import (
 	"reflect"
 )
 
-func ConvertBytesTo(input []byte, targetType string) interface{} {
+func ConvertBytesTo(input []byte, targetType string) reflect.Value {
 	return reflect.ValueOf(Bytes2X_CMD[targetType]).Call([]reflect.Value{reflect.ValueOf(input)})[0]
 }
 

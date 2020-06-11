@@ -27,7 +27,7 @@ func execSC(input []byte, fns SCExportFns) ([]byte, error) {
 	return result[0].Bytes(), nil
 }
 
-func retrieveFnNameAndParams(input []byte, fns SCExportFns) (fnName SCExportFnName, fn SCExportFn, fnParams []reflect.Value, err error) {
+func retrieveFnNameAndParams(input []byte, fns SCExportFns) (fnName string, fn SCExportFn, fnParams []reflect.Value, err error) {
 	defer func() {
 		if err := recover(); nil != err {
 			fn, fnParams, err = nil, nil, fmt.Errorf("parse tx data failed:%s", err)
@@ -41,7 +41,7 @@ func retrieveFnNameAndParams(input []byte, fns SCExportFns) (fnName SCExportFnNa
 		return "", nil, nil, err
 	}
 	//txType := int(common.BytesToInt64(args[0]))
-	fnName = SCExportFnName(args[1])
+	fnName = string(args[1])
 
 	var ok bool
 	if fn, ok = fns[fnName]; !ok {
@@ -51,6 +51,7 @@ func retrieveFnNameAndParams(input []byte, fns SCExportFns) (fnName SCExportFnNa
 	fnType := reflect.TypeOf(fn)
 	paramNum := fnType.NumIn()
 	if paramNum != len(args)-2 {
+		log.Info("params number invalid. ", "expected:", paramNum, "got:", len(args)-2)
 		return "", nil, nil, SC_ERR_PARAMS_NUMBER_INVALID
 	}
 
@@ -58,7 +59,7 @@ func retrieveFnNameAndParams(input []byte, fns SCExportFns) (fnName SCExportFnNa
 	for i := 0; i < paramNum; i++ {
 		targetType := fnType.In(i).String()
 		inputByte := args[i+2]
-		fnParams[i] = reflect.ValueOf(byteutil.ConvertBytesTo(inputByte, targetType))
+		fnParams[i] = byteutil.ConvertBytesTo(inputByte, targetType)
 	}
 
 	return fnName, fn, fnParams, nil
