@@ -9,7 +9,7 @@ import (
 )
 
 func execSC(input []byte, fns SCExportFns) ([]byte, error) {
-	_, fn, params, err := retrieveFnNameAndParams(input, fns)
+	_, fn, params, err := retrieveFnAndParams(input, fns)
 	if nil != err {
 		log.Error("failed to retrieve func name and params.", "error", err)
 		return nil, err
@@ -27,7 +27,7 @@ func execSC(input []byte, fns SCExportFns) ([]byte, error) {
 	return result[0].Bytes(), nil
 }
 
-func retrieveFnNameAndParams(input []byte, fns SCExportFns) (fnName string, fn SCExportFn, fnParams []reflect.Value, err error) {
+func retrieveFnAndParams(input []byte, fns SCExportFns) (fnName string, fn SCExportFn, fnParams []reflect.Value, err error) {
 	defer func() {
 		if err := recover(); nil != err {
 			fn, fnParams, err = nil, nil, fmt.Errorf("parse tx data failed:%s", err)

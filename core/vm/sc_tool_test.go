@@ -9,21 +9,9 @@ import (
 
 //TODO
 func Test_retrieveFnNameAndParams(t *testing.T) {
-	tmp := struct{
-		A string
-	}{
-		"hhh",
-	}
-	b,err := rlp.EncodeToBytes(tmp)
-	if nil != err{
-		panic(err)
-	}
-	t.Log(string(b))
-	return
-	
 	fnNameInput := "registerRole"
 	var input = MakeInput(fnNameInput, "v2.0.0", "abc")
-	fnName, fn, params, err := retrieveFnNameAndParams(input, (&UserManagement{}).AllExportFns())
+	fnName, fn, params, err := retrieveFnAndParams(input, (&UserManagement{}).AllExportFns())
 	if nil != err {
 		t.Error(err)
 		return

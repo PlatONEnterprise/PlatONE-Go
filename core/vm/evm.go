@@ -54,20 +54,8 @@ func run(evm *EVM, contract *Contract, input []byte, readOnly bool) ([]byte, err
 			return RunPrecompiledContract(p, input, contract)
 		}
 
-		//new
 		if p := PlatONEPrecompiledContracts[*contract.CodeAddr]; nil != p {
-			switch p.(type) {
-			case *UserManagement:
-				um := &UserManagement{
-					Contract: contract,
-					Evm:      evm,
-				}
-
-				return RunPlatONEPrecompiledContract(um, input, contract)
-
-			default:
-				panic("should not be here")
-			}
+			return RunPlatONEPrecompiledSC(p, input, contract, evm)
 		}
 	}
 
