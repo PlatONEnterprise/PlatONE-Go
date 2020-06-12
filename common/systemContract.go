@@ -34,16 +34,16 @@ type CommonResult struct {
 }
 
 type NodeInfo struct {
-	Name  string `json:"name,omitempty"`
-	Owner string `json:"owner,omitempty"`
-	Desc  string `json:"desc,omitempty"`
+	Name  string `json:"name,omitempty"` //这个名称意义是？
+	Owner string `json:"owner,omitempty"` //没有用到？删除？
+	Desc  string `json:"desc,omitempty"` //没有用到？删除？
 	Types int32  `json:"type,omitempty"`
 	// status 1为正常节点, 2为删除节点
 	Status     int32  `json:"status,omitempty"`
-	ExternalIP string `json:"externalIP,omitempty"`
+	ExternalIP string `json:"externalIP,omitempty"` //没有用到？删除？
 	InternalIP string `json:"internalIP,omitempty"`
 	PublicKey  string `json:"publicKey,omitempty"`
-	RpcPort    int32  `json:"rpcPort,omitempty"`
+	RpcPort    int32  `json:"rpcPort,omitempty"` //没有用到？删除？
 	P2pPort    int32  `json:"p2pPort,omitempty"`
 	// delay set validatorSet
 	DelayNum uint64 `json:"delayNum,omitempty"`
