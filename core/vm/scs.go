@@ -13,7 +13,7 @@ type (
 
 var PlatONEPrecompiledContracts = map[common.Address]PrecompiledContract{
 	vm.USER_MANAGEMENT_ADDRESS: &UserManagement{},
-	vm.NODE_MANAGEMENT_ADDRESS: NewSCNode(),
+	vm.NODE_MANAGEMENT_ADDRESS: &SCNodeWrapper{},
 }
 
 //input format： hex.encode( rlp.encode( [][]byte{rlp.encode(txType), function name,rlp.encode(params[1]), rlp.encode(params[1])...} ) )
@@ -31,8 +31,8 @@ func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Cont
 				Evm:      evm,
 			}
 			return um.Run(input)
-		case *SCNode:
-			node := NewSCNode()
+		case *SCNodeWrapper:
+			node := NewSCNodeWrapper()
 			node.stateDB = evm.StateDB
 
 			return node.Run(input)
