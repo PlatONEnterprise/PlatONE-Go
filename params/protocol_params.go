@@ -90,6 +90,7 @@ const (
 
 	//system contract
 	UserManagementGas uint64 = 80000 //
+	CnsManagerGas 	  uint64 = 80000 //
 	SCNodeGas         uint64 = 80000 //
 
 )
