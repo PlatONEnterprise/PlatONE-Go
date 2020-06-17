@@ -1,11 +1,18 @@
 package vm
 
 import (
+	"errors"
 	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/byteutil"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"reflect"
+)
+
+var (
+	ErrFuncNotFoundInExportFuncs = errors.New("the func not found in export function set")
+	ErrParamsNumInvalid          = errors.New("the number of params is invalid")
 )
 
 func execSC(input []byte, fns SCExportFns) ([]byte, error) {
@@ -45,14 +52,14 @@ func retrieveFnAndParams(input []byte, fns SCExportFns) (fnName string, fn SCExp
 
 	var ok bool
 	if fn, ok = fns[fnName]; !ok {
-		return "", nil, nil, SC_ERR_FUNC_NOT_FOUND
+		return "", nil, nil, ErrFuncNotFoundInExportFuncs
 	}
 
 	fnType := reflect.TypeOf(fn)
 	paramNum := fnType.NumIn()
 	if paramNum != len(args)-2 {
-		log.Info("params number invalid. ", "expected:", paramNum, "got:", len(args)-2)
-		return "", nil, nil, SC_ERR_PARAMS_NUMBER_INVALID
+		log.Warn("params number invalid. ", "expected:", paramNum, "got:", len(args)-2)
+		return "", nil, nil, ErrParamsNumInvalid
 	}
 
 	fnParams = make([]reflect.Value, paramNum)
@@ -65,10 +72,11 @@ func retrieveFnAndParams(input []byte, fns SCExportFns) (fnName string, fn SCExp
 	return fnName, fn, fnParams, nil
 }
 
-func IsEmpty(input []byte) bool {
-	if len(input) == 0 {
-		return true
-	} else {
-		return false
+func CheckPublicKeyFormat(pub string) error {
+	_, err := crypto.UnmarshalPubkey([]byte(pub))
+	if err != nil {
+		return err
 	}
+
+	return nil
 }

@@ -78,7 +78,7 @@ func decodeCnsInfo(data []byte) (*ContractInfo, error) {
 }
 
 func (u *CnsManager) RequiredGas(input []byte) uint64 {
-	if IsEmpty(input) {
+	if common.IsBytesEmpty(input) {
 		return 0
 	}
 	return params.CnsManagerGas

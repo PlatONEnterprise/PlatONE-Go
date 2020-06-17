@@ -353,3 +353,12 @@ func IsSafeNumber(number string, bit int, isUnsigned bool) (res bool) {
 	}
 	return src.Cmp(min) >= 0 && src.Cmp(max) <= 0
 }
+
+func IsBytesEmpty(input []byte) bool {
+	if len(input) == 0 {
+		return true
+	} else {
+		return false
+	}
+}
+

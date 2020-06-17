@@ -43,7 +43,7 @@ func RetrieveUserInfo(data []byte) (*UserInfo, error) {
 }
 
 func (u *UserManagement) RequiredGas(input []byte) uint64 {
-	if IsEmpty(input) {
+	if common.IsBytesEmpty(input) {
 		return 0
 	}
 	return params.UserManagementGas

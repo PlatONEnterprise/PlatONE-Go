@@ -9,7 +9,7 @@ import (
 
 const JSONRequiredTag = "required"
 
-func CheckBasicTypeIsEmpty(val reflect.Value) bool {
+func isValueZero(val reflect.Value) bool {
 	return val.IsZero()
 }
 
@@ -40,5 +40,5 @@ func CheckRequiredFields(isEmpty func(reflect.Value) bool, data interface{}) err
 }
 
 func CheckRequiredFieldsIsEmpty(data interface{}) error {
-	return CheckRequiredFields(CheckBasicTypeIsEmpty, data)
+	return CheckRequiredFields(isValueZero, data)
 }

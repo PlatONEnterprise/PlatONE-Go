@@ -33,7 +33,7 @@ func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Cont
 			return um.Run(input)
 		case *SCNodeWrapper:
 			node := NewSCNodeWrapper()
-			node.stateDB = evm.StateDB
+			node.base.stateDB = evm.StateDB
 
 			return node.Run(input)
 		default:
