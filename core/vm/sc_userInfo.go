@@ -2,8 +2,8 @@ package vm
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )
 
@@ -18,14 +18,45 @@ const (
 	UserListKey = "5af8141e0ecb4e3df3f35f6e6b0b387b"
 )
 
+var (
+	ZeroAddress = common.Address{}
+)
+
+var (
+	errUsernameUnsupported = errors.New("Unsupported Username")
+	errUserNameAlreadyExist = errors.New(" UserName Already Exist")
+	errAlreadySetUserName = errors.New("Already Set UserName")
+	errNoUserInfo = errors.New("No UserInfo")
+)
+
 // 具备操作user权限的角色
 var permissionRolesForUserOps  = []int32{CHAIN_ADMIN}
 
 type UserInfo struct {
-	Address common.Address  `json:"address"`
-	Name string				`json:"name"`
-	MiscInfo string			`json:"miscInfo"`
-	Version uint32			`json:"version"`
+	Address common.Address  	`json:"address"`  	// 地址，不可变更
+	Authorizer common.Address 	`json:"authorizer"`	// 授权者，不可变更
+	Name string					`json:"name"`		// 用户名，不可变更
+
+	DescInfo string				`json:"descInfo"`	// 描述信息，可变更
+	Version uint32				`json:"version"`	// 可变更
+}
+
+type DescInfoV1 struct{
+	Email        string 	`json:"email"`
+	Organization string 	`json:"organization"`
+	Phone string 			`json:"phone"`
+}
+
+func (src *DescInfoV1) update(dest *DescInfoV1){
+	if src.Email != dest.Email{
+		src.Email = dest.Email
+	}
+	if src.Organization != dest.Organization {
+		src.Organization = dest.Organization
+	}
+	if src.Phone != dest.Phone{
+		src.Phone = dest.Phone
+	}
 }
 
 func (u *UserInfo) encode() ([]byte, error) {
@@ -42,14 +73,8 @@ func RetrieveUserInfo(data []byte) (*UserInfo, error) {
 	return &ui, nil
 }
 
-func (u *UserManagement) RequiredGas(input []byte) uint64 {
-	if IsEmpty(input) {
-		return 0
-	}
-	return params.UserManagementGas
-}
-
 // export function
+// 管理员操作
 func (u *UserManagement) addUser(userInfo string) ([]byte, error){
 	if !u.callerPermissionCheck() {
 		return nil, ErrNoPermission
@@ -58,12 +83,33 @@ func (u *UserManagement) addUser(userInfo string) ([]byte, error){
 	info := &UserInfo{}
 
 	if err := json.Unmarshal([]byte(userInfo), info); err != nil{
+		return nil, err
+	}
+
+	if info.Name == "" {
+		return nil, errUsernameUnsupported
+	}
+
+	if u.getAddrByName(info.Name) != ZeroAddress {
+		return nil, errUserNameAlreadyExist
+	}
+
+	if u.getNameByAddr(info.Address) != ""{
+		return nil, errAlreadySetUserName
+	}
+
+	descInfo := &DescInfoV1{}
+	if err := json.Unmarshal([]byte(info.DescInfo), descInfo); err!= nil{
 		return nil,err
 	}
+
+	info.Authorizer = u.Caller()
 
 	if err := u.setUserInfo(info); err != nil{
 		return nil, err
 	}
+	u.addAddrNameMap(info.Address, info.Name)
+	u.addNameAddrMap(info.Address, info.Name)
 
 	if err := u.addUserList(info.Address); err != nil{
 		return nil, err
@@ -71,24 +117,58 @@ func (u *UserManagement) addUser(userInfo string) ([]byte, error){
 
 	return nil,nil
 }
-func (u *UserManagement) updateUser(userInfo string)  ([]byte, error){
+
+// 管理员操作，可以更新用户信息中的DescInfo字段
+func (u *UserManagement) updateUserDescInfo(addr common.Address, descInfo string)  ([]byte, error){
 	if !u.callerPermissionCheck() {
 		return nil, ErrNoPermission
 	}
 
-	info := &UserInfo{}
-
-	if err := json.Unmarshal([]byte(userInfo), info); err != nil{
+	info := &DescInfoV1{}
+	if err := json.Unmarshal([]byte(descInfo), info); err != nil{
 		return nil,err
 	}
 
-	if err := u.setUserInfo(info); err != nil{
+	userInfo, err := u.getUserInfo(addr)
+	if err != nil{
+		return nil, err
+	}
+
+	infoOnChain := &DescInfoV1{}
+	if err := json.Unmarshal([]byte(userInfo.DescInfo), infoOnChain); err != nil{
+		return nil,err
+	}
+	infoOnChain.update(info)
+
+	ser, err := json.Marshal(infoOnChain)
+	userInfo.DescInfo = string(ser)
+
+	if err := u.setUserInfo(userInfo); err != nil{
 		return nil, err
 	}
 
 	return nil, nil
 }
-func (u *UserManagement) getUser(addr common.Address) ([]byte, error){
+
+// 查询用户信息，任意用户可查
+func (u *UserManagement) getUserByAddress(addr common.Address) ([]byte, error){
+	user, err := u.getUserInfo(addr)
+	if err != nil{
+		return nil, err
+	}
+
+	data, err := json.Marshal(user)
+	if err != nil{
+		return nil, err
+	}
+	return data, nil
+}
+func (u *UserManagement) getUserByName(name string) ([]byte, error){
+	addr := u.getAddrByName(name)
+	if addr == ZeroAddress {
+		return nil,errNoUserInfo
+	}
+
 	user, err := u.getUserInfo(addr)
 	if err != nil{
 		return nil, err
@@ -101,6 +181,8 @@ func (u *UserManagement) getUser(addr common.Address) ([]byte, error){
 	return data, nil
 }
 
+// 查询登记的所有用户，任意用户可查
+// TODO: 返回值类型
 func (u *UserManagement) getAllUser() []*UserInfo{
 	var (
 		addrs []common.Address
@@ -122,12 +204,8 @@ func (u *UserManagement) getAllUser() []*UserInfo{
 
 	return users
 }
-
 //func (u *UserManagement) registerUserInfo(userInfo string) {}
 //func (u *UserManagement) approveUserInfo(userAddress string){}
-
-
-//func (u *UserManagement) getUsersByRole()
 
 //internal function
 func (u *UserManagement) setUserInfo(info *UserInfo) error{
@@ -144,6 +222,9 @@ func (u *UserManagement) setUserInfo(info *UserInfo) error{
 func (u *UserManagement) getUserInfo(addr common.Address) (*UserInfo, error){
 	key := append(addr[:], []byte(UserInfoKey)...)
 	data := u.getState(key)
+	if len(data) == 0{
+		return nil ,errNoUserInfo
+	}
 
 	info := &UserInfo{}
 	if err := rlp.DecodeBytes(data, info); err != nil{
@@ -152,6 +233,28 @@ func (u *UserManagement) getUserInfo(addr common.Address) (*UserInfo, error){
 	return info, nil
 }
 
+func (u *UserManagement) addAddrNameMap(addr common.Address, name string){
+	key := append(addr[:], []byte(AddressUserMapKey)...)
+	u.setState(key, []byte(name))
+}
+func (u *UserManagement) getNameByAddr(addr common.Address) string {
+	key := append(addr[:], []byte(AddressUserMapKey)...)
+	data := u.getState(key)
+	return string(data)
+}
+func (u *UserManagement) addNameAddrMap(addr common.Address, name string){
+	key := append([]byte(name), []byte(UserAddressMapKey)...)
+	u.setState(key, addr[:])
+}
+func (u *UserManagement) getAddrByName(name string) common.Address{
+	key := append([]byte(name), []byte(UserAddressMapKey)...)
+	data := u.getState(key)
+	addr := common.Address{}
+	if len(data) == 20 {
+		copy(addr[:], data)
+	}
+	return addr
+}
 
 func (u *UserManagement) addUserList(addr common.Address)error{
 	var addrs []common.Address

@@ -1,10 +1,20 @@
 package vm
 
-import "github.com/PlatONEnetwork/PlatONE-Go/common"
+import (
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/params"
+)
 
 type UserManagement struct {
 	Contract *Contract
 	Evm      *EVM
+}
+
+func (u *UserManagement) RequiredGas(input []byte) uint64 {
+	if IsEmpty(input) {
+		return 0
+	}
+	return params.UserManagementGas
 }
 
 // Run runs the precompiled contract
@@ -27,8 +37,26 @@ func (u *UserManagement) Caller() common.Address{
 //for access control
 func (u *UserManagement) AllExportFns() SCExportFns {
 	return SCExportFns{
-		"registerRole": u.addContractAdminByAddress,
-		//TODO implement
+		"transferSuperAdminByAddress": u.transferSuperAdminByAddress,
+		"transferSuperAdminByName": u.transferSuperAdminByName,
+		"addChainAdminByAddress":u.addChainAdminByAddress,
+		"addChainAdminByName": u.addChainAdminByName,
+		"addNodeAdminByAddress": u.addNodeAdminByAddress,
+		"addNodeAdminByName": u.addNodeAdminByName,
+		"addContractAdminByAddress": u.addContractAdminByAddress,
+		"addContractAdminByName": u.addContractAdminByName,
+		"addContractDeployerByAddress":u.addContractDeployerByAddress,
+		"addContractDeployerByName": u.addContractDeployerByName,
+
+		"getAddrListOfRole":u.getAddrListOfRole,
+		"getRolesByAddress": u.getRolesByAddress,
+
+		"addUser":u.addUser,
+		"updateUserDescInfo":u.updateUserDescInfo,
+
+		"getUserByAddress": u.getUserByAddress,
+		"getUserByName": u.getUserByName,
+		"getAllUser": u.getAllUser,
 	}
 }
 

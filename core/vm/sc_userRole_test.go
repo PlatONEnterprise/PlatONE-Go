@@ -609,8 +609,8 @@ func TestUserManagement_setRoleWithPermissionCheck(t *testing.T) {
 				Contract: tt.fields.Contract,
 				Evm:      tt.fields.Evm,
 			}
-			if err := u.setRoleWithPermissionCheck(tt.args.addr, tt.args.targetRole, tt.args.status); (err != nil) != tt.wantErr {
-				t.Errorf("UserManagement.setRoleWithPermissionCheck() error = %v, wantErr %v", err, tt.wantErr)
+			if err := u.setRoleWithPermissionCheckByAddress(tt.args.addr, tt.args.targetRole, tt.args.status); (err != nil) != tt.wantErr {
+				t.Errorf("UserManagement.setRoleWithPermissionCheckByAddress() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
