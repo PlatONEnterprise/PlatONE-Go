@@ -25,8 +25,8 @@ const (
 )
 
 type CnsManager struct {
-	Contract *Contract
-	cMap	 *cnsMap		//	cMap = NewCnsMap(StateDB, Contract.CodeAddr)
+	callerAddr 	*common.Address	// callerAddr = Contract.CallerAddress
+	cMap	 	*cnsMap			// cMap = NewCnsMap(StateDB, Contract.CodeAddr)
 }
 
 type ContractInfo struct {
@@ -111,7 +111,7 @@ func (u *CnsManager) getState(key []byte) []byte {
 }*/
 
 func (cns *CnsManager) isOwner(contractAddr common.Address) bool {	// TODO return type int64?
-	callerAddr := cns.Contract.CallerAddress
+	callerAddr := cns.callerAddr
 	contractOwnerAddr := cns.cMap.GetContractCreator(contractAddr)
 
 	if callerAddr.Hex() == contractOwnerAddr.Hex() {
@@ -150,7 +150,7 @@ func (cns *CnsManager) doCnsRegister(name, version, address string) ([]byte, err
 		return nil, errors.New("[CNS] Name and version is already registered and activated in CNS")
 	}
 
-	ori := cns.Contract.CallerAddress.String()
+	ori := cns.callerAddr.String()
 
 	// check name unique
 	if cns.cMap.isNameDuplicated(name, ori) {
