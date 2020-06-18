@@ -24,7 +24,6 @@ func TestLatestVersion (t *testing.T) {
 			t.Logf("ver1 %s is larger than ver2 %s\n", data.ver1, data.ver2)
 		} else {
 			t.Logf("ver1 %s is smaller than ver2 %s\n", data.ver1, data.ver2)
-
 		}
 	}
 }
@@ -90,6 +89,13 @@ func TestCnsManager_cMap(t *testing.T) {
 			Enabled:	true,
 		},
 		{
+			Name: 		"tofu",
+			Version: 	"0.0.0.4",
+			Address:	"0x102",
+			Origin:		"0x000",
+			Enabled:	false,
+		},
+		{
 			Name: 		"bob",
 			Version: 	"0.0.0.1",
 			Address:	"0x123",
@@ -112,7 +118,10 @@ func TestCnsManager_cMap(t *testing.T) {
 	assert.Equal(t, len(testCases), cns.cMap.total(),  "cns total() equal")
 	//cns.cMap.update()
 	//cns.cMap.get()
-	//cns.cMap.getLatestVersion()
+
+	nameT := testCases[0].Name
+	verT := testCases[0].Version
+	assert.Equal(t, verT, cns.cMap.getLatestVersion(nameT),  "getLatestVersion equal")
 
 	//fmt.Println(db.mockDB)
 }
@@ -121,10 +130,6 @@ func newMockStateDB() *mockStateDB{
 	return &mockStateDB{
 		mockDB:		make(map[common.Address]map[string][]byte),
 	}
-}
-
-func newMap() {
-
 }
 
 type mockStateDB struct {
