@@ -14,34 +14,34 @@ import (
 )
 
 const (
-	NODE_STATUS_NORMAL  = 1
-	NODE_STATUS_DELETED = 2
+	NodeStatusNormal  = 1
+	NodeStatusDeleted = 2
 )
 
 const (
-	NODE_TYPE_OBSERVER  = 0
-	NODE_TYPE_VALIDATOR = 1
+	NodeTypeObserver  = 0
+	NodeTypeValidator = 1
 )
 
 const (
-	NODE_NAME_MAX_LEN_IN_CHARACTOR = 50
-	NODE_DESC_MAX_LEN_IN_CHARACTOR = 100
+	nodeNameMaxLenInCharacter = 50
+	nodeDescMaxLenInCharacter = 100
 )
 
 const (
-	NodesNameKey   = "nodes-name-key"
-	PrefixNodeName = "sc-node-name"
+	keyOfNodesNameDB = "nodes-name-key"
+	prefixNodeName   = "sc-node-name"
 )
 
 var (
-	ErrParamsInvalid            = errors.New("the parameters invalid")
-	ErrNoPermissionManageSCNode = errors.New("no permission to manage node system contract")
+	errParamsInvalid            = errors.New("the parameters invalid")
+	errNoPermissionManageSCNode = errors.New("no permission to manage node system contract")
 )
 
 var (
-	ErrNodeNameExist  = errors.New("node name exist")
-	ErrPublicKeyExist = errors.New("publicKey exist")
-	ErrNodeNotFound   = errors.New("node not found")
+	errNodeNameExist  = errors.New("node name exist")
+	errPublicKeyExist = errors.New("publicKey exist")
+	errNodeNotFound   = errors.New("node not found")
 )
 
 type NodeInfo struct {
@@ -60,7 +60,7 @@ type NodeInfo struct {
 	DelayNum uint64 `json:"delayNum,omitempty"` //共识节点延迟设置的区块高度 (可选, 默认实时设置)
 }
 
-type UpdateNode struct {
+type updateNode struct {
 	Desc *string `json:"desc,omitempty"` //没有用到？删除？
 	Typ  *int32  `json:"type,omitempty"` // 0:观察者节点；1:共识节点
 	// status 1为正常节点, 2为删除节点
@@ -69,72 +69,86 @@ type UpdateNode struct {
 	DelayNum *uint64 `json:"delayNum,omitempty"` //共识节点延迟设置的区块高度 (可选, 默认实时设置)
 }
 
-type ENode struct {
+type eNode struct {
 	PublicKey string
 	IP        string
 	Port      int32
 }
 
-func (en *ENode) String() string {
+func (en *eNode) String() string {
 	return fmt.Sprintf("enode://%s@%s:%d", en.PublicKey, en.IP, en.Port)
 }
 
-func IsValidUser(caller common.Address) bool {
+func isValidUser(caller common.Address) bool {
 	//todo
 	panic("not implemented")
 }
 
-func HasAddNodePermission(caller common.Address) bool {
+func hasAddNodePermission(caller common.Address) bool {
 	//todo
 	panic("not implemented")
 }
 
-func CheckRequiredFieldsIsEmpty(node *NodeInfo) error {
+func checkRequiredFieldsIsEmpty(node *NodeInfo) error {
 	return common.CheckRequiredFieldsIsEmpty(node)
 }
 
-func CheckNodeStatus(status int32) error {
-	if status != NODE_STATUS_DELETED &&
-		status != NODE_STATUS_NORMAL {
+func checkNodeStatus(status int32) error {
+	if status != NodeStatusDeleted &&
+		status != NodeStatusNormal {
 		return errors.New(
 			fmt.Sprintf("The status of node must be DELETED(%d) or NORMAL(%d)",
-				NODE_STATUS_DELETED,
-				NODE_STATUS_NORMAL,
+				NodeStatusDeleted,
+				NodeStatusNormal,
 			))
 	}
 
 	return nil
 }
 
-func CheckNodeType(typ int32) error {
-	if typ != NODE_TYPE_OBSERVER &&
-		typ != NODE_TYPE_VALIDATOR {
+func checkNodeType(typ int32) error {
+	if typ != NodeTypeObserver &&
+		typ != NodeTypeValidator {
 		return errors.New(
 			fmt.Sprintf("The type of node must be OBSERVER(%d) or VALIDATOR(%d)",
-				NODE_TYPE_OBSERVER,
-				NODE_TYPE_VALIDATOR,
+				NodeTypeObserver,
+				NodeTypeValidator,
 			))
 	}
 
 	return nil
 }
 
-func CheckNodeDescLen(desc string) error {
-	if len(bytes.Runes([]byte(desc))) > NODE_DESC_MAX_LEN_IN_CHARACTOR {
-		return errors.New(fmt.Sprintf("The length of node name must be less than %d", NODE_DESC_MAX_LEN_IN_CHARACTOR))
+func checkNodeDescLen(desc string) error {
+	if len(bytes.Runes([]byte(desc))) > nodeDescMaxLenInCharacter {
+		return errors.New(fmt.Sprintf("The length of node name must be less than %d", nodeDescMaxLenInCharacter))
 	}
 	return nil
 }
 
-func CheckNodeNameLen(name string) error {
-	if len(bytes.Runes([]byte(name))) > NODE_NAME_MAX_LEN_IN_CHARACTOR {
-		return errors.New(fmt.Sprintf("The length of node name must be less than %d", NODE_NAME_MAX_LEN_IN_CHARACTOR))
+func checkNodeNameLen(name string) error {
+	if len(bytes.Runes([]byte(name))) > nodeNameMaxLenInCharacter {
+		return errors.New(fmt.Sprintf("The length of node name must be less than %d", nodeNameMaxLenInCharacter))
 	}
 	return nil
 }
 
-func GenNodeName(name string) string {
-	return fmt.Sprintf("%s-%s", PrefixNodeName, name)
+func genNodeName(name string) string {
+	return fmt.Sprintf("%s-%s", prefixNodeName, name)
+}
+
+func fromNodes(nodes []*NodeInfo) []*eNode {
+	var enodes []*eNode
+	for _, n := range nodes {
+		enode := &eNode{}
+		enode.PublicKey = n.PublicKey
+		enode.Port = n.P2pPort
+		enode.IP = n.InternalIP
+
+		enodes = append(enodes, enode)
+	}
+
+	return enodes
 }
 
 type SCNode struct {
@@ -147,51 +161,51 @@ func NewSCNode() *SCNode {
 	return &SCNode{address: vm.NODE_MANAGEMENT_ADDRESS}
 }
 
-func (n *SCNode) CheckParamsOfAddNode(node *NodeInfo) error {
-	if err := CheckRequiredFieldsIsEmpty(node); err != nil {
+func (n *SCNode) checkParamsOfAddNode(node *NodeInfo) error {
+	if err := checkRequiredFieldsIsEmpty(node); err != nil {
 		return err
 	}
 
-	if err := CheckNodeStatus(node.Status); err != nil {
+	if err := checkNodeStatus(node.Status); err != nil {
 		return err
 	}
 
-	if err := CheckNodeType(node.Typ); err != nil {
+	if err := checkNodeType(node.Typ); err != nil {
 		return err
 	}
 
-	if err := CheckNodeNameLen(node.Name); err != nil {
+	if err := checkNodeNameLen(node.Name); err != nil {
 		return err
 	}
 
-	names, err := n.GetNames()
+	names, err := n.getNames()
 	if err != nil {
 		return err
 	}
-	if n.IsNameExist(names, node.Name) {
-		return ErrNodeNameExist
+	if n.isNameExist(names, node.Name) {
+		return errNodeNameExist
 	}
 
 	if err := CheckPublicKeyFormat(node.PublicKey); nil != err {
 		return err
 	}
 
-	if err := n.CheckPublicKeyExist(node.PublicKey); nil != err {
+	if err := n.checkPublicKeyExist(node.PublicKey); nil != err {
 		return err
 	}
 
 	return nil
 }
 
-func (n *SCNode) CheckParamsOfUpdateNodeAndReturnUpdatedNode(name string, update *UpdateNode) (*NodeInfo, error) {
-	node, err := n.GetNodeByName(name)
+func (n *SCNode) checkParamsOfUpdateNodeAndReturnUpdatedNode(name string, update *updateNode) (*NodeInfo, error) {
+	node, err := n.getNodeByName(name)
 	if err != nil {
 		return nil, err
 	}
 
 	if update.Status != nil {
 		status := *update.Status
-		if err := CheckNodeStatus(status); err != nil {
+		if err := checkNodeStatus(status); err != nil {
 			return nil, err
 		}
 		node.Status = status
@@ -199,7 +213,7 @@ func (n *SCNode) CheckParamsOfUpdateNodeAndReturnUpdatedNode(name string, update
 
 	if nil != update.Typ {
 		typ := *update.Typ
-		if err := CheckNodeType(typ); err != nil {
+		if err := checkNodeType(typ); err != nil {
 			return nil, err
 		}
 		node.Typ = typ
@@ -207,7 +221,7 @@ func (n *SCNode) CheckParamsOfUpdateNodeAndReturnUpdatedNode(name string, update
 
 	if nil != update.Desc {
 		desc := *update.Desc
-		if err := CheckNodeDescLen(desc); err != nil {
+		if err := checkNodeDescLen(desc); err != nil {
 			return nil, err
 		}
 		node.Desc = desc
@@ -220,46 +234,46 @@ func (n *SCNode) CheckParamsOfUpdateNodeAndReturnUpdatedNode(name string, update
 	return node, nil
 }
 
-func (n *SCNode) CheckPublicKeyExist(pub string) error {
+func (n *SCNode) checkPublicKeyExist(pub string) error {
 	query := &NodeInfo{}
 	query.PublicKey = pub
-	num, err := n.NodesNum(query)
+	num, err := n.nodesNum(query)
 	if err != nil {
 		return err
 	}
 
 	if num > 0 {
-		return ErrPublicKeyExist
+		return errPublicKeyExist
 	}
 
 	return nil
 }
 
-func (n *SCNode) CheckPermissionForAdd() error {
-	if !IsValidUser(n.caller) {
+func (n *SCNode) checkPermissionForAdd() error {
+	if !isValidUser(n.caller) {
 		log.Error("Failed to add node.", "error", n.caller.String()+" is invalid user.")
-		return ErrNoPermissionManageSCNode
+		return errNoPermissionManageSCNode
 	}
 
-	if !HasAddNodePermission(n.caller) {
+	if !hasAddNodePermission(n.caller) {
 		log.Error("Failed to add node.", "error", n.caller.String()+" has no permission to add node.")
-		return ErrNoPermissionManageSCNode
+		return errNoPermissionManageSCNode
 	}
 
 	return nil
 }
 
-func (n *SCNode) Add(node *NodeInfo) error {
-	if err := n.CheckPermissionForAdd(); nil != err {
-		return ErrNoPermissionManageSCNode
+func (n *SCNode) add(node *NodeInfo) error {
+	if err := n.checkPermissionForAdd(); nil != err {
+		return errNoPermissionManageSCNode
 	}
 
-	if err := n.CheckParamsOfAddNode(node); nil != err {
+	if err := n.checkParamsOfAddNode(node); nil != err {
 		log.Error("Failed to add node.", "error", err.Error(), "node", node)
-		return ErrParamsInvalid
+		return errParamsInvalid
 	}
 
-	err := n.AddName(node.Name)
+	err := n.addName(node.Name)
 	if err != nil {
 		log.Error("Failed to add node.", "node", node, "error", err)
 		return err
@@ -270,19 +284,19 @@ func (n *SCNode) Add(node *NodeInfo) error {
 		log.Error("Failed to add node.", "error", err.Error(), "node", node)
 		return err
 	}
-	n.SetState(GenNodeName(node.Name), encodedBin)
+	n.setState(genNodeName(node.Name), encodedBin)
 
-	log.Info("Add node success.", "node", string(encodedBin))
+	log.Info("add node success.", "node", string(encodedBin))
 
 	return nil
 }
 
-func (n *SCNode) Update(name string, update *UpdateNode) error {
-	if err := n.CheckPermissionForAdd(); nil != err {
+func (n *SCNode) update(name string, update *updateNode) error {
+	if err := n.checkPermissionForAdd(); nil != err {
 		return err
 	}
 
-	node, err := n.CheckParamsOfUpdateNodeAndReturnUpdatedNode(name, update)
+	node, err := n.checkParamsOfUpdateNodeAndReturnUpdatedNode(name, update)
 	if err != nil {
 		return err
 	}
@@ -292,81 +306,109 @@ func (n *SCNode) Update(name string, update *UpdateNode) error {
 		log.Error("Failed to update node.", "error", err.Error(), "update", update)
 		return err
 	}
-	n.SetState(GenNodeName(node.Name), encodedBin)
+	n.setState(genNodeName(node.Name), encodedBin)
 
 	return nil
 }
 
-//const (
-//	KeyTotalCountsOfNodes = "total-counts-nodes"
-//
-//	ShardingNum       = 1000
-//	PrefixShardingKey = "prefix-sharding-key"
-//)
-//
-//func (n *SCNode) ShardingCount() (uint64, error) {
-//	count, err := n.TotalCounts()
-//	if err != nil {
-//		return 0, err
-//	}
-//
-//	if count%ShardingNum > 0 {
-//		return count/ShardingNum + 1, nil
-//	}
-//
-//	return count / ShardingNum, nil
-//}
-//
-//func (n *SCNode) GetNames() ([]string, error) {
-//	shardNum, err := n.ShardingCount()
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	var names []string
-//	for i := uint64(0); i < shardNum; i++ {
-//		val := n.GetState([]byte(fmt.Sprintf("%s-%d", PrefixShardingKey, i)))
-//		var shardNames []string
-//		err := json.Unmarshal(val, &shardNames)
-//		if err != nil {
-//			return nil, err
-//		}
-//
-//		names = append(names, shardNames...)
-//	}
-//
-//	return names, nil
-//}
-//
-//func (n *SCNode) TotalCounts() (uint64, error) {
-//	bin := n.GetState([]byte(KeyTotalCountsOfNodes))
-//
-//	var count uint64
-//	err := rlp.DecodeBytes(bin, &count)
-//	if nil != err {
-//		return 0, err
-//	}
-//
-//	return count, nil
-//}
-//
-//func (n *SCNode) IncrementTotalCounts() error {
-//	count, err := n.TotalCounts()
-//	if nil != err {
-//		return err
-//	}
-//
-//	encodedCount, err := rlp.EncodeToBytes(count + 1)
-//	if nil != err {
-//		return err
-//	}
-//	n.SetState([]byte(KeyTotalCountsOfNodes), encodedCount)
-//
-//	return nil
-//}
+//The slice must be sorted in ascending order
+func (n *SCNode) isNameExist(names []string, name string) bool {
+	index := sort.SearchStrings(names, name)
+	//not found
+	if len(names) == index {
+		return false
+	}
 
-func (n *SCNode) GetNames() ([]string, error) {
-	bin := n.GetState(NodesNameKey)
+	return true
+}
+
+func (n *SCNode) addName(name string) error {
+	names, err := n.getNames()
+	if err != nil {
+		return err
+	}
+
+	if n.isNameExist(names, name) {
+		log.Error("node exist.", "name", name)
+		return errors.New("node exist.")
+	}
+
+	names = append(names, name)
+	sort.Strings(names)                           //must sort names before set to DB
+	encodedNames, err := rlp.EncodeToBytes(names) //todo C++合约里面这个存储格式是自定义的，自定义格式：name|name
+	if err != nil {
+		return err
+	}
+
+	n.setState(keyOfNodesNameDB, encodedNames)
+
+	return nil
+}
+
+func (n *SCNode) GetAllNodes() ([]*NodeInfo, error) {
+	return n.GetNodes(nil)
+}
+
+func (n *SCNode) getENodesOfAllNormalNodes() ([]*eNode, error) {
+	query := new(NodeInfo)
+	query.Status = NodeStatusNormal
+	nodes, err := n.GetNodes(query)
+	if err != nil {
+		return nil, err
+	}
+
+	return fromNodes(nodes), nil
+}
+
+func (n *SCNode) getENodesOfAllDeletedNodes() ([]*eNode, error) {
+	query := new(NodeInfo)
+	query.Status = NodeStatusDeleted
+	nodes, err := n.GetNodes(query)
+	if err != nil {
+		return nil, err
+	}
+
+	return fromNodes(nodes), nil
+}
+
+func (n *SCNode) getNodeByName(name string) (*NodeInfo, error) {
+	bin := n.getState(genNodeName(name))
+	if len(bin) == 0 {
+		return nil, errNodeNotFound
+	}
+
+	var node NodeInfo
+	err := json.Unmarshal(bin, &node)
+	if err != nil {
+		return nil, err
+	}
+
+	return &node, nil
+}
+
+func (n *SCNode) GetNodes(query *NodeInfo) ([]*NodeInfo, error) {
+	names, err := n.getNames()
+	if err != nil {
+		return nil, err
+	}
+
+	var nodes []*NodeInfo
+	for _, name := range names {
+		node, err := n.getNodeByName(name)
+		if err != nil {
+			return nil, err
+		}
+
+		if n.isMatch(node, query) {
+			nodes = append(nodes, node)
+		}
+	}
+
+	return nodes, nil
+}
+
+func (n *SCNode) getNames() ([]string, error) {
+	bin := n.getState(keyOfNodesNameDB)
 	if len(bin) == 0 {
 		return []string{}, nil
 	}
@@ -380,134 +422,7 @@ func (n *SCNode) GetNames() ([]string, error) {
 	return names, nil
 }
 
-//var (
-//	ErrNodeNameExist = errors.New("node name exist")
-//)
-//
-//func (n *SCNode) CheckNameExist(name string) (existedNames []string, err error) {
-//	names, err := n.GetNames()
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	if n.IsNameExist(names, name) {
-//		return names, ErrNodeNameExist
-//	}
-//
-//	return names,nil
-//}
-
-//The slice must be sorted in ascending order
-func (n *SCNode) IsNameExist(names []string, name string) bool {
-	index := sort.SearchStrings(names, name)
-	//not found
-	if len(names) == index {
-		return false
-	}
-
-	return true
-}
-
-func (n *SCNode) AddName(name string) error {
-	names, err := n.GetNames()
-	if err != nil {
-		return err
-	}
-
-	if n.IsNameExist(names, name) {
-		log.Error("node exist.", "name", name)
-		return errors.New("node exist.")
-	}
-
-	names = append(names, name)
-	sort.Strings(names)                           //must sort names before set to DB
-	encodedNames, err := rlp.EncodeToBytes(names) //todo C++合约里面这个存储格式是自定义的，自定义格式：name|name
-	if err != nil {
-		return err
-	}
-
-	n.SetState(NodesNameKey, encodedNames)
-
-	return nil
-}
-
-func (n *SCNode) GetAllNodes() ([]*NodeInfo, error) {
-	return n.GetNodes(nil)
-}
-
-func FromNodes(nodes []*NodeInfo) []*ENode {
-	var enodes []*ENode
-	for _, n := range nodes {
-		enode := &ENode{}
-		enode.PublicKey = n.PublicKey
-		enode.Port = n.P2pPort
-		enode.IP = n.InternalIP
-
-		enodes = append(enodes, enode)
-	}
-
-	return enodes
-}
-
-func (n *SCNode) GetENodesOfAllNormalNodes() ([]*ENode, error) {
-	query := new(NodeInfo)
-	query.Status = NODE_STATUS_NORMAL
-	nodes, err := n.GetNodes(query)
-	if err != nil {
-		return nil, err
-	}
-
-	return FromNodes(nodes), nil
-}
-
-func (n *SCNode) GetENodesOfAllDeletedNodes() ([]*ENode, error) {
-	query := new(NodeInfo)
-	query.Status = NODE_STATUS_DELETED
-	nodes, err := n.GetNodes(query)
-	if err != nil {
-		return nil, err
-	}
-
-	return FromNodes(nodes), nil
-}
-
-func (n *SCNode) GetNodeByName(name string) (*NodeInfo, error) {
-	bin := n.GetState(GenNodeName(name))
-	if len(bin) == 0 {
-		return nil, ErrNodeNotFound
-	}
-
-	var node NodeInfo
-	err := json.Unmarshal(bin, &node)
-	if err != nil {
-		return nil, err
-	}
-
-	return &node, nil
-}
-
-func (n *SCNode) GetNodes(query *NodeInfo) ([]*NodeInfo, error) {
-	names, err := n.GetNames()
-	if err != nil {
-		return nil, err
-	}
-
-	var nodes []*NodeInfo
-	for _, name := range names {
-		node, err := n.GetNodeByName(name)
-		if err != nil {
-			return nil, err
-		}
-
-		if n.isMatch(node, query) {
-			nodes = append(nodes, node)
-		}
-	}
-
-	return nodes, nil
-}
-
-func (n *SCNode) NodesNum(query *NodeInfo) (int, error) {
+func (n *SCNode) nodesNum(query *NodeInfo) (int, error) {
 	nodes, err := n.GetNodes(query)
 	if err != nil {
 		return 0, err
@@ -516,11 +431,11 @@ func (n *SCNode) NodesNum(query *NodeInfo) (int, error) {
 	return len(nodes), nil
 }
 
-func (n *SCNode) SetState(key string, value []byte) {
+func (n *SCNode) setState(key string, value []byte) {
 	n.stateDB.SetState(n.address, []byte(key), value)
 }
 
-func (n *SCNode) GetState(key string) []byte {
+func (n *SCNode) getState(key string) []byte {
 	return n.stateDB.GetState(n.address, []byte(key))
 }
 
@@ -544,3 +459,88 @@ func (n *SCNode) isMatch(node, query *NodeInfo) bool {
 
 	return true
 }
+
+//const (
+//	KeyTotalCountsOfNodes = "total-counts-nodes"
+//
+//	ShardingNum       = 1000
+//	PrefixShardingKey = "prefix-sharding-key"
+//)
+//
+//func (n *SCNode) ShardingCount() (uint64, error) {
+//	count, err := n.TotalCounts()
+//	if err != nil {
+//		return 0, err
+//	}
+//
+//	if count%ShardingNum > 0 {
+//		return count/ShardingNum + 1, nil
+//	}
+//
+//	return count / ShardingNum, nil
+//}
+//
+//func (n *SCNode) getNames() ([]string, error) {
+//	shardNum, err := n.ShardingCount()
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	var names []string
+//	for i := uint64(0); i < shardNum; i++ {
+//		val := n.getState([]byte(fmt.Sprintf("%s-%d", PrefixShardingKey, i)))
+//		var shardNames []string
+//		err := json.Unmarshal(val, &shardNames)
+//		if err != nil {
+//			return nil, err
+//		}
+//
+//		names = append(names, shardNames...)
+//	}
+//
+//	return names, nil
+//}
+//
+//func (n *SCNode) TotalCounts() (uint64, error) {
+//	bin := n.getState([]byte(KeyTotalCountsOfNodes))
+//
+//	var count uint64
+//	err := rlp.DecodeBytes(bin, &count)
+//	if nil != err {
+//		return 0, err
+//	}
+//
+//	return count, nil
+//}
+//
+//func (n *SCNode) IncrementTotalCounts() error {
+//	count, err := n.TotalCounts()
+//	if nil != err {
+//		return err
+//	}
+//
+//	encodedCount, err := rlp.EncodeToBytes(count + 1)
+//	if nil != err {
+//		return err
+//	}
+//	n.setState([]byte(KeyTotalCountsOfNodes), encodedCount)
+//
+//	return nil
+//}
+
+//var (
+//	errNodeNameExist = errors.New("node name exist")
+//)
+//
+//func (n *SCNode) CheckNameExist(name string) (existedNames []string, err error) {
+//	names, err := n.getNames()
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	if n.isNameExist(names, name) {
+//		return names, errNodeNameExist
+//	}
+//
+//	return names,nil
+//}

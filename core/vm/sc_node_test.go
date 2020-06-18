@@ -203,8 +203,8 @@ func TestCheckNodeDescLen(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := CheckNodeDescLen(tt.args.desc); (err != nil) != tt.wantErr {
-				t.Errorf("CheckNodeDescLen() error = %v, wantErr %v", err, tt.wantErr)
+			if err := checkNodeDescLen(tt.args.desc); (err != nil) != tt.wantErr {
+				t.Errorf("checkNodeDescLen() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -226,8 +226,8 @@ func TestCheckNodeNameLen(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := CheckNodeNameLen(tt.args.name); (err != nil) != tt.wantErr {
-				t.Errorf("CheckNodeNameLen() error = %v, wantErr %v", err, tt.wantErr)
+			if err := checkNodeNameLen(tt.args.name); (err != nil) != tt.wantErr {
+				t.Errorf("checkNodeNameLen() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -242,12 +242,12 @@ func TestCheckRequiredFieldsIsEmpty(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		// TODO: add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := CheckRequiredFieldsIsEmpty(tt.args.node); (err != nil) != tt.wantErr {
-				t.Errorf("CheckRequiredFieldsIsEmpty() error = %v, wantErr %v", err, tt.wantErr)
+			if err := checkRequiredFieldsIsEmpty(tt.args.node); (err != nil) != tt.wantErr {
+				t.Errorf("checkRequiredFieldsIsEmpty() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -264,11 +264,11 @@ func TestENode_String(t *testing.T) {
 		fields fields
 		want   string
 	}{
-		// TODO: Add test cases.
+		// TODO: add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			en := &ENode{
+			en := &eNode{
 				PublicKey: tt.fields.PublicKey,
 				IP:        tt.fields.IP,
 				Port:      tt.fields.Port,
@@ -287,14 +287,14 @@ func TestFromNodes(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want []*ENode
+		want []*eNode
 	}{
-		// TODO: Add test cases.
+		// TODO: add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := FromNodes(tt.args.nodes); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("FromNodes() = %v, want %v", got, tt.want)
+			if got := fromNodes(tt.args.nodes); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("fromNodes() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -309,12 +309,12 @@ func TestGenNodeName(t *testing.T) {
 		args args
 		want string
 	}{
-		// TODO: Add test cases.
+		// TODO: add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := GenNodeName(tt.args.name); got != tt.want {
-				t.Errorf("GenNodeName() = %v, want %v", got, tt.want)
+			if got := genNodeName(tt.args.name); got != tt.want {
+				t.Errorf("genNodeName() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -329,12 +329,12 @@ func TestHasAddNodePermission(t *testing.T) {
 		args args
 		want bool
 	}{
-		// TODO: Add test cases.
+		// TODO: add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := HasAddNodePermission(tt.args.caller); got != tt.want {
-				t.Errorf("HasAddNodePermission() = %v, want %v", got, tt.want)
+			if got := hasAddNodePermission(tt.args.caller); got != tt.want {
+				t.Errorf("hasAddNodePermission() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -349,12 +349,12 @@ func TestIsValidUser(t *testing.T) {
 		args args
 		want bool
 	}{
-		// TODO: Add test cases.
+		// TODO: add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := IsValidUser(tt.args.caller); got != tt.want {
-				t.Errorf("IsValidUser() = %v, want %v", got, tt.want)
+			if got := isValidUser(tt.args.caller); got != tt.want {
+				t.Errorf("isValidUser() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -400,8 +400,8 @@ func TestSCNode_Add(t *testing.T) {
 				address: tt.fields.address,
 				caller:  tt.fields.caller,
 			}
-			if err := n.Add(tt.args.node); (err != nil) != tt.wantErr {
-				t.Errorf("Add() error = %v, wantErr %v", err, tt.wantErr)
+			if err := n.add(tt.args.node); (err != nil) != tt.wantErr {
+				t.Errorf("add() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -431,8 +431,8 @@ func TestSCNode_AddName(t *testing.T) {
 				address: tt.fields.address,
 				caller:  tt.fields.caller,
 			}
-			if err := n.AddName(tt.args.name); (err != nil) != tt.wantErr {
-				t.Errorf("AddName() error = %v, wantErr %v", err, tt.wantErr)
+			if err := n.addName(tt.args.name); (err != nil) != tt.wantErr {
+				t.Errorf("addName() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -462,8 +462,8 @@ func TestSCNode_CheckParamsOfAddNode(t *testing.T) {
 				address: tt.fields.address,
 				caller:  tt.fields.caller,
 			}
-			if err := n.CheckParamsOfAddNode(tt.args.node); (err != nil) != tt.wantErr {
-				t.Errorf("CheckParamsOfAddNode() error = %v, wantErr %v", err, tt.wantErr)
+			if err := n.checkParamsOfAddNode(tt.args.node); (err != nil) != tt.wantErr {
+				t.Errorf("checkParamsOfAddNode() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -477,7 +477,7 @@ func TestSCNode_CheckParamsOfUpdateNodeAndReturnUpdatedNode(t *testing.T) {
 	}
 	type args struct {
 		name   string
-		update *UpdateNode
+		update *updateNode
 	}
 	tests := []struct {
 		name    string
@@ -495,13 +495,13 @@ func TestSCNode_CheckParamsOfUpdateNodeAndReturnUpdatedNode(t *testing.T) {
 				address: tt.fields.address,
 				caller:  tt.fields.caller,
 			}
-			got, err := n.CheckParamsOfUpdateNodeAndReturnUpdatedNode(tt.args.name, tt.args.update)
+			got, err := n.checkParamsOfUpdateNodeAndReturnUpdatedNode(tt.args.name, tt.args.update)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("CheckParamsOfUpdateNodeAndReturnUpdatedNode() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("checkParamsOfUpdateNodeAndReturnUpdatedNode() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("CheckParamsOfUpdateNodeAndReturnUpdatedNode() got = %v, want %v", got, tt.want)
+				t.Errorf("checkParamsOfUpdateNodeAndReturnUpdatedNode() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -527,8 +527,8 @@ func TestSCNode_CheckPermissionForAdd(t *testing.T) {
 				address: tt.fields.address,
 				caller:  tt.fields.caller,
 			}
-			if err := n.CheckPermissionForAdd(); (err != nil) != tt.wantErr {
-				t.Errorf("CheckPermissionForAdd() error = %v, wantErr %v", err, tt.wantErr)
+			if err := n.checkPermissionForAdd(); (err != nil) != tt.wantErr {
+				t.Errorf("checkPermissionForAdd() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -558,8 +558,8 @@ func TestSCNode_CheckPublicKeyExist(t *testing.T) {
 				address: tt.fields.address,
 				caller:  tt.fields.caller,
 			}
-			if err := n.CheckPublicKeyExist(tt.args.pub); (err != nil) != tt.wantErr {
-				t.Errorf("CheckPublicKeyExist() error = %v, wantErr %v", err, tt.wantErr)
+			if err := n.checkPublicKeyExist(tt.args.pub); (err != nil) != tt.wantErr {
+				t.Errorf("checkPublicKeyExist() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -607,7 +607,7 @@ func TestSCNode_GetENodesOfAllDeletedNodes(t *testing.T) {
 	tests := []struct {
 		name    string
 		fields  fields
-		want    []*ENode
+		want    []*eNode
 		wantErr bool
 	}{
 		// TODO: Add test cases.
@@ -619,13 +619,13 @@ func TestSCNode_GetENodesOfAllDeletedNodes(t *testing.T) {
 				address: tt.fields.address,
 				caller:  tt.fields.caller,
 			}
-			got, err := n.GetENodesOfAllDeletedNodes()
+			got, err := n.getENodesOfAllDeletedNodes()
 			if (err != nil) != tt.wantErr {
-				t.Errorf("GetENodesOfAllDeletedNodes() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("getENodesOfAllDeletedNodes() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetENodesOfAllDeletedNodes() got = %v, want %v", got, tt.want)
+				t.Errorf("getENodesOfAllDeletedNodes() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -640,7 +640,7 @@ func TestSCNode_GetENodesOfAllNormalNodes(t *testing.T) {
 	tests := []struct {
 		name    string
 		fields  fields
-		want    []*ENode
+		want    []*eNode
 		wantErr bool
 	}{
 		// TODO: Add test cases.
@@ -652,13 +652,13 @@ func TestSCNode_GetENodesOfAllNormalNodes(t *testing.T) {
 				address: tt.fields.address,
 				caller:  tt.fields.caller,
 			}
-			got, err := n.GetENodesOfAllNormalNodes()
+			got, err := n.getENodesOfAllNormalNodes()
 			if (err != nil) != tt.wantErr {
-				t.Errorf("GetENodesOfAllNormalNodes() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("getENodesOfAllNormalNodes() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetENodesOfAllNormalNodes() got = %v, want %v", got, tt.want)
+				t.Errorf("getENodesOfAllNormalNodes() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -685,13 +685,13 @@ func TestSCNode_GetNames(t *testing.T) {
 				address: tt.fields.address,
 				caller:  tt.fields.caller,
 			}
-			got, err := n.GetNames()
+			got, err := n.getNames()
 			if (err != nil) != tt.wantErr {
-				t.Errorf("GetNames() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("getNames() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetNames() got = %v, want %v", got, tt.want)
+				t.Errorf("getNames() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -722,13 +722,13 @@ func TestSCNode_GetNodeByName(t *testing.T) {
 				address: tt.fields.address,
 				caller:  tt.fields.caller,
 			}
-			got, err := n.GetNodeByName(tt.args.name)
+			got, err := n.getNodeByName(tt.args.name)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("GetNodeByName() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("getNodeByName() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetNodeByName() got = %v, want %v", got, tt.want)
+				t.Errorf("getNodeByName() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -795,8 +795,8 @@ func TestSCNode_GetState(t *testing.T) {
 				address: tt.fields.address,
 				caller:  tt.fields.caller,
 			}
-			if got := n.GetState(tt.args.key); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetState() = %v, want %v", got, tt.want)
+			if got := n.getState(tt.args.key); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("getState() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -827,8 +827,8 @@ func TestSCNode_IsNameExist(t *testing.T) {
 				address: tt.fields.address,
 				caller:  tt.fields.caller,
 			}
-			if got := n.IsNameExist(tt.args.names, tt.args.name); got != tt.want {
-				t.Errorf("IsNameExist() = %v, want %v", got, tt.want)
+			if got := n.isNameExist(tt.args.names, tt.args.name); got != tt.want {
+				t.Errorf("isNameExist() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -859,13 +859,13 @@ func TestSCNode_NodesNum(t *testing.T) {
 				address: tt.fields.address,
 				caller:  tt.fields.caller,
 			}
-			got, err := n.NodesNum(tt.args.query)
+			got, err := n.nodesNum(tt.args.query)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("NodesNum() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("nodesNum() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("NodesNum() got = %v, want %v", got, tt.want)
+				t.Errorf("nodesNum() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -879,7 +879,7 @@ func TestSCNode_Update(t *testing.T) {
 	}
 	type args struct {
 		name   string
-		update *UpdateNode
+		update *updateNode
 	}
 	tests := []struct {
 		name    string
@@ -896,8 +896,8 @@ func TestSCNode_Update(t *testing.T) {
 				address: tt.fields.address,
 				caller:  tt.fields.caller,
 			}
-			if err := n.Update(tt.args.name, tt.args.update); (err != nil) != tt.wantErr {
-				t.Errorf("Update() error = %v, wantErr %v", err, tt.wantErr)
+			if err := n.update(tt.args.name, tt.args.update); (err != nil) != tt.wantErr {
+				t.Errorf("update() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
