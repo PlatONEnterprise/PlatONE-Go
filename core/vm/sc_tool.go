@@ -1,6 +1,7 @@
 package vm
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/byteutil"
@@ -73,7 +74,12 @@ func retrieveFnAndParams(input []byte, fns SCExportFns) (fnName string, fn SCExp
 }
 
 func CheckPublicKeyFormat(pub string) error {
-	_, err := crypto.UnmarshalPubkey([]byte(pub))
+	b, err := hex.DecodeString(pub)
+	if err != nil {
+		return err
+	}
+
+	_, err = crypto.UnmarshalPubkey(b)
 	if err != nil {
 		return err
 	}

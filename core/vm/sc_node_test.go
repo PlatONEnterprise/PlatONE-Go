@@ -1,9 +1,12 @@
 package vm
 
 import (
+	"encoding/hex"
+	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"github.com/stretchr/testify/assert"
 	"math/big"
 	"reflect"
@@ -12,6 +15,10 @@ import (
 
 type stateDBMock struct {
 	database map[string]interface{}
+}
+
+func newStateDBMock() *stateDBMock {
+	return &stateDBMock{database: make(map[string]interface{})}
 }
 
 func (m stateDBMock) CreateAccount(address common.Address) {
@@ -83,7 +90,11 @@ func (m stateDBMock) GetCommittedState(address common.Address, bytes []byte) []b
 }
 
 func (m stateDBMock) GetState(address common.Address, key []byte) []byte {
-	return m.database[string(key)].([]byte)
+	if bin, ok := m.database[string(key)]; ok {
+		return bin.([]byte)
+	}
+
+	return nil
 }
 
 func (m stateDBMock) SetState(address common.Address, key []byte, val []byte) {
@@ -233,26 +244,6 @@ func TestCheckNodeNameLen(t *testing.T) {
 	}
 }
 
-func TestCheckRequiredFieldsIsEmpty(t *testing.T) {
-	type args struct {
-		node *NodeInfo
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		// TODO: add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := checkRequiredFieldsIsEmpty(tt.args.node); (err != nil) != tt.wantErr {
-				t.Errorf("checkRequiredFieldsIsEmpty() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
 func TestENode_String(t *testing.T) {
 	type fields struct {
 		PublicKey string
@@ -264,7 +255,7 @@ func TestENode_String(t *testing.T) {
 		fields fields
 		want   string
 	}{
-		// TODO: add test cases.
+		{"t1", fields{"123", "127.0.0.1", 8987}, "enode://123@127.0.0.1:8987"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -281,6 +272,8 @@ func TestENode_String(t *testing.T) {
 }
 
 func TestFromNodes(t *testing.T) {
+	input := []*NodeInfo{&NodeInfo{PublicKey: "123", InternalIP: "127.0.0.1", P2pPort: 8888}}
+	want := []*eNode{&eNode{"123", "127.0.0.1", 8888}}
 	type args struct {
 		nodes []*NodeInfo
 	}
@@ -289,7 +282,7 @@ func TestFromNodes(t *testing.T) {
 		args args
 		want []*eNode
 	}{
-		// TODO: add test cases.
+		{"t1", args{input}, want},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -301,6 +294,7 @@ func TestFromNodes(t *testing.T) {
 }
 
 func TestGenNodeName(t *testing.T) {
+	name := "万向区块链"
 	type args struct {
 		name string
 	}
@@ -309,7 +303,7 @@ func TestGenNodeName(t *testing.T) {
 		args args
 		want string
 	}{
-		// TODO: add test cases.
+		{"t1", args{name}, prefixNodeName + "-" + name},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -360,23 +354,35 @@ func TestIsValidUser(t *testing.T) {
 	}
 }
 
-func TestNewSCNode(t *testing.T) {
-	tests := []struct {
-		name string
-		want *SCNode
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := NewSCNode(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewSCNode() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+func fakeNodeInfo() *NodeInfo {
+	ni := &NodeInfo{}
+	ni.P2pPort = 8888
+	ni.InternalIP = "127.0.0.1"
+	ni.Name = "万向区块链"
+	ni.Typ = NodeTypeObserver
+	ni.Status = NodeStatusNormal
+	//ni.PublicKey = "0x294866ff9693257147c7AE69293609F4b6E59Aa1"
+	ni.PublicKey = "044b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc"
+	return ni
+}
+
+func genPublicKeyInHex() string {
+	prk, _ := crypto.GenerateKey()
+	pub := crypto.FromECDSAPub(&prk.PublicKey)
+	fmt.Println(hex.EncodeToString(pub))
+
+	return hex.EncodeToString(pub)
 }
 
 func TestSCNode_Add(t *testing.T) {
+	errNi := &NodeInfo{}
+	errNi.P2pPort = 8888
+	errNi.InternalIP = "127.0.0.1"
+	errNi.Name = "万向区块链"
+	errNi.Typ = NodeTypeObserver
+	errNi.Status = NodeStatusNormal
+	errNi.PublicKey = "0x294866ff9693257147c7AE69293609F4b6E59Aa1"
+
 	type fields struct {
 		stateDB StateDB
 		address common.Address
@@ -391,7 +397,8 @@ func TestSCNode_Add(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{"t1", fields{stateDB: newStateDBMock()}, args{fakeNodeInfo()}, false},
+		{"t1", fields{stateDB: newStateDBMock()}, args{errNi}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -898,38 +905,6 @@ func TestSCNode_Update(t *testing.T) {
 			}
 			if err := n.update(tt.args.name, tt.args.update); (err != nil) != tt.wantErr {
 				t.Errorf("update() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestSCNode_isMatch1(t *testing.T) {
-	type fields struct {
-		stateDB StateDB
-		address common.Address
-		caller  common.Address
-	}
-	type args struct {
-		node  *NodeInfo
-		query *NodeInfo
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			n := &SCNode{
-				stateDB: tt.fields.stateDB,
-				address: tt.fields.address,
-				caller:  tt.fields.caller,
-			}
-			if got := n.isMatch(tt.args.node, tt.args.query); got != tt.want {
-				t.Errorf("isMatch() = %v, want %v", got, tt.want)
 			}
 		})
 	}

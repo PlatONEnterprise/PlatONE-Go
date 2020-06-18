@@ -80,11 +80,21 @@ func (en *eNode) String() string {
 }
 
 func isValidUser(caller common.Address) bool {
+	//internal call, do not check permission
+	if common.IsHexZeroAddress(caller.String()) {
+		return true
+	}
+
 	//todo
 	panic("not implemented")
 }
 
 func hasAddNodePermission(caller common.Address) bool {
+	//internal call, do not check permission
+	if common.IsHexZeroAddress(caller.String()) {
+		return true
+	}
+
 	//todo
 	panic("not implemented")
 }
