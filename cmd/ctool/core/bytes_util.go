@@ -145,6 +145,9 @@ func StringConverter(source string, t string) ([]byte, error) {
 		if !success {
 			return []byte(source), errors.New("parse string to int error")
 		}
+		if (t == "uint128" && I.Sign() < 0) || (t == "int128" && I.BitLen() > 127) {
+			return []byte(source), errors.New("parse string to int error")
+		}
 		b, success := common.BigToByte128(I)
 		if !success {
 			return []byte(source), errors.New("parse string to int error")
@@ -169,8 +172,31 @@ func StringConverter(source string, t string) ([]byte, error) {
 		} else {
 			return []byte{}, errors.New("invalid boolean param")
 		}
+	case "int128_s":
+		I, success := new(big.Int).SetString(source, 10)
+		if !success || I.BitLen() > 127 {
+			return []byte(source), errors.New("not a valid number")
+		}
+		return []byte(source), nil
+	case "uint128_s":
+		I, success := new(big.Int).SetString(source, 10)
+		if !success || I.BitLen() > 128 || I.Sign() < 0 {
+			return []byte(source), errors.New("not a valid number")
+		}
+		return []byte(source), nil
+	case "int256_s":
+		I, success := new(big.Int).SetString(source, 10)
+		if !success || I.BitLen() > 255 {
+			return []byte(source), errors.New("not a valid number")
+		}
+		return []byte(source), nil
+	case "uint256_s":
+		I, success := new(big.Int).SetString(source, 10)
+		if !success || I.BitLen() > 256 || I.Sign() < 0 {
+			return []byte(source), errors.New("not a valid number")
+		}
+		return []byte(source), nil
 	default:
 		return []byte(source), nil
 	}
-
 }
