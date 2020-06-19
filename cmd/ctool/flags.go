@@ -62,6 +62,7 @@ var (
 		Name:  "vm",
 		Value: "wasm",
 		Usage: `Choose the virtual machine interpreter for the contract execution and deployment, 
+		"wasm" for WebAssembly virtual machine; "evm" for EVM virtual machine,
 		The error may occur if the interpreter does not match.`,
 	}
 	ContractIDFlag = cli.StringFlag{

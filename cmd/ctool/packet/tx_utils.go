@@ -31,8 +31,11 @@ const (
 
 	CNS_PROXY_ADDRESS = "0x0000000000000000000000000000000000000011"
 
-	TX_RECEIPT_STATUS_SUCCESS = "0x1"
-	TX_RECEIPT_STATUS_FAILURE = "0x0"
+	TX_RECEIPT_STATUS_SUCCESS_CODE = "0x1"
+	TX_RECEIPT_STATUS_FAILURE_CODE = "0x0"
+
+	TX_RECEIPT_STATUS_SUCCESS_MSG = "Operation Succeeded"
+	TX_RECEIPT_STATUS_FAILURE_MSG = "Operation Failed"
 
 	SLEEP_TIME = 1000000000 // 1 seconds
 )
@@ -300,18 +303,21 @@ func GetReceiptByPolling(txHash string, ch chan string) {
 		}
 
 		switch {
-		case receipt.Status == TX_RECEIPT_STATUS_FAILURE:
-			ch <- "Operation Failed"
+		case receipt.Status == TX_RECEIPT_STATUS_FAILURE_CODE:
+			ch <- TX_RECEIPT_STATUS_FAILURE_MSG
 			break
 		case receipt.ContractAddress != "":
 			ch <- receipt.ContractAddress
 			break
 		case len(receipt.Logs) != 0:
-			tmp, _ := hexutil.Decode(receipt.Logs[0].Data)
+			tmp, _ := hexutil.Decode(receipt.Logs[0].Data)		// currently it only take the first topic
+
+			fmt.Printf("the return string in log is %s\n", tmp)
+
 			ch <- string(tmp)
 			break
-		case receipt.Status == TX_RECEIPT_STATUS_SUCCESS:
-			ch <- "Operation Succeeded"
+		case receipt.Status == TX_RECEIPT_STATUS_SUCCESS_CODE:
+			ch <- TX_RECEIPT_STATUS_SUCCESS_MSG
 			break
 		}
 	}

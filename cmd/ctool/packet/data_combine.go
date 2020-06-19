@@ -340,6 +340,8 @@ func (i *EvmInterpreter) StringConverter(source string, t string) ([]byte, error
 	case t == "string":
 		isDynamic = true
 
+		fmt.Printf("the source is %v\n", source)
+
 		strRunes := []rune(source)
 		strBytes := utl.RuneToBytesArray(strRunes)
 		resultBytes, resultErr = utl.EncodeBytesType(string(strBytes), "bytes")

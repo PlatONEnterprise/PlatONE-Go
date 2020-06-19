@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/math"
 	"math/big"
@@ -90,11 +91,15 @@ func IsValidEvmIntType(t string) bool {
 func RuneToBytesArray(r []rune) []byte {
 	var bytesArray []byte
 
+	fmt.Printf("the rune r is %v", r)
+
 	for _, value := range r {
 		tempBytes := common.Int32ToBytes(value)
 		tempBytes = bytes.TrimLeft(tempBytes, "\x00")
 		bytesArray = append(bytesArray, tempBytes...)
 	}
+
+	fmt.Printf("after convertion the rune is %v", bytesArray)
 
 	return bytesArray
 }
