@@ -145,7 +145,7 @@ func StringConverter(source string, t string) ([]byte, error) {
 		if !success {
 			return []byte(source), errors.New("parse string to int error")
 		}
-		if t == "uint128" && I.Sign() < 0 {
+		if (t == "uint128" && I.Sign() < 0) || (t == "int128" && I.BitLen() > 127) {
 			return []byte(source), errors.New("parse string to int error")
 		}
 		b, success := common.BigToByte128(I)
