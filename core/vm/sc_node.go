@@ -69,6 +69,14 @@ type updateNode struct {
 	DelayNum *uint64 `json:"delayNum,omitempty"` //共识节点延迟设置的区块高度 (可选, 默认实时设置)
 }
 
+func (un *updateNode) setStatus(status int32) {
+	un.Status = &status
+}
+
+func (un *updateNode) setTyp(typ int32) {
+	un.Typ = &typ
+}
+
 type eNode struct {
 	PublicKey string
 	IP        string
@@ -414,6 +422,10 @@ func (n *SCNode) GetNodes(query *NodeInfo) ([]*NodeInfo, error) {
 		}
 	}
 
+	if len(nodes) == 0 {
+		return nil, errNodeNotFound
+	}
+
 	return nodes, nil
 }
 
@@ -435,6 +447,10 @@ func (n *SCNode) getNames() ([]string, error) {
 func (n *SCNode) nodesNum(query *NodeInfo) (int, error) {
 	nodes, err := n.GetNodes(query)
 	if err != nil {
+		if errNodeNotFound == err {
+			return 0, nil
+		}
+
 		return 0, err
 	}
 

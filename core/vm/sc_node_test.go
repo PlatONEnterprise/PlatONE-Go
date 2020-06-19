@@ -2,7 +2,6 @@ package vm
 
 import (
 	"encoding/hex"
-	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
@@ -369,7 +368,7 @@ func fakeNodeInfo() *NodeInfo {
 func genPublicKeyInHex() string {
 	prk, _ := crypto.GenerateKey()
 	pub := crypto.FromECDSAPub(&prk.PublicKey)
-	fmt.Println(hex.EncodeToString(pub))
+	//fmt.Println(hex.EncodeToString(pub))
 
 	return hex.EncodeToString(pub)
 }
@@ -423,13 +422,15 @@ func TestSCNode_AddName(t *testing.T) {
 	type args struct {
 		name string
 	}
+	stateDB := newStateDBMock()
 	tests := []struct {
 		name    string
 		fields  fields
 		args    args
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{"t1", fields{stateDB: stateDB}, args{"上海万向区块链"}, false},
+		{"t2", fields{stateDB: stateDB}, args{"上海万向区块链"}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -446,6 +447,14 @@ func TestSCNode_AddName(t *testing.T) {
 }
 
 func TestSCNode_CheckParamsOfAddNode(t *testing.T) {
+	ni := &NodeInfo{}
+	ni.P2pPort = 8888
+	ni.InternalIP = "127.0.0.1"
+	ni.Name = "万向区块链"
+	ni.Typ = NodeTypeObserver
+	ni.Status = NodeStatusNormal
+	ni.PublicKey = "044b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc"
+
 	type fields struct {
 		stateDB StateDB
 		address common.Address
@@ -454,13 +463,14 @@ func TestSCNode_CheckParamsOfAddNode(t *testing.T) {
 	type args struct {
 		node *NodeInfo
 	}
+	db := newMockStateDB()
 	tests := []struct {
 		name    string
 		fields  fields
 		args    args
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{"t1", fields{stateDB: db}, args{ni}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -477,435 +487,295 @@ func TestSCNode_CheckParamsOfAddNode(t *testing.T) {
 }
 
 func TestSCNode_CheckParamsOfUpdateNodeAndReturnUpdatedNode(t *testing.T) {
-	type fields struct {
-		stateDB StateDB
-		address common.Address
-		caller  common.Address
-	}
-	type args struct {
-		name   string
-		update *updateNode
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    *NodeInfo
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			n := &SCNode{
-				stateDB: tt.fields.stateDB,
-				address: tt.fields.address,
-				caller:  tt.fields.caller,
-			}
-			got, err := n.checkParamsOfUpdateNodeAndReturnUpdatedNode(tt.args.name, tt.args.update)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("checkParamsOfUpdateNodeAndReturnUpdatedNode() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("checkParamsOfUpdateNodeAndReturnUpdatedNode() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
+	ni := &NodeInfo{}
+	ni.P2pPort = 8888
+	ni.InternalIP = "127.0.0.1"
+	ni.Name = "万向区块链"
+	ni.Typ = NodeTypeObserver
+	ni.Status = NodeStatusNormal
+	ni.PublicKey = "044b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc"
 
-func TestSCNode_CheckPermissionForAdd(t *testing.T) {
-	type fields struct {
-		stateDB StateDB
-		address common.Address
-		caller  common.Address
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			n := &SCNode{
-				stateDB: tt.fields.stateDB,
-				address: tt.fields.address,
-				caller:  tt.fields.caller,
-			}
-			if err := n.checkPermissionForAdd(); (err != nil) != tt.wantErr {
-				t.Errorf("checkPermissionForAdd() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
+	db := newMockStateDB()
+	n := NewSCNode()
+	n.stateDB = db
+
+	err := n.add(ni)
+	assert.NoError(t, err)
+
+	update := &updateNode{}
+	update.setStatus(5)
+	update.setTyp(NodeTypeValidator)
+
+	_, err = n.checkParamsOfUpdateNodeAndReturnUpdatedNode(ni.Name, update)
+	assert.Error(t, err)
+
+	update.setStatus(NodeStatusDeleted)
+	update.setTyp(NodeTypeValidator)
+	desc := "上海万向区块链是一个伟大的企业"
+	update.Desc = &desc
+	updatedNI, err := n.checkParamsOfUpdateNodeAndReturnUpdatedNode(ni.Name, update)
+	assert.NoError(t, err)
+	ni.Desc = desc
+	ni.Status = NodeStatusDeleted
+	ni.Typ = NodeTypeValidator
+	assert.Equal(t, ni, updatedNI)
 }
 
 func TestSCNode_CheckPublicKeyExist(t *testing.T) {
-	type fields struct {
-		stateDB StateDB
-		address common.Address
-		caller  common.Address
-	}
-	type args struct {
-		pub string
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			n := &SCNode{
-				stateDB: tt.fields.stateDB,
-				address: tt.fields.address,
-				caller:  tt.fields.caller,
-			}
-			if err := n.checkPublicKeyExist(tt.args.pub); (err != nil) != tt.wantErr {
-				t.Errorf("checkPublicKeyExist() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
+	db := newMockStateDB()
+	n := NewSCNode()
+	n.stateDB = db
+
+	err := n.checkPublicKeyExist("044b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc")
+	assert.NoError(t, err)
+
+	ni := &NodeInfo{}
+	ni.P2pPort = 8888
+	ni.InternalIP = "127.0.0.1"
+	ni.Name = "万向区块链"
+	ni.Typ = NodeTypeObserver
+	ni.Status = NodeStatusNormal
+	ni.PublicKey = "044b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc"
+
+	err = n.add(ni)
+	assert.NoError(t, err)
+
+	err = n.checkPublicKeyExist("044b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc")
+	assert.Error(t, err)
 }
 
 func TestSCNode_GetAllNodes(t *testing.T) {
-	type fields struct {
-		stateDB StateDB
-		address common.Address
-		caller  common.Address
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		want    []*NodeInfo
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			n := &SCNode{
-				stateDB: tt.fields.stateDB,
-				address: tt.fields.address,
-				caller:  tt.fields.caller,
-			}
-			got, err := n.GetAllNodes()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GetAllNodes() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetAllNodes() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
+	ni := &NodeInfo{}
+	ni.P2pPort = 8888
+	ni.InternalIP = "127.0.0.1"
+	ni.Name = "万向区块链"
+	ni.Typ = NodeTypeObserver
+	ni.Status = NodeStatusNormal
+	ni.PublicKey = "044b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc"
+
+	db := newMockStateDB()
+	n := NewSCNode()
+	n.stateDB = db
+
+	err := n.add(ni)
+	assert.NoError(t, err)
+
+	allNodes, err := n.GetAllNodes()
+	assert.NoError(t, err)
+	assert.Equal(t, []*NodeInfo{ni}, allNodes)
 }
 
 func TestSCNode_GetENodesOfAllDeletedNodes(t *testing.T) {
-	type fields struct {
-		stateDB StateDB
-		address common.Address
-		caller  common.Address
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		want    []*eNode
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			n := &SCNode{
-				stateDB: tt.fields.stateDB,
-				address: tt.fields.address,
-				caller:  tt.fields.caller,
-			}
-			got, err := n.getENodesOfAllDeletedNodes()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("getENodesOfAllDeletedNodes() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("getENodesOfAllDeletedNodes() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
+	ni := &NodeInfo{}
+	ni.P2pPort = 8888
+	ni.InternalIP = "127.0.0.1"
+	ni.Name = "万向区块链"
+	ni.Typ = NodeTypeObserver
+	ni.Status = NodeStatusNormal
+	ni.PublicKey = "044b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc"
+
+	db := newMockStateDB()
+	n := NewSCNode()
+	n.stateDB = db
+
+	err := n.add(ni)
+	assert.NoError(t, err)
+
+	enodes, err := n.getENodesOfAllDeletedNodes()
+	assert.Error(t, err)
+
+	update := &updateNode{}
+	update.setStatus(NodeStatusDeleted)
+	err = n.update(ni.Name, update)
+	assert.NoError(t, err)
+
+	enodes, err = n.getENodesOfAllDeletedNodes()
+	assert.NoError(t, err)
+	ni.Status = NodeStatusDeleted
+	assert.Equal(t, fromNodes([]*NodeInfo{ni}), enodes)
 }
 
 func TestSCNode_GetENodesOfAllNormalNodes(t *testing.T) {
-	type fields struct {
-		stateDB StateDB
-		address common.Address
-		caller  common.Address
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		want    []*eNode
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			n := &SCNode{
-				stateDB: tt.fields.stateDB,
-				address: tt.fields.address,
-				caller:  tt.fields.caller,
-			}
-			got, err := n.getENodesOfAllNormalNodes()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("getENodesOfAllNormalNodes() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("getENodesOfAllNormalNodes() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
+	ni := &NodeInfo{}
+	ni.P2pPort = 8888
+	ni.InternalIP = "127.0.0.1"
+	ni.Name = "万向区块链"
+	ni.Typ = NodeTypeObserver
+	ni.Status = NodeStatusNormal
+	ni.PublicKey = "044b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc"
+
+	db := newMockStateDB()
+	n := NewSCNode()
+	n.stateDB = db
+
+	err := n.add(ni)
+	assert.NoError(t, err)
+
+	enodes, err := n.getENodesOfAllNormalNodes()
+	assert.NoError(t, err)
+	assert.Equal(t, fromNodes([]*NodeInfo{ni}), enodes)
 }
 
 func TestSCNode_GetNames(t *testing.T) {
-	type fields struct {
-		stateDB StateDB
-		address common.Address
-		caller  common.Address
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		want    []string
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			n := &SCNode{
-				stateDB: tt.fields.stateDB,
-				address: tt.fields.address,
-				caller:  tt.fields.caller,
-			}
-			got, err := n.getNames()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("getNames() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("getNames() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
+	ni := &NodeInfo{}
+	ni.P2pPort = 8888
+	ni.InternalIP = "127.0.0.1"
+	ni.Name = "万向区块链"
+	ni.Typ = NodeTypeObserver
+	ni.Status = NodeStatusNormal
+	ni.PublicKey = "044b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc"
+
+	db := newMockStateDB()
+	n := NewSCNode()
+	n.stateDB = db
+
+	err := n.add(ni)
+	assert.NoError(t, err)
+
+	names, err := n.getNames()
+	assert.NoError(t, err)
+	assert.Equal(t, []string{ni.Name}, names)
 }
 
 func TestSCNode_GetNodeByName(t *testing.T) {
-	type fields struct {
-		stateDB StateDB
-		address common.Address
-		caller  common.Address
-	}
-	type args struct {
-		name string
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    *NodeInfo
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			n := &SCNode{
-				stateDB: tt.fields.stateDB,
-				address: tt.fields.address,
-				caller:  tt.fields.caller,
-			}
-			got, err := n.getNodeByName(tt.args.name)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("getNodeByName() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("getNodeByName() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
+	ni := &NodeInfo{}
+	ni.P2pPort = 8888
+	ni.InternalIP = "127.0.0.1"
+	ni.Name = "万向区块链"
+	ni.Typ = NodeTypeObserver
+	ni.Status = NodeStatusNormal
+	ni.PublicKey = "044b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc"
+
+	db := newMockStateDB()
+	n := NewSCNode()
+	n.stateDB = db
+
+	err := n.add(ni)
+	assert.NoError(t, err)
+
+	node, err := n.getNodeByName(ni.Name)
+	assert.NoError(t, err)
+	assert.Equal(t, ni, node)
 }
 
 func TestSCNode_GetNodes(t *testing.T) {
-	type fields struct {
-		stateDB StateDB
-		address common.Address
-		caller  common.Address
-	}
-	type args struct {
-		query *NodeInfo
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    []*NodeInfo
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			n := &SCNode{
-				stateDB: tt.fields.stateDB,
-				address: tt.fields.address,
-				caller:  tt.fields.caller,
-			}
-			got, err := n.GetNodes(tt.args.query)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GetNodes() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetNodes() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
+	ni := &NodeInfo{}
+	ni.P2pPort = 8888
+	ni.InternalIP = "127.0.0.1"
+	ni.Name = "万向区块链"
+	ni.Typ = NodeTypeObserver
+	ni.Status = NodeStatusNormal
+	ni.PublicKey = "044b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc"
 
-func TestSCNode_GetState(t *testing.T) {
-	type fields struct {
-		stateDB StateDB
-		address common.Address
-		caller  common.Address
-	}
-	type args struct {
-		key string
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   []byte
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			n := &SCNode{
-				stateDB: tt.fields.stateDB,
-				address: tt.fields.address,
-				caller:  tt.fields.caller,
-			}
-			if got := n.getState(tt.args.key); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("getState() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+	db := newMockStateDB()
+	n := NewSCNode()
+	n.stateDB = db
+
+	err := n.add(ni)
+	assert.NoError(t, err)
+
+	query := &NodeInfo{}
+	query.Typ = NodeTypeObserver
+	query.Status = NodeStatusDeleted
+
+	_, err = n.GetNodes(query)
+	assert.Error(t, err)
+
+	query.Status = NodeStatusNormal
+	node, err := n.GetNodes(query)
+	assert.NoError(t, err)
+	assert.Equal(t, []*NodeInfo{ni}, node)
 }
 
 func TestSCNode_IsNameExist(t *testing.T) {
-	type fields struct {
-		stateDB StateDB
-		address common.Address
-		caller  common.Address
-	}
-	type args struct {
-		names []string
-		name  string
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			n := &SCNode{
-				stateDB: tt.fields.stateDB,
-				address: tt.fields.address,
-				caller:  tt.fields.caller,
-			}
-			if got := n.isNameExist(tt.args.names, tt.args.name); got != tt.want {
-				t.Errorf("isNameExist() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+	ni := &NodeInfo{}
+	ni.P2pPort = 8888
+	ni.InternalIP = "127.0.0.1"
+	ni.Name = "万向区块链"
+	ni.Typ = NodeTypeObserver
+	ni.Status = NodeStatusNormal
+	ni.PublicKey = "044b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc"
+
+	db := newMockStateDB()
+	n := NewSCNode()
+	n.stateDB = db
+
+	err := n.add(ni)
+	assert.NoError(t, err)
+
+	ni2 := &NodeInfo{}
+	ni2.P2pPort = 8888
+	ni2.InternalIP = "127.0.0.1"
+	ni2.Name = "通联支付"
+	ni2.Typ = NodeTypeObserver
+	ni2.Status = NodeStatusNormal
+	ni2.PublicKey = "044b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc"
+
+	err = n.add(ni2)
+	assert.Error(t, err)
+
+	ni2.PublicKey = genPublicKeyInHex()
+	err = n.add(ni2)
+	assert.NoError(t, err)
+
+	names, err := n.getNames()
+	assert.NoError(t, err)
+
+	exist := n.isNameExist(names, ni.Name)
+	assert.Equal(t, true, exist)
 }
 
 func TestSCNode_NodesNum(t *testing.T) {
-	type fields struct {
-		stateDB StateDB
-		address common.Address
-		caller  common.Address
-	}
-	type args struct {
-		query *NodeInfo
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    int
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			n := &SCNode{
-				stateDB: tt.fields.stateDB,
-				address: tt.fields.address,
-				caller:  tt.fields.caller,
-			}
-			got, err := n.nodesNum(tt.args.query)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("nodesNum() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("nodesNum() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
+	ni := &NodeInfo{}
+	ni.P2pPort = 8888
+	ni.InternalIP = "127.0.0.1"
+	ni.Name = "万向区块链"
+	ni.Typ = NodeTypeObserver
+	ni.Status = NodeStatusNormal
+	ni.PublicKey = "044b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc"
+
+	db := newMockStateDB()
+	n := NewSCNode()
+	n.stateDB = db
+
+	err := n.add(ni)
+	assert.NoError(t, err)
+
+	query := &NodeInfo{}
+	query.Name = "万向"
+	num, err := n.nodesNum(query)
+	assert.NoError(t, err)
+	assert.Equal(t, 0, num)
+
+	query.Name = ni.Name
+	num, err = n.nodesNum(query)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, num)
 }
 
 func TestSCNode_Update(t *testing.T) {
-	type fields struct {
-		stateDB StateDB
-		address common.Address
-		caller  common.Address
-	}
-	type args struct {
-		name   string
-		update *updateNode
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			n := &SCNode{
-				stateDB: tt.fields.stateDB,
-				address: tt.fields.address,
-				caller:  tt.fields.caller,
-			}
-			if err := n.update(tt.args.name, tt.args.update); (err != nil) != tt.wantErr {
-				t.Errorf("update() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
+	ni := &NodeInfo{}
+	ni.P2pPort = 8888
+	ni.InternalIP = "127.0.0.1"
+	ni.Name = "万向区块链"
+	ni.Typ = NodeTypeObserver
+	ni.Status = NodeStatusNormal
+	ni.PublicKey = "044b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc"
+
+	db := newMockStateDB()
+	n := NewSCNode()
+	n.stateDB = db
+
+	err := n.add(ni)
+	assert.NoError(t, err)
+
+	update := &updateNode{}
+	update.setStatus(NodeStatusDeleted)
+	err = n.update(ni.Name, update)
+	assert.NoError(t, err)
+
+	node, err := n.getNodeByName(ni.Name)
+	assert.NoError(t, err)
+	ni.Status = NodeStatusDeleted
+	assert.Equal(t, ni, node)
 }
