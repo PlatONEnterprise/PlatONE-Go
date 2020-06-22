@@ -14,6 +14,7 @@ type (
 var PlatONEPrecompiledContracts = map[common.Address]PrecompiledContract{
 	syscontracts.USER_MANAGEMENT_ADDRESS: &UserManagement{},
 	syscontracts.NODE_MANAGEMENT_ADDRESS: &scNodeWrapper{},
+	syscontracts.CNS_MANAGEMENT_ADDRESS: &CnsManager{},
 }
 
 //input format： hex.encode( rlp.encode( [][]byte{rlp.encode(txType), function name,rlp.encode(params[1]), rlp.encode(params[1])...} ) )
@@ -37,6 +38,14 @@ func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Cont
 			node.base.caller = contract.CallerAddress
 
 			return node.Run(input)
+		case *CnsManager:
+			cns := &CnsManager{
+				callerAddr: contract.CallerAddress,
+				cMap: 		NewCnsMap(evm.StateDB, contract.CodeAddr),
+				isInit:		evm.InitEntryID,
+				origin:		evm.Context.Origin,
+			}
+			return cns.Run(input)
 		default:
 			panic("system contract handler not found")
 		}

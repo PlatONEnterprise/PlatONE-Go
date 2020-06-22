@@ -17,13 +17,33 @@ const (
 
 	CODE_OK = 0
 	CODE_ERR = 1
+
+	SUCCESS = 0
+	FAILURE = 1
+
+	UNDEFINED = -1
+	UNREGISTERD = 0
+	REGISTERD = 1
+
+	NAME_PATTERN = `^[a-zA-Z]\w{2,15}$`		// alice
+	VERSION_PATTERN = `^([\d]\.){3}[\d]$`	// 0.0.0.1
+
+	ERR_NAME_INVALID = "[CNS] name format is invalid"
+	ERR_VERSION_INVALID = "[CNS] version format is invalid"
+	ERR_ADDRESS_INVALID = "[CNS] address format is invalid"
+	ERR_NOT_OWNER = "[CNS] not owner of registered contract"
+)
+
+var (
+	regName = regexp.MustCompile(NAME_PATTERN)
+	regVer = regexp.MustCompile(VERSION_PATTERN)
 )
 
 type CnsManager struct {
-	callerAddr 	*common.Address	// callerAddr = Contract.CallerAddress
+	callerAddr 	common.Address	// callerAddr = Contract.CallerAddress
 	cMap	 	*cnsMap			// cMap = NewCnsMap(StateDB, Contract.CodeAddr)
 	isInit		int				// isInit = evm.InitEntryID
-	origin		*common.Address	// origin = evm.Context.Origin // todo necessary?
+	origin		common.Address	// origin = evm.Context.Origin // todo necessary?
 }
 
 type ContractInfo struct {
@@ -32,7 +52,7 @@ type ContractInfo struct {
 	Address 	string
 	Origin  	string
 	TimeStamp 	int64
-	// Enabled 	bool
+	// Enabled 	bool	// deprecated
 }
 
 type returnMsg struct {
@@ -48,7 +68,6 @@ func newContractInfo(name, version, address, origin string) *ContractInfo {
 		Address:	address,
 		Origin:		origin,
 		TimeStamp:  time.Now().Unix(),
-		// Enabled:	true,
 	}
 }
 
@@ -104,7 +123,7 @@ func (u *CnsManager) AllExportFns() SCExportFns {
 }
 
 func (cns *CnsManager) isOwner(contractAddr common.Address) bool {
-	callerAddr := cns.callerAddr
+	callerAddr := cns.origin	// todo
 	contractOwnerAddr := cns.cMap.GetContractCreator(contractAddr)
 
 	if callerAddr.Hex() == contractOwnerAddr.Hex() {
@@ -122,9 +141,9 @@ func (cns *CnsManager) isFromInit() bool {
 	}
 }
 
-func (cns *CnsManager) cnsRegisterFromInit(name, version string) (bool, error) {
+func (cns *CnsManager) cnsRegisterFromInit(name, version string) (int, error) {
 	if !cns.isFromInit() {
-		return false, errors.New("[CNS] cnsRegisterFromInit can only be called from init()")
+		return FAILURE, errors.New("[CNS] cnsRegisterFromInit can only be called from init()")
 	}
 
 	address := cns.callerAddr.Hex()
@@ -132,53 +151,40 @@ func (cns *CnsManager) cnsRegisterFromInit(name, version string) (bool, error) {
 	return cns.doCnsRegister(name, version, address)
 }
 
-func (cns *CnsManager) cnsRegister(name, version, address string) (bool, error) {
+func (cns *CnsManager) cnsRegister(name, version, address string) (int, error) {
 
-	// todo is it necessary?
 	if cns.isFromInit() {
-		return false, errors.New("[CNS] cnsRegister can't be called from init()")
+		return FAILURE, errors.New("[CNS] cnsRegister can't be called from init()")
 	}
 
 	contractAddr := common.HexToAddress(address)
 
 	// check the owner
 	if !cns.isOwner(contractAddr) {
-		return false, errors.New("[CNS] not owner of registered contract")
+		return FAILURE, errors.New(ERR_NOT_OWNER)
 	}
 
 	return cns.doCnsRegister(name, version, address)
 }
 
-// todo precompiled regMatch
-// regMatch check if string matches the pattern by regular expression
-func regMatch(param, pattern string) bool {
-	result, _ := regexp.MatchString(pattern, param)
-	return result
-}
-
-const (
-	NAME_PATTERN = `^[a-zA-Z]\w{2,15}$`		// alice
-	VERSION_PATTERN = `^([\d]\.){3}[\d]$`	// 0.0.0.1
-)
-
-func (cns *CnsManager) doCnsRegister(name, version, address string) (bool, error) {
+func (cns *CnsManager) doCnsRegister(name, version, address string) (int, error) {
 	if !common.IsHexAddress(address) {
-		return false, errors.New("[CNS] address format is invalid")
+		return FAILURE, errors.New(ERR_ADDRESS_INVALID)
 	}
 
-	if !regMatch(name, NAME_PATTERN) {
-		return false, errors.New("[CNS] name format is invalid")
+	if !regName.MatchString(name) {
+		return FAILURE, errors.New(ERR_NAME_INVALID)
 	}
 
-	if regMatch(version, VERSION_PATTERN) {
-		return false, errors.New("[CNS] version format is invalid")
+	if !regVer.MatchString(version) {
+		return FAILURE, errors.New(ERR_VERSION_INVALID)
 	}
 
 	key := getSearchKey(name, version)
 
 	value := cns.cMap.find(key)
 	if value != nil {
-		return false, errors.New("[CNS] name and version is already registered and activated in CNS")
+		return FAILURE, errors.New("[CNS] name and version is already registered and activated in CNS")
 	}
 
 	ori := cns.origin.Hex()
@@ -186,13 +192,13 @@ func (cns *CnsManager) doCnsRegister(name, version, address string) (bool, error
 
 	// check name unique
 	if cns.cMap.isNameRegByOthers(name, ori) {
-		return false, errors.New("[CNS] Name is already registered")
+		return FAILURE, errors.New("[CNS] Name is already registered")
 	}
 
 	// check version
-	latestVersion := cns.cMap.getLargestVersion(name)
-	if verCompare(version, latestVersion) != 1 {
-		return false, errors.New("[CNS] Version must be larger than current latest version")
+	largestVersion := cns.cMap.getLargestVersion(name)
+	if verCompare(version, largestVersion) != 1 {
+		return FAILURE, errors.New("[CNS] Version must be larger than previous version")
 	}
 
 	cnsInfo := newContractInfo(name, version, address, ori)
@@ -201,11 +207,7 @@ func (cns *CnsManager) doCnsRegister(name, version, address string) (bool, error
 
 	cns.cMap.updateLatestVer(name, version)
 
-	return true, nil
-}
-
-func (cns *CnsManager) isVersionDuplicated(name, ver string) bool {
-	return true
+	return SUCCESS, nil
 }
 
 func verCompare(ver1, ver2 string) int {
@@ -226,14 +228,14 @@ func verCompare(ver1, ver2 string) int {
 }
 
 // cnsUnregister is deprecated, cnsUnregister -> cnsRecall
-func (cns *CnsManager) cnsRecall(name, version string) (bool, error) {
+func (cns *CnsManager) cnsRecall(name, version string) (int, error) {
 
-	if !regMatch(name, NAME_PATTERN) {
-		return false, errors.New("[CNS] name format is invalid")
+	if !regName.MatchString(name) {
+		return FAILURE, errors.New(ERR_NAME_INVALID)
 	}
 
-	if regMatch(version, VERSION_PATTERN) {
-		return false, errors.New("[CNS] version format is invalid")
+	if !regVer.MatchString(version) {
+		return FAILURE, errors.New(ERR_VERSION_INVALID)
 	}
 
 	// if strings.EqualFold(version, "latest") {
@@ -246,28 +248,28 @@ func (cns *CnsManager) cnsRecall(name, version string) (bool, error) {
 	// get cnsInfo
 	cnsInfo := cns.cMap.find(key)
 	if cnsInfo == nil {
-		return false, errors.New("[CNS] Name and version didn't register before")
+		return FAILURE, errors.New("[CNS] Name and version didn't register before")
 	}
 
 	// isOwner
 	contractAddr := common.HexToAddress(cnsInfo.Address)
 	if !cns.isOwner(contractAddr) {
-		return false, errors.New("[CNS] Not owner of registered contract")
+		return FAILURE, errors.New(ERR_NOT_OWNER)
 	}
 
 	// cBytes, _ := cnsInfo.encode()
 	cns.cMap.updateLatestVer(name, version)
 
-	return true, nil
+	return SUCCESS, nil
 }
 
 func (cns *CnsManager) getContractAddress(name, version string) (string, error) {
-	if !regMatch(name, NAME_PATTERN) {
-		return "", errors.New("[CNS] name format is invalid")
+	if !regName.MatchString(name) {
+		return "", errors.New(ERR_NAME_INVALID)
 	}
 
-	if regMatch(version, VERSION_PATTERN) {
-		return "", errors.New("[CNS] version format is invalid")
+	if !regVer.MatchString(version) {
+		return "", errors.New(ERR_VERSION_INVALID)
 	}
 
 	if strings.EqualFold(version, "latest") {
@@ -290,34 +292,36 @@ func (cns *CnsManager) getContractAddress(name, version string) (string, error) 
 	return cnsInfo.Address, nil
 }
 
-func (cns *CnsManager) ifRegisteredByName(name string) (bool, error) {
+func (cns *CnsManager) ifRegisteredByName(name string) (int, error) {
 
-	if !regMatch(name, NAME_PATTERN) {
-		return false, errors.New("[CNS] name format is invalid")
+	if !regName.MatchString(name) {
+		return UNDEFINED, errors.New(ERR_NAME_INVALID)
 	}
+	
 	for index := 0; index < cns.cMap.total(); index++{
 		cnsInfo := cns.cMap.get(index)
 		if cnsInfo.Name == name{
-			return true, nil
+			return REGISTERD, nil
 		}
 	}
 
-	return false, nil
+	return UNREGISTERD, nil
 }
 
-func (cns *CnsManager) ifRegisteredByAddress(address string) (bool, error) {
+func (cns *CnsManager) ifRegisteredByAddress(address string) (int, error) {
 
 	if !common.IsHexAddress(address) {
-		return false, errors.New("[CNS] contract address format is invalid")
+		return UNDEFINED, errors.New("[CNS] contract address format is invalid")
 	}
+	
 	for index := 0; index < cns.cMap.total(); index++{
 		cnsInfo := cns.cMap.get(index)
 		if cnsInfo.Address == address{
-			return true, nil
+			return REGISTERD, nil
 		}
 	}
 
-	return false, nil
+	return UNREGISTERD, nil
 }
 
 func getSearchKey(name, version string) []byte {
@@ -352,8 +356,8 @@ func (cns *CnsManager) getRegisteredContractsByRange(head, size int) ([]byte, er
 func (cns *CnsManager) getRegisteredContractsByName(name string) ([]byte, error) {
 	var cnsInfoArray = make([]*ContractInfo, 0)
 
-	if !regMatch(name, NAME_PATTERN) {
-		return nil, errors.New("[CNS] name format is invalid")
+	if !regName.MatchString(name) {
+		return nil, errors.New(ERR_NAME_INVALID)
 	}
 
 	for index := 0; index < cns.cMap.total(); index++{
@@ -370,7 +374,7 @@ func (cns *CnsManager) getRegisteredContractsByAddress(addr string) ([]byte, err
 	var cnsInfoArray = make([]*ContractInfo, 0)
 
 	if !common.IsHexAddress(addr) {
-		return nil, errors.New("[CNS] contract address format is invalid")
+		return nil, errors.New(ERR_ADDRESS_INVALID)
 	}
 
 	for index := 0; index < cns.cMap.total(); index++{
@@ -389,7 +393,7 @@ func (cns *CnsManager) getRegisteredContractsByOrigin(origin string) ([]byte, er
 	var cnsInfoArray = make([]*ContractInfo, 0)
 
 	if !common.IsHexAddress(origin) {
-		return nil, errors.New("[CNS] contract owner address format is invalid")
+		return nil, errors.New(ERR_ADDRESS_INVALID)
 	}
 
 	for index := 0; index < cns.cMap.total(); index++{

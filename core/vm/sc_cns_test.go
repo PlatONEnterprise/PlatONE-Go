@@ -72,35 +72,30 @@ func TestCnsManager_cMap(t *testing.T) {
 			Version: 	"0.0.0.1",
 			Address:	"0x123",
 			Origin:		"0x000",
-			Enabled:	true,
 		},
 		{
 			Name: 		"tofu",
 			Version: 	"0.0.0.2",
 			Address:	"0x456",
 			Origin:		"0x000",
-			Enabled:	true,
 		},
 		{
 			Name: 		"tofu",
 			Version: 	"0.0.0.3",
 			Address:	"0x789",
 			Origin:		"0x000",
-			Enabled:	true,
 		},
 		{
 			Name: 		"tofu",
 			Version: 	"0.0.0.4",
 			Address:	"0x102",
 			Origin:		"0x000",
-			Enabled:	false,
 		},
 		{
 			Name: 		"bob",
 			Version: 	"0.0.0.1",
 			Address:	"0x123",
 			Origin:		"0x000",
-			Enabled:	false,
 		},
 	}
 
@@ -116,14 +111,13 @@ func TestCnsManager_cMap(t *testing.T) {
 	assert.Equal(t, key[1], cns.cMap.getKey(1),  "cns getKey equal")
 	assert.Equal(t, testCases[0], cns.cMap.find(key[0]),  "cns find() equal")
 	assert.Equal(t, len(testCases), cns.cMap.total(),  "cns total() equal")
-	//cns.cMap.update()
 	//cns.cMap.get()
 
-	nameT := testCases[0].Name
-	verT := testCases[0].Version
-	assert.Equal(t, verT, cns.cMap.getLatestVersion(nameT),  "getLatestVersion equal")
+	nameT := testCases[3].Name
+	verT := testCases[3].Version
+	assert.Equal(t, verT, cns.cMap.getLargestVersion(nameT),  "getLargestVersion equal")
 
-	//fmt.Println(db.mockDB)
+	/// fmt.Println(db.mockDB)
 }
 
 func newMockStateDB() *mockStateDB{
