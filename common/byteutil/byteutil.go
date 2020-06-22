@@ -9,7 +9,12 @@ import (
 )
 
 func ConvertBytesTo(input []byte, targetType string) reflect.Value {
-	return reflect.ValueOf(Bytes2X_CMD[targetType]).Call([]reflect.Value{reflect.ValueOf(input)})[0]
+	v, ok := Bytes2X_CMD[targetType]
+	if !ok {
+		panic("unsupported type")
+	}
+
+	return reflect.ValueOf(v).Call([]reflect.Value{reflect.ValueOf(input)})[0]
 }
 
 var Bytes2X_CMD = map[string]interface{}{
@@ -18,6 +23,12 @@ var Bytes2X_CMD = map[string]interface{}{
 	"uint16": BytesToUint16,
 	"uint32": BytesToUint32,
 	"uint64": BytesToUint64,
+	//"uint":   BytesToUint,
+
+	"int16": BytesToInt16,
+	"int32": BytesToInt32,
+	"int64": BytesToInt64,
+	//"int":   BytesToInt,
 
 	"*syscontracts.NodeInfo":   BytesToNodeInfo,
 	"*syscontracts.UpdateNode": BytesToUpdateNode,
