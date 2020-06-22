@@ -373,7 +373,7 @@ namespace systemContract
 
             StringBuffer buffer;
             Writer<StringBuffer> writer(buffer);
-            curNodek.Accept(writer);
+            curNode.Accept(writer);
             const char *output = buffer.GetString();
 
             curNode.Parse(std::string(buffer.GetString()).c_str());
@@ -527,7 +527,7 @@ namespace systemContract
         }
 
     };
-    std::string NodeManager::NodedbKey = "nodesName";
+    std::string NodeManager::dbKey = "nodesName";
 
 } // namespace systemContract
 
