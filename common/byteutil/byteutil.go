@@ -75,3 +75,27 @@ func BytesToUint32(b []byte) uint32 {
 func BytesToUint64(b []byte) uint64 {
 	return binary.BigEndian.Uint64(b)
 }
+
+func Int64ToBytes(i int64) []byte {
+	buf := bytes.NewBuffer([]byte{})
+	binary.Write(buf, binary.BigEndian, &i)
+	return buf.Bytes()
+}
+
+func Int32ToBytes(i int32) []byte {
+	buf := bytes.NewBuffer([]byte{})
+	binary.Write(buf, binary.BigEndian, &i)
+	return buf.Bytes()
+}
+
+func Uint64ToBytes(n uint64) []byte {
+	buf := make([]byte, 8)
+	binary.BigEndian.PutUint64(buf, n)
+	return buf
+}
+
+func BoolToBytes(b bool) []byte {
+	buf := bytes.NewBuffer([]byte{})
+	binary.Write(buf, binary.BigEndian, b)
+	return buf.Bytes()
+}

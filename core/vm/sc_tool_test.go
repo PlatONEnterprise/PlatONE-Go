@@ -1,6 +1,7 @@
 package vm
 
 import (
+	"github.com/PlatONEnetwork/PlatONE-Go/common/byteutil"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"github.com/stretchr/testify/assert"
 	"reflect"
@@ -39,23 +40,26 @@ func Test_execSC(t *testing.T) {
 	assert.EqualError(t, err, "The params number invalid")
 }
 
-// hex.encode( rlp.encode( [][]byte{rlp.encode(txType), function name,rlp.encode(params[1]), rlp.encode(params[1])...} ) )
 func MakeInput(fnName string, params ...interface{}) []byte {
 	input := make([][]byte, 0)
-	txTyp, err := rlp.EncodeToBytes(E_INVOKE_CONTRACT)
-	if nil != err {
-		panic(err)
-	}
-	input = append(input, txTyp)
 
+	txTyp := byteutil.Int64ToBytes(int64(E_INVOKE_CONTRACT))
+
+	input = append(input, txTyp)
 	input = append(input, []byte(fnName))
 
 	for _, v := range params {
-		param, err := rlp.EncodeToBytes(v)
-		if nil != err {
-			panic(err)
+
+		switch v.(type) {
+		case int, int8, int16, int32, int64:
+			param := byteutil.Int64ToBytes(reflect.ValueOf(v).Int())
+			input = append(input, param)
+		case uint, uint8, uint16, uint32, uint64:
+			param := byteutil.Uint64ToBytes(reflect.ValueOf(v).Uint())
+			input = append(input, param)
+		case string:
+			input = append(input, []byte(v.(string)))
 		}
-		input = append(input, param)
 	}
 
 	encodedInput, err := rlp.EncodeToBytes(input)

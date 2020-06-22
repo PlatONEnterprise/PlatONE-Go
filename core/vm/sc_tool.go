@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/byteutil"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/life/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"reflect"
@@ -25,14 +26,29 @@ func execSC(input []byte, fns SCExportFns) ([]byte, error) {
 
 	//execute system contract method
 	//all the export method of system contracts must return two results,
-	//first result type is: []byte, second result type: error
+	//first result type is: primitive type, second result type: error
 	result := reflect.ValueOf(fn).Call(params)
 	if err, ok := result[1].Interface().(error); ok {
 		log.Error("execute system contract failed.", "error", err)
 		return nil, err
 	}
 
-	return result[0].Bytes(), nil
+	return primitiveToBytes(result[0]), nil
+}
+
+func primitiveToBytes(val reflect.Value) []byte {
+	switch val.Kind() {
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return utils.Uint64ToBytes(val.Uint())
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return utils.Int64ToBytes(val.Int())
+	case reflect.String:
+		return []byte(val.String())
+		//case reflect.Bool:
+		//case reflect.Float64, reflect.Float32:
+	}
+
+	panic("unsupported type")
 }
 
 func retrieveFnAndParams(input []byte, fns SCExportFns) (fnName string, fn SCExportFn, fnParams []reflect.Value, err error) {
