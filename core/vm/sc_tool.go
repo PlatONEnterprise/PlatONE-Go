@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	ErrFuncNotFoundInExportFuncs = errors.New("the func not found in export function set")
-	ErrParamsNumInvalid          = errors.New("the number of params is invalid")
+	errFuncNotFoundInExportFuncs = errors.New("the func not found in export function set")
+	errParamsNumInvalid          = errors.New("the number of params is invalid")
 )
 
 func execSC(input []byte, fns SCExportFns) ([]byte, error) {
@@ -53,14 +53,14 @@ func retrieveFnAndParams(input []byte, fns SCExportFns) (fnName string, fn SCExp
 
 	var ok bool
 	if fn, ok = fns[fnName]; !ok {
-		return "", nil, nil, ErrFuncNotFoundInExportFuncs
+		return "", nil, nil, errFuncNotFoundInExportFuncs
 	}
 
 	fnType := reflect.TypeOf(fn)
 	paramNum := fnType.NumIn()
 	if paramNum != len(args)-2 {
 		log.Warn("params number invalid. ", "expected:", paramNum, "got:", len(args)-2)
-		return "", nil, nil, ErrParamsNumInvalid
+		return "", nil, nil, errParamsNumInvalid
 	}
 
 	fnParams = make([]reflect.Value, paramNum)

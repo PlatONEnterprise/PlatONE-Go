@@ -1,9 +1,8 @@
 package vm
 
 import (
-	"encoding/json"
-	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"strings"
 )
@@ -12,25 +11,11 @@ const (
 	addNodeSuccess      = 0
 	addNodeBadParameter = 1
 	addNodeNoPermission = 2
-	//new
-	//todo 确认：新增了一个返回码
-	addNodeInternalServerError = 3
 )
 
 const (
-	updateNodeSuccess = 0
-	updateNodeFailed  = 1
-)
-
-const (
-	publicKeyNotExist      = 0
-	publicKeyExist         = 1
-	publicKeyInternalError = 2
-)
-
-const (
-	resultCodeSuccess       = 0
-	resultCodeInternalError = 1
+	publicKeyNotExist = 0
+	publicKeyExist    = 1
 )
 
 func eNodesToString(enodes []*eNode) string {
@@ -40,29 +25,6 @@ func eNodesToString(enodes []*eNode) string {
 	}
 
 	return strings.Join(ret, "|")
-}
-
-type result struct {
-	Code int         `json:"code"`
-	Msg  string      `json:"msg"`
-	Data interface{} `json:"data"`
-}
-
-func newResult(code int, msg string, data interface{}) *result {
-	return &result{Code: code, Msg: msg, Data: data}
-}
-
-func newSuccessResult(data interface{}) *result {
-	return newResult(resultCodeSuccess, "success", data)
-}
-
-func (res *result) String() string {
-	b, err := json.Marshal(res)
-	if err != nil {
-		return fmt.Sprintf(`{"code":%d,"msg":"%s"}`, resultCodeInternalError, err.Error())
-	}
-
-	return string(b)
 }
 
 type scNodeWrapper struct {
@@ -84,95 +46,128 @@ func (n *scNodeWrapper) Run(input []byte) ([]byte, error) {
 	return execSC(input, n.allExportFns())
 }
 
-func (n *scNodeWrapper) add(node *NodeInfo) int {
+func (n *scNodeWrapper) add(node *syscontracts.NodeInfo) (int, error) {
 	if err := n.base.add(node); nil != err {
 		switch err {
 		case errNoPermissionManageSCNode:
-			return addNodeNoPermission
+			return addNodeNoPermission, nil
 		case errParamsInvalid:
-			return addNodeBadParameter
+			return addNodeBadParameter, nil
 		default:
-			return addNodeInternalServerError
+			return 0, err
 		}
 	}
 
-	return addNodeSuccess
+	return addNodeSuccess, nil
 }
 
-//todo 确认： 旧的接口返回值表示更新字段个个数（感觉有点奇怪！！），现在返回值表示更新操作是否成功
-func (n *scNodeWrapper) update(name string, node *updateNode) int {
+//todo 确认： 旧的接口返回值表示更新字段个个数（感觉有点奇怪！！）
+func (n *scNodeWrapper) update(name string, node *syscontracts.UpdateNode) (int, error) {
 	err := n.base.update(name, node)
 	if err != nil {
-		return updateNodeFailed
+		return 0, err
 	}
 
-	return updateNodeSuccess
+	count := 0
+	if node.Status != nil {
+		count++
+	}
+	if node.Typ != nil {
+		count++
+	}
+	if node.Desc != nil {
+		count++
+	}
+	if node.DelayNum != nil {
+		count++
+	}
+
+	return count, nil
 }
 
-//todo 确认：旧接口一律返回成功，没有失败。data值为空时返回的时[]
-func (n *scNodeWrapper) fetAllNodesa() string {
+//todo 确认：旧接口一律返回成功，没有失败。失败时设置data值为空，返回的时[]
+func (n *scNodeWrapper) getAllNodes() (string, error) {
 	nodes, err := n.base.GetAllNodes()
 	if err != nil {
-		return newResult(resultCodeInternalError, err.Error(), nil).String()
+		if errNodeNotFound == err {
+			return newResult(resultCodeInternalError, err.Error(), []string{}).String(), nil
+		}
+
+		return "", err
 	}
 
-	return newSuccessResult(nodes).String()
+	return newSuccessResult(nodes).String(), nil
 }
 
 //todo 确认: 旧的接口只返回了pub公钥是否存在，存在返回1，不存在返回0
-//for c++ interface: validJoinNode
-func (n *scNodeWrapper) isPublicKeyExist(pub string) int {
+func (n *scNodeWrapper) isPublicKeyExist(pub string) (int, error) {
 	err := n.base.checkPublicKeyExist(pub)
 	if err != nil {
 		if errPublicKeyExist == err {
-			return publicKeyExist
+			return publicKeyExist, nil
 		}
 
-		return publicKeyInternalError
+		return 0, err
 	}
 
-	return publicKeyNotExist
+	return publicKeyNotExist, nil
 }
 
 //enode format: "enode://" + publicKey + "@" + ip:port
-//for c++ sc interface: getNormalEnodeNodes
 //todo C++这个接口返回的值是自定义格式，是不是应该采用通用的格式？都采用json会比较好？
-func (n *scNodeWrapper) getENodesOfAllNormalNodes() string {
+//todo 找不到时，直接返回了空字符串，没有按照规定的json结构。
+func (n *scNodeWrapper) getENodesOfAllNormalNodes() (string, error) {
 	enodes, err := n.base.getENodesOfAllNormalNodes()
 	if err != nil {
-		return ""
+		if err == errNodeNotFound {
+			return "", nil
+		}
+
+		return "", err
 	}
 
-	return eNodesToString(enodes)
+	return eNodesToString(enodes), nil
 }
 
-func (n *scNodeWrapper) getENodesOfAllDeletedNodes() string {
+//todo 找不到时，直接返回了空字符串，没有按照规定的json结构。
+func (n *scNodeWrapper) getENodesOfAllDeletedNodes() (string, error) {
 	enodes, err := n.base.getENodesOfAllDeletedNodes()
 	if err != nil {
-		return ""
+		if errNodeNotFound == err {
+			return "", nil
+		}
+
+		return "", err
 	}
 
-	return eNodesToString(enodes)
+	return eNodesToString(enodes), nil
 }
 
 //TODO 需要支持像C++合约一样组合搜索吗
-func (n *scNodeWrapper) getNodes(query *NodeInfo) string {
+func (n *scNodeWrapper) getNodes(query *syscontracts.NodeInfo) (string, error) {
 	nodes, err := n.base.GetNodes(query)
 	if err != nil {
-		return newResult(resultCodeInternalError, err.Error(), nil).String()
+		if errNodeNotFound == err {
+			return "", err
+		}
+		return newResult(resultCodeInternalError, err.Error(), []string{}).String(), nil
 	}
 
-	return newSuccessResult(nodes).String()
+	return newSuccessResult(nodes).String(), nil
 }
 
 //todo 旧接口是定义查询错误时的返回值。 返回值0有多种含义。
-func (n *scNodeWrapper) nodesNum(query *NodeInfo) int {
+func (n *scNodeWrapper) nodesNum(query *syscontracts.NodeInfo) (int, error) {
 	num, err := n.base.nodesNum(query)
 	if err != nil {
-		return 0
+		if errNodeNotFound == err {
+			return 0, nil
+		}
+
+		return 0, err
 	}
 
-	return num
+	return num, nil
 }
 
 //for access control
@@ -180,9 +175,9 @@ func (n *scNodeWrapper) allExportFns() SCExportFns {
 	return SCExportFns{
 		"add":                  n.add,
 		"update":               n.update,
-		"getAllNodes":          n.fetAllNodesa,
+		"getAllNodes":          n.getAllNodes,
 		"getNodes":             n.getNodes,
-		"getNormalEnodeNodes":  n.getENodesOfAllNormalNodes(),
+		"getNormalEnodeNodes":  n.getENodesOfAllNormalNodes,
 		"getDeletedEnodeNodes": n.getENodesOfAllDeletedNodes,
 		"validJoinNode":        n.isPublicKeyExist,
 		"nodesNum":             n.nodesNum,

@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/vm"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"reflect"
@@ -44,39 +44,6 @@ var (
 	errNodeNotFound   = errors.New("node not found")
 )
 
-type NodeInfo struct {
-	Name  string `json:"name,omitempty,required"` //全网唯一，不能重复。所有接口均以此为主键。 这个名称意义是？
-	Owner string `json:"owner,omitempty"`         //todo 没有用到？删除？
-	Desc  string `json:"desc,omitempty"`          //todo 没有用到？删除？
-	Typ   int32  `json:"type,omitempty"`          // 0:观察者节点；1:共识节点
-	// status 1为正常节点, 2为删除节点
-	Status     int32  `json:"status,omitempty,required"`
-	ExternalIP string `json:"externalIP,omitempty"` //todo 没有用到？删除？
-	InternalIP string `json:"internalIP,omitempty,required"`
-	PublicKey  string `json:"publicKey,omitempty,required"` //节点公钥，全网唯一，不能重复
-	RpcPort    int32  `json:"rpcPort,omitempty"`            //todo 没有用到？删除？
-	P2pPort    int32  `json:"p2pPort,omitempty,required"`
-	// delay set validatorSet
-	DelayNum uint64 `json:"delayNum,omitempty"` //共识节点延迟设置的区块高度 (可选, 默认实时设置)
-}
-
-type updateNode struct {
-	Desc *string `json:"desc,omitempty"` //没有用到？删除？
-	Typ  *int32  `json:"type,omitempty"` // 0:观察者节点；1:共识节点
-	// status 1为正常节点, 2为删除节点
-	Status *int32 `json:"status,omitempty,required"`
-	// delay set validatorSet
-	DelayNum *uint64 `json:"delayNum,omitempty"` //共识节点延迟设置的区块高度 (可选, 默认实时设置)
-}
-
-func (un *updateNode) setStatus(status int32) {
-	un.Status = &status
-}
-
-func (un *updateNode) setTyp(typ int32) {
-	un.Typ = &typ
-}
-
 type eNode struct {
 	PublicKey string
 	IP        string
@@ -107,7 +74,7 @@ func hasAddNodePermission(caller common.Address) bool {
 	panic("not implemented")
 }
 
-func checkRequiredFieldsIsEmpty(node *NodeInfo) error {
+func checkRequiredFieldsIsEmpty(node *syscontracts.NodeInfo) error {
 	return common.CheckRequiredFieldsIsEmpty(node)
 }
 
@@ -155,7 +122,7 @@ func genNodeName(name string) string {
 	return fmt.Sprintf("%s-%s", prefixNodeName, name)
 }
 
-func fromNodes(nodes []*NodeInfo) []*eNode {
+func fromNodes(nodes []*syscontracts.NodeInfo) []*eNode {
 	var enodes []*eNode
 	for _, n := range nodes {
 		enode := &eNode{}
@@ -176,10 +143,10 @@ type SCNode struct {
 }
 
 func NewSCNode() *SCNode {
-	return &SCNode{address: vm.NODE_MANAGEMENT_ADDRESS}
+	return &SCNode{address: syscontracts.NODE_MANAGEMENT_ADDRESS}
 }
 
-func (n *SCNode) checkParamsOfAddNode(node *NodeInfo) error {
+func (n *SCNode) checkParamsOfAddNode(node *syscontracts.NodeInfo) error {
 	if err := checkRequiredFieldsIsEmpty(node); err != nil {
 		return err
 	}
@@ -198,7 +165,11 @@ func (n *SCNode) checkParamsOfAddNode(node *NodeInfo) error {
 
 	names, err := n.getNames()
 	if err != nil {
-		return err
+		if errNodeNotFound != err {
+			return err
+		}
+
+		names = []string{}
 	}
 	if n.isNameExist(names, node.Name) {
 		return errNodeNameExist
@@ -215,7 +186,7 @@ func (n *SCNode) checkParamsOfAddNode(node *NodeInfo) error {
 	return nil
 }
 
-func (n *SCNode) checkParamsOfUpdateNodeAndReturnUpdatedNode(name string, update *updateNode) (*NodeInfo, error) {
+func (n *SCNode) checkParamsOfUpdateNodeAndReturnUpdatedNode(name string, update *syscontracts.UpdateNode) (*syscontracts.NodeInfo, error) {
 	node, err := n.getNodeByName(name)
 	if err != nil {
 		return nil, err
@@ -253,7 +224,7 @@ func (n *SCNode) checkParamsOfUpdateNodeAndReturnUpdatedNode(name string, update
 }
 
 func (n *SCNode) checkPublicKeyExist(pub string) error {
-	query := &NodeInfo{}
+	query := &syscontracts.NodeInfo{}
 	query.PublicKey = pub
 	num, err := n.nodesNum(query)
 	if err != nil {
@@ -281,7 +252,7 @@ func (n *SCNode) checkPermissionForAdd() error {
 	return nil
 }
 
-func (n *SCNode) add(node *NodeInfo) error {
+func (n *SCNode) add(node *syscontracts.NodeInfo) error {
 	if err := n.checkPermissionForAdd(); nil != err {
 		return errNoPermissionManageSCNode
 	}
@@ -309,7 +280,7 @@ func (n *SCNode) add(node *NodeInfo) error {
 	return nil
 }
 
-func (n *SCNode) update(name string, update *updateNode) error {
+func (n *SCNode) update(name string, update *syscontracts.UpdateNode) error {
 	if err := n.checkPermissionForAdd(); nil != err {
 		return err
 	}
@@ -343,7 +314,11 @@ func (n *SCNode) isNameExist(names []string, name string) bool {
 func (n *SCNode) addName(name string) error {
 	names, err := n.getNames()
 	if err != nil {
-		return err
+		if errNodeNotFound != err {
+			return err
+		}
+
+		names = []string{}
 	}
 
 	if n.isNameExist(names, name) {
@@ -363,12 +338,12 @@ func (n *SCNode) addName(name string) error {
 	return nil
 }
 
-func (n *SCNode) GetAllNodes() ([]*NodeInfo, error) {
+func (n *SCNode) GetAllNodes() ([]*syscontracts.NodeInfo, error) {
 	return n.GetNodes(nil)
 }
 
 func (n *SCNode) getENodesOfAllNormalNodes() ([]*eNode, error) {
-	query := new(NodeInfo)
+	query := new(syscontracts.NodeInfo)
 	query.Status = NodeStatusNormal
 	nodes, err := n.GetNodes(query)
 	if err != nil {
@@ -379,7 +354,7 @@ func (n *SCNode) getENodesOfAllNormalNodes() ([]*eNode, error) {
 }
 
 func (n *SCNode) getENodesOfAllDeletedNodes() ([]*eNode, error) {
-	query := new(NodeInfo)
+	query := new(syscontracts.NodeInfo)
 	query.Status = NodeStatusDeleted
 	nodes, err := n.GetNodes(query)
 	if err != nil {
@@ -389,13 +364,13 @@ func (n *SCNode) getENodesOfAllDeletedNodes() ([]*eNode, error) {
 	return fromNodes(nodes), nil
 }
 
-func (n *SCNode) getNodeByName(name string) (*NodeInfo, error) {
+func (n *SCNode) getNodeByName(name string) (*syscontracts.NodeInfo, error) {
 	bin := n.getState(genNodeName(name))
 	if len(bin) == 0 {
 		return nil, errNodeNotFound
 	}
 
-	var node NodeInfo
+	var node syscontracts.NodeInfo
 	err := json.Unmarshal(bin, &node)
 	if err != nil {
 		return nil, err
@@ -404,13 +379,13 @@ func (n *SCNode) getNodeByName(name string) (*NodeInfo, error) {
 	return &node, nil
 }
 
-func (n *SCNode) GetNodes(query *NodeInfo) ([]*NodeInfo, error) {
+func (n *SCNode) GetNodes(query *syscontracts.NodeInfo) ([]*syscontracts.NodeInfo, error) {
 	names, err := n.getNames()
 	if err != nil {
 		return nil, err
 	}
 
-	var nodes []*NodeInfo
+	var nodes []*syscontracts.NodeInfo
 	for _, name := range names {
 		node, err := n.getNodeByName(name)
 		if err != nil {
@@ -432,7 +407,7 @@ func (n *SCNode) GetNodes(query *NodeInfo) ([]*NodeInfo, error) {
 func (n *SCNode) getNames() ([]string, error) {
 	bin := n.getState(keyOfNodesNameDB)
 	if len(bin) == 0 {
-		return []string{}, nil
+		return nil, errNodeNotFound
 	}
 
 	var names []string
@@ -444,7 +419,7 @@ func (n *SCNode) getNames() ([]string, error) {
 	return names, nil
 }
 
-func (n *SCNode) nodesNum(query *NodeInfo) (int, error) {
+func (n *SCNode) nodesNum(query *syscontracts.NodeInfo) (int, error) {
 	nodes, err := n.GetNodes(query)
 	if err != nil {
 		if errNodeNotFound == err {
@@ -465,7 +440,7 @@ func (n *SCNode) getState(key string) []byte {
 	return n.stateDB.GetState(n.address, []byte(key))
 }
 
-func (n *SCNode) isMatch(node, query *NodeInfo) bool {
+func (n *SCNode) isMatch(node, query *syscontracts.NodeInfo) bool {
 	if nil == query {
 		return true
 	}

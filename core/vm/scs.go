@@ -2,7 +2,7 @@ package vm
 
 import (
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/vm"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 )
 
 //system contract export functions
@@ -12,8 +12,8 @@ type (
 )
 
 var PlatONEPrecompiledContracts = map[common.Address]PrecompiledContract{
-	vm.USER_MANAGEMENT_ADDRESS: &UserManagement{},
-	vm.NODE_MANAGEMENT_ADDRESS: &scNodeWrapper{},
+	syscontracts.USER_MANAGEMENT_ADDRESS: &UserManagement{},
+	syscontracts.NODE_MANAGEMENT_ADDRESS: &scNodeWrapper{},
 }
 
 //input format： hex.encode( rlp.encode( [][]byte{rlp.encode(txType), function name,rlp.encode(params[1]), rlp.encode(params[1])...} ) )
