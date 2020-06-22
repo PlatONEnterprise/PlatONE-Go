@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/byteutil"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/life/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"reflect"
@@ -39,9 +38,9 @@ func execSC(input []byte, fns SCExportFns) ([]byte, error) {
 func primitiveToBytes(val reflect.Value) []byte {
 	switch val.Kind() {
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		return utils.Uint64ToBytes(val.Uint())
+		return byteutil.Uint64ToBytes(val.Uint())
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		return utils.Int64ToBytes(val.Int())
+		return byteutil.Int64ToBytes(val.Int())
 	case reflect.String:
 		return []byte(val.String())
 		//case reflect.Bool:

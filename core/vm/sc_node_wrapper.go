@@ -31,8 +31,8 @@ type scNodeWrapper struct {
 	base *SCNode
 }
 
-func newSCNodeWrapper() *scNodeWrapper {
-	return &scNodeWrapper{NewSCNode()}
+func newSCNodeWrapper(db StateDB) *scNodeWrapper {
+	return &scNodeWrapper{NewSCNode(db)}
 }
 
 func (n *scNodeWrapper) RequiredGas(input []byte) uint64 {

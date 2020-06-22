@@ -15,7 +15,7 @@ import (
 )
 
 func TestSCNode_isMatch(t *testing.T) {
-	scNode := NewSCNode()
+	scNode := NewSCNode(nil)
 	node := &syscontracts.NodeInfo{}
 	query := &syscontracts.NodeInfo{}
 	assert.Equal(t, true, scNode.isMatch(node, query))
@@ -326,8 +326,7 @@ func addNodeInfoIntoDB() (*SCNode, *syscontracts.NodeInfo) {
 	ni.PublicKey = "044b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc"
 
 	db := newMockStateDB()
-	n := NewSCNode()
-	n.stateDB = db
+	n := NewSCNode(db)
 
 	return n, ni
 }
@@ -358,8 +357,7 @@ func TestSCNode_CheckParamsOfUpdateNodeAndReturnUpdatedNode(t *testing.T) {
 
 func TestSCNode_CheckPublicKeyExist(t *testing.T) {
 	db := newMockStateDB()
-	n := NewSCNode()
-	n.stateDB = db
+	n := NewSCNode(db)
 
 	err := n.checkPublicKeyExist("044b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc")
 	assert.NoError(t, err)

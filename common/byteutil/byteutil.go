@@ -23,12 +23,10 @@ var Bytes2X_CMD = map[string]interface{}{
 	"uint16": BytesToUint16,
 	"uint32": BytesToUint32,
 	"uint64": BytesToUint64,
-	//"uint":   BytesToUint,
 
 	"int16": BytesToInt16,
 	"int32": BytesToInt32,
 	"int64": BytesToInt64,
-	//"int":   BytesToInt,
 
 	"*syscontracts.NodeInfo":   BytesToNodeInfo,
 	"*syscontracts.UpdateNode": BytesToUpdateNode,

@@ -142,8 +142,8 @@ type SCNode struct {
 	caller  common.Address
 }
 
-func NewSCNode() *SCNode {
-	return &SCNode{address: syscontracts.NODE_MANAGEMENT_ADDRESS}
+func NewSCNode(db StateDB) *SCNode {
+	return &SCNode{stateDB: db, address: syscontracts.NODE_MANAGEMENT_ADDRESS}
 }
 
 func (n *SCNode) checkParamsOfAddNode(node *syscontracts.NodeInfo) error {
