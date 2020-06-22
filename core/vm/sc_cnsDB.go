@@ -95,7 +95,7 @@ func totalWrapper() []byte {
 
 // utils
 
-func (cMap *cnsMap) isNameDuplicated(name, origin string) bool {
+func (cMap *cnsMap) isNameRegByOthers(name, origin string) bool {
 	for index := 0; index < cMap.total(); index++{
 		cnsInfo := cMap.get(index)
 		if cnsInfo.Name == name && cnsInfo.Origin != origin {
@@ -106,7 +106,7 @@ func (cMap *cnsMap) isNameDuplicated(name, origin string) bool {
 	return false
 }
 
-func isNameDuplicated_Method2(c *cnsMap, name, origin string) bool {
+func isNameRegByOthers_Method2(c *cnsMap, name, origin string) bool {
 	for index := 0; index < c.total(); index++{
 		key := c.getKey(index)
 		existedName := strings.Split(string(key), ":")[0]
@@ -123,7 +123,7 @@ func isNameDuplicated_Method2(c *cnsMap, name, origin string) bool {
 	return false
 }
 
-func (c *cnsMap) getLatestVersion(name string) string {
+func (c *cnsMap) getLargestVersion(name string) string {
 	tempVersion := "0.0.0.0"
 
 	for index := 0; index < c.total(); index++{
@@ -138,7 +138,7 @@ func (c *cnsMap) getLatestVersion(name string) string {
 	return tempVersion
 }
 
-func (c *cnsMap) getLatestVersion_Method2(name string) string {
+func (c *cnsMap) getLargestVersion_Method2(name string) string {
 	tempVersion := "0.0.0.0"
 
 	for index := 0; index < c.total(); index++{
