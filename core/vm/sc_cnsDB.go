@@ -1,7 +1,6 @@
 package vm
 
 import (
-	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"strconv"
 	"strings"
@@ -53,9 +52,6 @@ func (c *cnsMap) find(key []byte) *ContractInfo {
 
 func (c *cnsMap) get(index int) *ContractInfo {
 	value := c.getKey(index)
-
-	fmt.Printf("the value is %s\n", value)
-
 	return c.find(value)
 }
 
@@ -73,7 +69,7 @@ func (c *cnsMap) total() int {
 func (c *cnsMap) insert(key, value []byte) {
 	total := c.total()
 	index := strconv.Itoa(total)
-	
+
 	c.setState(key, value)
 	c.setState(wrapper(index), key)
 

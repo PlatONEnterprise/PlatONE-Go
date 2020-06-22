@@ -3,6 +3,7 @@ package vm
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
@@ -51,7 +52,7 @@ type ContractInfo struct {
 	Version 	string
 	Address 	string
 	Origin  	string
-	TimeStamp 	int64
+	TimeStamp 	time.Time
 	// Enabled 	bool	// deprecated
 }
 
@@ -67,7 +68,7 @@ func newContractInfo(name, version, address, origin string) *ContractInfo {
 		Version:	version,
 		Address:	address,
 		Origin:		origin,
-		TimeStamp:  time.Now().Unix(),
+		TimeStamp:  time.Now(),
 	}
 }
 
@@ -264,16 +265,19 @@ func (cns *CnsManager) cnsRecall(name, version string) (int, error) {
 }
 
 func (cns *CnsManager) getContractAddress(name, version string) (string, error) {
-	if !regName.MatchString(name) {
-		return "", errors.New(ERR_NAME_INVALID)
+
+	if strings.EqualFold(version, "latest") {
+		version = cns.cMap.getLatestVer(name)
 	}
+
+	fmt.Printf("the version is %v\n", version)
 
 	if !regVer.MatchString(version) {
 		return "", errors.New(ERR_VERSION_INVALID)
 	}
 
-	if strings.EqualFold(version, "latest") {
-		version = cns.cMap.getLatestVer(name)
+	if !regName.MatchString(name) {
+		return "", errors.New(ERR_NAME_INVALID)
 	}
 
 	key := getSearchKey(name, version)
