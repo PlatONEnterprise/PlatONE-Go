@@ -28,8 +28,8 @@ func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Cont
 		switch p.(type) {
 		case *UserManagement:
 			um := &UserManagement{
-				Contract: contract,
-				Evm:      evm,
+				state: evm.StateDB,
+				caller: contract.Caller(),
 			}
 			return um.Run(input)
 		case *scNodeWrapper:

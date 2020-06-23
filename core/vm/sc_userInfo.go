@@ -182,8 +182,7 @@ func (u *UserManagement) getUserByName(name string) ([]byte, error){
 }
 
 // 查询登记的所有用户，任意用户可查
-// TODO: 返回值类型
-func (u *UserManagement) getAllUser() []*UserInfo{
+func (u *UserManagement) getAllUsers() ([]byte, error){
 	var (
 		addrs []common.Address
 		users []*UserInfo
@@ -191,18 +190,18 @@ func (u *UserManagement) getAllUser() []*UserInfo{
 	)
 	addrs, err = u.getUserList()
 	if err != nil{
-		return nil
+		return nil, err
 	}
 
 	for  _,v := range addrs{
 		info, err := u.getUserInfo(v)
 		if err != nil{
-			return nil
+			return nil, err
 		}
 		users = append(users, info)
 	}
 
-	return users
+	return json.Marshal(users)
 }
 //func (u *UserManagement) registerUserInfo(userInfo string) {}
 //func (u *UserManagement) approveUserInfo(userAddress string){}
@@ -331,8 +330,15 @@ func (u *UserManagement) callerPermissionCheck() bool{
 	if err != nil{
 		return false
 	}
+
+	rolesStr := []string  {}
+	json.Unmarshal(role, rolesStr)
+
+	ur := &UserRoles{}
+	ur.FromStrings(rolesStr)
+
 	for _, p := range permissionRolesForUserOps {
-		if role. hasRole(p){
+		if ur. hasRole(p){
 			return true
 		}
 	}
