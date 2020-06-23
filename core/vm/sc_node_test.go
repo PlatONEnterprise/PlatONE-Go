@@ -2,11 +2,13 @@ package vm
 
 import (
 	"encoding/hex"
+	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"math/rand"
 
 	"github.com/stretchr/testify/assert"
 	"math/big"
@@ -181,6 +183,18 @@ func TestIsValidUser(t *testing.T) {
 			}
 		})
 	}
+}
+
+func randFakeNodeInfo() *syscontracts.NodeInfo {
+	ni := &syscontracts.NodeInfo{}
+	ni.P2pPort = 8888
+	ni.InternalIP = "127.0.0.1"
+	ni.Name = fmt.Sprintf("name-%d", rand.Int())
+	ni.Typ = NodeTypeObserver
+	ni.Status = NodeStatusNormal
+	ni.PublicKey = genPublicKeyInHex()
+	fmt.Printf("rand fake node info:%+v\n", ni)
+	return ni
 }
 
 func fakeNodeInfo() *syscontracts.NodeInfo {

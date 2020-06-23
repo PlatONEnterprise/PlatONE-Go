@@ -26,7 +26,7 @@ func Test_retrieveFnNameAndParams(t *testing.T) {
 	name := "wanxiang"
 	var age int64 = 3
 	var input = MakeInput(fnNameInput, name, age)
-	fnName, fn, params, err := retrieveFnAndParams(input, (&fakeClass{}).allExportFns())
+	txType, fnName, fn, params, err := retrieveFnAndParams(input, (&fakeClass{}).allExportFns())
 	if nil != err {
 		t.Error(err)
 		return
@@ -37,6 +37,7 @@ func Test_retrieveFnNameAndParams(t *testing.T) {
 	assert.Equal(t, 2, len(params), "params length is invalid")
 	assert.Equal(t, name, params[0].String(), "params invalid")
 	assert.Equal(t, age, params[1].Int(), "params invalid")
+	assert.Equal(t, int(E_INVOKE_CONTRACT), txType)
 }
 
 func Test_execSC(t *testing.T) {

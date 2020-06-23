@@ -32,7 +32,6 @@ syscontract:
 
 all:
 	build/build_deps.sh
-	build/build_syscontracts.sh
 	build/env.sh go run build/ci.go install
 	build/move_bin_to_release.sh
 

@@ -514,9 +514,9 @@ func InvokeContract(contractAddr string, abiPath string, funcName string,
 		funcName, funcParams = GetFuncNameAndParams(funcName)
 	}
 	//Judging whether this contract exists or not
-	if !getContractByAddress(contractAddr) {
-		return fmt.Errorf("the contract address is not exist ...")
-	}
+	//if !getContractByAddress(contractAddr) {
+	//	return fmt.Errorf("the contract address is not exist ...")
+	//}
 
 	//Judging whether this method exists or not
 	abiFunc, err := parseFuncFromAbi(abiPath, funcName)

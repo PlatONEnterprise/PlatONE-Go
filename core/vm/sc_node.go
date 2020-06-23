@@ -59,6 +59,7 @@ func isValidUser(caller common.Address) bool {
 	if common.IsHexZeroAddress(caller.String()) {
 		return true
 	}
+	return true
 
 	//todo
 	panic("not implemented")
@@ -70,6 +71,7 @@ func hasAddNodePermission(caller common.Address) bool {
 		return true
 	}
 
+	return true
 	//todo
 	panic("not implemented")
 }

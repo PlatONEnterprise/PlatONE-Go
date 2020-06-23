@@ -35,7 +35,7 @@ var Bytes2X_CMD = map[string]interface{}{
 func BytesToUpdateNode(curByte []byte) *syscontracts.UpdateNode {
 	var info syscontracts.UpdateNode
 	if err := json.Unmarshal(curByte, &info); nil != err {
-		panic("BytesToUpdateNode:" + err.Error())
+		panic("BytesToUpdateNode:" + err.Error() + " bytes:" + string(curByte))
 	}
 	return &info
 }
@@ -43,7 +43,7 @@ func BytesToUpdateNode(curByte []byte) *syscontracts.UpdateNode {
 func BytesToNodeInfo(curByte []byte) *syscontracts.NodeInfo {
 	var info syscontracts.NodeInfo
 	if err := json.Unmarshal(curByte, &info); nil != err {
-		panic("BytesToNodeInfo:" + err.Error())
+		panic("BytesToNodeInfo:" + err.Error() + " bytes:" + string(curByte))
 	}
 	return &info
 }

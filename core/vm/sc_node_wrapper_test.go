@@ -10,12 +10,47 @@ import (
 
 func Test_scNodeWrapper_add(t *testing.T) {
 	addNodeInfoForTest(t)
+
+	mockDB := newStateDBMock()
+	ni := randFakeNodeInfo()
+	addRandNodeInfoForTest(t, ni, mockDB)
+
+	ni = randFakeNodeInfo()
+	_, node := addRandNodeInfoForTest(t, ni, mockDB)
+
+	fnNameInput := "getAllNodes"
+	var input = MakeInput(fnNameInput)
+	ret, err := node.Run(input)
+	assert.NoError(t, err)
+	t.Log(string(ret))
+}
+
+func addRandNodeInfoForTest(t *testing.T, ni *syscontracts.NodeInfo, mockDB *stateDBMock) (*syscontracts.NodeInfo, *scNodeWrapper) {
+	fnNameInput := "add"
+
+	params, err := json.Marshal(ni)
+
+	assert.NoError(t, err)
+	var input = MakeInput(fnNameInput, string(params))
+
+	node := &scNodeWrapper{NewSCNode(mockDB)}
+
+	ret, err := node.Run(input)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(addNodeSuccess), byteutil.BytesToInt64(ret))
+
+	return ni, node
 }
 
 func addNodeInfoForTest(t *testing.T) (*syscontracts.NodeInfo, *scNodeWrapper) {
 	fnNameInput := "add"
 	ni := fakeNodeInfo()
+
+	//d := genPublicKeyInHex()
+	//ni.PublicKey = d
+	//ni.Name = "wxblockchian"
 	params, err := json.Marshal(ni)
+
 	assert.NoError(t, err)
 	var input = MakeInput(fnNameInput, string(params))
 	mockDB := newStateDBMock()

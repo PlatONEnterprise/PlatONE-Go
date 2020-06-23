@@ -148,9 +148,9 @@ func (n *scNodeWrapper) getNodes(query *syscontracts.NodeInfo) (string, error) {
 	nodes, err := n.base.GetNodes(query)
 	if err != nil {
 		if errNodeNotFound == err {
-			return "", err
+			return newResult(resultCodeInternalError, err.Error(), []string{}).String(), nil
 		}
-		return newResult(resultCodeInternalError, err.Error(), []string{}).String(), nil
+		return "", err
 	}
 
 	return newSuccessResult(nodes).String(), nil

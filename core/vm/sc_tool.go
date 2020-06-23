@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/byteutil"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
@@ -17,7 +18,7 @@ var (
 )
 
 func execSC(input []byte, fns SCExportFns) ([]byte, error) {
-	_, fn, params, err := retrieveFnAndParams(input, fns)
+	txType, _, fn, params, err := retrieveFnAndParams(input, fns)
 	if nil != err {
 		log.Error("failed to retrieve func name and params.", "error", err)
 		return nil, err
@@ -32,17 +33,17 @@ func execSC(input []byte, fns SCExportFns) ([]byte, error) {
 		return nil, err
 	}
 
-	return primitiveToBytes(result[0]), nil
+	return toContractReturnValueType(txType, result[0]), nil
 }
 
-func primitiveToBytes(val reflect.Value) []byte {
+func toContractReturnValueType(txType int, val reflect.Value) []byte {
 	switch val.Kind() {
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		return byteutil.Uint64ToBytes(val.Uint())
+		return toContractReturnValueUintType(txType, val.Uint())
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		return byteutil.Int64ToBytes(val.Int())
+		return toContractReturnValueIntType(txType, val.Int())
 	case reflect.String:
-		return []byte(val.String())
+		return toContractReturnValueStringType(txType, []byte(val.String()))
 		//case reflect.Bool:
 		//case reflect.Float64, reflect.Float32:
 	}
@@ -50,10 +51,10 @@ func primitiveToBytes(val reflect.Value) []byte {
 	panic("unsupported type")
 }
 
-func retrieveFnAndParams(input []byte, fns SCExportFns) (fnName string, fn SCExportFn, fnParams []reflect.Value, err error) {
+func retrieveFnAndParams(input []byte, fns SCExportFns) (txType int, fnName string, fn SCExportFn, fnParams []reflect.Value, err error) {
 	defer func() {
-		if err := recover(); nil != err {
-			fn, fnParams, err = nil, nil, fmt.Errorf("parse tx data failed:%s", err)
+		if e := recover(); nil != e {
+			fn, fnParams, err = nil, nil, fmt.Errorf("parse tx data failed:%+v", e)
 			log.Error("Failed to parse tx data", "error", err, "input", input)
 		}
 	}()
@@ -61,21 +62,21 @@ func retrieveFnAndParams(input []byte, fns SCExportFns) (fnName string, fn SCExp
 	var args [][]byte
 	if err := rlp.DecodeBytes(input, &args); nil != err {
 		log.Error("Failed to verify input of system contract,Decode rlp input failed", "error", err)
-		return "", nil, nil, err
+		return 0, "", nil, nil, err
 	}
-	//txType := int(common.BytesToInt64(args[0]))
+	txType = int(common.BytesToInt64(args[0]))
 	fnName = string(args[1])
 
 	var ok bool
 	if fn, ok = fns[fnName]; !ok {
-		return "", nil, nil, errFuncNotFoundInExportFuncs
+		return 0, "", nil, nil, errFuncNotFoundInExportFuncs
 	}
 
 	fnType := reflect.TypeOf(fn)
 	paramNum := fnType.NumIn()
 	if paramNum != len(args)-2 {
 		log.Warn("params number invalid. ", "expected:", paramNum, "got:", len(args)-2)
-		return "", nil, nil, errParamsNumInvalid
+		return 0, "", nil, nil, errParamsNumInvalid
 	}
 
 	fnParams = make([]reflect.Value, paramNum)
@@ -85,7 +86,7 @@ func retrieveFnAndParams(input []byte, fns SCExportFns) (fnName string, fn SCExp
 		fnParams[i] = byteutil.ConvertBytesTo(inputByte, targetType)
 	}
 
-	return fnName, fn, fnParams, nil
+	return txType, fnName, fn, fnParams, nil
 }
 
 func CheckPublicKeyFormat(pub string) error {
