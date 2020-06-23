@@ -1,34 +1,13 @@
 package vm
 
 import (
+	"encoding/json"
+	"fmt"
 	"reflect"
 	"testing"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 )
-
-func TestUserRoles_encode(t *testing.T) {
-	tests := []struct {
-		name    string
-		roles   *UserRoles
-		want    []byte
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.roles.encode()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("UserRoles.encode() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("UserRoles.encode() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
 
 func TestUserRoles_setRole(t *testing.T) {
 	type args struct {
@@ -416,6 +395,8 @@ func TestUserManagement_delContractAdminByAddress(t *testing.T) {
 }
 
 func TestUserManagement_addContractDeployerByAddress(t *testing.T) {
+	db := newMockStateDB()
+
 	type fields struct {
 		Contract *Contract
 		Evm      *EVM
@@ -435,8 +416,8 @@ func TestUserManagement_addContractDeployerByAddress(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			u := &UserManagement{
-				Contract: tt.fields.Contract,
-				Evm:      tt.fields.Evm,
+				state:db,
+				caller:ZeroAddress,
 			}
 			got, err := u.addContractDeployerByAddress(tt.args.addr)
 			if (err != nil) != tt.wantErr {
@@ -636,6 +617,196 @@ func TestUserManagement_Caller(t *testing.T) {
 			}
 			if got := u.Caller(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("UserManagement.Caller() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestUserManagement_getAddrList(t *testing.T) {
+	addr := []common.Address{ZeroAddress}
+	data, _ := json.Marshal(addr)
+	fmt.Println(string(data))
+
+	addr1 := []common.Address{}
+	fmt.Println(json.Unmarshal(data, &addr1))
+	fmt.Println(addr1)
+}
+func generateKey(targetRole int32) ([]byte){
+	key := AddressListKey
+	switch targetRole{
+	case SUPER_ADMIN:
+		key += "SUPER_ADMIN"
+	case CHAIN_ADMIN:
+		key += "CHAIN_ADMIN"
+	case NODE_ADMIN:
+		key += "NODE_ADMIN"
+	case CONTRACT_ADMIN:
+		key += "CONTRACT_ADMIN"
+	case CONTRACT_DEPLOYER:
+		key += "CONTRACT_ADMIN"
+	default:
+		return nil
+	}
+	return []byte(key)
+}
+
+func TestUserManagement_addAddrList(t *testing.T) {
+	type fields struct {
+		state StateDB
+		caller common.Address
+	}
+	db := newMockStateDB()
+
+	type args struct {
+		key  []byte
+		addr common.Address
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    []common.Address
+		wantErr error
+	}{
+		// TODO: Add test cases.
+		{
+			fields:fields{
+				state:db,
+				caller:common.Address{},
+			},
+			args:args{
+				key:  generateKey(SUPER_ADMIN),
+				addr: ZeroAddress,
+			},
+			want:[]common.Address{ZeroAddress},
+			wantErr:nil,
+		},
+		{
+			fields:fields{
+				state:db,
+				caller:common.Address{},
+			},
+			args:args{
+				key:  generateKey(SUPER_ADMIN),
+				addr: common.HexToAddress("0x0000000000000000000000000000000000000001"),
+			},
+			want: []common.Address{ZeroAddress,common.HexToAddress("0x0000000000000000000000000000000000000001")},
+			wantErr:nil,
+		},
+		{
+			fields:fields{
+				state:db,
+				caller:common.Address{},
+			},
+			args:args{
+				key:  generateKey(SUPER_ADMIN),
+				addr: common.HexToAddress("0x0000000000000000000000000000000000000002"),
+			},
+			want: []common.Address{ZeroAddress,common.HexToAddress("0x0000000000000000000000000000000000000001"),common.HexToAddress("0x0000000000000000000000000000000000000002")},
+			wantErr:nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			u := &UserManagement{
+				state: tt.fields.state,
+				caller: tt.fields.caller,
+			}
+			err := u.addAddrList(tt.args.key,tt.args.addr)
+			if (err != tt.wantErr) {
+				t.Errorf("UserManagement.addAddrList() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			want, err := u.getAddrList(tt.args.key)
+			if err != nil || !reflect.DeepEqual(want, tt.want) {
+				t.Errorf("UserManagement.addAddrList() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
+}
+
+func TestUserManagement_delAddrList(t *testing.T) {
+	type fields struct {
+		state StateDB
+		caller common.Address
+	}
+	db := newMockStateDB()
+	u := UserManagement{
+		caller:ZeroAddress,
+		state:db,
+	}
+	key := generateKey(SUPER_ADMIN)
+	u.addAddrList(key, ZeroAddress)
+	u.addAddrList(key, common.HexToAddress("0x0000000000000000000000000000000000000001"))
+	u.addAddrList(key, common.HexToAddress("0x0000000000000000000000000000000000000002"))
+
+	type args struct {
+		key  []byte
+		addr common.Address
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    []common.Address
+		wantErr error
+	}{
+		// TODO: Add test cases.
+		{
+			fields:fields{
+				state:db,
+				caller:common.Address{},
+			},
+			args:args{
+				key:  generateKey(SUPER_ADMIN),
+				addr: ZeroAddress,
+			},
+			want:[]common.Address{common.HexToAddress("0x0000000000000000000000000000000000000001"),common.HexToAddress("0x0000000000000000000000000000000000000002")},
+			wantErr:nil,
+		},
+		{
+			fields:fields{
+				state:db,
+				caller:common.Address{},
+			},
+			args:args{
+				key:  generateKey(SUPER_ADMIN),
+				addr: common.HexToAddress("0x0000000000000000000000000000000000000001"),
+			},
+			want: []common.Address{common.HexToAddress("0x0000000000000000000000000000000000000002")},
+			wantErr:nil,
+		},
+		{
+			fields:fields{
+				state:db,
+				caller:common.Address{},
+			},
+			args:args{
+				key:  generateKey(SUPER_ADMIN),
+				addr: common.HexToAddress("0x0000000000000000000000000000000000000002"),
+			},
+			want: []common.Address{},
+			wantErr:nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			u := &UserManagement{
+				state: tt.fields.state,
+				caller: tt.fields.caller,
+			}
+			err := u.delAddrList(tt.args.key,tt.args.addr)
+			if (err != tt.wantErr) {
+				t.Errorf("UserManagement.delAddrList() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			want, err := u.getAddrList(tt.args.key)
+			if err != nil || !reflect.DeepEqual(want, tt.want) {
+				t.Errorf("UserManagement.delAddrList() ret = %v, want %v", want, tt.want)
+				return
 			}
 		})
 	}

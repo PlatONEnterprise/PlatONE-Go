@@ -34,7 +34,7 @@ function check_ip() {
 function create_account() {
     phrase=0
 
-    if [ "${AUTO}" = "true" ]; then 
+    if [ "${AUTO}" = "true" ]; then
         echo "[INFO]: auto use default password 0 to create the account"
     else
         echo "[INFO]: Input account passphrase."
@@ -137,14 +137,14 @@ function main() {
     create_account
     echo "[INFO] to create ctool.json"
     create_ctooljson
-    
+    exit
     deploy cnsManager
     deploy paramManager
-    deploy userManager 
-    deploy userRegister 
+    deploy userManager
+    deploy userRegister
     deploy roleManager
-    deploy roleRegister 
-    deploy nodeManager 
+    deploy roleRegister
+    deploy nodeManager
 #    deploy nodeRegister
 
     add_first_node
@@ -154,7 +154,7 @@ function main() {
 }
 
 function help() {
-    echo 
+    echo
     echo "
 USAGE: platonectl.sh deploysys [options]
 

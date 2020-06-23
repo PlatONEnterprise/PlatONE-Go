@@ -2,12 +2,15 @@ package vm
 
 import (
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 )
 
 type UserManagement struct {
 	Contract *Contract
 	Evm      *EVM
+	state  StateDB
+	caller common.Address
 }
 
 func (u *UserManagement) RequiredGas(input []byte) uint64 {
@@ -23,20 +26,23 @@ func (u *UserManagement) Run(input []byte) ([]byte, error) {
 }
 
 func (u *UserManagement) setState(key, value []byte) {
-	u.Evm.StateDB.SetState(*u.Contract.CodeAddr, key, value)
+	log.Warn("(u *UserManagement) setState", "key", key, "value", value)
+	u.state.SetState(u.caller, key, value)
 }
 func (u *UserManagement) getState(key []byte) []byte {
-	return u.Evm.StateDB.GetState(*u.Contract.CodeAddr, key)
+	value := u.state.GetState(u.caller, key)
+	log.Warn("(u *UserManagement) getState", "key", key, "value", value)
+	return value
 }
 
 func (u *UserManagement) Caller() common.Address{
-	return u.Contract.Caller()
+	return u.caller
 }
-
 
 //for access control
 func (u *UserManagement) AllExportFns() SCExportFns {
 	return SCExportFns{
+		"setSuperAdmin": u.setSuperAdmin,
 		"transferSuperAdminByAddress": u.transferSuperAdminByAddress,
 		"transferSuperAdminByName": u.transferSuperAdminByName,
 		"addChainAdminByAddress":u.addChainAdminByAddress,
@@ -56,7 +62,7 @@ func (u *UserManagement) AllExportFns() SCExportFns {
 
 		"getUserByAddress": u.getUserByAddress,
 		"getUserByName": u.getUserByName,
-		"getAllUser": u.getAllUser,
+		"getAllUsers": u.getAllUsers,
 	}
 }
 

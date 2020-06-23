@@ -700,7 +700,7 @@ func (pool *TxPool) PendingLimited() (map[common.Address]types.Transactions, err
 	pool.mu.Lock()
 	defer pool.mu.Unlock()
 
-	log.Info("Pending txs before get", len(pool.pending))
+	log.Info("Pending txs before get", "len(pending)",len(pool.pending))
 	txCount := 0
 	pending := make(map[common.Address]types.Transactions)
 	for addr, list := range pool.pending {

@@ -48,6 +48,7 @@ func HttpPost(param JsonParam) (string, error) {
 
 func parseResponse(r string) *Response {
 	var resp = Response{}
+	fmt.Println(r)
 	err := json.Unmarshal([]byte(r), &resp)
 
 	if err != nil {
