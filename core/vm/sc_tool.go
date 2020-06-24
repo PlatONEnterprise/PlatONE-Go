@@ -4,12 +4,13 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"reflect"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/byteutil"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
-	"reflect"
 )
 
 var (
@@ -37,6 +38,13 @@ func execSC(input []byte, fns SCExportFns) ([]byte, error) {
 }
 
 func toContractReturnValueType(txType int, val reflect.Value) []byte {
+	defer func() {
+		if e := recover(); nil != e {
+			err := fmt.Errorf("toContractReturnValueType:%+v", e)
+			log.Error("toContractReturnValueType", "error", err, "value type", val.Kind())
+		}
+	}()
+
 	switch val.Kind() {
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		return toContractReturnValueUintType(txType, val.Uint())
@@ -44,10 +52,11 @@ func toContractReturnValueType(txType int, val reflect.Value) []byte {
 		return toContractReturnValueIntType(txType, val.Int())
 	case reflect.String:
 		return toContractReturnValueStringType(txType, []byte(val.String()))
+	case reflect.Slice:
+		return toContractReturnValueStringType(txType, []byte(val.Bytes()))
 		//case reflect.Bool:
 		//case reflect.Float64, reflect.Float32:
 	}
-
 	panic("unsupported type")
 }
 

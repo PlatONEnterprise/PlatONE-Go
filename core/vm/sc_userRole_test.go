@@ -203,10 +203,7 @@ func TestUserManagement_addChainAdminByAddress(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			u := &UserManagement{
-				Contract: tt.fields.Contract,
-				Evm:      tt.fields.Evm,
-			}
+			u := &UserManagement{}
 			got, err := u.addChainAdminByAddress(tt.args.addr)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("UserManagement.addChainAdminByAddress() error = %v, wantErr %v", err, tt.wantErr)
@@ -238,10 +235,7 @@ func TestUserManagement_delChainAdminByAddress(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			u := &UserManagement{
-				Contract: tt.fields.Contract,
-				Evm:      tt.fields.Evm,
-			}
+			u := &UserManagement{}
 			got, err := u.delChainAdminByAddress(tt.args.addr)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("UserManagement.delChainAdminByAddress() error = %v, wantErr %v", err, tt.wantErr)
@@ -273,10 +267,7 @@ func TestUserManagement_addNodeAdminByAddress(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			u := &UserManagement{
-				Contract: tt.fields.Contract,
-				Evm:      tt.fields.Evm,
-			}
+			u := &UserManagement{}
 			got, err := u.addNodeAdminByAddress(tt.args.addr)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("UserManagement.addNodeAdminByAddress() error = %v, wantErr %v", err, tt.wantErr)
@@ -308,10 +299,7 @@ func TestUserManagement_delNodeAdminByAddress(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			u := &UserManagement{
-				Contract: tt.fields.Contract,
-				Evm:      tt.fields.Evm,
-			}
+			u := &UserManagement{}
 			got, err := u.delNodeAdminByAddress(tt.args.addr)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("UserManagement.delNodeAdminByAddress() error = %v, wantErr %v", err, tt.wantErr)
@@ -343,10 +331,7 @@ func TestUserManagement_addContractAdminByAddress(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			u := &UserManagement{
-				Contract: tt.fields.Contract,
-				Evm:      tt.fields.Evm,
-			}
+			u := &UserManagement{}
 			got, err := u.addContractAdminByAddress(tt.args.addr)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("UserManagement.addContractAdminByAddress() error = %v, wantErr %v", err, tt.wantErr)
@@ -378,10 +363,7 @@ func TestUserManagement_delContractAdminByAddress(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			u := &UserManagement{
-				Contract: tt.fields.Contract,
-				Evm:      tt.fields.Evm,
-			}
+			u := &UserManagement{}
 			got, err := u.delContractAdminByAddress(tt.args.addr)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("UserManagement.delContractAdminByAddress() error = %v, wantErr %v", err, tt.wantErr)
@@ -450,10 +432,7 @@ func TestUserManagement_delContractDeployerByAddress(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			u := &UserManagement{
-				Contract: tt.fields.Contract,
-				Evm:      tt.fields.Evm,
-			}
+			u := &UserManagement{}
 			got, err := u.delContractDeployerByAddress(tt.args.addr)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("UserManagement.delContractDeployerByAddress() error = %v, wantErr %v", err, tt.wantErr)
@@ -485,10 +464,7 @@ func TestUserManagement_getRolesByAddress(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			u := &UserManagement{
-				Contract: tt.fields.Contract,
-				Evm:      tt.fields.Evm,
-			}
+			u := &UserManagement{}
 			got, err := u.getRolesByAddress(tt.args.addr)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("UserManagement.getRolesByAddress() error = %v, wantErr %v", err, tt.wantErr)
@@ -521,8 +497,6 @@ func TestUserManagement_getRole(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			u := &UserManagement{
-				Contract: tt.fields.Contract,
-				Evm:      tt.fields.Evm,
 			}
 			got, err := u.getRole(tt.args.addr)
 			if (err != nil) != tt.wantErr {
@@ -555,10 +529,7 @@ func TestUserManagement_setRole(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			u := &UserManagement{
-				Contract: tt.fields.Contract,
-				Evm:      tt.fields.Evm,
-			}
+			u := &UserManagement{}
 			if err := u.setRole(tt.args.addr, tt.args.roles); (err != nil) != tt.wantErr {
 				t.Errorf("UserManagement.setRole() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -586,10 +557,7 @@ func TestUserManagement_setRoleWithPermissionCheck(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			u := &UserManagement{
-				Contract: tt.fields.Contract,
-				Evm:      tt.fields.Evm,
-			}
+			u := &UserManagement{}
 			if err := u.setRoleWithPermissionCheckByAddress(tt.args.addr, tt.args.targetRole, tt.args.status); (err != nil) != tt.wantErr {
 				t.Errorf("UserManagement.setRoleWithPermissionCheckByAddress() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -611,10 +579,7 @@ func TestUserManagement_Caller(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			u := &UserManagement{
-				Contract: tt.fields.Contract,
-				Evm:      tt.fields.Evm,
-			}
+			u := &UserManagement{}
 			if got := u.Caller(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("UserManagement.Caller() = %v, want %v", got, tt.want)
 			}

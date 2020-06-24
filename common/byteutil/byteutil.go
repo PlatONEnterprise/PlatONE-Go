@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 	"reflect"
 )
@@ -30,8 +31,12 @@ var Bytes2X_CMD = map[string]interface{}{
 
 	"*syscontracts.NodeInfo":   BytesToNodeInfo,
 	"*syscontracts.UpdateNode": BytesToUpdateNode,
+	"common.Address": HexBytesToAddress,
 }
 
+func HexBytesToAddress(curByte []byte)common.Address {
+	return common.HexToAddress(string(curByte))
+}
 func BytesToUpdateNode(curByte []byte) *syscontracts.UpdateNode {
 	var info syscontracts.UpdateNode
 	if err := json.Unmarshal(curByte, &info); nil != err {
