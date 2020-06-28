@@ -289,6 +289,11 @@ func (u *UserManagement) delContractDeployerByName(name string) ([]byte, error) 
 	return nil, nil
 }
 
+func (u *UserManagement) getRolesByName(name string) ([]byte, error) {
+	addr := u.getAddrByName(name)
+	return u.getRolesByAddress(addr)
+}
+
 func (u *UserManagement) getRolesByAddress(addr common.Address) ([]byte, error) {
 	ur, err := u.getRole(addr)
 	if err != nil {
@@ -298,7 +303,12 @@ func (u *UserManagement) getRolesByAddress(addr common.Address) ([]byte, error) 
 	roles := ur.Strings()
 	return json.Marshal(roles)
 }
-
+func (u *UserManagement) getAddrListOfRoleStr(targetRole string) ([]byte, error) {
+	if role , ok := rolesMap[targetRole]; ok{
+		return u.getAddrListOfRole(role)
+	}
+	return nil, ErrUnsupportedRole
+}
 func (u *UserManagement) getAddrListOfRole(targetRole int32) ([]byte, error) {
 	var key []byte
 	var err error

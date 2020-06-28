@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )
 
@@ -33,8 +34,8 @@ var (
 var permissionRolesForUserOps  = []int32{CHAIN_ADMIN}
 
 type UserInfo struct {
-	Address common.Address  	`json:"address"`  	// 地址，不可变更
-	Authorizer common.Address 	`json:"authorizer"`	// 授权者，不可变更
+	Address string  	`json:"address"`  	// 地址，不可变更
+	Authorizer string 	`json:"authorizer"`	// 授权者，不可变更
 	Name string					`json:"name"`		// 用户名，不可变更
 
 	DescInfo string				`json:"descInfo"`	// 描述信息，可变更
@@ -59,20 +60,6 @@ func (src *DescInfoV1) update(dest *DescInfoV1){
 	}
 }
 
-func (u *UserInfo) encode() ([]byte, error) {
-	return rlp.EncodeToBytes(u)
-}
-
-//decode
-func RetrieveUserInfo(data []byte) (*UserInfo, error) {
-	var ui UserInfo
-	if err := rlp.DecodeBytes(data, &ui); nil != err {
-		return nil, err
-	}
-
-	return &ui, nil
-}
-
 // export function
 // 管理员操作
 func (u *UserManagement) addUser(userInfo string) ([]byte, error){
@@ -83,6 +70,7 @@ func (u *UserManagement) addUser(userInfo string) ([]byte, error){
 	info := &UserInfo{}
 
 	if err := json.Unmarshal([]byte(userInfo), info); err != nil{
+		log.Error("json.Unmarshal([]byte(userInfo), info)")
 		return nil, err
 	}
 
@@ -94,24 +82,28 @@ func (u *UserManagement) addUser(userInfo string) ([]byte, error){
 		return nil, errUserNameAlreadyExist
 	}
 
-	if u.getNameByAddr(info.Address) != ""{
+	addr := common.HexToAddress(info.Address)
+	if u.getNameByAddr(addr) != ""{
 		return nil, errAlreadySetUserName
 	}
 
-	descInfo := &DescInfoV1{}
-	if err := json.Unmarshal([]byte(info.DescInfo), descInfo); err!= nil{
-		return nil,err
+	if info.DescInfo != ""{
+		descInfo := &DescInfoV1{}
+		if err := json.Unmarshal([]byte(info.DescInfo), descInfo); err!= nil{
+			log.Error("json.Unmarshal([]byte(info.DescInfo), descInfo)")
+			return nil,err
+		}
 	}
 
-	info.Authorizer = u.Caller()
+	info.Authorizer = u.Caller().String()
 
 	if err := u.setUserInfo(info); err != nil{
 		return nil, err
 	}
-	u.addAddrNameMap(info.Address, info.Name)
-	u.addNameAddrMap(info.Address, info.Name)
+	u.addAddrNameMap(addr, info.Name)
+	u.addNameAddrMap(addr, info.Name)
 
-	if err := u.addUserList(info.Address); err != nil{
+	if err := u.addUserList(addr); err != nil{
 		return nil, err
 	}
 
@@ -135,8 +127,10 @@ func (u *UserManagement) updateUserDescInfo(addr common.Address, descInfo string
 	}
 
 	infoOnChain := &DescInfoV1{}
-	if err := json.Unmarshal([]byte(userInfo.DescInfo), infoOnChain); err != nil{
-		return nil,err
+	if userInfo.DescInfo != ""{
+		if err := json.Unmarshal([]byte(userInfo.DescInfo), infoOnChain); err != nil{
+			return nil,err
+		}
 	}
 	infoOnChain.update(info)
 
@@ -208,7 +202,7 @@ func (u *UserManagement) getAllUsers() ([]byte, error){
 
 //internal function
 func (u *UserManagement) setUserInfo(info *UserInfo) error{
-	addr := info.Address
+	addr := common.HexToAddress(info.Address)
 	key1 := append(addr[:], []byte(UserInfoKey)...)
 	data, err := rlp.EncodeToBytes(info)
 	if err != nil{
@@ -305,8 +299,10 @@ func (u *UserManagement) getUserList()([]common.Address, error){
 
 	key := []byte(UserListKey)
 	data := u.getState(key)
-
-	if err := rlp.DecodeBytes(data, addrs); err != nil{
+	if len(data) == 0{
+		return nil, nil
+	}
+	if err := json.Unmarshal(data, &addrs); err != nil{
 		return nil, err
 	}
 
@@ -314,8 +310,8 @@ func (u *UserManagement) getUserList()([]common.Address, error){
 }
 
 func (u *UserManagement) setUserList(addrs []common.Address)error{
-	data, err := rlp.EncodeToBytes(addrs)
-	if err != nil{
+	data, err := json.Marshal(addrs)
+	if err != nil {
 		return err
 	}
 
@@ -331,14 +327,16 @@ func (u *UserManagement) callerPermissionCheck() bool{
 		return false
 	}
 
-	rolesStr := []string  {}
-	json.Unmarshal(role, rolesStr)
+	rolesStr := []string{}
+	if err := json.Unmarshal(role, &rolesStr); err!= nil{
+		return false
+	}
 
 	ur := &UserRoles{}
 	ur.FromStrings(rolesStr)
 
 	for _, p := range permissionRolesForUserOps {
-		if ur. hasRole(p){
+		if ur.hasRole(p){
 			return true
 		}
 	}

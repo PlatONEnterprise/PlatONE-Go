@@ -58,8 +58,9 @@ func (u *UserManagement) AllExportFns() SCExportFns {
 		"delContractDeployerByAddress": u.delContractDeployerByAddress,
 		"delContractDeployerByName":    u.delContractDeployerByName,
 
-		"getAddrListOfRole": u.getAddrListOfRole,
+		"getAddrListOfRole": u.getAddrListOfRoleStr,
 		"getRolesByAddress": u.getRolesByAddress,
+		"getRolesByName": u.getRolesByName,
 
 		"addUser":            u.addUser,
 		"updateUserDescInfo": u.updateUserDescInfo,
