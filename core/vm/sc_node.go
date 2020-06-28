@@ -306,11 +306,11 @@ func (n *SCNode) update(name string, update *syscontracts.UpdateNode) error {
 func (n *SCNode) isNameExist(names []string, name string) bool {
 	index := sort.SearchStrings(names, name)
 	//not found
-	if len(names) == index {
-		return false
+	if index < len(names) && names[index] == name {
+		return true
 	}
 
-	return true
+	return false
 }
 
 func (n *SCNode) addName(name string) error {

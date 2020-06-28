@@ -54,7 +54,7 @@ func Test_execSC(t *testing.T) {
 
 	ret2, err := (&fakeClass{}).Fn(name, age)
 	assert.NoError(t, err)
-	assert.Equal(t, []byte(ret2), ret)
+	assert.Equal(t, toContractReturnValueStringType(E_INVOKE_CONTRACT, []byte(ret2)), ret)
 
 	input = MakeInput(fnNameInput, "bbb")
 	_, err = execSC(input, (&fakeClass{}).allExportFns())
@@ -92,8 +92,6 @@ func MakeInput(fnName string, params ...interface{}) []byte {
 	return encodedInput
 }
 
-type TxType uint8
-
 const (
-	E_INVOKE_CONTRACT TxType = 1
+	E_INVOKE_CONTRACT = 1
 )
