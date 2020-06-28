@@ -2,6 +2,7 @@ package vm
 
 import (
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 )
 
@@ -23,10 +24,10 @@ func (u *UserManagement) Run(input []byte) ([]byte, error) {
 }
 
 func (u *UserManagement) setState(key, value []byte) {
-	u.state.SetState(u.caller, key, value)
+	u.state.SetState(syscontracts.USER_MANAGEMENT_ADDRESS, key, value)
 }
 func (u *UserManagement) getState(key []byte) []byte {
-	value := u.state.GetState(u.caller, key)
+	value := u.state.GetState(syscontracts.USER_MANAGEMENT_ADDRESS, key)
 	return value
 }
 
