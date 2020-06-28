@@ -48,11 +48,11 @@ func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Cont
 			}
 			return cns.Run(input)
 		case *ParamManager:
-			um := &ParamManager{
+			p := &ParamManager{
 				StateDB: 	evm.StateDB,
 				CodeAddr:	contract.CodeAddr,
 			}
-			return um.Run(input)
+			return p.Run(input)
 		default:
 			panic("system contract handler not found")
 		}
