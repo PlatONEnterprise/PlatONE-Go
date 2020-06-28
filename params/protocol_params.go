@@ -92,6 +92,7 @@ const (
 	UserManagementGas uint64 = 80000 //
 	CnsManagerGas 	  uint64 = 80000 //
 	SCNodeGas         uint64 = 80000 //
+	ParamManagerGas   uint64 = 80000 //
 
 )
 
