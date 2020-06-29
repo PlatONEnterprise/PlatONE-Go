@@ -2,13 +2,13 @@ package vm
 
 import (
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 )
 
 type UserManagement struct {
 	state    StateDB
 	caller   common.Address
+	address common.Address
 }
 
 func (u *UserManagement) RequiredGas(input []byte) uint64 {
@@ -24,10 +24,10 @@ func (u *UserManagement) Run(input []byte) ([]byte, error) {
 }
 
 func (u *UserManagement) setState(key, value []byte) {
-	u.state.SetState(syscontracts.USER_MANAGEMENT_ADDRESS, key, value)
+	u.state.SetState(u.address, key, value)
 }
 func (u *UserManagement) getState(key []byte) []byte {
-	value := u.state.GetState(syscontracts.USER_MANAGEMENT_ADDRESS, key)
+	value := u.state.GetState(u.address, key)
 	return value
 }
 

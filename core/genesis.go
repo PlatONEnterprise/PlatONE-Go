@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 	"math/big"
 	"strings"
 
@@ -231,6 +232,9 @@ func (g *Genesis) ToBlock(db ethdb.Database) *types.Block {
 			// todo: hash -> bytes
 			statedb.SetState(addr, key.Bytes(), value.Bytes())
 		}
+	}
+	for addr,_ := range vm.PlatONEPrecompiledContracts{
+		statedb.SetNonce(addr, 1)
 	}
 	root := statedb.IntermediateRoot(false)
 	head := &types.Header{
