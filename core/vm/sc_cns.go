@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"regexp"
 	"strings"
+	"time"
 )
 
 const (
@@ -39,19 +39,21 @@ var (
 	regVer = regexp.MustCompile(VERSION_PATTERN)
 )
 
+// CnsManager
 type CnsManager struct {
 	callerAddr 	common.Address	// callerAddr = Contract.CallerAddress
-	cMap	 	*cnsMap			// cMap = NewCnsMap(StateDB, Contract.CodeAddr)
-	isInit		int				// isInit = evm.InitEntryID
-	origin		common.Address	// origin = evm.Context.Origin // todo necessary?
+	cMap	 	*cnsMap			// cMap 	  = NewCnsMap(StateDB, Contract.CodeAddr)
+	isInit		int				// isInit 	  = evm.InitEntryID
+	origin		common.Address	// origin 	  = evm.Context.Origin // todo necessary?
 }
 
+// ContractInfo stores cns registration info of a contract address
 type ContractInfo struct {
 	Name		string
 	Version 	string
 	Address 	string
 	Origin  	string
-	///TimeStamp 	time.Time
+	TimeStamp 	uint64
 	// Enabled 	bool			// deprecated
 }
 
@@ -67,7 +69,7 @@ func newContractInfo(name, version, address, origin string) *ContractInfo {
 		Version:	version,
 		Address:	address,
 		Origin:		origin,
-		///TimeStamp:  time.Now(),
+		TimeStamp:  uint64(time.Now().Unix()),
 	}
 }
 
@@ -83,7 +85,7 @@ func (c *ContractInfo) encode() ([]byte, error) {
 	return rlp.EncodeToBytes(c)
 }
 
-// decode
+// decodeCnsInfo decodes rlp bytes to ContractInfo struct
 func decodeCnsInfo(data []byte) (*ContractInfo, error) {
 	var ci ContractInfo
 	if err := rlp.DecodeBytes(data, &ci); nil != err {
@@ -102,7 +104,6 @@ func (u *CnsManager) RequiredGas(input []byte) uint64 {
 
 // Run runs the precompiled contract
 func (u *CnsManager) Run(input []byte) ([]byte, error) {
-	log.Debug("[CNS] running in Run")
 	return execSC(input, u.AllExportFns())
 }
 
@@ -111,8 +112,7 @@ func (u *CnsManager) AllExportFns() SCExportFns {
 	return SCExportFns{
 		"cnsRegisterFromInit": 		u.cnsRegisterFromInit,
 		"cnsRegister": 				u.cnsRegister,
-		// "cnsUnregister":			u.cnsUnregister,
-		"cnsRecall": 				u.cnsRecall,
+		"cnsRedirect": 				u.cnsRedirect,									// cnsUnregister is deprecated, replaced by cnsRedirect
 		"getContractAddress":		u.getContractAddress,
 		"ifRegisteredByAddress":	u.ifRegisteredByAddress,
 		"ifRegisteredByName":		u.ifRegisteredByName,
@@ -123,9 +123,10 @@ func (u *CnsManager) AllExportFns() SCExportFns {
 	}
 }
 
+// isOwner checks if the caller is the owner of the contract to be registerd
 func (cns *CnsManager) isOwner(contractAddr common.Address) bool {
 	callerAddr := cns.origin	// todo
-	contractOwnerAddr := cns.cMap.stateDB.GetContractCreator(contractAddr)
+	contractOwnerAddr := cns.cMap.GetContractCreator(contractAddr)
 
 	if callerAddr.Hex() == contractOwnerAddr.Hex() {
 		return true
@@ -134,6 +135,7 @@ func (cns *CnsManager) isOwner(contractAddr common.Address) bool {
 	}
 }
 
+// isFromInit checks if the method is called from init()
 func (cns *CnsManager) isFromInit() bool {
 	if cns.isInit != -1 {
 		return true
@@ -148,13 +150,10 @@ func (cns *CnsManager) cnsRegisterFromInit(name, version string) (int, error) {
 	}
 
 	address := cns.callerAddr.Hex()
-
 	return cns.doCnsRegister(name, version, address)
 }
 
 func (cns *CnsManager) cnsRegister(name, version, address string) (int, error) {
-
-	log.Debug("[CNS] running in cnsRegister")
 
 	if cns.isFromInit() {
 		return FAILURE, errors.New("[CNS] cnsRegister can't be called from init()")
@@ -183,38 +182,42 @@ func (cns *CnsManager) doCnsRegister(name, version, address string) (int, error)
 		return FAILURE, errors.New(ERR_VERSION_INVALID)
 	}
 
+	// check if registered
 	key := getSearchKey(name, version)
-
 	value := cns.cMap.find(key)
 	if value != nil {
 		return FAILURE, errors.New("[CNS] name and version is already registered and activated in CNS")
 	}
 
+	// check is name unique
 	ori := cns.origin.Hex()
-	//ori := cns.callerAddr.String()
-
-	// check name unique
 	if cns.cMap.isNameRegByOthers(name, ori) {
 		return FAILURE, errors.New("[CNS] Name is already registered")
 	}
 
-	// check version
+	// check is version valid
 	largestVersion := cns.cMap.getLargestVersion(name)
 	if verCompare(version, largestVersion) != 1 {
 		return FAILURE, errors.New("[CNS] Version must be larger than previous version")
 	}
 
+	// new a contractInfo struct and serialize it
 	cnsInfo := newContractInfo(name, version, address, ori)
 	cBytes, _ := cnsInfo.encode()
+
+	// record the info to stateDB
 	cns.cMap.insert(key, cBytes)
 
+	// update the latest version of the cns name
 	cns.cMap.updateLatestVer(name, version)
-
-	log.Debug("[CNS] running in here[END]")
 
 	return SUCCESS, nil
 }
 
+// verCompare compares the versions
+// 1: ver1 > ver2
+// -1: ver1 < ver2
+// 0: ver1 = ver2
 func verCompare(ver1, ver2 string) int {
 	ver1Arr := strings.Split(ver1, ".")
 	ver2Arr := strings.Split(ver2, ".")
@@ -222,7 +225,7 @@ func verCompare(ver1, ver2 string) int {
 	for i := 0; i < len(ver1Arr); i++ {
 		if ver1Arr[i] > ver2Arr[i] {
 			return 1
-		} else if ver1Arr[i] > ver2Arr[i] {
+		} else if ver1Arr[i] < ver2Arr[i] {
 			return -1
 		} else {
 			continue
@@ -232,8 +235,9 @@ func verCompare(ver1, ver2 string) int {
 	return 0
 }
 
-// cnsUnregister is deprecated, cnsUnregister -> cnsRecall
-func (cns *CnsManager) cnsRecall(name, version string) (int, error) {
+// cnsUnregister is deprecated, cnsUnregister -> cnsRedirect
+// cnsRedirect selects a specific version of a cns name and set it "latest"
+func (cns *CnsManager) cnsRedirect(name, version string) (int, error) {
 
 	if !regName.MatchString(name) {
 		return FAILURE, errors.New(ERR_NAME_INVALID)
@@ -243,31 +247,26 @@ func (cns *CnsManager) cnsRecall(name, version string) (int, error) {
 		return FAILURE, errors.New(ERR_VERSION_INVALID)
 	}
 
-	// if strings.EqualFold(version, "latest") {
-	//	version = cns.cMap.getLatestVersion(name)
-		/// version = cMap.getLatestVer(name)
-	// }
-
 	key := getSearchKey(name, version)
 
 	// get cnsInfo
 	cnsInfo := cns.cMap.find(key)
-	if cnsInfo == nil {					// todo nil or null array
+	if cnsInfo == nil {
 		return FAILURE, errors.New("[CNS] Name and version didn't register before")
 	}
 
-	// isOwner
+	// check is Owner
 	contractAddr := common.HexToAddress(cnsInfo.Address)
 	if !cns.isOwner(contractAddr) {
 		return FAILURE, errors.New(ERR_NOT_OWNER)
 	}
 
-	// cBytes, _ := cnsInfo.encode()
 	cns.cMap.updateLatestVer(name, version)
 
 	return SUCCESS, nil
 }
 
+// getContractAddress returns the address of a cns name at specific version
 func (cns *CnsManager) getContractAddress(name, version string) (string, error) {
 
 	if strings.EqualFold(version, "latest") {
@@ -289,11 +288,6 @@ func (cns *CnsManager) getContractAddress(name, version string) (string, error) 
 	if cnsInfo == nil {
 		return "", errors.New("[CNS] name and version is not registered in CNS")
 	}
-
-	// (deprecated)if valid
-	// if !cnsInfo.Enabled {
-	//	return "", errors.New("not valid")
-	// }
 
 	return cnsInfo.Address, nil
 }
@@ -317,7 +311,7 @@ func (cns *CnsManager) ifRegisteredByName(name string) (int, error) {
 func (cns *CnsManager) ifRegisteredByAddress(address string) (int, error) {
 
 	if !common.IsHexAddress(address) {
-		return UNDEFINED, errors.New("[CNS] contract address format is invalid")
+		return UNDEFINED, errors.New(ERR_ADDRESS_INVALID)
 	}
 	
 	for index := 0; index < cns.cMap.total(); index++{
@@ -334,16 +328,19 @@ func getSearchKey(name, version string) []byte {
 	return []byte(name + ":" + version)
 }
 
+// getRegisteredContractsByRange returns the cnsContractInfo within the ranges specified
+// the size 0 means returning the cnsContractInfo from head to the end
 func (cns *CnsManager) getRegisteredContractsByRange(head, size int) (string, error) {
 	var cnsInfoArray = make([]*ContractInfo, 0)
 	var tail int
 
+	// check the head and size are valid numbers
 	invalidRange := head >= cns.cMap.total() || size < 0
-
 	if invalidRange {
 		return "", errors.New("")
 	}
 
+	// make sure the head + size does not exceed the total numbers of cnsContractInfo
 	if size == 0 || head + size > cns.cMap.total() {
 		tail = cns.cMap.total()
 	} else {

@@ -1,9 +1,7 @@
 package vm
 
 import (
-	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"strconv"
 	"strings"
 )
@@ -15,8 +13,7 @@ const (
 )
 
 type cnsMap struct{
-	/// StateDB
-	stateDB 	StateDB
+	StateDB
 	CodeAddr	*common.Address
 }
 
@@ -25,23 +22,11 @@ func NewCnsMap(db StateDB, addr *common.Address) *cnsMap {
 }
 
 func (c *cnsMap) setState(key, value []byte) {
-	str := fmt.Sprintf("[CNS] setState %v, key is %v, value is %v", *c.CodeAddr, key, value)
-	log.Debug(str)
-	///c.stateDB.SetState(*c.CodeAddr, key, value)
-
-	c.stateDB.SetState(*c.CodeAddr, key, value)
+	c.SetState(*c.CodeAddr, key, value)
 }
 
 func (c *cnsMap) getState(key []byte) []byte {
-	///return c.GetState(*c.CodeAddr, key)
-
-	///value := c.stateDB.GetState(*c.CodeAddr, key)
-
-	value := c.stateDB.GetState(*c.CodeAddr, key)
-
-	str := fmt.Sprintf("[CNS] %s getState, key is %v, value is %v", c.CodeAddr.Hex(), key, value)
-	log.Debug(str)
-	return value
+	return c.GetState(*c.CodeAddr, key)
 }
 
 func (c *cnsMap) getKey(index int) []byte {
