@@ -3,13 +3,12 @@ package vm
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"regexp"
 	"strings"
-	"time"
 )
 
 const (
@@ -52,8 +51,8 @@ type ContractInfo struct {
 	Version 	string
 	Address 	string
 	Origin  	string
-	TimeStamp 	time.Time
-	// Enabled 	bool	// deprecated
+	///TimeStamp 	time.Time
+	// Enabled 	bool			// deprecated
 }
 
 type returnMsg struct {
@@ -68,7 +67,7 @@ func newContractInfo(name, version, address, origin string) *ContractInfo {
 		Version:	version,
 		Address:	address,
 		Origin:		origin,
-		TimeStamp:  time.Now(),
+		///TimeStamp:  time.Now(),
 	}
 }
 
@@ -103,6 +102,7 @@ func (u *CnsManager) RequiredGas(input []byte) uint64 {
 
 // Run runs the precompiled contract
 func (u *CnsManager) Run(input []byte) ([]byte, error) {
+	log.Debug("[CNS] running in Run")
 	return execSC(input, u.AllExportFns())
 }
 
@@ -125,7 +125,7 @@ func (u *CnsManager) AllExportFns() SCExportFns {
 
 func (cns *CnsManager) isOwner(contractAddr common.Address) bool {
 	callerAddr := cns.origin	// todo
-	contractOwnerAddr := cns.cMap.GetContractCreator(contractAddr)
+	contractOwnerAddr := cns.cMap.stateDB.GetContractCreator(contractAddr)
 
 	if callerAddr.Hex() == contractOwnerAddr.Hex() {
 		return true
@@ -153,6 +153,8 @@ func (cns *CnsManager) cnsRegisterFromInit(name, version string) (int, error) {
 }
 
 func (cns *CnsManager) cnsRegister(name, version, address string) (int, error) {
+
+	log.Debug("[CNS] running in cnsRegister")
 
 	if cns.isFromInit() {
 		return FAILURE, errors.New("[CNS] cnsRegister can't be called from init()")
@@ -208,6 +210,8 @@ func (cns *CnsManager) doCnsRegister(name, version, address string) (int, error)
 
 	cns.cMap.updateLatestVer(name, version)
 
+	log.Debug("[CNS] running in here[END]")
+
 	return SUCCESS, nil
 }
 
@@ -248,7 +252,7 @@ func (cns *CnsManager) cnsRecall(name, version string) (int, error) {
 
 	// get cnsInfo
 	cnsInfo := cns.cMap.find(key)
-	if cnsInfo == nil {
+	if cnsInfo == nil {					// todo nil or null array
 		return FAILURE, errors.New("[CNS] Name and version didn't register before")
 	}
 
@@ -269,8 +273,6 @@ func (cns *CnsManager) getContractAddress(name, version string) (string, error) 
 	if strings.EqualFold(version, "latest") {
 		version = cns.cMap.getLatestVer(name)
 	}
-
-	fmt.Printf("the version is %v\n", version)
 
 	if !regVer.MatchString(version) {
 		return "", errors.New(ERR_VERSION_INVALID)
@@ -332,14 +334,14 @@ func getSearchKey(name, version string) []byte {
 	return []byte(name + ":" + version)
 }
 
-func (cns *CnsManager) getRegisteredContractsByRange(head, size int) ([]byte, error) {
+func (cns *CnsManager) getRegisteredContractsByRange(head, size int) (string, error) {
 	var cnsInfoArray = make([]*ContractInfo, 0)
 	var tail int
 
 	invalidRange := head >= cns.cMap.total() || size < 0
 
 	if invalidRange {
-		return nil, errors.New("")
+		return "", errors.New("")
 	}
 
 	if size == 0 || head + size > cns.cMap.total() {
@@ -357,11 +359,11 @@ func (cns *CnsManager) getRegisteredContractsByRange(head, size int) ([]byte, er
 }
 
 // before: getHistoryContractsByName -> after refactory: getRegisteredContractsByName
-func (cns *CnsManager) getRegisteredContractsByName(name string) ([]byte, error) {
+func (cns *CnsManager) getRegisteredContractsByName(name string) (string, error) {
 	var cnsInfoArray = make([]*ContractInfo, 0)
 
 	if !regName.MatchString(name) {
-		return nil, errors.New(ERR_NAME_INVALID)
+		return "", errors.New(ERR_NAME_INVALID)
 	}
 
 	for index := 0; index < cns.cMap.total(); index++{
@@ -374,11 +376,11 @@ func (cns *CnsManager) getRegisteredContractsByName(name string) ([]byte, error)
 	return serializeCnsInfo(CODE_OK, MSG_OK, cnsInfoArray)
 }
 
-func (cns *CnsManager) getRegisteredContractsByAddress(addr string) ([]byte, error) {
+func (cns *CnsManager) getRegisteredContractsByAddress(addr string) (string, error) {
 	var cnsInfoArray = make([]*ContractInfo, 0)
 
 	if !common.IsHexAddress(addr) {
-		return nil, errors.New(ERR_ADDRESS_INVALID)
+		return "", errors.New(ERR_ADDRESS_INVALID)
 	}
 
 	for index := 0; index < cns.cMap.total(); index++{
@@ -393,11 +395,11 @@ func (cns *CnsManager) getRegisteredContractsByAddress(addr string) ([]byte, err
 
 // todo: return serializeCnsInfo(CODE_ERR, MSG_ERR, cnsInfoArray) ???
 // before: getContractInfoByAddress -> after refactory: getRegisteredContractsByOrigin
-func (cns *CnsManager) getRegisteredContractsByOrigin(origin string) ([]byte, error) {
+func (cns *CnsManager) getRegisteredContractsByOrigin(origin string) (string, error) {
 	var cnsInfoArray = make([]*ContractInfo, 0)
 
 	if !common.IsHexAddress(origin) {
-		return nil, errors.New(ERR_ADDRESS_INVALID)
+		return "", errors.New(ERR_ADDRESS_INVALID)
 	}
 
 	for index := 0; index < cns.cMap.total(); index++{
@@ -410,7 +412,8 @@ func (cns *CnsManager) getRegisteredContractsByOrigin(origin string) ([]byte, er
 	return serializeCnsInfo(CODE_OK, MSG_OK, cnsInfoArray)
 }
 
-func serializeCnsInfo(code int, msg string, array []*ContractInfo) ([]byte, error) {
+func serializeCnsInfo(code int, msg string, array []*ContractInfo) (string, error) {
 	data := newReturnMsg(code, msg, array)
-	return json.Marshal(data)
+	cBytes, err := json.Marshal(data)
+	return string(cBytes), err
 }

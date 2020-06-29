@@ -25,6 +25,7 @@ var Bytes2X_CMD = map[string]interface{}{
 	"uint32": BytesToUint32,
 	"uint64": BytesToUint64,
 
+	"int":   BytesToInt,
 	"int16": BytesToInt16,
 	"int32": BytesToInt32,
 	"int64": BytesToInt64,
@@ -62,6 +63,10 @@ func BytesToInt16(b []byte) int16 {
 	var tmp int16
 	binary.Read(bytesBuffer, binary.BigEndian, &tmp)
 	return tmp
+}
+
+func BytesToInt(b []byte) int {
+	return int(BytesToInt32(b))
 }
 
 func BytesToInt32(b []byte) int32 {
