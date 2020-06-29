@@ -62,6 +62,7 @@ func (u *UserManagement) AllExportFns() SCExportFns {
 		"getAddrListOfRole": u.getAddrListOfRoleStr,
 		"getRolesByAddress": u.getRolesByAddress,
 		"getRolesByName": u.getRolesByName,
+		"hasRole": u.hasRole,
 
 		"addUser":            u.addUser,
 		"updateUserDescInfo": u.updateUserDescInfo,

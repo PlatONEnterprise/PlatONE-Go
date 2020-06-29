@@ -328,7 +328,7 @@ func (u *UserManagement) callerPermissionCheck() bool{
 	}
 
 	rolesStr := []string{}
-	if err := json.Unmarshal(role, &rolesStr); err!= nil{
+	if err := json.Unmarshal([]byte(role), &rolesStr); err!= nil{
 		return false
 	}
 

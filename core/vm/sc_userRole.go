@@ -124,31 +124,21 @@ func (ur UserRoles) hasRole(role int32) bool {
 	return ur.roles&(1<<role) != 0
 }
 
-// decode
-func RetrieveUserRoles(data []byte) (*UserRoles, error) {
-	ur := &UserRoles{}
-	if err := rlp.DecodeBytes(data, ur); nil != err {
-		return nil, err
-	}
-
-	return ur, nil
-}
-
 // export function
-func (u *UserManagement) setSuperAdmin() ([]byte, error) {
+func (u *UserManagement) setSuperAdmin() (int32, error) {
 	var key []byte
 	var err error
 	var addrs []common.Address
 
 	if key, err = generateAddressListKey(SUPER_ADMIN); err != nil {
-		return nil, err
+		return -1, err
 	}
 	if addrs, err = u.getAddrList(key); err != nil {
-		return nil, err
+		return -1, err
 	}
 
 	if len(addrs) >= 1 {
-		return nil, ErrAlreadySetSuperAdmin
+		return -1, ErrAlreadySetSuperAdmin
 	}
 
 	ur := &UserRoles{}
@@ -156,171 +146,201 @@ func (u *UserManagement) setSuperAdmin() ([]byte, error) {
 
 	u.addAddrListOfRole(u.Caller(), SUPER_ADMIN)
 	if err := u.setRole(u.Caller(), ur); err != nil {
-		return nil, err
+		return -1, err
 	}
 
-	return nil, nil
+	return 0, nil
 }
 
-func (u *UserManagement) transferSuperAdminByAddress(addr common.Address) ([]byte, error) {
+func (u *UserManagement) transferSuperAdminByAddress(addr common.Address) (int32, error) {
 	if err := u.setRoleWithPermissionCheckByAddress(addr, SUPER_ADMIN, ROLE_ACTIVE); err != nil {
-		return nil, err
+		return -1, err
 	}
 	if err := u.setRoleWithPermissionCheckByAddress(u.Caller(), SUPER_ADMIN, ROLE_DEACTIVE); err != nil {
-		return nil, err
+		return -1, err
 	}
-	return nil, nil
+	return 0, nil
 }
-func (u *UserManagement) transferSuperAdminByName(name string) ([]byte, error) {
+func (u *UserManagement) transferSuperAdminByName(name string) (int32, error) {
 	if err := u.setRoleWithPermissionCheckByName(name, SUPER_ADMIN, ROLE_ACTIVE); err != nil {
-		return nil, err
+		return -1, err
 	}
 	if err := u.setRoleWithPermissionCheckByAddress(u.Caller(), SUPER_ADMIN, ROLE_DEACTIVE); err != nil {
-		return nil, err
+		return -1, err
 	}
-	return nil, nil
+	return 0, nil
 }
 
-func (u *UserManagement) addChainAdminByAddress(addr common.Address) ([]byte, error) {
+func (u *UserManagement) addChainAdminByAddress(addr common.Address) (int32, error) {
 	if err := u.setRoleWithPermissionCheckByAddress(addr, CHAIN_ADMIN, ROLE_ACTIVE); err != nil {
-		return nil, err
+		return -1, err
 	}
-	return nil, nil
+	return 0, nil
 }
 
-func (u *UserManagement) addChainAdminByName(name string) ([]byte, error) {
+func (u *UserManagement) addChainAdminByName(name string) (int32, error) {
 	if err := u.setRoleWithPermissionCheckByName(name, CHAIN_ADMIN, ROLE_ACTIVE); err != nil {
-		return nil, err
+		return -1, err
 	}
-	return nil, nil
+	return 0, nil
 }
 
-func (u *UserManagement) delChainAdminByAddress(addr common.Address) ([]byte, error) {
+func (u *UserManagement) delChainAdminByAddress(addr common.Address) (int32, error) {
 	if err := u.setRoleWithPermissionCheckByAddress(addr, CHAIN_ADMIN, ROLE_DEACTIVE); err != nil {
-		return nil, err
+		return -1, err
 	}
-	return nil, nil
+	return 0, nil
 }
 
-func (u *UserManagement) delChainAdminByName(name string) ([]byte, error) {
+func (u *UserManagement) delChainAdminByName(name string) (int32, error) {
 	if err := u.setRoleWithPermissionCheckByName(name, CHAIN_ADMIN, ROLE_DEACTIVE); err != nil {
-		return nil, err
+		return -1, err
 	}
-	return nil, nil
+	return 0, nil
 }
 
-func (u *UserManagement) addNodeAdminByAddress(addr common.Address) ([]byte, error) {
+func (u *UserManagement) addNodeAdminByAddress(addr common.Address) (int32, error) {
 	if err := u.setRoleWithPermissionCheckByAddress(addr, NODE_ADMIN, ROLE_ACTIVE); err != nil {
-		return nil, err
+		return -1, err
 	}
-	return nil, nil
+	return 0, nil
 }
 
-func (u *UserManagement) addNodeAdminByName(name string) ([]byte, error) {
+func (u *UserManagement) addNodeAdminByName(name string) (int32, error) {
 	if err := u.setRoleWithPermissionCheckByName(name, NODE_ADMIN, ROLE_ACTIVE); err != nil {
-		return nil, err
+		return -1, err
 	}
-	return nil, nil
+	return 0, nil
 }
 
-func (u *UserManagement) delNodeAdminByAddress(addr common.Address) ([]byte, error) {
+func (u *UserManagement) delNodeAdminByAddress(addr common.Address) (int32, error) {
 	if err := u.setRoleWithPermissionCheckByAddress(addr, NODE_ADMIN, ROLE_DEACTIVE); err != nil {
-		return nil, err
+		return -1, err
 	}
-	return nil, nil
+	return 0, nil
 }
 
-func (u *UserManagement) delNodeAdminByName(name string) ([]byte, error) {
+func (u *UserManagement) delNodeAdminByName(name string) (int32, error) {
 	if err := u.setRoleWithPermissionCheckByName(name, NODE_ADMIN, ROLE_DEACTIVE); err != nil {
-		return nil, err
+		return -1, err
 	}
-	return nil, nil
+	return 0, nil
 }
 
-func (u *UserManagement) addContractAdminByAddress(addr common.Address) ([]byte, error) {
+func (u *UserManagement) addContractAdminByAddress(addr common.Address) (int32, error) {
 	if err := u.setRoleWithPermissionCheckByAddress(addr, CONTRACT_ADMIN, ROLE_ACTIVE); err != nil {
-		return nil, err
+		return -1, err
 	}
-	return nil, nil
+	return 0, nil
 }
-func (u *UserManagement) addContractAdminByName(name string) ([]byte, error) {
+func (u *UserManagement) addContractAdminByName(name string) (int32, error) {
 	if err := u.setRoleWithPermissionCheckByName(name, CONTRACT_ADMIN, ROLE_ACTIVE); err != nil {
-		return nil, err
+		return -1, err
 	}
-	return nil, nil
+	return 0, nil
 }
-func (u *UserManagement) delContractAdminByAddress(addr common.Address) ([]byte, error) {
+func (u *UserManagement) delContractAdminByAddress(addr common.Address) (int32, error) {
 	if err := u.setRoleWithPermissionCheckByAddress(addr, CONTRACT_ADMIN, ROLE_DEACTIVE); err != nil {
-		return nil, err
+		return -1, err
 	}
-	return nil, nil
+	return 0, nil
 }
-func (u *UserManagement) delContractAdminByName(name string) ([]byte, error) {
+func (u *UserManagement) delContractAdminByName(name string) (int32, error) {
 	if err := u.setRoleWithPermissionCheckByName(name, CONTRACT_ADMIN, ROLE_DEACTIVE); err != nil {
-		return nil, err
+		return -1, err
 	}
-	return nil, nil
+	return 0, nil
 }
 
-func (u *UserManagement) addContractDeployerByAddress(addr common.Address) ([]byte, error) {
+func (u *UserManagement) addContractDeployerByAddress(addr common.Address) (int32, error) {
 	if err := u.setRoleWithPermissionCheckByAddress(addr, CONTRACT_DEPLOYER, ROLE_ACTIVE); err != nil {
-		return nil, err
+		return -1, err
 	}
-	return nil, nil
+	return 0, nil
 }
-func (u *UserManagement) addContractDeployerByName(name string) ([]byte, error) {
+func (u *UserManagement) addContractDeployerByName(name string) (int32, error) {
 	if err := u.setRoleWithPermissionCheckByName(name, CONTRACT_DEPLOYER, ROLE_ACTIVE); err != nil {
-		return nil, err
+		return -1, err
 	}
-	return nil, nil
+	return 0, nil
 }
 
-func (u *UserManagement) delContractDeployerByAddress(addr common.Address) ([]byte, error) {
+func (u *UserManagement) delContractDeployerByAddress(addr common.Address) (int32, error) {
 	if err := u.setRoleWithPermissionCheckByAddress(addr, CONTRACT_DEPLOYER, ROLE_DEACTIVE); err != nil {
-		return nil, err
+		return -1, err
 	}
-	return nil, nil
+	return 0, nil
 }
 
-func (u *UserManagement) delContractDeployerByName(name string) ([]byte, error) {
+func (u *UserManagement) delContractDeployerByName(name string) (int32, error) {
 	if err := u.setRoleWithPermissionCheckByName(name, CONTRACT_DEPLOYER, ROLE_DEACTIVE); err != nil {
-		return nil, err
+		return -1, err
 	}
-	return nil, nil
+	return 0, nil
 }
 
-func (u *UserManagement) getRolesByName(name string) ([]byte, error) {
+func (u *UserManagement) getRolesByName(name string) (string, error) {
 	addr := u.getAddrByName(name)
 	return u.getRolesByAddress(addr)
 }
 
-func (u *UserManagement) getRolesByAddress(addr common.Address) ([]byte, error) {
+func (u *UserManagement) getRolesByAddress(addr common.Address) (string, error) {
 	ur, err := u.getRole(addr)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	roles := ur.Strings()
-	return json.Marshal(roles)
+	str, err := json.Marshal(roles)
+	if err != nil{
+		return "", err
+	}
+	return string(str), nil
 }
-func (u *UserManagement) getAddrListOfRoleStr(targetRole string) ([]byte, error) {
+func (u *UserManagement) getAddrListOfRoleStr(targetRole string) (string, error) {
 	if role , ok := rolesMap[targetRole]; ok{
 		return u.getAddrListOfRole(role)
 	}
-	return nil, ErrUnsupportedRole
+	return "", ErrUnsupportedRole
 }
-func (u *UserManagement) getAddrListOfRole(targetRole int32) ([]byte, error) {
+func (u *UserManagement) getAddrListOfRole(targetRole int32) (string, error) {
 	var key []byte
 	var err error
 	var addrs []common.Address
 
 	if key, err = generateAddressListKey(targetRole); err != nil {
-		return nil, err
+		return "", err
 	}
 	if addrs, err = u.getAddrList(key); err != nil {
-		return nil, err
+		return "", err
 	}
-	return json.Marshal(addrs)
+	str, err := json.Marshal(addrs)
+	if err != nil{
+		return "", err
+	}
+	return string(str), nil
+}
+
+// 0： the account(addr) doesn't has role
+// 1: the account(addr) doesn't role
+func (u *UserManagement) hasRole(addr common.Address, roleName string) (int32, error) {
+	key := append(addr[:], []byte(UserRolesKey)...)
+	data := u.getState(key)
+	if len(data) == 0 {
+		return 0, nil
+	}
+
+	roles := uint32(0)
+	if err := rlp.DecodeBytes(data, &roles); nil != err {
+		return 0, nil
+	}
+	ur := &UserRoles{roles: roles}
+
+	if role, ok := rolesMap[roleName]; ok && ur.hasRole(role){
+		 return 1, nil
+	}
+
+	return 0, nil
 }
 
 //internal function

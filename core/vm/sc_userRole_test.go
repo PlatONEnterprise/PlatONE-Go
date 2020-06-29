@@ -158,32 +158,6 @@ func TestUserRoles_hasRole(t *testing.T) {
 	}
 }
 
-func TestRetrieveUserRoles(t *testing.T) {
-	type args struct {
-		data []byte
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    *UserRoles
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := RetrieveUserRoles(tt.args.data)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("RetrieveUserRoles() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("RetrieveUserRoles() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestUserManagement_addChainAdminByAddress(t *testing.T) {
 	type fields struct {
 		Contract *Contract
