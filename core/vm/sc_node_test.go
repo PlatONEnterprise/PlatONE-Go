@@ -699,3 +699,35 @@ func (m stateDBMock) IsFwOpened(contractAddr common.Address) bool {
 func (m stateDBMock) FwImport(contractAddr common.Address, data []byte) error {
 	panic("implement me")
 }
+
+func TestSCNode_isNameExist(t *testing.T) {
+	type fields struct {
+		stateDB StateDB
+		address common.Address
+		caller  common.Address
+	}
+	type args struct {
+		names []string
+		name  string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   bool
+	}{
+		{"t1", fields{}, args{[]string{"万向区块链"}, "wxblockchain"}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			n := &SCNode{
+				stateDB: tt.fields.stateDB,
+				address: tt.fields.address,
+				caller:  tt.fields.caller,
+			}
+			if got := n.isNameExist(tt.args.names, tt.args.name); got != tt.want {
+				t.Errorf("isNameExist() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

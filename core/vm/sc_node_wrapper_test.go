@@ -75,7 +75,7 @@ func Test_scNodeWrapper_getAllNodes(t *testing.T) {
 	bin, err := json.Marshal(result)
 	assert.NoError(t, err)
 
-	assert.Equal(t, bin, ret)
+	assert.Equal(t, toContractReturnValueStringType(E_INVOKE_CONTRACT, bin), ret)
 }
 
 func Test_scNodeWrapper_getENodesOfAllDeletedNodes(t *testing.T) {
@@ -86,7 +86,7 @@ func Test_scNodeWrapper_getENodesOfAllDeletedNodes(t *testing.T) {
 	ret, err := node.Run(input)
 	assert.NoError(t, err)
 
-	assert.Equal(t, "", string(ret))
+	assert.Equal(t, toContractReturnValueStringType(E_INVOKE_CONTRACT, []byte("")), ret)
 }
 
 func Test_scNodeWrapper_getENodesOfAllNormalNodes(t *testing.T) {
@@ -102,7 +102,7 @@ func Test_scNodeWrapper_getENodesOfAllNormalNodes(t *testing.T) {
 	enode.IP = ni.InternalIP
 	enode.PublicKey = ni.PublicKey
 	expected := enode.String()
-	assert.Equal(t, expected, string(ret))
+	assert.Equal(t, toContractReturnValueStringType(E_INVOKE_CONTRACT, []byte(expected)), ret)
 }
 
 func Test_scNodeWrapper_getNodes(t *testing.T) {
@@ -123,7 +123,7 @@ func Test_scNodeWrapper_getNodes(t *testing.T) {
 	bin, err := json.Marshal(result)
 	assert.NoError(t, err)
 
-	assert.Equal(t, bin, ret)
+	assert.Equal(t, toContractReturnValueStringType(E_INVOKE_CONTRACT, bin), ret)
 }
 
 func Test_scNodeWrapper_isPublicKeyExist(t *testing.T) {
@@ -134,7 +134,7 @@ func Test_scNodeWrapper_isPublicKeyExist(t *testing.T) {
 	ret, err := node.Run(input)
 	assert.NoError(t, err)
 
-	assert.Equal(t, int64(publicKeyExist), byteutil.BytesToInt64(ret))
+	assert.Equal(t, toContractReturnValueIntType(E_INVOKE_CONTRACT, int64(publicKeyExist)), ret)
 }
 
 func Test_scNodeWrapper_nodesNum(t *testing.T) {
@@ -151,7 +151,7 @@ func Test_scNodeWrapper_nodesNum(t *testing.T) {
 	ret, err := node.Run(input)
 	assert.NoError(t, err)
 
-	assert.Equal(t, int64(1), byteutil.BytesToInt64(ret))
+	assert.Equal(t, toContractReturnValueIntType(E_INVOKE_CONTRACT, int64(1)), ret)
 }
 
 func Test_scNodeWrapper_update(t *testing.T) {
@@ -166,5 +166,5 @@ func Test_scNodeWrapper_update(t *testing.T) {
 	var input = MakeInput(fnNameInput, ni.Name, string(bin))
 	ret, err := node.Run(input)
 	assert.NoError(t, err)
-	assert.Equal(t, int64(1), byteutil.BytesToInt64(ret))
+	assert.Equal(t, toContractReturnValueIntType(E_INVOKE_CONTRACT, int64(1)), ret)
 }
