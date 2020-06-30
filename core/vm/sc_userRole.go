@@ -19,12 +19,12 @@ const (
 )
 
 var (
-	rolesName = []string{
-		"SUPER_ADMIN",
-		"CHAIN_ADMIN",
-		"NODE_ADMIN",
-		"CONTRACT_ADMIN",
-		"CONTRACT_DEPLOYER",
+	rolesName = map[int32]string{
+		SUPER_ADMIN:"SUPER_ADMIN",
+		CHAIN_ADMIN:"CHAIN_ADMIN",
+		NODE_ADMIN:"NODE_ADMIN",
+		CONTRACT_ADMIN:"CONTRACT_ADMIN",
+		CONTRACT_DEPLOYER:"CONTRACT_DEPLOYER",
 	}
 	rolesMap = map[string]int32{
 		"SUPER_ADMIN":       SUPER_ADMIN,

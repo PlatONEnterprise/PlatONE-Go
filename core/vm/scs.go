@@ -61,3 +61,17 @@ func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Cont
 
 	return nil, ErrOutOfGas
 }
+
+func checkPermission(state StateDB, user common.Address, role int32) bool{
+	um := &UserManagement{state:state}
+	roleName,ok := rolesName[role]
+	if !ok{
+		return false
+	}
+
+	b, e := um.hasRole(user, roleName)
+	if e != nil{
+		return false
+	}
+	return b == 1
+}
