@@ -3,6 +3,7 @@ package vm
 import (
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
 )
 
 //system contract export functions
@@ -50,8 +51,9 @@ func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Cont
 			return cns.Run(input)
 		case *ParamManager:
 			p := &ParamManager{
-				StateDB: 	evm.StateDB,
+				state: 	evm.StateDB,
 				CodeAddr:	contract.CodeAddr,
+				CallerAddr: contract.CallerAddress,
 			}
 			return p.Run(input)
 		default:
@@ -63,7 +65,10 @@ func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Cont
 }
 
 func checkPermission(state StateDB, user common.Address, role int32) bool{
-	um := &UserManagement{state:state}
+	um := &UserManagement{
+		state:state,
+		address: syscontracts.USER_MANAGEMENT_ADDRESS,
+	}
 	roleName,ok := rolesName[role]
 	if !ok{
 		return false
@@ -73,5 +78,7 @@ func checkPermission(state StateDB, user common.Address, role int32) bool{
 	if e != nil{
 		return false
 	}
+
+	log.Warn(" checkPermission", "user", user.String(), "role", role, "b", b)
 	return b == 1
 }

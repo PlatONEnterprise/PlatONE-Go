@@ -42,8 +42,9 @@ const (
 	FAL = "1"
 )
 type ParamManager struct {
-	StateDB
+	state StateDB
 	CodeAddr	*common.Address
+	CallerAddr  common.Address
 }
 
 func  encode(i interface{}) ([]byte, error) {
@@ -74,11 +75,11 @@ func (u *ParamManager) Run(input []byte) ([]byte, error) {
 }
 
 func (u *ParamManager) setState(key, value []byte) {
-	u.StateDB.SetState(*u.CodeAddr, key, value)
+	u.state.SetState(*u.CodeAddr, key, value)
 }
 
 func (u *ParamManager) getState(key []byte) []byte {
-	return u.StateDB.GetState(*u.CodeAddr, key)
+	return u.state.GetState(*u.CodeAddr, key)
 }
 
 func (u *ParamManager) setGasContractName (contractName string) ([]byte, error){
@@ -431,7 +432,8 @@ func (u *ParamManager) getIsTxUseGas() (uint64, error) {
 
 func (u *ParamManager)hasPermission() bool{
 	//在角色合约接口中查询对应角色信息并判断是否有权限
-	return true
+	return checkPermission(u.state, u.CallerAddr, 1) || checkPermission(u.state, u.CallerAddr, 0)
+
 }
 
 //for access control
