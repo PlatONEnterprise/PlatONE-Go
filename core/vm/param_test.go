@@ -5,7 +5,6 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"math/big"
 	"testing"
 )
@@ -114,41 +113,53 @@ func TestParamManager_stateDB(t *testing.T) {
 
 	res := db.GetState(addr, bin)
 	t.Logf("%b",res)
-
 }
 
-func TestParamManager_getFn(t *testing.T) {
+func TestParamManager_getTxLimit(t *testing.T) {
 	db := newMockDB()
 	addr := syscontracts.PARAMETER_MANAGEMENT_ADDRESS
 	p := ParamManager{CodeAddr:&addr, StateDB: db}
-	set := "abc"
-	res, err := p.setGasContractName(set)
+	p.setBlockGasLimit(12771599*100)
+	ret, err := p.getBlockGasLimit()
 	if nil != err{
-		t.Error(err)
-		return
-	}
-	t.Logf("%b",res)
-
-	res, err = p.getGasContractName()
-	if nil != err{
-		t.Error(err)
-		return
-	}
-	var ci string
-	if err := rlp.DecodeBytes(res, &ci); nil != err {
-		return
-	}
-
-	//var rea string
-	//if err = rlp.DecodeBytes(res, rea); nil != err {
-	//	//t.Logf("abc")
-	//	//t.Logf("%v",rea)
-	//	t.Logf("err")
-	//	return
-	//}
-	t.Logf("%v",ci)
-
+			t.Error(err)
+			return
+		}
+	t.Logf("%d",ret)
 }
+
+//func TestParamManager_getFn(t *testing.T) {
+//	db := newMockDB()
+//	addr := syscontracts.PARAMETER_MANAGEMENT_ADDRESS
+//	p := ParamManager{CodeAddr:&addr, StateDB: db}
+//	set := "abc"
+//	res, err := p.setGasContractName(set)
+//	if nil != err{
+//		t.Error(err)
+//		return
+//	}
+//	t.Logf("%b",res)
+//
+//	res, err = p.getGasContractName()
+//	if nil != err{
+//		t.Error(err)
+//		return
+//	}
+//	var ci string
+//	if err := rlp.DecodeBytes(res, &ci); nil != err {
+//		return
+//	}
+//
+//	//var rea string
+//	//if err = rlp.DecodeBytes(res, rea); nil != err {
+//	//	//t.Logf("abc")
+//	//	//t.Logf("%v",rea)
+//	//	t.Logf("err")
+//	//	return
+//	//}
+//	t.Logf("%v",ci)
+//
+//}
 
 func Test_encode(t *testing.T) {
 	a := "0"
@@ -180,6 +191,7 @@ func Test_decode(t *testing.T) {
 	//bin1
 	t.Logf("%v",bin)
 }
+
 
 type mockDB struct{
 	mockDB1	map[string]interface{}
