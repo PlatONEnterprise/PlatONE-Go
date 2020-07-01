@@ -55,7 +55,6 @@ func (n *scNodeWrapper) add(node *syscontracts.NodeInfo) (int, error) {
 	return int(addNodeSuccess), nil
 }
 
-//todo 确认： 旧的接口返回值表示更新字段个个数（感觉有点奇怪！！）
 func (n *scNodeWrapper) update(name string, node *syscontracts.UpdateNode) (int, error) {
 	err := n.base.update(name, node)
 	if err != nil {
@@ -79,7 +78,6 @@ func (n *scNodeWrapper) update(name string, node *syscontracts.UpdateNode) (int,
 	return count, nil
 }
 
-//todo 确认：旧接口一律返回成功，没有失败。失败时设置data值为空，返回的时[]
 func (n *scNodeWrapper) getAllNodes() (string, error) {
 	nodes, err := n.base.GetAllNodes()
 	if err != nil {
@@ -93,7 +91,6 @@ func (n *scNodeWrapper) getAllNodes() (string, error) {
 	return newSuccessResult(nodes).String(), nil
 }
 
-//todo 确认: 旧的接口只返回了pub公钥是否存在，存在返回1，不存在返回0
 func (n *scNodeWrapper) isPublicKeyExist(pub string) (int, error) {
 	err := n.base.checkPublicKeyExist(pub)
 	if err != nil {
@@ -107,9 +104,6 @@ func (n *scNodeWrapper) isPublicKeyExist(pub string) (int, error) {
 	return publicKeyNotExist, nil
 }
 
-//enode format: "enode://" + publicKey + "@" + ip:port
-//todo C++这个接口返回的值是自定义格式，是不是应该采用通用的格式？都采用json会比较好？
-//todo 找不到时，直接返回了空字符串，没有按照规定的json结构。
 func (n *scNodeWrapper) getENodesOfAllNormalNodes() (string, error) {
 	enodes, err := n.base.getENodesOfAllNormalNodes()
 	if err != nil {
@@ -123,7 +117,6 @@ func (n *scNodeWrapper) getENodesOfAllNormalNodes() (string, error) {
 	return eNodesToString(enodes), nil
 }
 
-//todo 找不到时，直接返回了空字符串，没有按照规定的json结构。
 func (n *scNodeWrapper) getENodesOfAllDeletedNodes() (string, error) {
 	enodes, err := n.base.getENodesOfAllDeletedNodes()
 	if err != nil {
@@ -137,7 +130,6 @@ func (n *scNodeWrapper) getENodesOfAllDeletedNodes() (string, error) {
 	return eNodesToString(enodes), nil
 }
 
-//TODO 需要支持像C++合约一样组合搜索吗
 func (n *scNodeWrapper) getNodes(query *syscontracts.NodeInfo) (string, error) {
 	nodes, err := n.base.GetNodes(query)
 	if err != nil {
@@ -150,7 +142,6 @@ func (n *scNodeWrapper) getNodes(query *syscontracts.NodeInfo) (string, error) {
 	return newSuccessResult(nodes).String(), nil
 }
 
-//todo 旧接口是定义查询错误时的返回值。 返回值0有多种含义。
 func (n *scNodeWrapper) nodesNum(query *syscontracts.NodeInfo) (int, error) {
 	num, err := n.base.nodesNum(query)
 	if err != nil {

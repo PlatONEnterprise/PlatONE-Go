@@ -19,10 +19,6 @@ var PlatONEPrecompiledContracts = map[common.Address]PrecompiledContract{
 	syscontracts.PARAMETER_MANAGEMENT_ADDRESS: &ParamManager{},
 }
 
-//input format： hex.encode( rlp.encode( [][]byte{rlp.encode(txType), function name,rlp.encode(params[1]), rlp.encode(params[1])...} ) )
-//old input format： hex.encode( rlp.encode( [][]byte{Int64ToBytes(txType), function name,BasicTypeToBytes(params[1]), BasicTypeToBytes(params[1])...} ) )
-//旧的格式入参都是基础格式，只是简单的把数据按照内存格式以byte方法导出而已（有bug，平台依赖？？至少是有语言依赖的。）。
-//TODO
 func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Contract, evm *EVM) (ret []byte, err error) {
 	gas := p.RequiredGas(input)
 
@@ -40,6 +36,7 @@ func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Cont
 			node.base.stateDB = evm.StateDB
 			node.base.caller = contract.CallerAddress
 			node.base.blockNumber = evm.BlockNumber
+			node.base.address = *contract.CodeAddr
 
 			return node.Run(input)
 		case *CnsManager:
