@@ -93,6 +93,7 @@ const (
 	CnsManagerGas 	  uint64 = 80000 //
 	SCNodeGas         uint64 = 80000 //
 	ParamManagerGas   uint64 = 80000 //
+	FireWall		  uint64 = 0
 
 )
 
