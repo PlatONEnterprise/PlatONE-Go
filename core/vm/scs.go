@@ -13,9 +13,9 @@ type (
 )
 
 var PlatONEPrecompiledContracts = map[common.Address]PrecompiledContract{
-	syscontracts.USER_MANAGEMENT_ADDRESS: &UserManagement{},
-	syscontracts.NODE_MANAGEMENT_ADDRESS: &scNodeWrapper{},
-	syscontracts.CNS_MANAGEMENT_ADDRESS: &CnsManager{},
+	syscontracts.USER_MANAGEMENT_ADDRESS:      &UserManagement{},
+	syscontracts.NODE_MANAGEMENT_ADDRESS:      &scNodeWrapper{},
+	syscontracts.CNS_MANAGEMENT_ADDRESS:       &CnsManager{},
 	syscontracts.PARAMETER_MANAGEMENT_ADDRESS: &ParamManager{},
 }
 
@@ -30,8 +30,8 @@ func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Cont
 		switch p.(type) {
 		case *UserManagement:
 			um := &UserManagement{
-				state: evm.StateDB,
-				caller: contract.Caller(),
+				state:   evm.StateDB,
+				caller:  contract.Caller(),
 				address: syscontracts.USER_MANAGEMENT_ADDRESS,
 			}
 			return um.Run(input)
@@ -39,20 +39,21 @@ func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Cont
 			node := newSCNodeWrapper(nil)
 			node.base.stateDB = evm.StateDB
 			node.base.caller = contract.CallerAddress
+			node.base.blockNumber = evm.BlockNumber
 
 			return node.Run(input)
 		case *CnsManager:
 			cns := &CnsManager{
 				callerAddr: contract.CallerAddress,
-				cMap: 		NewCnsMap(evm.StateDB, contract.CodeAddr),
-				isInit:		evm.InitEntryID,
-				origin:		evm.Context.Origin,
+				cMap:       NewCnsMap(evm.StateDB, contract.CodeAddr),
+				isInit:     evm.InitEntryID,
+				origin:     evm.Context.Origin,
 			}
 			return cns.Run(input)
 		case *ParamManager:
 			p := &ParamManager{
-				state: 	evm.StateDB,
-				CodeAddr:	contract.CodeAddr,
+				state:      evm.StateDB,
+				CodeAddr:   contract.CodeAddr,
 				CallerAddr: contract.CallerAddress,
 			}
 			return p.Run(input)
@@ -64,18 +65,18 @@ func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Cont
 	return nil, ErrOutOfGas
 }
 
-func checkPermission(state StateDB, user common.Address, role int32) bool{
+func checkPermission(state StateDB, user common.Address, role int32) bool {
 	um := &UserManagement{
-		state:state,
+		state:   state,
 		address: syscontracts.USER_MANAGEMENT_ADDRESS,
 	}
-	roleName,ok := rolesName[role]
-	if !ok{
+	roleName, ok := rolesName[role]
+	if !ok {
 		return false
 	}
 
 	b, e := um.hasRole(user, roleName)
-	if e != nil{
+	if e != nil {
 		return false
 	}
 

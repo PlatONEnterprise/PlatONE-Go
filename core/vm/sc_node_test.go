@@ -8,6 +8,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"math/rand"
 
 	"github.com/stretchr/testify/assert"
@@ -217,6 +218,43 @@ func genPublicKeyInHex() string {
 	return hex.EncodeToString(pub)
 }
 
+func TestSCNode_TxReceipt(t *testing.T) {
+	ni := &syscontracts.NodeInfo{}
+	ni.P2pPort = 8888
+	ni.InternalIP = "127.0.0.1"
+	ni.Name = "万向区块链"
+	ni.Typ = NodeTypeObserver
+	ni.Status = NodeStatusNormal
+	ni.PublicKey = "044b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc"
+
+	stateDB := newStateDBMock()
+	n := NewSCNode(stateDB)
+
+	err := n.add(ni)
+	assert.NoError(t, err)
+
+	topic := "Notify"
+	code := addNodeSuccess
+
+	topicH := common.BytesToHash(crypto.Keccak256([]byte(topic)))
+	log := stateDB.eLogs[topicH.String()]
+	assert.NotEqual(t, nil, log)
+
+	var data []rlp.RawValue
+	err = rlp.DecodeBytes(log.Data, &data)
+	assert.NoError(t, err)
+
+	var code2 uint64
+	err = rlp.DecodeBytes(data[0], &code2)
+	assert.NoError(t, err)
+	assert.Equal(t, uint64(code), code2)
+
+	var msg2 string
+	err = rlp.DecodeBytes(data[1], &msg2)
+	t.Log(msg2)
+	assert.Regexp(t, "success", msg2)
+}
+
 func TestSCNode_Add(t *testing.T) {
 	errNi := &syscontracts.NodeInfo{}
 	errNi.P2pPort = 8888
@@ -246,9 +284,10 @@ func TestSCNode_Add(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			n := &SCNode{
-				stateDB: tt.fields.stateDB,
-				address: tt.fields.address,
-				caller:  tt.fields.caller,
+				stateDB:     tt.fields.stateDB,
+				address:     tt.fields.address,
+				caller:      tt.fields.caller,
+				blockNumber: big.NewInt(0),
 			}
 			if err := n.add(tt.args.node); (err != nil) != tt.wantErr {
 				t.Errorf("add() error = %v, wantErr %v", err, tt.wantErr)
@@ -339,7 +378,7 @@ func addNodeInfoIntoDB() (*SCNode, *syscontracts.NodeInfo) {
 	ni.Status = NodeStatusNormal
 	ni.PublicKey = "044b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc"
 
-	db := newMockStateDB()
+	db := newStateDBMock()
 	n := NewSCNode(db)
 
 	return n, ni
@@ -370,7 +409,7 @@ func TestSCNode_CheckParamsOfUpdateNodeAndReturnUpdatedNode(t *testing.T) {
 }
 
 func TestSCNode_CheckPublicKeyExist(t *testing.T) {
-	db := newMockStateDB()
+	db := newStateDBMock()
 	n := NewSCNode(db)
 
 	err := n.checkPublicKeyExist("044b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc")
@@ -530,10 +569,11 @@ func TestSCNode_Update(t *testing.T) {
 
 type stateDBMock struct {
 	database map[string]interface{}
+	eLogs    map[string]*types.Log
 }
 
 func newStateDBMock() *stateDBMock {
-	return &stateDBMock{database: make(map[string]interface{})}
+	return &stateDBMock{database: make(map[string]interface{}), eLogs: make(map[string]*types.Log)}
 }
 
 func (m stateDBMock) CreateAccount(address common.Address) {
@@ -641,7 +681,7 @@ func (m stateDBMock) Snapshot() int {
 }
 
 func (m stateDBMock) AddLog(log *types.Log) {
-	panic("implement me")
+	m.eLogs[log.Topics[0].String()] = log
 }
 
 func (m stateDBMock) AddPreimage(hash common.Hash, bytes []byte) {

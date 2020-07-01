@@ -8,12 +8,6 @@ import (
 )
 
 const (
-	addNodeSuccess      = 0
-	addNodeBadParameter = 1
-	addNodeNoPermission = 2
-)
-
-const (
 	publicKeyNotExist = 0
 	publicKeyExist    = 1
 )
@@ -50,15 +44,15 @@ func (n *scNodeWrapper) add(node *syscontracts.NodeInfo) (int, error) {
 	if err := n.base.add(node); nil != err {
 		switch err {
 		case errNoPermissionManageSCNode:
-			return addNodeNoPermission, nil
+			return int(addNodeNoPermission), nil
 		case errParamsInvalid:
-			return addNodeBadParameter, nil
+			return int(addNodeBadParameter), nil
 		default:
 			return 0, err
 		}
 	}
 
-	return addNodeSuccess, nil
+	return int(addNodeSuccess), nil
 }
 
 //todo 确认： 旧的接口返回值表示更新字段个个数（感觉有点奇怪！！）

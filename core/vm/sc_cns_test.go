@@ -167,7 +167,7 @@ func TestCnsManager_cnsRecall(t *testing.T) {
 
 	curVersion := cns.cMap.getLatestVer(TEST_NAME)
 
-	result, err := cns.cnsRecall(TEST_NAME, testCases[2].Version)
+	result, err := cns.cnsRedirect(TEST_NAME, testCases[2].Version)
 	if err != nil {
 		t.Fatal(err)
 	}

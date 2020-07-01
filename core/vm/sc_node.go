@@ -9,6 +9,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"math/big"
 	"reflect"
 	"sort"
 )
@@ -42,6 +43,20 @@ var (
 	errNodeNameExist  = errors.New("node name exist")
 	errPublicKeyExist = errors.New("publicKey exist")
 	errNodeNotFound   = errors.New("node not found")
+)
+
+type CodeType uint8
+
+const (
+	addNodeSuccess      CodeType = 0
+	addNodeBadParameter CodeType = 1
+	addNodeNoPermission CodeType = 2
+)
+
+const (
+	updateNodeSuccess      CodeType = 0
+	updateNodeBadParameter CodeType = 1
+	updateNodeNoPermission CodeType = 2
 )
 
 type eNode struct {
@@ -139,13 +154,14 @@ func fromNodes(nodes []*syscontracts.NodeInfo) []*eNode {
 }
 
 type SCNode struct {
-	stateDB StateDB
-	address common.Address
-	caller  common.Address
+	stateDB     StateDB
+	address     common.Address
+	caller      common.Address
+	blockNumber *big.Int
 }
 
 func NewSCNode(db StateDB) *SCNode {
-	return &SCNode{stateDB: db, address: syscontracts.NODE_MANAGEMENT_ADDRESS}
+	return &SCNode{stateDB: db, address: syscontracts.NODE_MANAGEMENT_ADDRESS, blockNumber: big.NewInt(0)}
 }
 
 func (n *SCNode) checkParamsOfAddNode(node *syscontracts.NodeInfo) error {
@@ -256,27 +272,32 @@ func (n *SCNode) checkPermissionForAdd() error {
 
 func (n *SCNode) add(node *syscontracts.NodeInfo) error {
 	if err := n.checkPermissionForAdd(); nil != err {
+		n.emitNotifyEvent(addNodeNoPermission, fmt.Sprintf("%s has no permission to add node info.", n.caller.String()))
 		return errNoPermissionManageSCNode
 	}
 
 	if err := n.checkParamsOfAddNode(node); nil != err {
+		n.emitNotifyEvent(addNodeBadParameter, fmt.Sprintf("node info is invalid. err:%s", err.Error()))
 		log.Error("Failed to add node.", "error", err.Error(), "node", node)
 		return errParamsInvalid
 	}
 
 	err := n.addName(node.Name)
 	if err != nil {
+		n.emitNotifyEvent(addNodeBadParameter, fmt.Sprintf("Failed to add node. err:%s", err.Error()))
 		log.Error("Failed to add node.", "node", node, "error", err)
 		return err
 	}
 
 	encodedBin, err := json.Marshal(node)
 	if err != nil {
+		n.emitNotifyEvent(addNodeBadParameter, fmt.Sprintf("Failed to add node. err:%s", err.Error()))
 		log.Error("Failed to add node.", "error", err.Error(), "node", node)
 		return err
 	}
 	n.setState(genNodeName(node.Name), encodedBin)
 
+	n.emitNotifyEvent(addNodeSuccess, fmt.Sprintf("add node success. node:%s", string(encodedBin)))
 	log.Info("add node success.", "node", string(encodedBin))
 
 	return nil
@@ -284,20 +305,26 @@ func (n *SCNode) add(node *syscontracts.NodeInfo) error {
 
 func (n *SCNode) update(name string, update *syscontracts.UpdateNode) error {
 	if err := n.checkPermissionForAdd(); nil != err {
+		n.emitNotifyEvent(updateNodeNoPermission, fmt.Sprintf("%s no permission update node.", n.caller.String()))
 		return err
 	}
 
 	node, err := n.checkParamsOfUpdateNodeAndReturnUpdatedNode(name, update)
 	if err != nil {
+		n.emitNotifyEvent(updateNodeBadParameter, fmt.Sprintf("parameter is invalid"))
 		return err
 	}
 
 	encodedBin, err := json.Marshal(node)
 	if err != nil {
+		n.emitNotifyEvent(updateNodeBadParameter, fmt.Sprintf("parameter is invalid"))
 		log.Error("Failed to update node.", "error", err.Error(), "update", update)
 		return err
 	}
 	n.setState(genNodeName(node.Name), encodedBin)
+
+	n.emitNotifyEvent(updateNodeSuccess, fmt.Sprintf("update node success. info:%s", string(encodedBin)))
+	log.Info("update node success. ", "update info", string(encodedBin))
 
 	return nil
 }
@@ -463,87 +490,7 @@ func (n *SCNode) isMatch(node, query *syscontracts.NodeInfo) bool {
 	return true
 }
 
-//const (
-//	KeyTotalCountsOfNodes = "total-counts-nodes"
-//
-//	ShardingNum       = 1000
-//	PrefixShardingKey = "prefix-sharding-key"
-//)
-//
-//func (n *SCNode) ShardingCount() (uint64, error) {
-//	count, err := n.TotalCounts()
-//	if err != nil {
-//		return 0, err
-//	}
-//
-//	if count%ShardingNum > 0 {
-//		return count/ShardingNum + 1, nil
-//	}
-//
-//	return count / ShardingNum, nil
-//}
-//
-//func (n *SCNode) getNames() ([]string, error) {
-//	shardNum, err := n.ShardingCount()
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	var names []string
-//	for i := uint64(0); i < shardNum; i++ {
-//		val := n.getState([]byte(fmt.Sprintf("%s-%d", PrefixShardingKey, i)))
-//		var shardNames []string
-//		err := json.Unmarshal(val, &shardNames)
-//		if err != nil {
-//			return nil, err
-//		}
-//
-//		names = append(names, shardNames...)
-//	}
-//
-//	return names, nil
-//}
-//
-//func (n *SCNode) TotalCounts() (uint64, error) {
-//	bin := n.getState([]byte(KeyTotalCountsOfNodes))
-//
-//	var count uint64
-//	err := rlp.DecodeBytes(bin, &count)
-//	if nil != err {
-//		return 0, err
-//	}
-//
-//	return count, nil
-//}
-//
-//func (n *SCNode) IncrementTotalCounts() error {
-//	count, err := n.TotalCounts()
-//	if nil != err {
-//		return err
-//	}
-//
-//	encodedCount, err := rlp.EncodeToBytes(count + 1)
-//	if nil != err {
-//		return err
-//	}
-//	n.setState([]byte(KeyTotalCountsOfNodes), encodedCount)
-//
-//	return nil
-//}
-
-//var (
-//	errNodeNameExist = errors.New("node name exist")
-//)
-//
-//func (n *SCNode) CheckNameExist(name string) (existedNames []string, err error) {
-//	names, err := n.getNames()
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	if n.isNameExist(names, name) {
-//		return names, errNodeNameExist
-//	}
-//
-//	return names,nil
-//}
+func (n *SCNode) emitNotifyEvent(code CodeType, msg string) error {
+	topic := "Notify"
+	return emitEvent(n.address, n.stateDB, n.blockNumber.Uint64(), topic, code, msg)
+}
