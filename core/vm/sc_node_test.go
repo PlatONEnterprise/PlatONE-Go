@@ -146,46 +146,6 @@ func TestGenNodeName(t *testing.T) {
 	}
 }
 
-func TestHasAddNodePermission(t *testing.T) {
-	type args struct {
-		caller common.Address
-	}
-	tests := []struct {
-		name string
-		args args
-		want bool
-	}{
-		// TODO: add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := hasAddNodePermission(tt.args.caller); got != tt.want {
-				t.Errorf("hasAddNodePermission() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestIsValidUser(t *testing.T) {
-	type args struct {
-		caller common.Address
-	}
-	tests := []struct {
-		name string
-		args args
-		want bool
-	}{
-		// TODO: add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := isValidUser(tt.args.caller); got != tt.want {
-				t.Errorf("isValidUser() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func randFakeNodeInfo() *syscontracts.NodeInfo {
 	ni := &syscontracts.NodeInfo{}
 	ni.P2pPort = 8888

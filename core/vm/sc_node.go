@@ -69,28 +69,6 @@ func (en *eNode) String() string {
 	return fmt.Sprintf("enode://%s@%s:%d", en.PublicKey, en.IP, en.Port)
 }
 
-func isValidUser(caller common.Address) bool {
-	//internal call, do not check permission
-	if common.IsHexZeroAddress(caller.String()) {
-		return true
-	}
-	return true
-
-	//todo
-	panic("not implemented")
-}
-
-func hasAddNodePermission(caller common.Address) bool {
-	//internal call, do not check permission
-	if common.IsHexZeroAddress(caller.String()) {
-		return true
-	}
-
-	return true
-	//todo
-	panic("not implemented")
-}
-
 func checkRequiredFieldsIsEmpty(node *syscontracts.NodeInfo) error {
 	return common.CheckRequiredFieldsIsEmpty(node)
 }
@@ -257,15 +235,16 @@ func (n *SCNode) checkPublicKeyExist(pub string) error {
 }
 
 func (n *SCNode) checkPermissionForAdd() error {
-	if !isValidUser(n.caller) {
-		log.Error("Failed to add node.", "error", n.caller.String()+" is invalid user.")
-		return errNoPermissionManageSCNode
+	//internal call, do not check permission
+	if common.IsHexZeroAddress(n.caller.String()) {
+		return nil
 	}
 
-	if !hasAddNodePermission(n.caller) {
-		log.Error("Failed to add node.", "error", n.caller.String()+" has no permission to add node.")
-		return errNoPermissionManageSCNode
-	}
+	//todo
+	//if !checkPermission(n.stateDB,n.caller,) {
+	//	log.Error("Failed to add node.", "error", n.caller.String()+" has no permission to add node.")
+	//	return errNoPermissionManageSCNode
+	//}
 
 	return nil
 }
