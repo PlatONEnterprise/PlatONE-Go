@@ -1,33 +1,34 @@
 package vm
 
 import (
+	"math/big"
+	"testing"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/stretchr/testify/assert"
-	"math/big"
-	"testing"
 )
 
 const (
-	TEST_ADDR1 = "0x0000000000000000000000000000000000000123"
-	TEST_ADDR2 = "0x0000000000000000000000000000000000000456"
-	TEST_ADDR3 = "0x0000000000000000000000000000000000000789"
-	TEST_ADDR4 = "0x0000000000000000000000000000000000000101"
+	testAddr1 = "0x0000000000000000000000000000000000000123"
+	testAddr2 = "0x0000000000000000000000000000000000000456"
+	testAddr3 = "0x0000000000000000000000000000000000000789"
+	testAddr4 = "0x0000000000000000000000000000000000000101"
 
-	TEST_ORIGIN = "0x0000000000000000000000000000000000000afb"
-	TEST_CALLER = "0x0000000000000000000000000000000000000afc"
+	testOrigin = "0x0000000000000000000000000000000000000afb"
+	testCaller = "0x0000000000000000000000000000000000000afc"
 
-	TEST_NAME = "tofu"
+	testName = "tofu"
 )
 
-func TestLatestVersion (t *testing.T) {
+func TestLatestVersion(t *testing.T) {
 	testCase := []struct {
 		ver1 string
 		ver2 string
 	}{
 		{"0.0.0.0", "0.0.2.0"},
-		{"1.0.0.0","0.0.0.1"},
+		{"1.0.0.0", "0.0.0.1"},
 	}
 
 	for _, data := range testCase {
@@ -44,7 +45,7 @@ func TestSerializeCnsInfo(t *testing.T) {
 	cnsInfo := newContractInfo("tofu", "0.0.0.1", "0x123", "0x123")
 	cnsInfoArray = append(cnsInfoArray, cnsInfo, cnsInfo, cnsInfo)
 
-	sBytes, err := serializeCnsInfo(CODE_OK, MSG_OK, cnsInfoArray)
+	sBytes, err := serializeCnsInfo(codeOk, msgOk, cnsInfoArray)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -53,12 +54,11 @@ func TestSerializeCnsInfo(t *testing.T) {
 }
 
 var (
-	cns *CnsManager
-	db 	*mockStateDB
-	testCases	[]*ContractInfo
-	key = make([][]byte, 0)
+	cns       *CnsManager
+	db        *mockStateDB
+	testCases []*ContractInfo
+	key       = make([][]byte, 0)
 )
-
 
 // inital the cns with some pre prepared data
 func TestMain(m *testing.M) {
@@ -66,42 +66,42 @@ func TestMain(m *testing.M) {
 	addr := common.HexToAddress("")
 
 	cns = &CnsManager{
-		cMap: 		NewCnsMap(db, &addr),
-		callerAddr: common.HexToAddress(TEST_CALLER),
-		origin:		common.HexToAddress(TEST_ORIGIN),
-		isInit: 	-1,
+		cMap:       NewCnsMap(db, &addr),
+		callerAddr: common.HexToAddress(testCaller),
+		origin:     common.HexToAddress(testOrigin),
+		isInit:     -1,
 	}
 
 	testCases = []*ContractInfo{
 		{
-			Name: 		TEST_NAME,
-			Version: 	"0.0.0.1",
-			Address:	TEST_ADDR1,
-			Origin:		TEST_ORIGIN,
+			Name:    testName,
+			Version: "0.0.0.1",
+			Address: testAddr1,
+			Origin:  testOrigin,
 		},
 		{
-			Name: 		TEST_NAME,
-			Version: 	"0.0.0.2",
-			Address:	TEST_ADDR2,
-			Origin:		TEST_ORIGIN,
+			Name:    testName,
+			Version: "0.0.0.2",
+			Address: testAddr2,
+			Origin:  testOrigin,
 		},
 		{
-			Name: 		TEST_NAME,
-			Version: 	"0.0.0.3",
-			Address:	TEST_ADDR3,
-			Origin:		TEST_ORIGIN,
+			Name:    testName,
+			Version: "0.0.0.3",
+			Address: testAddr3,
+			Origin:  testOrigin,
 		},
 		{
-			Name: 		TEST_NAME,
-			Version: 	"0.0.0.4",
-			Address:	TEST_ADDR4,
-			Origin:		TEST_ORIGIN,
+			Name:    testName,
+			Version: "0.0.0.4",
+			Address: testAddr4,
+			Origin:  testOrigin,
 		},
 		{
-			Name: 		"bob",
-			Version: 	"0.0.0.1",
-			Address:	"0x123",
-			Origin:		TEST_ORIGIN,
+			Name:    "bob",
+			Version: "0.0.0.1",
+			Address: "0x123",
+			Origin:  testOrigin,
 		},
 	}
 
@@ -123,32 +123,32 @@ func TestMain(m *testing.M) {
 
 func TestCnsManager_cMap(t *testing.T) {
 
-	assert.Equal(t, key[1], cns.cMap.getKey(1),  "cns getKey FAILED")
-	assert.Equal(t, testCases[0], cns.cMap.find(key[0]),  "cns find() FAILED")
-	assert.Equal(t, len(testCases), cns.cMap.total(),  "cns total() FAILED")
+	assert.Equal(t, key[1], cns.cMap.getKey(1), "cns getKey FAILED")
+	assert.Equal(t, testCases[0], cns.cMap.find(key[0]), "cns find() FAILED")
+	assert.Equal(t, len(testCases), cns.cMap.total(), "cns total() FAILED")
 
 	t.Log(db.mockDB)
 }
 
 func TestCnsManager_cnsRegister(t *testing.T) {
-	result, err := cns.cnsRegister("alice", "0.0.0.1", TEST_ADDR1)
+	result, err := cns.cnsRegister("alice", "0.0.0.1", testAddr1)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, SUCCESS, result,  "cnsRegister FAILED")
+	assert.Equal(t, success, result, "cnsRegister FAILED")
 	t.Log(db.mockDB)
 }
 
 func TestCnsManager_getContractAddress(t *testing.T) {
 
-	testCasesSub := []struct{
-		name 		string
-		version 	string
-		expected	string
+	testCasesSub := []struct {
+		name     string
+		version  string
+		expected string
 	}{
-		{TEST_NAME, "0.0.0.2", TEST_ADDR2},
-		{TEST_NAME, "latest", TEST_ADDR4},
+		{testName, "0.0.0.2", testAddr2},
+		{testName, "latest", testAddr4},
 	}
 
 	for _, data := range testCasesSub {
@@ -157,7 +157,7 @@ func TestCnsManager_getContractAddress(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		assert.Equal(t, data.expected, result,  "getContractAddress FAILED")
+		assert.Equal(t, data.expected, result, "getContractAddress FAILED")
 		t.Log(result)
 	}
 
@@ -165,28 +165,28 @@ func TestCnsManager_getContractAddress(t *testing.T) {
 
 func TestCnsManager_cnsRecall(t *testing.T) {
 
-	curVersion := cns.cMap.getLatestVer(TEST_NAME)
+	curVersion := cns.cMap.getLatestVer(testName)
 
-	result, err := cns.cnsRedirect(TEST_NAME, testCases[2].Version)
+	result, err := cns.cnsRedirect(testName, testCases[2].Version)
 	if err != nil {
 		t.Fatal(err)
 	}
-	assert.Equal(t, SUCCESS, result,  "cnsRecall FAILED")
+	assert.Equal(t, success, result, "cnsRecall FAILED")
 
-	actVersion := cns.cMap.getLatestVer(TEST_NAME)
+	actVersion := cns.cMap.getLatestVer(testName)
 	expVersion := testCases[2].Version
-	assert.Equal(t, expVersion, actVersion,  "cnsRecall FAILED")
+	assert.Equal(t, expVersion, actVersion, "cnsRecall FAILED")
 
 	t.Logf("before: %s, after cnsRecall: %s\n", curVersion, actVersion)
 }
 
 func TestCnsManager_ifRegisteredByName(t *testing.T) {
-	testCasesSub := []struct{
-		name 		string
-		expected	int
+	testCasesSub := []struct {
+		name     string
+		expected int
 	}{
-		{TEST_NAME, REGISTERD},
-		{"tom", UNREGISTERD},
+		{testName, registered},
+		{"tom", unregistered},
 	}
 
 	for _, data := range testCasesSub {
@@ -195,29 +195,28 @@ func TestCnsManager_ifRegisteredByName(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		assert.Equal(t, data.expected, result,  "ifRegisteredByName FAILED")
+		assert.Equal(t, data.expected, result, "ifRegisteredByName FAILED")
 	}
 }
 
 func TestCnsManager_getRegisteredContractsByRange(t *testing.T) {
-	result, err := cns.getRegisteredContractsByRange(0,0)
+	result, err := cns.getRegisteredContractsByRange(0, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Logf("the result is %s\n", result)
 }
 
-
 //==================================mock======================================
 
-func newMockStateDB() *mockStateDB{
+func newMockStateDB() *mockStateDB {
 	return &mockStateDB{
-		mockDB:		make(map[common.Address]map[string][]byte),
+		mockDB: make(map[common.Address]map[string][]byte),
 	}
 }
 
 type mockStateDB struct {
-	mockDB	map[common.Address]map[string][]byte
+	mockDB map[common.Address]map[string][]byte
 }
 
 func (m *mockStateDB) GetState(addr common.Address, key []byte) []byte {
@@ -235,7 +234,7 @@ func (m *mockStateDB) SetState(addr common.Address, key []byte, value []byte) {
 }
 
 func (m *mockStateDB) GetContractCreator(contractAddr common.Address) common.Address {
-	return common.HexToAddress(TEST_ORIGIN)
+	return common.HexToAddress(testOrigin)
 }
 
 func (m *mockStateDB) CreateAccount(common.Address) {
