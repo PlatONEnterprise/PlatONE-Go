@@ -79,7 +79,6 @@ cmd/SysContracts/*.s
 cmd/SysContracts/*.wasm
 cmd/SysContracts/*.wast
 
-release/linux/conf/contracts
 release/linux/conf/bak
 release/linux/bin/abigen
 release/linux/bin/bootnode
