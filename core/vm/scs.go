@@ -37,7 +37,7 @@ func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Cont
 			node.base.stateDB = evm.StateDB
 			node.base.caller = contract.CallerAddress
 			node.base.blockNumber = evm.BlockNumber
-			node.base.address = *contract.CodeAddr
+			node.base.contractAddress = *contract.CodeAddr
 
 			return node.Run(input)
 		case *CnsManager:

@@ -132,14 +132,14 @@ func fromNodes(nodes []*syscontracts.NodeInfo) []*eNode {
 }
 
 type SCNode struct {
-	stateDB     StateDB
-	address     common.Address
-	caller      common.Address
-	blockNumber *big.Int
+	stateDB         StateDB
+	contractAddress common.Address
+	caller          common.Address
+	blockNumber     *big.Int
 }
 
 func NewSCNode(db StateDB) *SCNode {
-	return &SCNode{stateDB: db, address: syscontracts.NODE_MANAGEMENT_ADDRESS, blockNumber: big.NewInt(0)}
+	return &SCNode{stateDB: db, contractAddress: syscontracts.NODE_MANAGEMENT_ADDRESS, blockNumber: big.NewInt(0)}
 }
 
 func (n *SCNode) checkParamsOfAddNode(node *syscontracts.NodeInfo) error {
@@ -441,11 +441,11 @@ func (n *SCNode) nodesNum(query *syscontracts.NodeInfo) (int, error) {
 }
 
 func (n *SCNode) setState(key string, value []byte) {
-	n.stateDB.SetState(n.address, []byte(key), value)
+	n.stateDB.SetState(n.contractAddress, []byte(key), value)
 }
 
 func (n *SCNode) getState(key string) []byte {
-	return n.stateDB.GetState(n.address, []byte(key))
+	return n.stateDB.GetState(n.contractAddress, []byte(key))
 }
 
 func (n *SCNode) isMatch(node, query *syscontracts.NodeInfo) bool {
@@ -471,5 +471,5 @@ func (n *SCNode) isMatch(node, query *syscontracts.NodeInfo) bool {
 
 func (n *SCNode) emitNotifyEvent(code CodeType, msg string) error {
 	topic := "Notify"
-	return emitEvent(n.address, n.stateDB, n.blockNumber.Uint64(), topic, code, msg)
+	return emitEvent(n.contractAddress, n.stateDB, n.blockNumber.Uint64(), topic, code, msg)
 }
