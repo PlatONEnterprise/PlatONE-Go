@@ -14,57 +14,57 @@ func TestUserRoles_setRole(t *testing.T) {
 		role int32
 	}
 	tests := []struct {
-		name    string
-		roles   *UserRoles
-		args    args
+		name       string
+		roles      *UserRoles
+		args       args
 		targetRole uint32
-		wantErr bool
+		wantErr    bool
 	}{
 		// TODO: Add test cases.
 		{
-			roles: &UserRoles{roles: 0},
-			args : args{role: -1},
-			wantErr:true,
+			roles:   &UserRoles{roles: 0},
+			args:    args{role: -1},
+			wantErr: true,
 		},
 		{
-			roles: &UserRoles{roles: 0},
-			args : args{role: ROLES_CNT},
-			wantErr:true,
+			roles:   &UserRoles{roles: 0},
+			args:    args{role: ROLES_CNT},
+			wantErr: true,
 		},
 		{
-			roles: &UserRoles{roles: 0},
-			args : args{role: superAdmin},
+			roles:      &UserRoles{roles: 0},
+			args:       args{role: superAdmin},
 			targetRole: 0b1,
-			wantErr:false,
+			wantErr:    false,
 		},
 		{
-			roles: &UserRoles{roles: 1},
-			args : args{role: chainAdmin},
+			roles:      &UserRoles{roles: 1},
+			args:       args{role: chainAdmin},
 			targetRole: 0b11,
-			wantErr:false,
+			wantErr:    false,
 		},
 		{
-			roles: &UserRoles{roles: 0b11},
-			args : args{role: nodeAdmin},
+			roles:      &UserRoles{roles: 0b11},
+			args:       args{role: nodeAdmin},
 			targetRole: 0b111,
-			wantErr:false,
+			wantErr:    false,
 		},
 		{
-			roles: &UserRoles{roles: 0b111},
-			args : args{role: contractAdmin},
+			roles:      &UserRoles{roles: 0b111},
+			args:       args{role: contractAdmin},
 			targetRole: 0b1111,
-			wantErr:false,
+			wantErr:    false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.roles.setRole(tt.args.role);
+			err := tt.roles.setRole(tt.args.role)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("UserRoles.setRole() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
-			if  !tt.wantErr && tt.roles.roles != tt.targetRole {
-				t.Errorf("UserRoles.setRole() roles = %v, wantResult %v", tt.roles.roles, tt.targetRole )
+			if !tt.wantErr && tt.roles.roles != tt.targetRole {
+				t.Errorf("UserRoles.setRole() roles = %v, wantResult %v", tt.roles.roles, tt.targetRole)
 			}
 		})
 	}
@@ -75,21 +75,21 @@ func TestUserRoles_unsetRole(t *testing.T) {
 		role int32
 	}
 	tests := []struct {
-		name    string
-		roles   *UserRoles
-		args    args
+		name        string
+		roles       *UserRoles
+		args        args
 		targetRoles uint32
-		wantErr bool
+		wantErr     bool
 	}{
 		// TODO: Add test cases.
 		{
-			roles: &UserRoles{roles: 0},
-			args:args{role: -1},
+			roles:   &UserRoles{roles: 0},
+			args:    args{role: -1},
 			wantErr: true,
 		},
 		{
-			roles: &UserRoles{roles: 0},
-			args:args{role: ROLES_CNT},
+			roles:   &UserRoles{roles: 0},
+			args:    args{role: ROLES_CNT},
 			wantErr: true,
 		},
 	}
@@ -115,38 +115,38 @@ func TestUserRoles_hasRole(t *testing.T) {
 		// TODO: Add test cases.
 		{
 			roles: &UserRoles{roles: 0b1},
-			args:args{role: superAdmin},
-			want: true,
+			args:  args{role: superAdmin},
+			want:  true,
 		},
 		{
 			roles: &UserRoles{roles: 0},
-			args:args{role: superAdmin},
-			want: false,
+			args:  args{role: superAdmin},
+			want:  false,
 		},
 		{
 			roles: &UserRoles{roles: 0b10101},
-			args:args{role: superAdmin},
-			want: true,
+			args:  args{role: superAdmin},
+			want:  true,
 		},
 		{
 			roles: &UserRoles{roles: 0b10101},
-			args:args{role: chainAdmin},
-			want: false,
+			args:  args{role: chainAdmin},
+			want:  false,
 		},
 		{
 			roles: &UserRoles{roles: 0b10101},
-			args:args{role: nodeAdmin},
-			want: true,
+			args:  args{role: nodeAdmin},
+			want:  true,
 		},
 		{
 			roles: &UserRoles{roles: 0b10101},
-			args:args{role: contractAdmin},
-			want: false,
+			args:  args{role: contractAdmin},
+			want:  false,
 		},
 		{
 			roles: &UserRoles{roles: 0b10101},
-			args:args{role: contractDeployer},
-			want: true,
+			args:  args{role: contractDeployer},
+			want:  true,
 		},
 	}
 	for _, tt := range tests {
@@ -372,8 +372,8 @@ func TestUserManagement_addContractDeployerByAddress(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			u := &UserManagement{
-				state:db,
-				caller:ZeroAddress,
+				state:  db,
+				caller: ZeroAddress,
 			}
 			got, err := u.addContractDeployerByAddress(tt.args.addr)
 			if (err != nil) != tt.wantErr {
@@ -470,8 +470,7 @@ func TestUserManagement_getRole(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			u := &UserManagement{
-			}
+			u := &UserManagement{}
 			got, err := u.getRole(tt.args.addr)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("UserManagement.getRole() error = %v, wantErr %v", err, tt.wantErr)
@@ -570,9 +569,9 @@ func TestUserManagement_getAddrList(t *testing.T) {
 	fmt.Println(json.Unmarshal(data, &addr1))
 	fmt.Println(addr1)
 }
-func generateKey(targetRole int32) ([]byte){
+func generateKey(targetRole int32) []byte {
 	key := addressListKey
-	switch targetRole{
+	switch targetRole {
 	case superAdmin:
 		key += "superAdmin"
 	case chainAdmin:
@@ -591,7 +590,7 @@ func generateKey(targetRole int32) ([]byte){
 
 func TestUserManagement_addAddrList(t *testing.T) {
 	type fields struct {
-		state StateDB
+		state  StateDB
 		caller common.Address
 	}
 	db := newMockStateDB()
@@ -609,50 +608,50 @@ func TestUserManagement_addAddrList(t *testing.T) {
 	}{
 		// TODO: Add test cases.
 		{
-			fields:fields{
-				state:db,
-				caller:common.Address{},
+			fields: fields{
+				state:  db,
+				caller: common.Address{},
 			},
-			args:args{
+			args: args{
 				key:  generateKey(superAdmin),
 				addr: ZeroAddress,
 			},
-			want:[]common.Address{ZeroAddress},
-			wantErr:nil,
+			want:    []common.Address{ZeroAddress},
+			wantErr: nil,
 		},
 		{
-			fields:fields{
-				state:db,
-				caller:common.Address{},
+			fields: fields{
+				state:  db,
+				caller: common.Address{},
 			},
-			args:args{
+			args: args{
 				key:  generateKey(superAdmin),
 				addr: common.HexToAddress("0x0000000000000000000000000000000000000001"),
 			},
-			want: []common.Address{ZeroAddress,common.HexToAddress("0x0000000000000000000000000000000000000001")},
-			wantErr:nil,
+			want:    []common.Address{ZeroAddress, common.HexToAddress("0x0000000000000000000000000000000000000001")},
+			wantErr: nil,
 		},
 		{
-			fields:fields{
-				state:db,
-				caller:common.Address{},
+			fields: fields{
+				state:  db,
+				caller: common.Address{},
 			},
-			args:args{
+			args: args{
 				key:  generateKey(superAdmin),
 				addr: common.HexToAddress("0x0000000000000000000000000000000000000002"),
 			},
-			want: []common.Address{ZeroAddress,common.HexToAddress("0x0000000000000000000000000000000000000001"),common.HexToAddress("0x0000000000000000000000000000000000000002")},
-			wantErr:nil,
+			want:    []common.Address{ZeroAddress, common.HexToAddress("0x0000000000000000000000000000000000000001"), common.HexToAddress("0x0000000000000000000000000000000000000002")},
+			wantErr: nil,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			u := &UserManagement{
-				state: tt.fields.state,
+				state:  tt.fields.state,
 				caller: tt.fields.caller,
 			}
-			err := u.addAddrList(tt.args.key,tt.args.addr)
-			if (err != tt.wantErr) {
+			err := u.addAddrList(tt.args.key, tt.args.addr)
+			if err != tt.wantErr {
 				t.Errorf("UserManagement.addAddrList() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
@@ -668,13 +667,13 @@ func TestUserManagement_addAddrList(t *testing.T) {
 
 func TestUserManagement_delAddrList(t *testing.T) {
 	type fields struct {
-		state StateDB
+		state  StateDB
 		caller common.Address
 	}
 	db := newMockStateDB()
 	u := UserManagement{
-		caller:ZeroAddress,
-		state:db,
+		caller: ZeroAddress,
+		state:  db,
 	}
 	key := generateKey(superAdmin)
 	u.addAddrList(key, ZeroAddress)
@@ -694,50 +693,50 @@ func TestUserManagement_delAddrList(t *testing.T) {
 	}{
 		// TODO: Add test cases.
 		{
-			fields:fields{
-				state:db,
-				caller:common.Address{},
+			fields: fields{
+				state:  db,
+				caller: common.Address{},
 			},
-			args:args{
+			args: args{
 				key:  generateKey(superAdmin),
 				addr: ZeroAddress,
 			},
-			want:[]common.Address{common.HexToAddress("0x0000000000000000000000000000000000000001"),common.HexToAddress("0x0000000000000000000000000000000000000002")},
-			wantErr:nil,
+			want:    []common.Address{common.HexToAddress("0x0000000000000000000000000000000000000001"), common.HexToAddress("0x0000000000000000000000000000000000000002")},
+			wantErr: nil,
 		},
 		{
-			fields:fields{
-				state:db,
-				caller:common.Address{},
+			fields: fields{
+				state:  db,
+				caller: common.Address{},
 			},
-			args:args{
+			args: args{
 				key:  generateKey(superAdmin),
 				addr: common.HexToAddress("0x0000000000000000000000000000000000000001"),
 			},
-			want: []common.Address{common.HexToAddress("0x0000000000000000000000000000000000000002")},
-			wantErr:nil,
+			want:    []common.Address{common.HexToAddress("0x0000000000000000000000000000000000000002")},
+			wantErr: nil,
 		},
 		{
-			fields:fields{
-				state:db,
-				caller:common.Address{},
+			fields: fields{
+				state:  db,
+				caller: common.Address{},
 			},
-			args:args{
+			args: args{
 				key:  generateKey(superAdmin),
 				addr: common.HexToAddress("0x0000000000000000000000000000000000000002"),
 			},
-			want: []common.Address{},
-			wantErr:nil,
+			want:    []common.Address{},
+			wantErr: nil,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			u := &UserManagement{
-				state: tt.fields.state,
+				state:  tt.fields.state,
 				caller: tt.fields.caller,
 			}
-			err := u.delAddrList(tt.args.key,tt.args.addr)
-			if (err != tt.wantErr) {
+			err := u.delAddrList(tt.args.key, tt.args.addr)
+			if err != tt.wantErr {
 				t.Errorf("UserManagement.delAddrList() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}

@@ -29,11 +29,11 @@ var (
 		contractDeployer: "CONTRACT_DEPLOYER",
 	}
 	rolesMap = map[string]int32{
-		"SUPER_ADMIN":        superAdmin,
-		"CHAIN_ADMIN":        chainAdmin,
-		"GROUP_ADMIN":        groupAdmin,
-		"NODE_ADMIN":         nodeAdmin,
-		"CONTRACT_ADMIN":     contractAdmin,
+		"SUPER_ADMIN":       superAdmin,
+		"CHAIN_ADMIN":       chainAdmin,
+		"GROUP_ADMIN":       groupAdmin,
+		"NODE_ADMIN":        nodeAdmin,
+		"CONTRACT_ADMIN":    contractAdmin,
 		"CONTRACT_DEPLOYER": contractDeployer,
 	}
 )
@@ -295,13 +295,13 @@ func (u *UserManagement) getRolesByAddress(addr common.Address) (string, error) 
 
 	roles := ur.Strings()
 	str, err := json.Marshal(roles)
-	if err != nil{
+	if err != nil {
 		return "", err
 	}
 	return string(str), nil
 }
 func (u *UserManagement) getAddrListOfRoleStr(targetRole string) (string, error) {
-	if role , ok := rolesMap[targetRole]; ok{
+	if role, ok := rolesMap[targetRole]; ok {
 		return u.getAddrListOfRole(role)
 	}
 	return "", ErrUnsupportedRole
@@ -318,7 +318,7 @@ func (u *UserManagement) getAddrListOfRole(targetRole int32) (string, error) {
 		return "", err
 	}
 	str, err := json.Marshal(addrs)
-	if err != nil{
+	if err != nil {
 		return "", err
 	}
 	return string(str), nil
@@ -339,8 +339,8 @@ func (u *UserManagement) hasRole(addr common.Address, roleName string) (int32, e
 	}
 	ur := &UserRoles{roles: roles}
 
-	if role, ok := rolesMap[roleName]; ok && ur.hasRole(role){
-		 return 1, nil
+	if role, ok := rolesMap[roleName]; ok && ur.hasRole(role) {
+		return 1, nil
 	}
 
 	return 0, nil

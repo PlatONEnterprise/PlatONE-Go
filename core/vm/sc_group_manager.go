@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 )
@@ -18,15 +19,15 @@ const (
 )
 
 type GroupManagement struct {
-	state    StateDB
-	caller   common.Address
+	state   StateDB
+	caller  common.Address
 	address common.Address
 }
 
-type GroupInfo struct{
-	Creator string 	`json:"creator"`
-	GroupID uint64 			`json:"groupID"`
-	BootNodes string 		`json:"bootNodes"`
+type GroupInfo struct {
+	Creator   string `json:"creator"`
+	GroupID   uint64 `json:"groupID"`
+	BootNodes string `json:"bootNodes"`
 }
 
 func (g *GroupManagement) RequiredGas(input []byte) uint64 {
@@ -55,55 +56,53 @@ func (g *GroupManagement) Caller() common.Address {
 
 //for access control
 func (g *GroupManagement) AllExportFns() SCExportFns {
-	return SCExportFns{
-	}
+	return SCExportFns{}
 }
 
 // export functions
-func (g *GroupManagement) hasGroupOpPermisson() (int32, error){
-	if  hasGroupCreatePermmision(g.state, g.caller) {
+func (g *GroupManagement) hasGroupOpPermisson() (int32, error) {
+	if hasGroupCreatePermmision(g.state, g.caller) {
 		return 1, nil
 	}
 	return 0, nil
 }
 
-func (g *GroupManagement) createGroup(groupINfo string) ([]byte, error){
-	if ok,_ := g.hasGroupOpPermisson(); ok != 1{
-		return nil,ErrNoPermission
+func (g *GroupManagement) createGroup(groupINfo string) ([]byte, error) {
+	if ok, _ := g.hasGroupOpPermisson(); ok != 1 {
+		return nil, ErrNoPermission
 	}
 	group := &GroupInfo{}
 	err := json.Unmarshal([]byte(groupINfo), group)
-	if err != nil{
-		return nil,err
+	if err != nil {
+		return nil, err
 	}
 
 	return nil, nil
 }
-func (g *GroupManagement) getAllGroups(groupINfo string) (string, error){
+func (g *GroupManagement) getAllGroups(groupINfo string) (string, error) {
 
 	return "", nil
 }
 
-func (g *GroupManagement) getGroupByGroupID(groupID uint64) (string, error){
+func (g *GroupManagement) getGroupByGroupID(groupID uint64) (string, error) {
 
 	return "", nil
 }
-
 
 // internal functions
 
 func (g *GroupManagement) addGroup(info GroupInfo) error {
-	if p, _ := g.hasGroupOpPermisson(); p!=1{
+	if p, _ := g.hasGroupOpPermisson(); p != 1 {
 		return ErrNoPermission
 	}
 
 	groups, err := g.getGroupList()
-	if err != nil{
+	if err != nil {
 		return err
 	}
 
 	for _, g := range groups {
-		if g.GroupID == info.GroupID{
+		if g.GroupID == info.GroupID {
 			return ErrRepeatedGroupID
 		}
 	}
@@ -114,45 +113,45 @@ func (g *GroupManagement) addGroup(info GroupInfo) error {
 	return nil
 }
 
-func (g *GroupManagement)storeGroupInfo(info *GroupInfo) error {
+func (g *GroupManagement) storeGroupInfo(info *GroupInfo) error {
 	groupKey := generateGroupKey(info.GroupID)
 	rawData, err := json.Marshal(info)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	g.setState(groupKey, rawData)
 	return nil
 }
 
-func (g *GroupManagement)getGroupInfo(id uint64) (*GroupInfo, error) {
+func (g *GroupManagement) getGroupInfo(id uint64) (*GroupInfo, error) {
 	groupKey := generateGroupKey(id)
 
 	rawData := g.getState(groupKey)
 	group := &GroupInfo{}
 
-	if err := json.Unmarshal(rawData, group); err!= nil{
+	if err := json.Unmarshal(rawData, group); err != nil {
 		return nil, err
 	}
 
 	return group, nil
 }
 
-func (g *GroupManagement)storeGroupList(infos []GroupInfo) error {
+func (g *GroupManagement) storeGroupList(infos []GroupInfo) error {
 	rawData, err := json.Marshal(infos)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	g.setState([]byte(groupList), rawData)
 	return nil
 }
 
-func generateGroupKey (id uint64) []byte {
+func generateGroupKey(id uint64) []byte {
 	key := fmt.Sprintf("%s:%d", groupKey, id)
 	return []byte(key)
 }
 
-func (g* GroupManagement) delGroupInfo (id uint64)error{
-	if err := g.delGroupfromList(id); err != nil{
+func (g *GroupManagement) delGroupInfo(id uint64) error {
+	if err := g.delGroupfromList(id); err != nil {
 		return err
 	}
 	g.setState(generateGroupKey(id), nil)
@@ -160,13 +159,13 @@ func (g* GroupManagement) delGroupInfo (id uint64)error{
 	return nil
 }
 
-func  (g *GroupManagement) addGroupToList(info *GroupInfo) error{
+func (g *GroupManagement) addGroupToList(info *GroupInfo) error {
 	groups, err := g.getGroupList()
-	if err != nil{
+	if err != nil {
 		return err
 	}
 
-	for _, g := range groups{
+	for _, g := range groups {
 		if g.GroupID == info.GroupID {
 			return ErrRepeatedGroupID
 		}
@@ -177,14 +176,14 @@ func  (g *GroupManagement) addGroupToList(info *GroupInfo) error{
 	return nil
 }
 
-func  (g *GroupManagement) delGroupfromList(id uint64) error{
+func (g *GroupManagement) delGroupfromList(id uint64) error {
 	groups, err := g.getGroupList()
-	if err != nil{
+	if err != nil {
 		return err
 	}
 
 	pos := -1
-	for i, g := range groups{
+	for i, g := range groups {
 		if g.GroupID == id {
 			pos = i
 			break
@@ -197,18 +196,17 @@ func  (g *GroupManagement) delGroupfromList(id uint64) error{
 	return nil
 }
 
-func  (g *GroupManagement) getGroupList() ([]GroupInfo, error){
+func (g *GroupManagement) getGroupList() ([]GroupInfo, error) {
 	data := g.getState([]byte(groupList))
-	if len(data) == 0{
+	if len(data) == 0 {
 		return nil, nil
 	}
 
 	var groups []GroupInfo
 	err := json.Unmarshal(data, &groups)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
 	return groups, nil
 }
-
