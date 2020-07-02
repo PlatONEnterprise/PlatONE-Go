@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"regexp"
@@ -37,6 +38,14 @@ const (
 var (
 	regName = regexp.MustCompile(NAME_PATTERN)
 	regVer = regexp.MustCompile(VERSION_PATTERN)
+)
+
+var (
+	cnsSysContractsMap = map[string]common.Address {
+		"__sys_ParamManager": syscontracts.PARAMETER_MANAGEMENT_ADDRESS,
+		"__sys_NodeManager": syscontracts.NODE_MANAGEMENT_ADDRESS,
+		"__sys_UserManager": syscontracts.USER_MANAGEMENT_ADDRESS,
+	}
 )
 
 // CnsManager
@@ -268,7 +277,9 @@ func (cns *CnsManager) cnsRedirect(name, version string) (int, error) {
 
 // getContractAddress returns the address of a cns name at specific version
 func (cns *CnsManager) getContractAddress(name, version string) (string, error) {
-
+	if sysCon,ok := cnsSysContractsMap[name]; ok{
+		return sysCon.String(), nil
+	}
 	if strings.EqualFold(version, "latest") {
 		version = cns.cMap.getLatestVer(name)
 	}
