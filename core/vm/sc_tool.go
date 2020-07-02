@@ -19,9 +19,9 @@ var (
 )
 
 func execSC(input []byte, fns SCExportFns) ([]byte, error) {
-	txType, _, fn, params, err := retrieveFnAndParams(input, fns)
+	txType, fnName, fn, params, err := retrieveFnAndParams(input, fns)
 	if nil != err {
-		log.Error("failed to retrieve func name and params.", "error", err)
+		log.Error("failed to retrieve func name and params.", "error", err, "function", fnName)
 		return nil, err
 	}
 
@@ -79,7 +79,7 @@ func retrieveFnAndParams(input []byte, fns SCExportFns) (txType int, fnName stri
 
 	var ok bool
 	if fn, ok = fns[fnName]; !ok {
-		return 0, "", nil, nil, errFuncNotFoundInExportFuncs
+		return 0, fnName, nil, nil, errFuncNotFoundInExportFuncs
 	}
 
 	fnType := reflect.TypeOf(fn)
@@ -104,7 +104,8 @@ func CheckPublicKeyFormat(pub string) error {
 	if err != nil {
 		return err
 	}
-
+	// nodeid = pubkey[1:]
+	b = append([]byte{4}, b...)
 	_, err = crypto.UnmarshalPubkey(b)
 	if err != nil {
 		return err

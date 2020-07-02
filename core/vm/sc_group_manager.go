@@ -13,8 +13,8 @@ var (
 )
 
 const (
-	GROUP_KEY = "c9373997b64ef7ab34be47746b83f3bbad9ed86e"
-	GROUP_LIST= "b78adefaefdbf2ace61af534bbfe5e6d2e58682d"
+	groupKey  = "c9373997b64ef7ab34be47746b83f3bbad9ed86e"
+	groupList = "b78adefaefdbf2ace61af534bbfe5e6d2e58682d"
 )
 
 type GroupManagement struct {
@@ -142,12 +142,12 @@ func (g *GroupManagement)storeGroupList(infos []GroupInfo) error {
 	if err != nil{
 		return err
 	}
-	g.setState([]byte(GROUP_LIST), rawData)
+	g.setState([]byte(groupList), rawData)
 	return nil
 }
 
 func generateGroupKey (id uint64) []byte {
-	key := fmt.Sprintf("%s:%d", GROUP_KEY, id)
+	key := fmt.Sprintf("%s:%d", groupKey, id)
 	return []byte(key)
 }
 
@@ -198,7 +198,7 @@ func  (g *GroupManagement) delGroupfromList(id uint64) error{
 }
 
 func  (g *GroupManagement) getGroupList() ([]GroupInfo, error){
-	data := g.getState([]byte(GROUP_LIST))
+	data := g.getState([]byte(groupList))
 	if len(data) == 0{
 		return nil, nil
 	}

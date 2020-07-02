@@ -590,7 +590,6 @@ func InvokeContract(contractAddr string, abiPath string, funcName string,
 	if abiFunc.Constant == "true" {
 		if len(abiFunc.Outputs) != 0 && abiFunc.Outputs[0].Type != "void" {
 			bytes, _ := hexutil.Decode(resp.Result)
-			fmt.Println(string(bytes))
 			result := BytesConverter(bytes, abiFunc.Outputs[0].Type)
 			fmt.Printf("\nresult: %v\n", result)
 			return nil

@@ -33,25 +33,25 @@ func TestUserRoles_setRole(t *testing.T) {
 		},
 		{
 			roles: &UserRoles{roles: 0},
-			args : args{role: SUPER_ADMIN},
+			args : args{role: superAdmin},
 			targetRole: 0b1,
 			wantErr:false,
 		},
 		{
 			roles: &UserRoles{roles: 1},
-			args : args{role: CHAIN_ADMIN},
+			args : args{role: chainAdmin},
 			targetRole: 0b11,
 			wantErr:false,
 		},
 		{
 			roles: &UserRoles{roles: 0b11},
-			args : args{role: NODE_ADMIN},
+			args : args{role: nodeAdmin},
 			targetRole: 0b111,
 			wantErr:false,
 		},
 		{
 			roles: &UserRoles{roles: 0b111},
-			args : args{role: CONTRACT_ADMIN},
+			args : args{role: contractAdmin},
 			targetRole: 0b1111,
 			wantErr:false,
 		},
@@ -115,37 +115,37 @@ func TestUserRoles_hasRole(t *testing.T) {
 		// TODO: Add test cases.
 		{
 			roles: &UserRoles{roles: 0b1},
-			args:args{role:SUPER_ADMIN},
+			args:args{role: superAdmin},
 			want: true,
 		},
 		{
 			roles: &UserRoles{roles: 0},
-			args:args{role:SUPER_ADMIN},
+			args:args{role: superAdmin},
 			want: false,
 		},
 		{
 			roles: &UserRoles{roles: 0b10101},
-			args:args{role:SUPER_ADMIN},
+			args:args{role: superAdmin},
 			want: true,
 		},
 		{
 			roles: &UserRoles{roles: 0b10101},
-			args:args{role:CHAIN_ADMIN},
+			args:args{role: chainAdmin},
 			want: false,
 		},
 		{
 			roles: &UserRoles{roles: 0b10101},
-			args:args{role:NODE_ADMIN},
+			args:args{role: nodeAdmin},
 			want: true,
 		},
 		{
 			roles: &UserRoles{roles: 0b10101},
-			args:args{role:CONTRACT_ADMIN},
+			args:args{role: contractAdmin},
 			want: false,
 		},
 		{
 			roles: &UserRoles{roles: 0b10101},
-			args:args{role:CONTRACT_DEPLOYER},
+			args:args{role: contractDeployer},
 			want: true,
 		},
 	}
@@ -571,18 +571,18 @@ func TestUserManagement_getAddrList(t *testing.T) {
 	fmt.Println(addr1)
 }
 func generateKey(targetRole int32) ([]byte){
-	key := AddressListKey
+	key := addressListKey
 	switch targetRole{
-	case SUPER_ADMIN:
-		key += "SUPER_ADMIN"
-	case CHAIN_ADMIN:
-		key += "CHAIN_ADMIN"
-	case NODE_ADMIN:
-		key += "NODE_ADMIN"
-	case CONTRACT_ADMIN:
-		key += "CONTRACT_ADMIN"
-	case CONTRACT_DEPLOYER:
-		key += "CONTRACT_ADMIN"
+	case superAdmin:
+		key += "superAdmin"
+	case chainAdmin:
+		key += "chainAdmin"
+	case nodeAdmin:
+		key += "nodeAdmin"
+	case contractAdmin:
+		key += "contractAdmin"
+	case contractDeployer:
+		key += "contractAdmin"
 	default:
 		return nil
 	}
@@ -614,7 +614,7 @@ func TestUserManagement_addAddrList(t *testing.T) {
 				caller:common.Address{},
 			},
 			args:args{
-				key:  generateKey(SUPER_ADMIN),
+				key:  generateKey(superAdmin),
 				addr: ZeroAddress,
 			},
 			want:[]common.Address{ZeroAddress},
@@ -626,7 +626,7 @@ func TestUserManagement_addAddrList(t *testing.T) {
 				caller:common.Address{},
 			},
 			args:args{
-				key:  generateKey(SUPER_ADMIN),
+				key:  generateKey(superAdmin),
 				addr: common.HexToAddress("0x0000000000000000000000000000000000000001"),
 			},
 			want: []common.Address{ZeroAddress,common.HexToAddress("0x0000000000000000000000000000000000000001")},
@@ -638,7 +638,7 @@ func TestUserManagement_addAddrList(t *testing.T) {
 				caller:common.Address{},
 			},
 			args:args{
-				key:  generateKey(SUPER_ADMIN),
+				key:  generateKey(superAdmin),
 				addr: common.HexToAddress("0x0000000000000000000000000000000000000002"),
 			},
 			want: []common.Address{ZeroAddress,common.HexToAddress("0x0000000000000000000000000000000000000001"),common.HexToAddress("0x0000000000000000000000000000000000000002")},
@@ -676,7 +676,7 @@ func TestUserManagement_delAddrList(t *testing.T) {
 		caller:ZeroAddress,
 		state:db,
 	}
-	key := generateKey(SUPER_ADMIN)
+	key := generateKey(superAdmin)
 	u.addAddrList(key, ZeroAddress)
 	u.addAddrList(key, common.HexToAddress("0x0000000000000000000000000000000000000001"))
 	u.addAddrList(key, common.HexToAddress("0x0000000000000000000000000000000000000002"))
@@ -699,7 +699,7 @@ func TestUserManagement_delAddrList(t *testing.T) {
 				caller:common.Address{},
 			},
 			args:args{
-				key:  generateKey(SUPER_ADMIN),
+				key:  generateKey(superAdmin),
 				addr: ZeroAddress,
 			},
 			want:[]common.Address{common.HexToAddress("0x0000000000000000000000000000000000000001"),common.HexToAddress("0x0000000000000000000000000000000000000002")},
@@ -711,7 +711,7 @@ func TestUserManagement_delAddrList(t *testing.T) {
 				caller:common.Address{},
 			},
 			args:args{
-				key:  generateKey(SUPER_ADMIN),
+				key:  generateKey(superAdmin),
 				addr: common.HexToAddress("0x0000000000000000000000000000000000000001"),
 			},
 			want: []common.Address{common.HexToAddress("0x0000000000000000000000000000000000000002")},
@@ -723,7 +723,7 @@ func TestUserManagement_delAddrList(t *testing.T) {
 				caller:common.Address{},
 			},
 			args:args{
-				key:  generateKey(SUPER_ADMIN),
+				key:  generateKey(superAdmin),
 				addr: common.HexToAddress("0x0000000000000000000000000000000000000002"),
 			},
 			want: []common.Address{},

@@ -221,12 +221,8 @@ func loadLastConsensusNodesList(chain consensus.ChainReader, sb *backend, header
 		var fh string = "getContractAddress"
 
 		systemContractList := []string{"__sys_NodeManager",
-			"__sys_NodeRegister",
-			"__sys_UserRegister",
 			"__sys_UserManager",
-			"__sys_ParamManager",
-			"__sys_RoleManager",
-			"__sys_RoleRegister"}
+			"__sys_ParamManager"}
 
 		// Update system contract address
 		for _, contractName := range systemContractList {
@@ -259,19 +255,7 @@ func loadLastConsensusNodesList(chain consensus.ChainReader, sb *backend, header
 					sc.SysParam.BlockGasLimit = ret
 				}
 			}
-			funcName = "getCBFTTimeParam"
-			funcParams = []interface{}{}
-			res = callContract(paramAddr, common.GenCallData(funcName, funcParams))
-			if res != nil {
-				strRes := common.CallResAsString(res)
 
-				var cbftCfgTime common.CBFTProduceBlockCfg
-				if err := json.Unmarshal([]byte(strRes), &cbftCfgTime); err != nil {
-					log.Error("contract return invalid data", "result", strRes, "err", err.Error())
-				} else {
-					sc.SysParam.CBFTTime = cbftCfgTime
-				}
-			}
 			funcName = "getGasContractName"
 			funcParams = []interface{}{}
 			res = callContract(paramAddr, common.GenCallData(funcName, funcParams))

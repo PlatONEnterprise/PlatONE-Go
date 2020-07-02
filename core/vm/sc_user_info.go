@@ -9,14 +9,14 @@ import (
 )
 
 const (
-	// UserInfoKey = sha3("userInfo")
-	UserInfoKey = "bebc082d6e6b7cce489569e3716ad317"
-	// UserAddressMapKey = sha3("userAddressMap")
-	UserAddressMapKey = "25e73d394205b4eb66cfddc8c77e0e6e"
+	// userInfoKey = sha3("userInfo")
+	userInfoKey = "bebc082d6e6b7cce489569e3716ad317"
+	// userAddressMapKey = sha3("userAddressMap")
+	userAddressMapKey = "25e73d394205b4eb66cfddc8c77e0e6e"
 	// AddressUserMap = sha3("addressUserMap")
-	AddressUserMapKey = "a3b6f5702a6c188c1558e4f8bb686c56"
-	// UserListKey = sha3("userList")
-	UserListKey = "5af8141e0ecb4e3df3f35f6e6b0b387b"
+	addressUserMapKey = "a3b6f5702a6c188c1558e4f8bb686c56"
+	// userListKey = sha3("userList")
+	userListKey = "5af8141e0ecb4e3df3f35f6e6b0b387b"
 )
 
 var (
@@ -31,7 +31,7 @@ var (
 )
 
 // 具备操作user权限的角色
-var permissionRolesForUserOps  = []int32{CHAIN_ADMIN}
+var permissionRolesForUserOps  = []int32{chainAdmin}
 
 type UserInfo struct {
 	Address string  	`json:"address"`  	// 地址，不可变更
@@ -203,7 +203,7 @@ func (u *UserManagement) getAllUsers() ([]byte, error){
 //internal function
 func (u *UserManagement) setUserInfo(info *UserInfo) error{
 	addr := common.HexToAddress(info.Address)
-	key1 := append(addr[:], []byte(UserInfoKey)...)
+	key1 := append(addr[:], []byte(userInfoKey)...)
 	data, err := rlp.EncodeToBytes(info)
 	if err != nil{
 		return err
@@ -213,7 +213,7 @@ func (u *UserManagement) setUserInfo(info *UserInfo) error{
 	return nil
 }
 func (u *UserManagement) getUserInfo(addr common.Address) (*UserInfo, error){
-	key := append(addr[:], []byte(UserInfoKey)...)
+	key := append(addr[:], []byte(userInfoKey)...)
 	data := u.getState(key)
 	if len(data) == 0{
 		return nil ,errNoUserInfo
@@ -227,20 +227,20 @@ func (u *UserManagement) getUserInfo(addr common.Address) (*UserInfo, error){
 }
 
 func (u *UserManagement) addAddrNameMap(addr common.Address, name string){
-	key := append(addr[:], []byte(AddressUserMapKey)...)
+	key := append(addr[:], []byte(addressUserMapKey)...)
 	u.setState(key, []byte(name))
 }
 func (u *UserManagement) getNameByAddr(addr common.Address) string {
-	key := append(addr[:], []byte(AddressUserMapKey)...)
+	key := append(addr[:], []byte(addressUserMapKey)...)
 	data := u.getState(key)
 	return string(data)
 }
 func (u *UserManagement) addNameAddrMap(addr common.Address, name string){
-	key := append([]byte(name), []byte(UserAddressMapKey)...)
+	key := append([]byte(name), []byte(userAddressMapKey)...)
 	u.setState(key, addr[:])
 }
 func (u *UserManagement) getAddrByName(name string) common.Address{
-	key := append([]byte(name), []byte(UserAddressMapKey)...)
+	key := append([]byte(name), []byte(userAddressMapKey)...)
 	data := u.getState(key)
 	addr := common.Address{}
 	if len(data) == 20 {
@@ -297,7 +297,7 @@ func (u *UserManagement) delUserList(addr common.Address)error{
 func (u *UserManagement) getUserList()([]common.Address, error){
 	var addrs []common.Address
 
-	key := []byte(UserListKey)
+	key := []byte(userListKey)
 	data := u.getState(key)
 	if len(data) == 0{
 		return nil, nil
@@ -315,7 +315,7 @@ func (u *UserManagement) setUserList(addrs []common.Address)error{
 		return err
 	}
 
-	key := []byte(UserListKey)
+	key := []byte(userListKey)
 	u.setState(key, data)
 	return nil
 }

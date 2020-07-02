@@ -59,18 +59,6 @@ func (u *ParamManager) RequiredGas(input []byte) uint64 {
 }
 
 func (u *ParamManager) Run(input []byte) ([]byte, error) {
-	//gasLimit, err := rlp.EncodeToBytes(txGasLimitKey)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//gasValue, err := rlp.EncodeToBytes(txGasLimitDefaultValue)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//if u.getState(gasLimit) == nil {
-	//	u.setState(gasLimit, gasValue)
-	//}
 	return execSC(input, u.AllExportFns())
 }
 
@@ -83,7 +71,6 @@ func (u *ParamManager) getState(key []byte) []byte {
 }
 
 func (u *ParamManager) setGasContractName (contractName string) ([]byte, error){
-
 	if !u.hasPermission() {
 		//event here
 		return nil, ErrHasNoPermission
@@ -423,6 +410,9 @@ func (u *ParamManager) getIsTxUseGas() (uint64, error) {
 		return FailFlag, err
 	}
 	isTxUseGas := u.getState(key)
+	if len(isTxUseGas) == 0{
+		return 0, nil
+	}
 	var ret uint64
 	if err := rlp.DecodeBytes(isTxUseGas, &ret); nil != err {
 		return FailFlag, err
