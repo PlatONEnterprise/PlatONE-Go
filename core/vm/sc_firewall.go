@@ -4,19 +4,20 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
-	"strings"
 )
 
-var fwProcessErr = errors.New("firewall process error!")
-var ErrNotOwner = errors.New("FW : error, only contract owner can set firewall setting!")
+// var fwProcessErr = errors.New("firewall process error!")
+var fwErrNotOwner = errors.New("FW : error, only contract owner can set firewall setting!")
 
 type FireWall struct {
-	StateDB
-	contractAddr common.Address		// st.to()		contract.self
-	caller common.Address			// msg.From()	contract.caller
+	db           StateDB
+	contractAddr common.Address // st.to()		contract.self
+	caller       common.Address // msg.From()	contract.caller
 }
 
 func (u *FireWall) RequiredGas(input []byte) uint64 {
@@ -34,20 +35,20 @@ func (u *FireWall) Run(input []byte) ([]byte, error) {
 // for access control
 func (u *FireWall) AllExportFns() SCExportFns {
 	return SCExportFns{
-		"__sys_FwOpen": 	u.openFirewall,
-		"__sys_FwClose": 	u.closeFirewall,
-		"__sys_FwClear": 	u.fwClear,
-		"__sys_FwAdd":		u.fwAdd,
-		"__sys_FwDel":		u.fwDel,
-		"__sys_FwSet":		u.fwSet,
-		"__sys_FwImport":	u.fwImport,
-		"__sys_FwStatus":	u.getFwStatus,
-		"__sys_FwExport":	u.getFwStatus,
+		"__sys_FwOpen":   u.openFirewall,
+		"__sys_FwClose":  u.closeFirewall,
+		"__sys_FwClear":  u.fwClear,
+		"__sys_FwAdd":    u.fwAdd,
+		"__sys_FwDel":    u.fwDel,
+		"__sys_FwSet":    u.fwSet,
+		"__sys_FwImport": u.fwImport,
+		"__sys_FwStatus": u.getFwStatus,
+		"__sys_FwExport": u.getFwStatus,
 	}
 }
 
 func (u *FireWall) isOwner(contractAddr string) bool {
-	contractOwnerAddr := u.GetContractCreator(common.HexToAddress(contractAddr))
+	contractOwnerAddr := u.db.GetContractCreator(common.HexToAddress(contractAddr))
 	callerAddr := u.caller
 
 	if callerAddr.Hex() == contractOwnerAddr.Hex() {
@@ -59,108 +60,108 @@ func (u *FireWall) isOwner(contractAddr string) bool {
 
 func (u *FireWall) openFirewall(contractAddr string) (int, error) {
 	if !u.isOwner(contractAddr) {
-		return FAILURE, ErrNotOwner
+		return failure, fwErrNotOwner
 	}
 
-	u.OpenFirewall(common.HexToAddress(contractAddr))
-	return SUCCESS, nil
+	u.db.OpenFirewall(common.HexToAddress(contractAddr))
+	return success, nil
 }
 
 func (u *FireWall) closeFirewall(contractAddr string) (int, error) {
 	if !u.isOwner(contractAddr) {
-		return FAILURE, ErrNotOwner
+		return failure, fwErrNotOwner
 	}
 
-	u.CloseFirewall(common.HexToAddress(contractAddr))
-	return SUCCESS, nil
+	u.db.CloseFirewall(common.HexToAddress(contractAddr))
+	return success, nil
 }
 
 func (u *FireWall) fwClear(contractAddr, action string) (int, error) {
 	if !u.isOwner(contractAddr) {
-		return FAILURE, ErrNotOwner
+		return failure, fwErrNotOwner
 	}
 
 	act, err := actConvert(action)
 	if err != nil {
-		return FAILURE, err
+		return failure, err
 	}
 
-	u.FwClear(common.HexToAddress(contractAddr), act)
-	return SUCCESS, nil
+	u.db.FwClear(common.HexToAddress(contractAddr), act)
+	return success, nil
 }
 
 func (u *FireWall) fwAdd(contractAddr, action, lst string) (int, error) {
 	if !u.isOwner(contractAddr) {
-		return FAILURE, ErrNotOwner
+		return failure, fwErrNotOwner
 	}
 
 	act, err := actConvert(action)
 	if err != nil {
-		return FAILURE, err
+		return failure, err
 	}
 
 	list, err := listConvert(lst)
 	if err != nil {
-		return FAILURE, err
+		return failure, err
 	}
 
-	u.FwAdd(common.HexToAddress(contractAddr), act, list)
-	return SUCCESS, nil
+	u.db.FwAdd(common.HexToAddress(contractAddr), act, list)
+	return success, nil
 }
 
 func (u *FireWall) fwDel(contractAddr, action, lst string) (int, error) {
 	if !u.isOwner(contractAddr) {
-		return FAILURE, ErrNotOwner
+		return failure, fwErrNotOwner
 	}
 
 	act, err := actConvert(action)
 	if err != nil {
-		return FAILURE, err
+		return failure, err
 	}
 
 	list, err := listConvert(lst)
 	if err != nil {
-		return FAILURE, err
+		return failure, err
 	}
 
-	u.FwDel(common.HexToAddress(contractAddr), act, list)
-	return SUCCESS, nil
+	u.db.FwDel(common.HexToAddress(contractAddr), act, list)
+	return success, nil
 }
 
 func (u *FireWall) fwSet(contractAddr, action, lst string) (int, error) {
 	if !u.isOwner(contractAddr) {
-		return FAILURE, ErrNotOwner
+		return failure, fwErrNotOwner
 	}
 
 	act, err := actConvert(action)
 	if err != nil {
-		return FAILURE, err
+		return failure, err
 	}
 
 	list, err := listConvert(lst)
 	if err != nil {
-		return FAILURE, err
+		return failure, err
 	}
 
-	u.FwSet(common.HexToAddress(contractAddr), act, list)
-	return SUCCESS, nil
+	u.db.FwSet(common.HexToAddress(contractAddr), act, list)
+	return success, nil
 }
 
 func (u *FireWall) fwImport(contractAddr string, data []byte) (int, error) {
 	if !u.isOwner(contractAddr) {
-		return FAILURE, ErrNotOwner
+		return failure, fwErrNotOwner
 	}
 
-	err := u.FwImport(common.HexToAddress(contractAddr), data)
-	return SUCCESS, err
+	err := u.db.FwImport(common.HexToAddress(contractAddr), data)
+	return success, err
 }
 
 func (u *FireWall) getFwStatus(contractAddr string) (string, error) {
 	if !u.isOwner(contractAddr) {
-		return "", ErrNotOwner
+		return "", fwErrNotOwner
 	}
 
-	fwStatus := u.GetFwStatus(common.HexToAddress(contractAddr))
+	fwStatus := u.db.GetFwStatus(common.HexToAddress(contractAddr))
 
 	returnBytes, err := json.Marshal(fwStatus)
 	if err != nil {
@@ -171,7 +172,7 @@ func (u *FireWall) getFwStatus(contractAddr string) (string, error) {
 	return string(makeReturnBytes(returnBytes)), nil
 }
 
-func listConvert(l string) ([]state.FwElem, error){
+func listConvert(l string) ([]state.FwElem, error) {
 	var list []state.FwElem
 
 	elements := strings.Split(l, "|")
@@ -179,7 +180,7 @@ func listConvert(l string) ([]state.FwElem, error){
 		tmp := strings.Split(e, ":")
 		if len(tmp) != 2 {
 			/// log.Warn("FW : error, wrong function parameters!")
-			return nil, errors.New("FW : error, wrong function parameters!")
+			return nil, errors.New("FW : error, incorrect firewall rule format")
 		}
 
 		addr := tmp[0]
@@ -194,17 +195,17 @@ func listConvert(l string) ([]state.FwElem, error){
 	return list, nil
 }
 
-func actConvert(action string) (state.Action, error){
+func actConvert(action string) (state.Action, error) {
 	if strings.EqualFold(action, "ACCEPT") {
 		return state.ACCEPT, nil
 	} else if strings.EqualFold(action, "REJECT") {
 		return state.REJECT, nil
 	} else {
-		return 0, errors.New("FW : error, action is invalid!")		// todo fix the return value
+		return 0, errors.New("FW : error, action is invalid!") // todo fix the return value
 	}
 }
 
-// todo optimize, code is duplicated
+// todo optimize: code is duplicated, see state_transition.go
 func makeReturnBytes(ret []byte) []byte {
 
 	strHash := common.BytesToHash(common.Int32ToBytes(32))
