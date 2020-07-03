@@ -89,6 +89,8 @@ type StateDB interface {
 	IsFwOpened(contractAddr common.Address) bool
 
 	FwImport(contractAddr common.Address, data []byte) error
+	//clone storage data from the `src` to `dest`
+	CloneAccount(src common.Address, dest common.Address) (error)
 }
 
 // CallContext provides a basic interface for the EVM calling conventions. The EVM

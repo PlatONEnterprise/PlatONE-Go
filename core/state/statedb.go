@@ -490,11 +490,11 @@ func (self *StateDB) CreateAccount(addr common.Address) {
 	}
 }
 
-func (self *StateDB) CloneAccount(src common.Address, dest common.Address) ([]byte, uint64, error) {
+func (self *StateDB) CloneAccount(src common.Address, dest common.Address) (error) {
 
 	srcObject := self.getStateObject(src)
 	if srcObject == nil {
-		return nil, 0, cloneErr
+		return cloneErr
 	}
 	it := trie.NewIterator(srcObject.getTrie(self.db).NodeIterator(nil))
 	for it.Next() {
@@ -516,7 +516,7 @@ func (self *StateDB) CloneAccount(src common.Address, dest common.Address) ([]by
 		value = self.trie.GetKey(it.Value)
 		self.SetState(dest, key, value)
 	}
-	return nil, 0, nil
+	return nil
 }
 
 func (db *StateDB) ForEachStorage(addr common.Address, cb func(key, value common.Hash) bool) {

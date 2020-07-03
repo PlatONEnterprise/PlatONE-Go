@@ -18,6 +18,7 @@ var PlatONEPrecompiledContracts = map[common.Address]PrecompiledContract{
 	syscontracts.ParameterManagementAddress: &ParamManager{},
 	syscontracts.FirewallManagementAddress:  &FireWall{},
 	syscontracts.GroupManagementAddress: &GroupManagement{},
+	syscontracts.ContractDataProcessorAddress: &ContractDataProcessor{},
 }
 
 func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Contract, evm *EVM) (ret []byte, err error) {
@@ -63,12 +64,19 @@ func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Cont
 			}
 			return fw.Run(input)
 		case *GroupManagement:
-			fw := &GroupManagement{
+			gm := &GroupManagement{
 				state:			evm.StateDB,
 				address: 		contract.self.Address(),
 				caller:			contract.caller.Address(),
 			}
-			return fw.Run(input)
+			return gm.Run(input)
+		case *ContractDataProcessor:
+			dp := &ContractDataProcessor{
+				state:			evm.StateDB,
+				address: 		contract.self.Address(),
+				caller:			contract.caller.Address(),
+			}
+			return dp.Run(input)
 		default:
 			panic("system contract handler not found")
 		}
