@@ -56,7 +56,7 @@ func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Cont
 			return p.Run(input)
 		case *FireWall:
 			fw := &FireWall{
-				StateDB:		evm.StateDB,
+				db:				evm.StateDB,
 				contractAddr: 	contract.self.Address(),
 				caller:			contract.caller.Address(),
 			}

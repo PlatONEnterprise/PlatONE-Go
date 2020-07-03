@@ -1,20 +1,21 @@
 package vm
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"strconv"
 	"strings"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
 )
 
 const (
-	NAME = "cnsManager"
-	CNS_TOTAL = "total"
-	CNS_LATEST = "latest"
+	cnsName   = "cnsManager"
+	cnsTotal  = "total"
+	cnsLatest = "latest"
 )
 
-type cnsMap struct{
+type cnsMap struct {
 	StateDB
-	CodeAddr	*common.Address
+	codeAddr *common.Address
 }
 
 func NewCnsMap(db StateDB, addr *common.Address) *cnsMap {
@@ -22,11 +23,11 @@ func NewCnsMap(db StateDB, addr *common.Address) *cnsMap {
 }
 
 func (c *cnsMap) setState(key, value []byte) {
-	c.SetState(*c.CodeAddr, key, value)
+	c.SetState(*c.codeAddr, key, value)
 }
 
 func (c *cnsMap) getState(key []byte) []byte {
-	return c.GetState(*c.CodeAddr, key)
+	return c.GetState(*c.codeAddr, key)
 }
 
 func (c *cnsMap) getKey(index int) []byte {
@@ -78,22 +79,20 @@ func (c *cnsMap) insert(key, value []byte) {
 	c.setState(totalWrapper(), []byte(update))
 }
 
-func (c *cnsMap) update(key, value []byte) {		// todo overwrite?
+func (c *cnsMap) update(key, value []byte) {
 	c.setState(key, value)
 }
 
 func wrapper(str string) []byte {
-	return []byte(NAME + str)
+	return []byte(cnsName + str)
 }
 
 func totalWrapper() []byte {
-	return []byte(NAME + CNS_TOTAL)
+	return []byte(cnsName + cnsTotal)
 }
 
-// utils
-
 func (cMap *cnsMap) isNameRegByOthers(name, origin string) bool {
-	for index := 0; index < cMap.total(); index++{
+	for index := 0; index < cMap.total(); index++ {
 		cnsInfo := cMap.get(index)
 		if cnsInfo.Name == name && cnsInfo.Origin != origin {
 			return true
@@ -103,8 +102,8 @@ func (cMap *cnsMap) isNameRegByOthers(name, origin string) bool {
 	return false
 }
 
-func isNameRegByOthers_Method2(c *cnsMap, name, origin string) bool {
-	for index := 0; index < c.total(); index++{
+func (c *cnsMap) isNameRegByOthers_Method2(name, origin string) bool {
+	for index := 0; index < c.total(); index++ {
 		key := c.getKey(index)
 		existedName := strings.Split(string(key), ":")[0]
 		if existedName == name {
@@ -123,9 +122,9 @@ func isNameRegByOthers_Method2(c *cnsMap, name, origin string) bool {
 func (c *cnsMap) getLargestVersion(name string) string {
 	tempVersion := "0.0.0.0"
 
-	for index := 0; index < c.total(); index++{
+	for index := 0; index < c.total(); index++ {
 		cnsInfo := c.get(index)
-		if cnsInfo.Name == name{
+		if cnsInfo.Name == name {
 			if verCompare(cnsInfo.Version, tempVersion) == 1 {
 				tempVersion = cnsInfo.Version
 			}
@@ -138,11 +137,11 @@ func (c *cnsMap) getLargestVersion(name string) string {
 func (c *cnsMap) getLargestVersion_Method2(name string) string {
 	tempVersion := "0.0.0.0"
 
-	for index := 0; index < c.total(); index++{
+	for index := 0; index < c.total(); index++ {
 		key := c.getKey(index)
 		existedName := strings.Split(string(key), ":")[0]
 		existedVersion := strings.Split(string(key), ":")[1]
-		if existedName == name{
+		if existedName == name {
 			if verCompare(existedVersion, tempVersion) == 1 {
 				tempVersion = existedVersion
 			}
@@ -152,10 +151,8 @@ func (c *cnsMap) getLargestVersion_Method2(name string) string {
 	return tempVersion
 }
 
-//-------------------------------------------------------
-// Method 2
 func latestWrapper(name string) []byte {
-	return []byte(NAME + CNS_LATEST + name)
+	return []byte(cnsName + cnsLatest + name)
 }
 
 func (c *cnsMap) getLatestVer(name string) string {

@@ -1,0 +1,330 @@
+[
+    {
+        "name": "setSuperAdmin",
+        "inputs": [],
+        "outputs": [],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "getAddrListOfRole",
+        "inputs": [
+            {
+                "name": "targetRole",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "getRolesByAddress",
+        "inputs": [
+            {
+                "name": "addr",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },  
+    {
+        "name": "getRolesByName",
+        "inputs": [
+            {
+                "name": "name",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    }, 
+    {
+        "name": "addChainAdminByAddress",
+        "inputs": [
+            {
+                "name": "addr",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    }, 
+    {
+        "name": "addChainAdminByName",
+        "inputs": [
+            {
+                "name": "addr",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    }, 
+    {
+        "name": "addNodeAdminByName",
+        "inputs": [
+            {
+                "name": "name",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    }, 
+    {
+        "name": "delChainAdminByAddress",
+        "inputs": [
+            {
+                "name": "addr",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    },  
+    {
+        "name": "addNodeAdminByAddress",
+        "inputs": [
+            {
+                "name": "addr",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    },  
+    {
+        "name": "delNodeAdminByAddress",
+        "inputs": [
+            {
+                "name": "addr",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "addContractAdminByAddress",
+        "inputs": [
+            {
+                "name": "addr",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    },  
+    {
+        "name": "delContractAdminByAddress",
+        "inputs": [
+            {
+                "name": "addr",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    },    
+    {
+        "name": "addContractDeployerByAddress",
+        "inputs": [
+            {
+                "name": "addr",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    },  
+    {
+        "name": "delContractDeployerByAddress",
+        "inputs": [
+            {
+                "name": "addr",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "addUser",
+        "inputs": [
+            {
+                "name": "userInfo",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "updateUserDescInfo",
+        "inputs": [
+            {
+                "name": "address",
+                "type": "string"
+            },
+            {
+                "name": "descInfo",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "getAllUsers",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "getUserByAddress",
+        "inputs": [            {
+            "name": "address",
+            "type": "string"
+        }],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "getUserByName",
+        "inputs": [            {
+            "name": "address",
+            "type": "string"
+        }],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "hasRole",
+        "inputs": [            {
+            "name": "address",
+            "type": "string"
+            },
+            {
+                "name":"roleName",
+                "type":"string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "int32"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    }
+]

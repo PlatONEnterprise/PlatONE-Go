@@ -10,12 +10,8 @@ var (
 
 	SystemContractList = []string{
 		"__sys_NodeManager",
-		"__sys_NodeRegister",
-		"__sys_UserRegister",
 		"__sys_UserManager",
-		"__sys_ParamManager",
-		"__sys_RoleManager",
-		"__sys_RoleRegister"}
+		"__sys_ParamManager"}
 )
 
 func SetSysContractCallFunc(f func(*SystemConfig)) {

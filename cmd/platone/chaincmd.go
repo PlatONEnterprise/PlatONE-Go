@@ -584,19 +584,6 @@ func InitInnerCallFuncFromChain(bc *core.BlockChain) {
 				sc.SysParam.IsProduceEmptyBlock = ret == 1
 			}
 
-			funcName = "getCBFTTimeParam"
-			funcParams = []interface{}{}
-			res = callContract(paramAddr, common.GenCallData(funcName, funcParams))
-			if res != nil {
-				strRes := common.CallResAsString(res)
-
-				var cbftCfgTime common.CBFTProduceBlockCfg
-				if err := json.Unmarshal([]byte(strRes), &cbftCfgTime); err != nil {
-					log.Error("contract return invalid data", "result", strRes, "err", err.Error())
-				} else {
-					sc.SysParam.CBFTTime = cbftCfgTime
-				}
-			}
 			funcName = "getGasContractName"
 			funcParams = []interface{}{}
 			res = callContract(paramAddr, common.GenCallData(funcName, funcParams))

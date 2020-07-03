@@ -11,8 +11,8 @@
 GOBIN = $(shell pwd)/build/bin
 GO ?= latest
 
-syscontracts:
-	build/build_syscontracts.sh
+#syscontracts:
+#	build/build_syscontracts.sh
 
 platone:
 	build/build_deps.sh
@@ -27,8 +27,8 @@ swarm:
 	@echo "Done building."
 	@echo "Run \"$(GOBIN)/swarm\" to launch swarm."
 
-syscontract:
-	build/build_syscontracts.sh
+#syscontract:
+#	build/build_syscontracts.sh
 
 all:
 	build/build_deps.sh

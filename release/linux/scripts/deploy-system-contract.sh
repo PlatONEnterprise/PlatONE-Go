@@ -130,6 +130,14 @@ function add_first_node() {
     ${SCRIPT_PATH}/add-node.sh --nodeid $NODE_ID
 }
 
+function set_super_admin(){
+    ${BIN_PATH}/ctool invoke --config ${CONF_PATH}/ctool.json --abi ${CONF_PATH}/contracts/userManager.cpp.abi.json --addr 0x1000000000000000000000000000000000000001 --func setSuperAdmin
+}
+
+function add_chain_admin(){
+    ${BIN_PATH}/ctool invoke --config ${CONF_PATH}/ctool.json --abi ${CONF_PATH}/contracts/userManager.cpp.abi.json --addr 0x1000000000000000000000000000000000000001 --func addChainAdminByAddress --param ${ACCOUNT}
+}
+
 function main() {
     readEnv
 
@@ -137,15 +145,18 @@ function main() {
     create_account
     echo "[INFO] to create ctool.json"
     create_ctooljson
-    exit
-    deploy cnsManager
-    deploy paramManager
-    deploy userManager
-    deploy userRegister
-    deploy roleManager
-    deploy roleRegister
-    deploy nodeManager
+
+    #deploy cnsManager
+    #deploy paramManager
+    #deploy userManager
+    #deploy userRegister
+    #deploy roleManager
+    #deploy roleRegister
+    #deploy nodeManager
 #    deploy nodeRegister
+
+    set_super_admin
+    add_chain_admin
 
     add_first_node
 
