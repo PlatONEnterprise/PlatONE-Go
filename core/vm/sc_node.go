@@ -139,7 +139,7 @@ type SCNode struct {
 }
 
 func NewSCNode(db StateDB) *SCNode {
-	return &SCNode{stateDB: db, contractAddress: syscontracts.NODE_MANAGEMENT_ADDRESS, blockNumber: big.NewInt(0)}
+	return &SCNode{stateDB: db, contractAddress: syscontracts.NodeManagementAddress, blockNumber: big.NewInt(0)}
 }
 
 func (n *SCNode) checkParamsOfAddNode(node *syscontracts.NodeInfo) error {

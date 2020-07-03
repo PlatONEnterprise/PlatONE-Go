@@ -1,0 +1,140 @@
+[
+    {
+        "name": "createGroup",
+        "inputs": [
+            {
+                "name": "groupInfo",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "int32"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "getAllGroups",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "hasGroupOpPermission",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "int32"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "nodesNum",
+        "inputs": [
+            {
+                "name": "nodeJsonStr",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "int32"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "getGroupByID",
+        "inputs": [
+            {
+                "name": "groupID",
+                "type": "uint64"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "updateBootNodes",
+        "inputs": [
+            {
+                "name": "groupID",
+                "type": "uint64"
+            },
+            {
+                "name": "nodeJsonStr",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "int32"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "addBootNode",
+        "inputs": [
+            {
+                "name": "groupID",
+                "type": "uint64"
+            },
+            {
+                "name": "nodeJsonStr",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "int32"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "delBootNode",
+        "inputs": [
+            {
+                "name": "groupID",
+                "type": "uint64"
+            },
+            {
+                "name": "nodeJsonStr",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "int32"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    }
+ ]

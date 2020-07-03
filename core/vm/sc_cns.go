@@ -45,9 +45,9 @@ var (
 
 var (
 	cnsSysContractsMap = map[string]common.Address{
-		"__sys_ParamManager": syscontracts.PARAMETER_MANAGEMENT_ADDRESS,
-		"__sys_NodeManager":  syscontracts.NODE_MANAGEMENT_ADDRESS,
-		"__sys_UserManager":  syscontracts.USER_MANAGEMENT_ADDRESS,
+		"__sys_ParamManager": syscontracts.ParameterManagementAddress,
+		"__sys_NodeManager":  syscontracts.NodeManagementAddress,
+		"__sys_UserManager":  syscontracts.UserManagementAddress,
 	}
 )
 

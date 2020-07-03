@@ -18,7 +18,6 @@ package core
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
@@ -398,7 +397,6 @@ func makeReturnBytes(ret []byte) []byte {
 //  2. 如果账户data字段为空，pass
 // 	3. 黑名单优先于白名单，后续只有不在黑名单列表，同时在白名单列表里的账户才能pass
 func fwCheck(stateDb vm.StateDB, contractAddr common.Address, caller common.Address, input []byte) ([]byte, bool) {
-
 	if stateDb.IsFwOpened(contractAddr) == false {
 		return nil, true
 	}
@@ -509,180 +507,13 @@ func fwCheck(stateDb vm.StateDB, contractAddr common.Address, caller common.Addr
 	return makeReturnBytes([]byte(fwLog)), false
 }
 
-// The contract's firewall rule can only be set by its creator
-func fwProcess(stateDb vm.StateDB, contractAddr common.Address, caller common.Address, input []byte) ([]byte, uint64, error) {
-	var fwStatus state.FwStatus
-	var err error
-	var act state.Action
-	var fwData [][]byte
-	var funcName, listName, params string
-	var list []state.FwElem
-
-	if !addressCompare(stateDb.GetContractCreator(contractAddr), caller) {
-		log.Warn("FW : error, only contract owner can set firewall setting!")
-		return nil, 0, fwProcessErr
-	}
-
-	if err = rlp.DecodeBytes(input, &fwData); err != nil {
-		log.Warn("FW : error, fwData decoded failure!")
-		return nil, 0, fwProcessErr
-	}
-
-	// check parameters
-	if len(fwData) < 2 {
-		log.Warn("FW : error, require function name!")
-		return nil, 0, fwProcessErr
-	}
-	funcName = string(fwData[1])
-	if funcName == "__sys_FwOpen" || funcName == "__sys_FwClose" || funcName == "__sys_FwStatus" {
-		if len(fwData) != 2 {
-			log.Warn("FW : error, wrong function parameters!")
-			return nil, 0, fwProcessErr
-		}
-	} else if funcName == "__sys_FwClear" {
-		if len(fwData) != 3 {
-			log.Warn("FW : error, wrong function parameters!")
-			return nil, 0, fwProcessErr
-		}
-
-		listName = string(fwData[2])
-		listName = strings.ToUpper(listName)
-		if listName == "ACCEPT" {
-			act = state.ACCEPT
-		} else if listName == "REJECT" {
-			act = state.REJECT
-		} else {
-			log.Warn("FW : error, action is invalid!")
-			return nil, 0, fwProcessErr
-		}
-
-	} else if funcName == "__sys_FwAdd" || funcName == "__sys_FwDel" || funcName == "__sys_FwSet" {
-		if len(fwData) != 4 {
-			log.Warn("FW : error, wrong function parameters!")
-			return nil, 0, fwProcessErr
-		}
-
-		listName = string(fwData[2])
-		params = string(fwData[3])
-		listName = strings.ToUpper(listName)
-		if listName == "ACCEPT" {
-			act = state.ACCEPT
-		} else if listName == "REJECT" {
-			act = state.REJECT
-		} else {
-			log.Warn("FW : error, action is invalid!")
-			return nil, 0, fwProcessErr
-		}
-
-		elements := strings.Split(params, "|")
-		for _, e := range elements {
-			tmp := strings.Split(e, ":")
-			if len(tmp) != 2 {
-				log.Warn("FW : error, wrong function parameters!")
-				return nil, 0, fwProcessErr
-			}
-
-			addr := tmp[0]
-			api := tmp[1]
-			if addr == "*" {
-				addr = state.FWALLADDR
-			}
-			fwElem := state.FwElem{Addr: common.HexToAddress(addr), FuncName: api}
-			list = append(list, fwElem)
-		}
-
-	} else if funcName == "__sys_FwImport" {
-		if len(fwData) != 3 {
-			log.Warn("FW : error, wrong function parameters!")
-			return nil, 0, fwProcessErr
-		}
-	} else {
-		log.Warn("FW : error, wrong function name!")
-		return nil, 0, fwProcessErr
-	}
-
-	switch funcName {
-	case "__sys_FwOpen":
-		stateDb.OpenFirewall(contractAddr)
-	case "__sys_FwClose":
-		stateDb.CloseFirewall(contractAddr)
-	case "__sys_FwClear":
-		stateDb.FwClear(contractAddr, act)
-	case "__sys_FwAdd":
-		stateDb.FwAdd(contractAddr, act, list)
-	case "__sys_FwDel":
-		stateDb.FwDel(contractAddr, act, list)
-	case "__sys_FwSet":
-		stateDb.FwSet(contractAddr, act, list)
-	case "__sys_FwImport":
-		stateDb.FwImport(contractAddr, fwData[2])
-	default:
-		// "__sys_FwStatus"
-		fwStatus = stateDb.GetFwStatus(contractAddr)
-	}
-
-	var returnBytes []byte
-	returnBytes, err = json.Marshal(fwStatus)
-	if err != nil {
-		log.Warn("FW : fwStatus Marshal error", "err", err)
-		return nil, 0, fwProcessErr
-	}
-	return makeReturnBytes(returnBytes), 0, nil
-}
-
 func (st *StateTransition) ifUseContractTokenAsFee() (string, bool, error) {
-
-	paramMangerAddr, found := getContractAddr("__sys_ParamManager")
-	if !found {
+	isUseContractToken := common.SysCfg.GetIsTxUseGas()
+	contractAddr := common.SysCfg.GetGasContractAddress()
+	if contractAddr == ZeroAddress {
 		return "", false, nil
 	}
-
-	params := []interface{}{}
-	binisUseContractToken, _, err := st.doCallContract(paramMangerAddr.String(), "getIsTxUseGas", params)
-	if nil != err {
-		log.Warn("st.doCallContract error", "err", err.Error())
-		return "", false, err
-	}
-
-	isUseContractToken := utils.BytesToInt64(binisUseContractToken) == 1
-	contractAddr := ""
-	if isUseContractToken {
-		params = []interface{}{}
-		binContractName, _, err := st.doCallContract(paramMangerAddr.String(), "getGasContractName", params)
-		if nil != err {
-			log.Warn("st.doCallContract error", "err", err.Error())
-			return "", false, err
-		}
-		contractName := utils.Bytes2string(binContractName)
-		contractAddr, err = st.getContractAddr(contractName)
-		if nil != err {
-			log.Warn("getContractAddr error", "err", err.Error())
-			return "", false, err
-		}
-		if contractAddr == "" {
-			return "", false, nil
-		}
-	}
-
-	return contractAddr, isUseContractToken, nil
-}
-
-func (st *StateTransition) getContractAddr(contractName string) (feeContractAddr string, err error) {
-	params := []interface{}{contractName, "latest"}
-	var binFeeContractAddr []byte
-	binFeeContractAddr, _, err = st.doCallContract(CnsManagerAddr, "getContractAddress", params)
-	if nil != err {
-		log.Warn("getContractAddr fail", "err", err.Error())
-		return
-	}
-	feeContractAddr = utils.Bytes2string(binFeeContractAddr)
-
-	if "0x0000000000000000000000000000000000000000" == feeContractAddr {
-		err := errors.New("fee contract address not found")
-		return "", err
-	}
-
-	return
+	return contractAddr.String(), isUseContractToken, nil
 }
 
 // TransitionDb will transition the state by applying the current message and
@@ -780,11 +611,7 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, gasPrice 
 		} else {
 			// Increment the nonce for the next transaction
 			// If the transaction is cns-type, do not increment the nonce
-			if msg.TxType() == types.FwTxType {
-				ret, st.gas, vmerr = fwProcess(evm.StateDB, st.to(), msg.From(), msg.Data())
-			} else {
-				ret, st.gas, vmerr = evm.Call(sender, st.to(), st.data, st.gas, st.value)
-			}
+			ret, st.gas, vmerr = evm.Call(sender, st.to(), st.data, st.gas, st.value)
 		}
 	}
 	if vmerr != nil {

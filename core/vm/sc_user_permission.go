@@ -8,7 +8,7 @@ import (
 func checkPermission(state StateDB, user common.Address, role int32) bool {
 	um := &UserManagement{
 		state:   state,
-		address: syscontracts.USER_MANAGEMENT_ADDRESS,
+		address: syscontracts.UserManagementAddress,
 	}
 	roleName, ok := rolesName[role]
 	if !ok {

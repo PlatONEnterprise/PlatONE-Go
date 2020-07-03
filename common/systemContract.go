@@ -254,7 +254,7 @@ func (sc *SystemConfig) GetGasContractName() string {
 	return sc.SysParam.GasContractName
 }
 
-func (sc *SystemConfig) GetGasContractGas() Address {
+func (sc *SystemConfig) GetGasContractAddress() Address {
 	sc.SystemConfigMu.RLock()
 	defer sc.SystemConfigMu.RUnlock()
 	return sc.SysParam.GasContractAddr

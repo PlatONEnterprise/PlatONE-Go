@@ -4,11 +4,12 @@ import "github.com/PlatONEnetwork/PlatONE-Go/common"
 
 // the system contract addr  table
 var (
-	USER_MANAGEMENT_ADDRESS      = common.HexToAddress("0x1000000000000000000000000000000000000001") // The PlatONE Precompiled contract addr for user management
-	NODE_MANAGEMENT_ADDRESS      = common.HexToAddress("0x1000000000000000000000000000000000000002") // The PlatONE Precompiled contract addr for node management
-	CNS_MANAGEMENT_ADDRESS       = common.HexToAddress("0x0000000000000000000000000000000000000011") // The PlatONE Precompiled contract addr for CNS
-	PARAMETER_MANAGEMENT_ADDRESS = common.HexToAddress("0x1000000000000000000000000000000000000004") // The PlatONE Precompiled contract addr for parameter management
-	FIREWALL_MANAGEMENT_ADDRESS  = common.HexToAddress("0x1000000000000000000000000000000000000005") // The PlatONE Precompiled contract addr for fire wall management
+	UserManagementAddress      = common.HexToAddress("0x1000000000000000000000000000000000000001") // The PlatONE Precompiled contract addr for user management
+	NodeManagementAddress      = common.HexToAddress("0x1000000000000000000000000000000000000002") // The PlatONE Precompiled contract addr for node management
+	CnsManagementAddress       = common.HexToAddress("0x0000000000000000000000000000000000000011") // The PlatONE Precompiled contract addr for CNS
+	ParameterManagementAddress = common.HexToAddress("0x1000000000000000000000000000000000000004") // The PlatONE Precompiled contract addr for parameter management
+	FirewallManagementAddress  = common.HexToAddress("0x1000000000000000000000000000000000000005") // The PlatONE Precompiled contract addr for fire wall management
+	GroupManagementAddress     = common.HexToAddress("0x1000000000000000000000000000000000000006") // The PlatONE Precompiled contract addr for group management
 )
 
 type UpdateNode struct {

@@ -12,11 +12,12 @@ type (
 )
 
 var PlatONEPrecompiledContracts = map[common.Address]PrecompiledContract{
-	syscontracts.USER_MANAGEMENT_ADDRESS:      &UserManagement{},
-	syscontracts.NODE_MANAGEMENT_ADDRESS:      &scNodeWrapper{},
-	syscontracts.CNS_MANAGEMENT_ADDRESS:       &CnsManager{},
-	syscontracts.PARAMETER_MANAGEMENT_ADDRESS: &ParamManager{},
-	syscontracts.FIREWALL_MANAGEMENT_ADDRESS:  &FireWall{},
+	syscontracts.UserManagementAddress:      &UserManagement{},
+	syscontracts.NodeManagementAddress:      &scNodeWrapper{},
+	syscontracts.CnsManagementAddress:       &CnsManager{},
+	syscontracts.ParameterManagementAddress: &ParamManager{},
+	syscontracts.FirewallManagementAddress:  &FireWall{},
+	syscontracts.GroupManagementAddress: &GroupManagement{},
 }
 
 func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Contract, evm *EVM) (ret []byte, err error) {
@@ -28,7 +29,7 @@ func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Cont
 			um := &UserManagement{
 				state:   evm.StateDB,
 				caller:  contract.Caller(),
-				address: syscontracts.USER_MANAGEMENT_ADDRESS,
+				address: syscontracts.UserManagementAddress,
 			}
 			return um.Run(input)
 		case *scNodeWrapper:
@@ -58,6 +59,13 @@ func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Cont
 			fw := &FireWall{
 				db:				evm.StateDB,
 				contractAddr: 	contract.self.Address(),
+				caller:			contract.caller.Address(),
+			}
+			return fw.Run(input)
+		case *GroupManagement:
+			fw := &GroupManagement{
+				state:			evm.StateDB,
+				address: 		contract.self.Address(),
 				caller:			contract.caller.Address(),
 			}
 			return fw.Run(input)

@@ -108,7 +108,7 @@ func TestParamManager_stateDB(t *testing.T) {
 		return
 	}
 	db := newMockDB()
-	addr := syscontracts.PARAMETER_MANAGEMENT_ADDRESS
+	addr := syscontracts.ParameterManagementAddress
 	db.SetState(addr, bin, bin)
 
 	res := db.GetState(addr, bin)
@@ -117,7 +117,7 @@ func TestParamManager_stateDB(t *testing.T) {
 
 func TestParamManager_getTxLimit(t *testing.T) {
 	db := newMockDB()
-	addr := syscontracts.PARAMETER_MANAGEMENT_ADDRESS
+	addr := syscontracts.ParameterManagementAddress
 	caller := common.HexToAddress("0x62fb664c49cfa4fa35931760c704f9b3ab664666")
 	um := UserManagement{state:db, caller:caller, address:addr}
 	um.setSuperAdmin()
@@ -134,7 +134,7 @@ func TestParamManager_getTxLimit(t *testing.T) {
 
 //func TestParamManager_getFn(t *testing.T) {
 //	db := newMockDB()
-//	addr := syscontracts.PARAMETER_MANAGEMENT_ADDRESS
+//	addr := syscontracts.ParameterManagementAddress
 //	p := ParamManager{CodeAddr:&addr, StateDB: db}
 //	set := "abc"
 //	res, err := p.setGasContractName(set)
