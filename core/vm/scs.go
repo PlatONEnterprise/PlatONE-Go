@@ -63,12 +63,12 @@ func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Cont
 			}
 			return fw.Run(input)
 		case *GroupManagement:
-			fw := &GroupManagement{
+			gm := &GroupManagement{
 				state:			evm.StateDB,
 				address: 		contract.self.Address(),
 				caller:			contract.caller.Address(),
 			}
-			return fw.Run(input)
+			return gm.Run(input)
 		default:
 			panic("system contract handler not found")
 		}
