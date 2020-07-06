@@ -6,28 +6,28 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )
+
 var (
-	gasContractNameKey = "GasContractName"
-	isProduceEmptyBlockKey = "IsProduceEmptyBlock"
-	txGasLimitKey = "TxGasLimit"
-	blockGasLimitKey = "BlockGasLimit"
+	gasContractNameKey                 = "GasContractName"
+	isProduceEmptyBlockKey             = "IsProduceEmptyBlock"
+	txGasLimitKey                      = "TxGasLimit"
+	blockGasLimitKey                   = "BlockGasLimit"
 	isAllowAnyAccountDeployContractKey = "IsAllowAnyAccountDeployContract"
-	isCheckContractDeployPermission="isCheckContractDeployPermission"
-	isApproveDeployedContractKey = "IsApproveDeployedContract"
-	isTxUseGasKey = "IsTxUseGas"
+	isCheckContractDeployPermission    = "isCheckContractDeployPermission"
+	isApproveDeployedContractKey       = "IsApproveDeployedContract"
+	isTxUseGasKey                      = "IsTxUseGas"
 )
 var (
-	ErrHasNoPermission      = errors.New("has no permission")
-	ErrInvalid              = errors.New("something invalid")
-
+	ErrHasNoPermission = errors.New("has no permission")
+	ErrInvalid         = errors.New("something invalid")
 )
 
 const (
-	txGasLimitMinValue uint64 = 12771596*100// 12771596 大致相当于 0.012772s
-	txGasLimitMaxValue uint64 = 2e9      // 相当于 2s
-	txGasLimitDefaultValue = 1.5e9        // 相当于 1.5s
-	blockGasLimitMinValue uint64 = 12771596*100 // 12771596 大致相当于 0.012772s
-	blockGasLimitMaxValue uint64 = 2e10         // 相当于 20s
+	txGasLimitMinValue     uint64 = 12771596 * 100 // 12771596 大致相当于 0.012772s
+	txGasLimitMaxValue     uint64 = 2e9            // 相当于 2s
+	txGasLimitDefaultValue        = 1.5e9          // 相当于 1.5s
+	blockGasLimitMinValue  uint64 = 12771596 * 100 // 12771596 大致相当于 0.012772s
+	blockGasLimitMaxValue  uint64 = 2e10           // 相当于 20s
 	//blockGasLimitDefaultValue uint64 = 1e10        // 相当于 10s
 	//produceDurationMaxValue = 60
 	//produceDurationDefaultValue = 10
@@ -36,14 +36,13 @@ const (
 	failFlag = 2
 )
 
-
 type ParamManager struct {
-	state StateDB
-	CodeAddr	*common.Address
-	CallerAddr  common.Address
+	state      StateDB
+	codeAddr   *common.Address
+	callerAddr common.Address
 }
 
-func  encode(i interface{}) ([]byte, error) {
+func encode(i interface{}) ([]byte, error) {
 	return rlp.EncodeToBytes(i)
 }
 
@@ -59,14 +58,14 @@ func (u *ParamManager) Run(input []byte) ([]byte, error) {
 }
 
 func (u *ParamManager) setState(key, value []byte) {
-	u.state.SetState(*u.CodeAddr, key, value)
+	u.state.SetState(*u.codeAddr, key, value)
 }
 
 func (u *ParamManager) getState(key []byte) []byte {
-	return u.state.GetState(*u.CodeAddr, key)
+	return u.state.GetState(*u.codeAddr, key)
 }
 
-func (u *ParamManager) setGasContractName (contractName string) ([]byte, error){
+func (u *ParamManager) setGasContractName(contractName string) ([]byte, error) {
 	if !u.hasPermission() {
 		//event here
 		return nil, ErrHasNoPermission
@@ -86,11 +85,12 @@ func (u *ParamManager) setGasContractName (contractName string) ([]byte, error){
 	u.setState(key, value)
 	return nil, nil
 }
+
 //pass
-func (u *ParamManager) getGasContractName() (string, error){
+func (u *ParamManager) getGasContractName() (string, error) {
 	key, err := encode(gasContractNameKey)
 	if err != nil {
-		return "",err
+		return "", err
 	}
 	contractName := u.getState(key)
 	var ret string
@@ -100,6 +100,7 @@ func (u *ParamManager) getGasContractName() (string, error){
 	return ret, nil
 	//return encode(contractName)
 }
+
 //pass
 func (u *ParamManager) setIsProduceEmptyBlock(isProduceEmptyBlock uint64) ([]byte, error) {
 	if !u.hasPermission() {
@@ -123,7 +124,7 @@ func (u *ParamManager) setIsProduceEmptyBlock(isProduceEmptyBlock uint64) ([]byt
 	return nil, nil
 }
 
-func (u *ParamManager) getIsProduceEmptyBlock() (uint64, error){
+func (u *ParamManager) getIsProduceEmptyBlock() (uint64, error) {
 	key, err := encode(isProduceEmptyBlockKey)
 	if err != nil {
 		return failFlag, err
@@ -141,7 +142,7 @@ func (u *ParamManager) setTxGasLimit(txGasLimit uint64) ([]byte, error) {
 	if !u.hasPermission() {
 		//event here
 		//return encode(FAL)
-		return  nil, err
+		return nil, err
 	}
 	if txGasLimit < txGasLimitMinValue || txGasLimit > txGasLimitMaxValue {
 		//event
@@ -153,12 +154,12 @@ func (u *ParamManager) setTxGasLimit(txGasLimit uint64) ([]byte, error) {
 		return nil, err
 	}
 	blockGasLimit := u.getState(key)
-	if blockGasLimit != nil{
+	if blockGasLimit != nil {
 		var ci uint64
 		if err := rlp.DecodeBytes(blockGasLimit, &ci); nil != err {
 			return nil, err
 		}
-		if txGasLimit > ci{
+		if txGasLimit > ci {
 			//event
 			return nil, ErrInvalid
 		}
@@ -178,7 +179,7 @@ func (u *ParamManager) setTxGasLimit(txGasLimit uint64) ([]byte, error) {
 	//return  encode(SUC)
 }
 
-func (u *ParamManager) getTxGasLimit() (uint64, error){
+func (u *ParamManager) getTxGasLimit() (uint64, error) {
 	key, err := encode(txGasLimitKey)
 	if err != nil {
 		return 0, err
@@ -191,7 +192,7 @@ func (u *ParamManager) getTxGasLimit() (uint64, error){
 	return ret, nil
 }
 
-func (u *ParamManager) setBlockGasLimit(blockGasLimit uint64) ([]byte, error){
+func (u *ParamManager) setBlockGasLimit(blockGasLimit uint64) ([]byte, error) {
 	if !u.hasPermission() {
 		//event here
 		return nil, ErrHasNoPermission
@@ -205,12 +206,12 @@ func (u *ParamManager) setBlockGasLimit(blockGasLimit uint64) ([]byte, error){
 		return nil, err
 	}
 	txGasLimit1 := u.getState(key)
-	if txGasLimit1 != nil{
+	if txGasLimit1 != nil {
 		var ci uint64
 		if err := rlp.DecodeBytes(txGasLimit1, &ci); nil != err {
 			return nil, err
 		}
-		if  ci > blockGasLimit{
+		if ci > blockGasLimit {
 			//event
 			return nil, err
 		}
@@ -230,7 +231,7 @@ func (u *ParamManager) setBlockGasLimit(blockGasLimit uint64) ([]byte, error){
 
 // 获取区块 gaslimit
 func (u *ParamManager) getBlockGasLimit() (uint64, error) {
-	key ,err := encode(blockGasLimitKey)
+	key, err := encode(blockGasLimitKey)
 	if err != nil {
 		return failFlag, err
 	}
@@ -246,7 +247,7 @@ func (u *ParamManager) getBlockGasLimit() (uint64, error) {
 // @isAllowAnyAccountDeployContract:
 // 0: 允许任意用户部署合约  1: 用户具有相应权限才可以部署合约
 // 默认为0，即允许任意用户部署合约
-func (u *ParamManager) setAllowAnyAccountDeployContract(isAllowAnyAccountDeployContract uint64) ([]byte, error){
+func (u *ParamManager) setAllowAnyAccountDeployContract(isAllowAnyAccountDeployContract uint64) ([]byte, error) {
 	if !u.hasPermission() {
 		//event here
 		return nil, ErrHasNoPermission
@@ -270,9 +271,9 @@ func (u *ParamManager) setAllowAnyAccountDeployContract(isAllowAnyAccountDeployC
 
 // 获取是否允许任意用户部署合约的标志
 func (u *ParamManager) getAllowAnyAccountDeployContract() (uint64, error) {
-	key ,err := encode(isAllowAnyAccountDeployContractKey)
+	key, err := encode(isAllowAnyAccountDeployContractKey)
 	if err != nil {
-		return failFlag,err
+		return failFlag, err
 	}
 	isAllowAnyAccountDeployContract := u.getState(key)
 	var ret uint64
@@ -282,11 +283,10 @@ func (u *ParamManager) getAllowAnyAccountDeployContract() (uint64, error) {
 	return ret, nil
 }
 
-
 // 设置是否检查合约部署权限
 // 0: 不检查合约部署权限，允许任意用户部署合约  1: 检查合约部署权限，用户具有相应权限才可以部署合约
 // 默认为0，不检查合约部署权限，即允许任意用户部署合约
-func (u *ParamManager) setCheckContractDeployPermission(checkPermission uint8) ([]byte, error){
+func (u *ParamManager) setCheckContractDeployPermission(checkPermission uint8) ([]byte, error) {
 	if !u.hasPermission() {
 		//event here
 		return nil, ErrHasNoPermission
@@ -312,9 +312,9 @@ func (u *ParamManager) setCheckContractDeployPermission(checkPermission uint8) (
 // 0: 不检查合约部署权限，允许任意用户部署合约  1: 检查合约部署权限，用户具有相应权限才可以部署合约
 // 默认为0，不检查合约部署权限，即允许任意用户部署合约
 func (u *ParamManager) getCheckContractDeployPermission() (uint64, error) {
-	key ,err := encode(isCheckContractDeployPermission)
+	key, err := encode(isCheckContractDeployPermission)
 	if err != nil {
-		return failFlag,err
+		return failFlag, err
 	}
 	checkPermission := u.getState(key)
 	var ret uint64
@@ -325,11 +325,10 @@ func (u *ParamManager) getCheckContractDeployPermission() (uint64, error) {
 
 }
 
-
 // 设置是否审核已部署的合约
 // @isApproveDeployedContract:
 // 1: 审核已部署的合约  0: 不审核已部署的合约
-func (u *ParamManager) setIsApproveDeployedContract(isApproveDeployedContract uint32) ([]byte, error){
+func (u *ParamManager) setIsApproveDeployedContract(isApproveDeployedContract uint32) ([]byte, error) {
 	if !u.hasPermission() {
 		//event here
 		return nil, ErrHasNoPermission
@@ -353,7 +352,7 @@ func (u *ParamManager) setIsApproveDeployedContract(isApproveDeployedContract ui
 
 // 获取是否审核已部署的合约的标志
 func (u *ParamManager) getIsApproveDeployedContract() (uint64, error) {
-	key ,err := encode(isApproveDeployedContractKey)
+	key, err := encode(isApproveDeployedContractKey)
 	if err != nil {
 		return failFlag, err
 	}
@@ -369,7 +368,7 @@ func (u *ParamManager) getIsApproveDeployedContract() (uint64, error) {
 // 设置交易是否消耗 gas
 // @isTxUseGas:
 // 1:  交易消耗 gas  0: 交易不消耗 gas
-func (u *ParamManager) setIsTxUseGas(isTxUseGas uint64) ([]byte, error){
+func (u *ParamManager) setIsTxUseGas(isTxUseGas uint64) ([]byte, error) {
 	if !u.hasPermission() {
 		//event here
 		return nil, ErrHasNoPermission
@@ -393,12 +392,12 @@ func (u *ParamManager) setIsTxUseGas(isTxUseGas uint64) ([]byte, error){
 
 // 获取交易是否消耗 gas
 func (u *ParamManager) getIsTxUseGas() (uint64, error) {
-	key ,err := encode(isTxUseGasKey)
+	key, err := encode(isTxUseGasKey)
 	if err != nil {
 		return failFlag, err
 	}
 	isTxUseGas := u.getState(key)
-	if len(isTxUseGas) == 0{
+	if len(isTxUseGas) == 0 {
 		return 0, nil
 	}
 	var ret uint64
@@ -408,31 +407,30 @@ func (u *ParamManager) getIsTxUseGas() (uint64, error) {
 	return ret, nil
 }
 
-func (u *ParamManager)hasPermission() bool{
+func (u *ParamManager) hasPermission() bool {
 	//在角色合约接口中查询对应角色信息并判断是否有权限
-	return checkPermission(u.state, u.CallerAddr, 1) || checkPermission(u.state, u.CallerAddr, 0)
+	return checkPermission(u.state, u.callerAddr, 1) || checkPermission(u.state, u.callerAddr, 0)
 
 }
 
 //for access control
 func (u *ParamManager) AllExportFns() SCExportFns {
 	return SCExportFns{
-		"setGasContractName": u.setGasContractName,
-		"getGasContractName": u.getGasContractName,
-		"setIsProduceEmptyBlock": u.setIsProduceEmptyBlock,
-		"getIsProduceEmptyBlock": u.getIsProduceEmptyBlock,
-		"setTxGasLimit": u.setTxGasLimit,
-		"getTxGasLimit": u.getTxGasLimit,
-		"setBlockGasLimit": u.setBlockGasLimit,
-		"getBlockGasLimit": u.getBlockGasLimit,
+		"setGasContractName":               u.setGasContractName,
+		"getGasContractName":               u.getGasContractName,
+		"setIsProduceEmptyBlock":           u.setIsProduceEmptyBlock,
+		"getIsProduceEmptyBlock":           u.getIsProduceEmptyBlock,
+		"setTxGasLimit":                    u.setTxGasLimit,
+		"getTxGasLimit":                    u.getTxGasLimit,
+		"setBlockGasLimit":                 u.setBlockGasLimit,
+		"getBlockGasLimit":                 u.getBlockGasLimit,
 		"setAllowAnyAccountDeployContract": u.setAllowAnyAccountDeployContract,
 		"setCheckContractDeployPermission": u.setCheckContractDeployPermission,
 		"getCheckContractDeployPermission": u.getCheckContractDeployPermission,
 		"getAllowAnyAccountDeployContract": u.getAllowAnyAccountDeployContract,
-		"setIsApproveDeployedContract": u.setIsApproveDeployedContract,
-		"getIsApproveDeployedContract": u.getIsApproveDeployedContract,
-		"setIsTxUseGas": u.setIsTxUseGas,
-		"getIsTxUseGas": u.getIsTxUseGas,
-		
+		"setIsApproveDeployedContract":     u.setIsApproveDeployedContract,
+		"getIsApproveDeployedContract":     u.getIsApproveDeployedContract,
+		"setIsTxUseGas":                    u.setIsTxUseGas,
+		"getIsTxUseGas":                    u.getIsTxUseGas,
 	}
 }

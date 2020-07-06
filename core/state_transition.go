@@ -222,45 +222,6 @@ func GetCnsAddr(evm *vm.EVM, msg Message, cnsName string) (*common.Address, erro
 // state and would never be accepted within a block.
 func ApplyMessage(evm *vm.EVM, msg Message, gp *GasPool) ([]byte, uint64, int64,  bool, error) {
 
-	if msg.TxType() == types.CnsTxType {
-		cnsRawData := msg.Data()
-		var cnsData [][]byte
-
-		if err := rlp.DecodeBytes(cnsRawData, &cnsData); err != nil {
-			log.Warn("Decode cnsRawData failed", "err", err)
-			evm.StateDB.SetNonce(msg.From(), evm.StateDB.GetNonce(msg.From())+1)
-			return nil, 0, 0, true, nil
-		}
-
-		if len(cnsData) < 3 {
-			evm.StateDB.SetNonce(msg.From(), evm.StateDB.GetNonce(msg.From())+1)
-			return nil, 0, 0, true, nil
-		}
-
-		addr, err := GetCnsAddr(evm, msg, string(cnsData[1]))
-		if err != nil {
-			log.Warn("GetCnsAddr failed", "err", err)
-			evm.StateDB.SetNonce(msg.From(), evm.StateDB.GetNonce(msg.From())+1)
-			return nil, 0, 0, true, nil
-		}
-
-		if *addr == ZeroAddress {
-			return nil, 0, 0, true, CnsQueryErr
-		}
-
-		msg.SetTo(*addr)
-
-		cnsData = append(cnsData[:1], cnsData[2:]...)
-		cnsRawData, err = rlp.EncodeToBytes(cnsData)
-		if err != nil {
-			log.Warn("Encode Cns Data failed", "err", err)
-			evm.StateDB.SetNonce(msg.From(), evm.StateDB.GetNonce(msg.From())+1)
-			return nil, 0, 0, true, nil
-		}
-
-		msg.SetData(cnsRawData)
-		msg.SetTxType(types.NormalTxType)
-	}
 	return NewStateTransition(evm, msg, gp).TransitionDb()
 }
 
