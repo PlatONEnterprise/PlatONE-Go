@@ -3,6 +3,7 @@ package vm
 import (
 	"errors"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )
@@ -25,10 +26,10 @@ var (
 const (
 	txGasLimitMinValue     uint64 = 12771596 * 100 // 12771596 大致相当于 0.012772s
 	txGasLimitMaxValue     uint64 = 2e9            // 相当于 2s
-	txGasLimitDefaultValue        = 1.5e9          // 相当于 1.5s
+	txGasLimitDefaultValue uint64      = 1.5e9          // 相当于 1.5s
 	blockGasLimitMinValue  uint64 = 12771596 * 100 // 12771596 大致相当于 0.012772s
 	blockGasLimitMaxValue  uint64 = 2e10           // 相当于 20s
-	//blockGasLimitDefaultValue uint64 = 1e10        // 相当于 10s
+	blockGasLimitDefaultValue uint64 = 1e10        // 相当于 10s
 	//produceDurationMaxValue = 60
 	//produceDurationDefaultValue = 10
 	//blockIntervalMinValue = 1
@@ -54,6 +55,10 @@ func (u *ParamManager) RequiredGas(input []byte) uint64 {
 }
 
 func (u *ParamManager) Run(input []byte) ([]byte, error) {
+	err :=u.setDefaultValue()
+	if nil != err{
+		return nil, err
+	}
 	return execSC(input, u.AllExportFns())
 }
 
@@ -406,6 +411,43 @@ func (u *ParamManager) getIsTxUseGas() (uint64, error) {
 	}
 	return ret, nil
 }
+
+func (u *ParamManager)setDefaultValue() error{
+	gasLimit, err := rlp.EncodeToBytes(txGasLimitKey)
+	log.Error("can't encodetobyte", "err", err)
+	if err != nil {
+		return err
+	}
+	gasValue, err := rlp.EncodeToBytes(txGasLimitDefaultValue)
+	log.Error("can't encodetobyte1", "err", err)
+	if err != nil {
+		return err
+	}
+	data := u.getState(gasLimit)
+	log.Error("can't encodetobyte2", "err", err)
+	if len(data) == 0 {
+		u.setState(gasLimit, gasValue)
+		log.Error("can't encodetobyte3", "err", err)
+	}
+	blockGasLimit, err := rlp.EncodeToBytes(blockGasLimitKey)
+	log.Error("can't encodetobyte", "err", err)
+	if err != nil {
+		return err
+	}
+	blockGasValue, err := rlp.EncodeToBytes(blockGasLimitDefaultValue)
+	log.Error("can't encodetobyte1", "err", err)
+	if err != nil {
+		return err
+	}
+	data = u.getState(blockGasLimit)
+	log.Error("can't encodetobyte2", "err", err)
+	if len(data) == 0 {
+		u.setState(blockGasLimit, blockGasValue)
+		log.Error("can't encodetobyte3", "err", err)
+	}
+	return err
+}
+
 
 func (u *ParamManager) hasPermission() bool {
 	//在角色合约接口中查询对应角色信息并判断是否有权限
