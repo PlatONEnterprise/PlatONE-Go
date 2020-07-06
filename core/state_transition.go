@@ -561,9 +561,7 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, gasPrice 
 		}
 		//st.state.OpenFirewall(conAddr)
 	} else {
-		if msg.TxType() != types.CnsTxType {
-			st.state.SetNonce(msg.From(), st.state.GetNonce(sender.Address())+1)
-		}
+		st.state.SetNonce(msg.From(), st.state.GetNonce(sender.Address())+1)
 		var pass bool
 		if ret, pass = fwCheck(evm.StateDB, st.to(), msg.From(), msg.Data()); !pass {
 			err = PermissionErr
