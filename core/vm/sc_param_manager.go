@@ -3,7 +3,6 @@ package vm
 import (
 	"errors"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )
@@ -414,36 +413,28 @@ func (u *ParamManager) getIsTxUseGas() (uint64, error) {
 
 func (u *ParamManager)setDefaultValue() error{
 	gasLimit, err := rlp.EncodeToBytes(txGasLimitKey)
-	log.Error("can't encodetobyte", "err", err)
 	if err != nil {
 		return err
 	}
 	gasValue, err := rlp.EncodeToBytes(txGasLimitDefaultValue)
-	log.Error("can't encodetobyte1", "err", err)
 	if err != nil {
 		return err
 	}
 	data := u.getState(gasLimit)
-	log.Error("can't encodetobyte2", "err", err)
 	if len(data) == 0 {
 		u.setState(gasLimit, gasValue)
-		log.Error("can't encodetobyte3", "err", err)
 	}
 	blockGasLimit, err := rlp.EncodeToBytes(blockGasLimitKey)
-	log.Error("can't encodetobyte", "err", err)
 	if err != nil {
 		return err
 	}
 	blockGasValue, err := rlp.EncodeToBytes(blockGasLimitDefaultValue)
-	log.Error("can't encodetobyte1", "err", err)
 	if err != nil {
 		return err
 	}
 	data = u.getState(blockGasLimit)
-	log.Error("can't encodetobyte2", "err", err)
 	if len(data) == 0 {
 		u.setState(blockGasLimit, blockGasValue)
-		log.Error("can't encodetobyte3", "err", err)
 	}
 	return err
 }
@@ -451,7 +442,7 @@ func (u *ParamManager)setDefaultValue() error{
 
 func (u *ParamManager) hasPermission() bool {
 	//在角色合约接口中查询对应角色信息并判断是否有权限
-	return checkPermission(u.state, u.callerAddr, 1) || checkPermission(u.state, u.callerAddr, 0)
+	return checkPermission(u.state, u.callerAddr, 1)
 
 }
 
