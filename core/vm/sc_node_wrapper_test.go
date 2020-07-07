@@ -11,7 +11,7 @@ import (
 func Test_scNodeWrapper_add(t *testing.T) {
 	addNodeInfoForTest(t)
 
-	mockDB := newStateDBMock()
+	mockDB := newMockStateDB()
 	ni := randFakeNodeInfo()
 	addRandNodeInfoForTest(t, ni, mockDB)
 
@@ -25,7 +25,7 @@ func Test_scNodeWrapper_add(t *testing.T) {
 	t.Log(string(ret))
 }
 
-func addRandNodeInfoForTest(t *testing.T, ni *syscontracts.NodeInfo, mockDB *stateDBMock) (*syscontracts.NodeInfo, *scNodeWrapper) {
+func addRandNodeInfoForTest(t *testing.T, ni *syscontracts.NodeInfo, mockDB *mockStateDB) (*syscontracts.NodeInfo, *scNodeWrapper) {
 	fnNameInput := "add"
 
 	params, err := json.Marshal(ni)
@@ -53,7 +53,7 @@ func addNodeInfoForTest(t *testing.T) (*syscontracts.NodeInfo, *scNodeWrapper) {
 
 	assert.NoError(t, err)
 	var input = MakeInput(fnNameInput, string(params))
-	mockDB := newStateDBMock()
+	mockDB := newMockStateDB()
 	node := &scNodeWrapper{NewSCNode(mockDB)}
 
 	ret, err := node.Run(input)

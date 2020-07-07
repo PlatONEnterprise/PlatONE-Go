@@ -9,7 +9,7 @@ import (
 )
 
 func Test_emitEvent(t *testing.T) {
-	stateDB := newStateDBMock()
+	stateDB := newMockStateDB()
 	topic := "Notify"
 	msg := "success"
 	code := uint64(1)

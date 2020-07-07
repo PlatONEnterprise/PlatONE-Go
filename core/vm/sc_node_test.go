@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"math/rand"
@@ -187,7 +185,7 @@ func TestSCNode_TxReceipt(t *testing.T) {
 	ni.Status = NodeStatusNormal
 	ni.PublicKey = "044b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc"
 
-	stateDB := newStateDBMock()
+	stateDB := newMockStateDB()
 	n := NewSCNode(stateDB)
 
 	err := n.add(ni)
@@ -238,8 +236,8 @@ func TestSCNode_Add(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"t1", fields{stateDB: newStateDBMock()}, args{fakeNodeInfo()}, false},
-		{"t1", fields{stateDB: newStateDBMock()}, args{errNi}, true},
+		{"t1", fields{stateDB: newMockStateDB()}, args{fakeNodeInfo()}, false},
+		{"t1", fields{stateDB: newMockStateDB()}, args{errNi}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -265,7 +263,7 @@ func TestSCNode_AddName(t *testing.T) {
 	type args struct {
 		name string
 	}
-	stateDB := newStateDBMock()
+	stateDB := newMockStateDB()
 	tests := []struct {
 		name    string
 		fields  fields
@@ -338,7 +336,7 @@ func addNodeInfoIntoDB() (*SCNode, *syscontracts.NodeInfo) {
 	ni.Status = NodeStatusNormal
 	ni.PublicKey = "044b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc"
 
-	db := newStateDBMock()
+	db := newMockStateDB()
 	n := NewSCNode(db)
 
 	return n, ni
@@ -369,7 +367,7 @@ func TestSCNode_CheckParamsOfUpdateNodeAndReturnUpdatedNode(t *testing.T) {
 }
 
 func TestSCNode_CheckPublicKeyExist(t *testing.T) {
-	db := newStateDBMock()
+	db := newMockStateDB()
 	n := NewSCNode(db)
 
 	err := n.checkPublicKeyExist("044b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc")
@@ -525,179 +523,6 @@ func TestSCNode_Update(t *testing.T) {
 	assert.NoError(t, err)
 	ni.Status = NodeStatusDeleted
 	assert.Equal(t, ni, node)
-}
-
-type stateDBMock struct {
-	database map[string]interface{}
-	eLogs    map[string]*types.Log
-}
-
-func newStateDBMock() *stateDBMock {
-	return &stateDBMock{database: make(map[string]interface{}), eLogs: make(map[string]*types.Log)}
-}
-
-func (m stateDBMock) CreateAccount(address common.Address) {
-	panic("implement me")
-}
-
-func (m stateDBMock) SubBalance(address common.Address, b *big.Int) {
-	panic("implement me")
-}
-
-func (m stateDBMock) AddBalance(address common.Address, b *big.Int) {
-	panic("implement me")
-}
-
-func (m stateDBMock) GetBalance(address common.Address) *big.Int {
-	panic("implement me")
-}
-
-func (m stateDBMock) GetNonce(address common.Address) uint64 {
-	panic("implement me")
-}
-
-func (m stateDBMock) SetNonce(address common.Address, u uint64) {
-	panic("implement me")
-}
-
-func (m stateDBMock) GetCodeHash(address common.Address) common.Hash {
-	panic("implement me")
-}
-
-func (m stateDBMock) GetCode(address common.Address) []byte {
-	panic("implement me")
-}
-
-func (m stateDBMock) SetCode(address common.Address, bytes []byte) {
-	panic("implement me")
-}
-
-func (m stateDBMock) GetCodeSize(address common.Address) int {
-	panic("implement me")
-}
-
-func (m stateDBMock) GetAbiHash(address common.Address) common.Hash {
-	panic("implement me")
-}
-
-func (m stateDBMock) GetAbi(address common.Address) []byte {
-	panic("implement me")
-}
-
-func (m stateDBMock) SetAbi(address common.Address, bytes []byte) {
-	panic("implement me")
-}
-
-func (m stateDBMock) AddRefund(u uint64) {
-	panic("implement me")
-}
-
-func (m stateDBMock) SubRefund(u uint64) {
-	panic("implement me")
-}
-
-func (m stateDBMock) GetRefund() uint64 {
-	panic("implement me")
-}
-
-func (m stateDBMock) GetCommittedState(address common.Address, bytes []byte) []byte {
-	panic("implement me")
-}
-
-func (m stateDBMock) GetState(address common.Address, key []byte) []byte {
-	if bin, ok := m.database[string(key)]; ok {
-		return bin.([]byte)
-	}
-
-	return nil
-}
-
-func (m stateDBMock) SetState(address common.Address, key []byte, val []byte) {
-	m.database[string(key)] = val
-}
-
-func (m stateDBMock) Suicide(address common.Address) bool {
-	panic("implement me")
-}
-
-func (m stateDBMock) HasSuicided(address common.Address) bool {
-	panic("implement me")
-}
-
-func (m stateDBMock) Exist(address common.Address) bool {
-	panic("implement me")
-}
-
-func (m stateDBMock) Empty(address common.Address) bool {
-	panic("implement me")
-}
-
-func (m stateDBMock) RevertToSnapshot(i int) {
-	panic("implement me")
-}
-
-func (m stateDBMock) Snapshot() int {
-	panic("implement me")
-}
-
-func (m stateDBMock) AddLog(log *types.Log) {
-	m.eLogs[log.Topics[0].String()] = log
-}
-
-func (m stateDBMock) AddPreimage(hash common.Hash, bytes []byte) {
-	panic("implement me")
-}
-
-func (m stateDBMock) ForEachStorage(address common.Address, f func(common.Hash, common.Hash) bool) {
-	panic("implement me")
-}
-
-func (m stateDBMock) FwAdd(contractAddr common.Address, action state.Action, list []state.FwElem) {
-	panic("implement me")
-}
-
-func (m stateDBMock) FwClear(contractAddr common.Address, action state.Action) {
-	panic("implement me")
-}
-
-func (m stateDBMock) FwDel(contractAddr common.Address, action state.Action, list []state.FwElem) {
-	panic("implement me")
-}
-
-func (m stateDBMock) FwSet(contractAddr common.Address, action state.Action, list []state.FwElem) {
-	panic("implement me")
-}
-
-func (m stateDBMock) SetFwStatus(contractAddr common.Address, status state.FwStatus) {
-	panic("implement me")
-}
-
-func (m stateDBMock) GetFwStatus(contractAddr common.Address) state.FwStatus {
-	panic("implement me")
-}
-
-func (m stateDBMock) SetContractCreator(contractAddr common.Address, creator common.Address) {
-	panic("implement me")
-}
-
-func (m stateDBMock) GetContractCreator(contractAddr common.Address) common.Address {
-	panic("implement me")
-}
-
-func (m stateDBMock) OpenFirewall(contractAddr common.Address) {
-	panic("implement me")
-}
-
-func (m stateDBMock) CloseFirewall(contractAddr common.Address) {
-
-}
-
-func (m stateDBMock) IsFwOpened(contractAddr common.Address) bool {
-	panic("implement me")
-}
-
-func (m stateDBMock) FwImport(contractAddr common.Address, data []byte) error {
-	panic("implement me")
 }
 
 func TestSCNode_isNameExist(t *testing.T) {
