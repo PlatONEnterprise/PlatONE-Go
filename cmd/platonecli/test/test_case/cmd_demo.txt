@@ -1,0 +1,59 @@
+1.
+./ctool contract deploy ./test/test_case/wasm/contracta.wasm --abi ./test/test_case/wasm/contracta.cpp.abi.json
+
+contract address: 0xb16756ec299ca4e849cddeaac925c65515e5440e
+
+1.1
+
+./ctool contract execute "0x0000000000000000000000000000000000000011" 'getRegisteredContracts(0,10)'
+
+./ctool contract execute "0x0000000000000000000000000000000000000011" 'getRegisteredContracts' --param 0 --param 10
+
+2.
+./ctool contract deploy ./test/test_case/sol/storage_byzantium_065.bin --vm evm // 修改genesis.json interpreter字段为"all"
+result: contract address is 
+
+./ctool contract execute 0x2e8157c0e391c5dbcaaf6dad802aa777dd31ae57 store --param 5 --abi ./test/test_case/sol/storage_byzantium_065.abi --vm evm
+
+./ctool contract execute 0x2e8157c0e391c5dbcaaf6dad802aa777dd31ae57 retreive --abi ./test/test_case/sol/storage_byzantium_065.abi --vm evm
+
+3.
+./ctool fw query 0x419670144e793ba73cbcaadebbda6194cdb33057
+
+./ctool fw start 0x419670144e793ba73cbcaadebbda6194cdb33057
+
+new以及import前 firewall需要开启
+
+4.
+./ctool account transfer "0x0000000000000000000000000000000000000000"
+
+5.
+./ctool account register-role '["chainCreator"]'  --sync
+
+./ctool cns resolve __sys_RoleRegister
+
+./ctool contract execute 0xe0837ef8449b5c699e0c91a5971cf19f69da2f2a registerRole --param '["chainCreator"]' --sync
+
+
+6.
+./ctool contract deploy ../../release/linux/conf/contracts/nodeManager.wasm --abi ../../release/linux/conf/contracts/nodeManager.cpp.abi.json
+
+./ctool cns resolve __sys_NodeManager
+
+nodeManager old: 0x5a6072d21a5c4fda7c7a7e2f442ca06264435140
+new: 0x05e58dc4861e52c708740f0bad6f8fe14533857c
+
+./ctool contract execute ...
+
+./ctool contract migrate <old> <new> --sync
+
+1.
+ctool account transfer 0xd0f2936e525Bc3aaB2c1104743c35D5a25EdCbd2 10 --account 0x83fd09ac4dc277cc6c7bcfa2935843fe05b3a5dc
+
+./ctool account register-user 0x83fd09ac4dc277cc6c7bcfa2935843fe05b3a5dc tofu 13780496793 df@wxblockchain.com --remark "the is a test"
+
+./ctool account register-roles '["nodeAdmin"]'
+
+./ctool account query 0x3545bf5c67922215781e0034069349a15b9deb4b
+
+

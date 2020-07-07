@@ -1,0 +1,55 @@
+[
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "getInfo",
+		"outputs": [
+			{
+				"name": "",
+				"type": "string"
+			},
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "_fName",
+				"type": "string"
+			},
+			{
+				"name": "_age",
+				"type": "uint256"
+			}
+		],
+		"name": "setInfo",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"name": "name",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"name": "age",
+				"type": "uint256"
+			}
+		],
+		"name": "Instructor",
+		"type": "event"
+	}
+]
