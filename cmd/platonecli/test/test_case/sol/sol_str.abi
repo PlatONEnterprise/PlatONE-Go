@@ -1,0 +1,30 @@
+[
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "pname",
+				"type": "string"
+			}
+		],
+		"name": "setProductname",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "getProductname",
+		"outputs": [
+			{
+				"name": "",
+				"type": "string"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	}
+]

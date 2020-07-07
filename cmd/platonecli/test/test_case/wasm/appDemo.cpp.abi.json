@@ -1,0 +1,38 @@
+[
+    {
+        "name": "invokeNotify",
+        "inputs": [
+            {
+                "name": "msg",
+                "type": "string"
+            }
+        ],
+        "outputs": [],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "getName",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "Notify",
+        "inputs": [
+            {
+                "type": "uint64"
+            },
+            {
+                "type": "string"
+            }
+        ],
+        "type": "event"
+    }
+]

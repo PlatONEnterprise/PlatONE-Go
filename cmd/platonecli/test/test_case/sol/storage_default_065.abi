@@ -1,0 +1,28 @@
+[
+	{
+		"inputs": [],
+		"name": "retreive",
+		"outputs": [
+			{
+				"internalType": "int32",
+				"name": "",
+				"type": "int32"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "int32",
+				"name": "num",
+				"type": "int32"
+			}
+		],
+		"name": "store",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	}
+]
