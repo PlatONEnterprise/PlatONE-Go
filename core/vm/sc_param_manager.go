@@ -33,7 +33,7 @@ const (
 	//produceDurationDefaultValue = 10
 	//blockIntervalMinValue = 1
 	//blockIntervalDefaultValue = 1
-	failFlag = 2
+	failFlag = 0
 )
 
 type ParamManager struct {
@@ -97,6 +97,9 @@ func (u *ParamManager) getGasContractName() (string, error) {
 		return "", err
 	}
 	contractName := u.getState(key)
+	if len(contractName) == 0{
+		return "", nil
+	}
 	var ret string
 	if err := rlp.DecodeBytes(contractName, &ret); nil != err {
 		return "", err
@@ -134,6 +137,9 @@ func (u *ParamManager) getIsProduceEmptyBlock() (uint64, error) {
 		return failFlag, err
 	}
 	isProduceEmptyBlock := u.getState(key)
+	if len(isProduceEmptyBlock) == 0{
+		return failFlag, nil
+	}
 	var ret uint64
 	if err := rlp.DecodeBytes(isProduceEmptyBlock, &ret); nil != err {
 		return 0, err
@@ -186,9 +192,12 @@ func (u *ParamManager) setTxGasLimit(txGasLimit uint64) ([]byte, error) {
 func (u *ParamManager) getTxGasLimit() (uint64, error) {
 	key, err := encode(txGasLimitKey)
 	if err != nil {
-		return 0, err
+		return failFlag, err
 	}
 	txGasLimit := u.getState(key)
+	if len(txGasLimit) == 0{
+		return failFlag, nil
+	}
 	var ret uint64
 	if err := rlp.DecodeBytes(txGasLimit, &ret); nil != err {
 		return 0, err
@@ -240,6 +249,9 @@ func (u *ParamManager) getBlockGasLimit() (uint64, error) {
 		return failFlag, err
 	}
 	blockGasLimit := u.getState(key)
+	if len(blockGasLimit) == 0{
+		return failFlag, nil
+	}
 	var ret uint64
 	if err := rlp.DecodeBytes(blockGasLimit, &ret); nil != err {
 		return 0, err
@@ -280,6 +292,9 @@ func (u *ParamManager) getAllowAnyAccountDeployContract() (uint64, error) {
 		return failFlag, err
 	}
 	isAllowAnyAccountDeployContract := u.getState(key)
+	if len(isAllowAnyAccountDeployContract) == 0{
+		return failFlag, nil
+	}
 	var ret uint64
 	if err := rlp.DecodeBytes(isAllowAnyAccountDeployContract, &ret); nil != err {
 		return failFlag, err
@@ -321,6 +336,9 @@ func (u *ParamManager) getCheckContractDeployPermission() (uint64, error) {
 		return failFlag, err
 	}
 	checkPermission := u.getState(key)
+	if len(checkPermission) == 0{
+		return failFlag, nil
+	}
 	var ret uint64
 	if err := rlp.DecodeBytes(checkPermission, &ret); nil != err {
 		return failFlag, err
@@ -361,6 +379,9 @@ func (u *ParamManager) getIsApproveDeployedContract() (uint64, error) {
 		return failFlag, err
 	}
 	isApproveDeployedContract := u.getState(key)
+	if len(isApproveDeployedContract) == 0{
+		return failFlag, nil
+	}
 	var ret uint64
 	if err := rlp.DecodeBytes(isApproveDeployedContract, &ret); nil != err {
 		return failFlag, err
@@ -402,7 +423,7 @@ func (u *ParamManager) getIsTxUseGas() (uint64, error) {
 	}
 	isTxUseGas := u.getState(key)
 	if len(isTxUseGas) == 0 {
-		return 0, nil
+		return failFlag, nil
 	}
 	var ret uint64
 	if err := rlp.DecodeBytes(isTxUseGas, &ret); nil != err {
