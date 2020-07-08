@@ -98,7 +98,7 @@ func (c *CnsInvoke) GetCnsAddr(evm *EVM, cnsName string) (*common.Address, error
 		}
 
 		if isSystemContract {
-			ToAddr = common.SysCfg.GetContractAddress(contractName)
+			ToAddr = cnsSysContractsMap[contractName]
 		} else {
 			var fh string = "getContractAddress"
 			callParams := []interface{}{contractName, "latest"}
