@@ -7,12 +7,7 @@
                 "type": "string"
             }
         ],
-        "outputs": [
-            {
-                "name": "",
-                "type": "int32"
-            }
-        ],
+        "outputs": [],
         "constant": "false",
         "type": "function"
     },
@@ -29,52 +24,14 @@
         "type": "function"
     },
     {
-        "name": "setCBFTTimeParam",
-        "inputs": [
-            {
-                "name": "produceDuration",
-                "type": "int32"
-            },
-            {
-                "name": "blockInterval",
-                "type": "int32"
-            }
-        ],
-        "outputs": [
-            {
-                "name": "",
-                "type": "int32"
-            }
-        ],
-        "constant": "false",
-        "type": "function"
-    },
-    {
-        "name": "getCBFTTimeParam",
-        "inputs": [],
-        "outputs": [
-            {
-                "name": "",
-                "type": "string"
-            }
-        ],
-        "constant": "true",
-        "type": "function"
-    },
-    {
         "name": "setIsProduceEmptyBlock",
         "inputs": [
             {
                 "name": "isProduceEmptyBlock",
-                "type": "int32"
+                "type": "uint64"
             }
         ],
-        "outputs": [
-            {
-                "name": "",
-                "type": "int32"
-            }
-        ],
+        "outputs": [],
         "constant": "false",
         "type": "function"
     },
@@ -84,7 +41,7 @@
         "outputs": [
             {
                 "name": "",
-                "type": "int32"
+                "type": "uint64"
             }
         ],
         "constant": "true",
@@ -98,12 +55,7 @@
                 "type": "uint64"
             }
         ],
-        "outputs": [
-            {
-                "name": "",
-                "type": "int32"
-            }
-        ],
+        "outputs": [],
         "constant": "false",
         "type": "function"
     },
@@ -127,12 +79,7 @@
                 "type": "uint64"
             }
         ],
-        "outputs": [
-            {
-                "name": "",
-                "type": "int32"
-            }
-        ],
+        "outputs": [],
         "constant": "false",
         "type": "function"
     },
@@ -153,15 +100,10 @@
         "inputs": [
             {
                 "name": "isAllowAnyAccountDeployContract",
-                "type": "int32"
+                "type": "uint64"
             }
         ],
-        "outputs": [
-            {
-                "name": "",
-                "type": "int32"
-            }
-        ],
+        "outputs": [],
         "constant": "false",
         "type": "function"
     },
@@ -170,15 +112,10 @@
         "inputs": [
             {
                 "name": "checkPermission",
-                "type": "int32"
+                "type": "uint64"
             }
         ],
-        "outputs": [
-            {
-                "name": "",
-                "type": "int32"
-            }
-        ],
+        "outputs": [],
         "constant": "false",
         "type": "function"
     },
@@ -188,7 +125,7 @@
         "outputs": [
             {
                 "name": "",
-                "type": "int32"
+                "type": "uint64"
             }
         ],
         "constant": "true",
@@ -200,7 +137,7 @@
         "outputs": [
             {
                 "name": "",
-                "type": "int32"
+                "type": "uint64"
             }
         ],
         "constant": "true",
@@ -211,15 +148,10 @@
         "inputs": [
             {
                 "name": "isApproveDeployedContract",
-                "type": "int32"
+                "type": "uint64"
             }
         ],
-        "outputs": [
-            {
-                "name": "",
-                "type": "int32"
-            }
-        ],
+        "outputs": [],
         "constant": "false",
         "type": "function"
     },
@@ -229,7 +161,7 @@
         "outputs": [
             {
                 "name": "",
-                "type": "int32"
+                "type": "uint64"
             }
         ],
         "constant": "true",
@@ -240,15 +172,10 @@
         "inputs": [
             {
                 "name": "isTxUseGas",
-                "type": "int32"
+                "type": "uint64"
             }
         ],
-        "outputs": [
-            {
-                "name": "",
-                "type": "int32"
-            }
-        ],
+        "outputs": [],
         "constant": "false",
         "type": "function"
     },
@@ -258,22 +185,11 @@
         "outputs": [
             {
                 "name": "",
-                "type": "int32"
+                "type": "uint64"
             }
         ],
         "constant": "true",
         "type": "function"
-    },
-    {
-        "name": "Notify",
-        "inputs": [
-            {
-                "type": "uint64"
-            },
-            {
-                "type": "string"
-            }
-        ],
-        "type": "event"
     }
 ]
+
