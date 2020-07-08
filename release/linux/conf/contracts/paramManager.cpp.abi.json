@@ -28,7 +28,7 @@
         "inputs": [
             {
                 "name": "isProduceEmptyBlock",
-                "type": "uint64"
+                "type": "uint32"
             }
         ],
         "outputs": [],
@@ -41,7 +41,7 @@
         "outputs": [
             {
                 "name": "",
-                "type": "uint64"
+                "type": "int32"
             }
         ],
         "constant": "true",
@@ -100,7 +100,7 @@
         "inputs": [
             {
                 "name": "isAllowAnyAccountDeployContract",
-                "type": "uint64"
+                "type": "uint"
             }
         ],
         "outputs": [],
@@ -112,7 +112,7 @@
         "inputs": [
             {
                 "name": "checkPermission",
-                "type": "uint64"
+                "type": "uint32"
             }
         ],
         "outputs": [],
@@ -125,7 +125,7 @@
         "outputs": [
             {
                 "name": "",
-                "type": "uint64"
+                "type": "int32"
             }
         ],
         "constant": "true",
@@ -137,7 +137,7 @@
         "outputs": [
             {
                 "name": "",
-                "type": "uint64"
+                "type": "int32"
             }
         ],
         "constant": "true",
@@ -148,7 +148,7 @@
         "inputs": [
             {
                 "name": "isApproveDeployedContract",
-                "type": "uint64"
+                "type": "uint32"
             }
         ],
         "outputs": [],
@@ -161,7 +161,7 @@
         "outputs": [
             {
                 "name": "",
-                "type": "uint64"
+                "type": "int32"
             }
         ],
         "constant": "true",

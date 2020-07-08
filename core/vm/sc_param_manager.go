@@ -33,7 +33,10 @@ const (
 	//produceDurationDefaultValue = 10
 	//blockIntervalMinValue = 1
 	//blockIntervalDefaultValue = 1
+	errFlag  = -1
 	failFlag = 0
+	sucFlag  = 1
+
 )
 
 type ParamManager struct {
@@ -109,7 +112,7 @@ func (u *ParamManager) getGasContractName() (string, error) {
 }
 
 //pass
-func (u *ParamManager) setIsProduceEmptyBlock(isProduceEmptyBlock uint64) ([]byte, error) {
+func (u *ParamManager) setIsProduceEmptyBlock(isProduceEmptyBlock uint32) ([]byte, error) {
 	if !u.hasPermission() {
 		//event here
 		return nil, ErrHasNoPermission
@@ -131,20 +134,24 @@ func (u *ParamManager) setIsProduceEmptyBlock(isProduceEmptyBlock uint64) ([]byt
 	return nil, nil
 }
 
-func (u *ParamManager) getIsProduceEmptyBlock() (uint64, error) {
+func (u *ParamManager) getIsProduceEmptyBlock() (int32, error) {
 	key, err := encode(isProduceEmptyBlockKey)
 	if err != nil {
 		return failFlag, err
 	}
 	isProduceEmptyBlock := u.getState(key)
 	if len(isProduceEmptyBlock) == 0{
-		return failFlag, nil
+		return errFlag, nil
 	}
 	var ret uint64
 	if err := rlp.DecodeBytes(isProduceEmptyBlock, &ret); nil != err {
 		return 0, err
 	}
-	return ret, nil
+	if ret == 1 {
+		return sucFlag, nil
+	}else {
+		return failFlag, nil
+	}
 }
 
 func (u *ParamManager) setTxGasLimit(txGasLimit uint64) ([]byte, error) {
@@ -263,7 +270,7 @@ func (u *ParamManager) getBlockGasLimit() (uint64, error) {
 // @isAllowAnyAccountDeployContract:
 // 0: 允许任意用户部署合约  1: 用户具有相应权限才可以部署合约
 // 默认为0，即允许任意用户部署合约
-func (u *ParamManager) setAllowAnyAccountDeployContract(isAllowAnyAccountDeployContract uint64) ([]byte, error) {
+func (u *ParamManager) setAllowAnyAccountDeployContract(isAllowAnyAccountDeployContract uint32) ([]byte, error) {
 	if !u.hasPermission() {
 		//event here
 		return nil, ErrHasNoPermission
@@ -286,7 +293,7 @@ func (u *ParamManager) setAllowAnyAccountDeployContract(isAllowAnyAccountDeployC
 }
 
 // 获取是否允许任意用户部署合约的标志
-func (u *ParamManager) getAllowAnyAccountDeployContract() (uint64, error) {
+func (u *ParamManager) getAllowAnyAccountDeployContract() (int32, error) {
 	key, err := encode(isAllowAnyAccountDeployContractKey)
 	if err != nil {
 		return failFlag, err
@@ -299,13 +306,17 @@ func (u *ParamManager) getAllowAnyAccountDeployContract() (uint64, error) {
 	if err := rlp.DecodeBytes(isAllowAnyAccountDeployContract, &ret); nil != err {
 		return failFlag, err
 	}
-	return ret, nil
+	if ret == 1 {
+		return sucFlag, nil
+	}else {
+		return failFlag, nil
+	}
 }
 
 // 设置是否检查合约部署权限
 // 0: 不检查合约部署权限，允许任意用户部署合约  1: 检查合约部署权限，用户具有相应权限才可以部署合约
 // 默认为0，不检查合约部署权限，即允许任意用户部署合约
-func (u *ParamManager) setCheckContractDeployPermission(checkPermission uint8) ([]byte, error) {
+func (u *ParamManager) setCheckContractDeployPermission(checkPermission uint32) ([]byte, error) {
 	if !u.hasPermission() {
 		//event here
 		return nil, ErrHasNoPermission
@@ -330,7 +341,7 @@ func (u *ParamManager) setCheckContractDeployPermission(checkPermission uint8) (
 // 获取是否是否检查合约部署权限
 // 0: 不检查合约部署权限，允许任意用户部署合约  1: 检查合约部署权限，用户具有相应权限才可以部署合约
 // 默认为0，不检查合约部署权限，即允许任意用户部署合约
-func (u *ParamManager) getCheckContractDeployPermission() (uint64, error) {
+func (u *ParamManager) getCheckContractDeployPermission() (int32, error) {
 	key, err := encode(isCheckContractDeployPermission)
 	if err != nil {
 		return failFlag, err
@@ -343,7 +354,11 @@ func (u *ParamManager) getCheckContractDeployPermission() (uint64, error) {
 	if err := rlp.DecodeBytes(checkPermission, &ret); nil != err {
 		return failFlag, err
 	}
-	return ret, nil
+	if ret == 1 {
+		return sucFlag, nil
+	}else {
+		return failFlag, nil
+	}
 
 }
 
@@ -373,7 +388,7 @@ func (u *ParamManager) setIsApproveDeployedContract(isApproveDeployedContract ui
 }
 
 // 获取是否审核已部署的合约的标志
-func (u *ParamManager) getIsApproveDeployedContract() (uint64, error) {
+func (u *ParamManager) getIsApproveDeployedContract() (int32, error) {
 	key, err := encode(isApproveDeployedContractKey)
 	if err != nil {
 		return failFlag, err
@@ -386,7 +401,11 @@ func (u *ParamManager) getIsApproveDeployedContract() (uint64, error) {
 	if err := rlp.DecodeBytes(isApproveDeployedContract, &ret); nil != err {
 		return failFlag, err
 	}
-	return ret, nil
+	if ret == 1 {
+		return sucFlag, nil
+	}else {
+		return failFlag, nil
+	}
 }
 
 // 本参数根据最新的讨论（2019.03.06之前）不再需要，即交易需要消耗gas。但是计费相关如消耗特定合约代币的参数由 setGasContractName 进行设置
@@ -463,8 +482,7 @@ func (u *ParamManager)setDefaultValue() error{
 
 func (u *ParamManager) hasPermission() bool {
 	//在角色合约接口中查询对应角色信息并判断是否有权限
-	return checkPermission(u.state, u.callerAddr, 1)
-
+	return checkPermission(u.state, u.callerAddr, 1) || checkPermission(u.state, u.callerAddr, 0)
 }
 
 //for access control

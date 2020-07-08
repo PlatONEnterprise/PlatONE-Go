@@ -115,13 +115,14 @@ func TestParamManager_stateDB(t *testing.T) {
 func TestParamManager_getTxLimit(t *testing.T) {
 	db := newMockStateDB()
 	addr := syscontracts.ParameterManagementAddress
+	addr1 := syscontracts.UserManagementAddress
 	caller := common.HexToAddress("0x62fb664c49cfa4fa35931760c704f9b3ab664666")
-	um := UserManagement{state: db, caller: caller, address: addr}
+	um := UserManagement{state: db, caller: caller, address: addr1}
 	um.setSuperAdmin()
 	um.addChainAdminByAddress(caller)
 	p := ParamManager{codeAddr: &addr, state: db, callerAddr: caller}
-	p.setBlockGasLimit(12771599 * 100)
-	ret, err := p.getBlockGasLimit()
+	p.setIsApproveDeployedContract(1 )
+	ret, err := p.getIsApproveDeployedContract()
 	if nil != err {
 		t.Error(err)
 		return
@@ -163,7 +164,7 @@ func TestParamManager_getTxLimit(t *testing.T) {
 //}
 
 func Test_encode(t *testing.T) {
-	a := "0"
+	a := uint32(8)
 	bin, err := encode(a)
 	if nil != err {
 		t.Error(err)
