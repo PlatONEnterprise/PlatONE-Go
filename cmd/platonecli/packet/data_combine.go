@@ -270,6 +270,7 @@ func (i *WasmInterpreter) funcByteSort(funcByte [][]byte) [][]byte {
 	return funcByte
 }
 
+// todo: duplicated with the StringConverter in abi/type.go
 // StringConverter encodes different types of function parameters into bytes in the way defined by the wasm virtual machine
 // Implement the Interpreter interface
 func (i WasmInterpreter) StringConverter(source string, t string) ([]byte, error) {

@@ -12,15 +12,15 @@ type (
 )
 
 var PlatONEPrecompiledContracts = map[common.Address]PrecompiledContract{
-	syscontracts.UserManagementAddress:      &UserManagement{},
-	syscontracts.NodeManagementAddress:      &scNodeWrapper{},
-	syscontracts.CnsManagementAddress:       &CnsManager{},
-	syscontracts.ParameterManagementAddress: &ParamManager{},
-	syscontracts.FirewallManagementAddress:  &FireWall{},
-	syscontracts.GroupManagementAddress: &GroupManagement{},
+	syscontracts.UserManagementAddress:        &UserManagement{},
+	syscontracts.NodeManagementAddress:        &scNodeWrapper{},
+	syscontracts.CnsManagementAddress:         &CnsManager{},
+	syscontracts.ParameterManagementAddress:   &ParamManager{},
+	syscontracts.FirewallManagementAddress:    &FireWall{},
+	syscontracts.GroupManagementAddress:       &GroupManagement{},
 	syscontracts.ContractDataProcessorAddress: &ContractDataProcessor{},
-	syscontracts.GroupManagementAddress:     &GroupManagement{},
-	syscontracts.CnsInvokeAddress:           &CnsInvoke{},
+	syscontracts.GroupManagementAddress:       &GroupManagement{},
+	syscontracts.CnsInvokeAddress:             &CnsInvoke{},
 }
 
 func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Contract, evm *EVM) (ret []byte, err error) {
@@ -44,12 +44,11 @@ func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Cont
 
 			return node.Run(input)
 		case *CnsManager:
-			cns := &CnsManager{
-				callerAddr: contract.CallerAddress,
-				cMap:       NewCnsMap(evm.StateDB, contract.CodeAddr),
-				isInit:     evm.InitEntryID,
-				origin:     evm.Context.Origin,
-			}
+			cns := newCnsManager(evm.StateDB)
+			cns.callerAddr = contract.CallerAddress
+			cns.isInit = evm.InitEntryID
+			cns.origin = evm.Context.Origin
+
 			return cns.Run(input)
 		case *ParamManager:
 			p := &ParamManager{
@@ -74,9 +73,9 @@ func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Cont
 			return gm.Run(input)
 		case *ContractDataProcessor:
 			dp := &ContractDataProcessor{
-				state:			evm.StateDB,
-				address: 		contract.self.Address(),
-				caller:			contract.caller.Address(),
+				state:   evm.StateDB,
+				address: contract.self.Address(),
+				caller:  contract.caller.Address(),
 			}
 			return dp.Run(input)
 		case *CnsInvoke:

@@ -1,13 +1,9 @@
 [
     {
-        "name": "cnsRegisterFromInit",
+        "name": "__sys_FwOpen",
         "inputs": [
             {
-                "name": "name",
-                "type": "string"
-            },
-            {
-                "name": "version",
+                "name": "address",
                 "type": "string"
             }
         ],
@@ -21,16 +17,8 @@
         "type": "function"
     },
     {
-        "name": "cnsRegister",
+        "name": "__sys_FwClose",
         "inputs": [
-            {
-                "name": "name",
-                "type": "string"
-            },
-            {
-                "name": "version",
-                "type": "string"
-            },
             {
                 "name": "address",
                 "type": "string"
@@ -46,14 +34,18 @@
         "type": "function"
     },
     {
-        "name": "cnsRedirect",
+        "name": "__sys_FwAdd",
         "inputs": [
             {
-                "name": "name",
+                "name": "address",
                 "type": "string"
             },
             {
-                "name": "version",
+                "name": "action",
+                "type": "string"
+            },
+            {
+                "name": "rules",
                 "type": "string"
             }
         ],
@@ -67,87 +59,15 @@
         "type": "function"
     },
     {
-        "name": "getContractAddress",
-        "inputs": [
-            {
-                "name": "name",
-                "type": "string"
-            },
-            {
-                "name": "version",
-                "type": "string"
-            }
-        ],
-        "outputs": [
-            {
-                "name": "",
-                "type": "string"
-            }
-        ],
-        "constant": "true",
-        "type": "function"
-    },
-    {
-        "name": "getRegisteredContracts",
-        "inputs": [
-            {
-                "name": "pageNum",
-                "type": "int32"
-            },
-            {
-                "name": "pageSize",
-                "type": "int32"
-            }
-        ],
-        "outputs": [
-            {
-                "name": "",
-                "type": "string"
-            }
-        ],
-        "constant": "true",
-        "type": "function"
-    },
-    {
-        "name": "getRegisteredContractsByOrigin",
-        "inputs": [
-            {
-                "name": "origin",
-                "type": "string"
-            }
-        ],
-        "outputs": [
-            {
-                "name": "",
-                "type": "string"
-            }
-        ],
-        "constant": "true",
-        "type": "function"
-    },
-    {
-        "name": "ifRegisteredByName",
-        "inputs": [
-            {
-                "name": "name",
-                "type": "string"
-            }
-        ],
-        "outputs": [
-            {
-                "name": "",
-                "type": "int32"
-            }
-        ],
-        "constant": "true",
-        "type": "function"
-    },
-    {
-        "name": "ifRegisteredByAddress",
+        "name": "__sys_FwClear",
         "inputs": [
             {
                 "name": "address",
                 "type": "string"
+            },
+            {
+                "name": "action",
+                "type": "string"
             }
         ],
         "outputs": [
@@ -156,11 +76,61 @@
                 "type": "int32"
             }
         ],
-        "constant": "true",
+        "constant": "false",
         "type": "function"
     },
     {
-        "name": "getRegisteredContractsByAddress",
+        "name": "__sys_FwDel",
+        "inputs": [
+            {
+                "name": "address",
+                "type": "string"
+            },
+            {
+                "name": "action",
+                "type": "string"
+            },
+            {
+                "name": "rules",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "int32"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "__sys_FwSet",
+        "inputs": [
+            {
+                "name": "address",
+                "type": "string"
+            },
+            {
+                "name": "action",
+                "type": "string"
+            },
+            {
+                "name": "rules",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "int32"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "__sys_FwStatus",
         "inputs": [
             {
                 "name": "address",
@@ -177,44 +147,24 @@
         "type": "function"
     },
     {
-        "name": "getRegisteredContractsByName",
+        "name": "__sys_Import",
         "inputs": [
             {
-                "name": "name",
+                "name": "address",
+                "type": "string"
+            },
+            {
+                "name": "",
                 "type": "string"
             }
         ],
         "outputs": [
             {
                 "name": "",
-                "type": "string"
+                "type": "int32"
             }
         ],
-        "constant": "true",
+        "constant": "false",
         "type": "function"
-    },
-    {
-        "name": "Notify",
-        "inputs": [
-            {
-                "type": "uint64"
-            },
-            {
-                "type": "string"
-            }
-        ],
-        "type": "event"
-    },
-    {
-        "name": "init",
-        "inputs": [
-            {
-                "type": "string"
-            },
-            {
-                "type": "string"
-            }
-        ],
-        "type": "event"
     }
 ]

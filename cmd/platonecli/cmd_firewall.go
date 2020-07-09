@@ -129,56 +129,68 @@ The * is stand for all account addresses or APIs`,
 )
 
 func fwStart(c *cli.Context) {
-	// todo which method is better? method 2 lack of abi
-	/// funcName := "__sys_FwOpen"
-	/// result := innerCall(c, funcName, []string{}, packet.FW_TX_TYPE)
-
+	funcName := "__sys_FwOpen"
 	addr := c.Args().First()
-	result := contractCommon(c, []string{addr}, "__sys_FwOpen", firewallManagementAddress)
+	funcParams := []string{addr}
+
+	result := contractCommon(c, funcParams, funcName, firewallManagementAddress)
 	fmt.Printf("result: %s\n", result)
 }
 
 func fwStop(c *cli.Context) {
 	funcName := "__sys_FwClose"
-	result := innerCall(c, funcName, []string{}, fwTxType)
+	addr := c.Args().First()
+	funcParams := []string{addr}
+
+	result := contractCommon(c, funcParams, funcName, firewallManagementAddress)
 	fmt.Printf("result: %s\n", result)
 }
 
 func fwStatus(c *cli.Context) {
 	funcName := "__sys_FwStatus"
-	result := innerCall(c, funcName, []string{}, fwTxType)
+	addr := c.Args().First()
+	funcParams := []string{addr}
+
+	result := contractCommon(c, funcParams, funcName, firewallManagementAddress)
 	utl.PrintJson([]byte(result.(string)))
 }
 
+// todo: the output file has error code
 func fwExport(c *cli.Context) {
-	funcName := "__sys_FwStatus"
+	funcName := "__sys_FwExport"
 	filePath := c.String(FilePathFlags.Name)
-	result := innerCall(c, funcName, []string{}, fwTxType)
+	addr := c.Args().First()
+
+	funcParams := []string{addr}
+	result := contractCommon(c, funcParams, funcName, firewallManagementAddress)
+
 	utl.WriteFile([]byte(result.(string)), filePath)
 }
 
 func fwImport(c *cli.Context) {
 	funcName := "__sys_FwImport"
 	filePath := c.String(FilePathFlags.Name)
+	addr := c.Args().First()
 
 	fileBytes, err := utl.ParseFileToBytes(filePath)
 	if err != nil {
 		utils.Fatalf(utl.ErrParseFileFormat, "fire wall", err.Error())
 	}
 
-	funcParams := []string{string(fileBytes)}
-	result := innerCall(c, funcName, funcParams, fwTxType)
+	funcParams := []string{addr, string(fileBytes)}
+	result := contractCommon(c, funcParams, funcName, firewallManagementAddress)
 	fmt.Printf("result: %s\n", result)
 }
 
 func fwCommon(c *cli.Context, funcName string) {
 
+	addr := c.Args().First()
 	action := c.Args().Get(1)
-	addr := c.Args().Get(2)
+	targetAddr := c.Args().Get(2)
 	api := c.Args().Get(3)
 
 	utl.ParamValid(action, "action")
-	utl.ParamValid(addr, "fw")
+	utl.ParamValid(targetAddr, "fw")
 	utl.ParamValid(api, "name")
 
 	rules := CombineRule(addr, api) //TODO batch rules
@@ -186,8 +198,8 @@ func fwCommon(c *cli.Context, funcName string) {
 	// string --rule addr1:func1|addr2:func2|...
 	// string --addr addr1 --api func1
 
-	funcParams := CombineFuncParams(action, rules)
-	result := innerCall(c, funcName, funcParams, fwTxType)
+	funcParams := CombineFuncParams(addr, action, rules)
+	result := contractCommon(c, funcParams, funcName, firewallManagementAddress)
 	fmt.Printf("result: %s\n", result)
 }
 
@@ -201,27 +213,28 @@ func fwDelete(c *cli.Context) {
 	fwCommon(c, funcName)
 }
 
-func fwClear(c *cli.Context) {
+func fwClearCommon(c *cli.Context, addr, action string) {
 	funcName := "__sys_FwClear"
+	utl.ParamValid(action, "action")
+
+	funcParams := []string{addr, action}
+	result := contractCommon(c, funcParams, funcName, firewallManagementAddress)
+	fmt.Printf("result: clear '%s' rule lists %s\n", action, result)
+}
+
+func fwClear(c *cli.Context) {
+	// funcName := "__sys_FwClear"
+	addr := c.Args().First()
 	action := c.String(FwActionFlags.Name)
 	all := c.Bool(FwClearAllFlags.Name)
 
 	switch {
 	case all: // clear all fire wall rules
-		result1 := innerCall(c, funcName, []string{"accept"}, fwTxType)
-		result2 := innerCall(c, funcName, []string{"reject"}, fwTxType)
-		if result1 == result2 && result1 == "Operation Succeeded" {
-			fmt.Printf("result: Operation Succeeded\n")
-		} else {
-			fmt.Printf("result: something wrong happens, only part of the rules are cleared\n")
+		fwClearCommon(c, addr, "reject")
+		fwClearCommon(c, addr, "accept")
 
-		}
 	case action != "": // clear the fire wall rules of a specific action
-		utl.ParamValid(action, "action")
-
-		funcParams := []string{action}
-		result := innerCall(c, funcName, funcParams, fwTxType)
-		fmt.Printf("result: %s\n", result)
+		fwClearCommon(c, addr, action)
 	default:
 		fmt.Printf("no action is specified.\n")
 	}

@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"strconv"
 
+	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/precompiled"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/packet"
 	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
@@ -32,9 +34,20 @@ const (
 	cnsTxType       = 0x11 // Used for sending transactions without address
 	fwTxType        = 0x12 // Used fot sending transactions  about firewall
 	migTxType       = 0x13 // Used for update system contract.
+
 	// Currently it's under developing
 	migDpType = 0x14 // Used for update system contract without create a new contract manually
 )
+
+var precompiledList = map[string]string{
+	userManagementAddress:        "../../release/linux/conf/contracts/userManager.cpp.abi.json",
+	nodeManagementAddress:        "../../release/linux/conf/contracts/nodeManager.cpp.abi.json",
+	cnsManagementAddress:         "../../release/linux/conf/contracts/cnsManager.cpp.abi.json",
+	parameterManagementAddress:   "../../release/linux/conf/contracts/paramManager.cpp.abi.json",
+	firewallManagementAddress:    "../../release/linux/conf/contracts/fireWall.abi.json",
+	groupManagementAddress:       "../../release/linux/conf/contracts/groupManager.cpp.abi.json",
+	contractDataProcessorAddress: "",
+}
 
 // convert, convert user input from key to value
 type convert struct {
@@ -43,6 +56,19 @@ type convert struct {
 	value1    interface{} // the convert value of user input 1
 	value2    interface{} // the convert value of user input 2
 	paramName string
+}
+
+// innerCall extract the common parts of the actions of fw and mig calls
+func precompiledCall(c *cli.Context, contract, funcName string, funcParams []string, txType int) interface{} {
+
+	precompiledAbi, _ := precompile.Asset("abi.json")
+
+	// judge whether the input string is contract address or contract name
+	cns := CnsParse(contract)
+	to := utl.ChainParamConvert(cns.To, "to").(common.Address)
+
+	call := packet.ContractCallCommon(funcName, funcParams, precompiledAbi, *cns, "wasm")
+	return messageCall(c, call, &to, "", call.TxType)
 }
 
 // innerCall extract the common parts of the actions of fw and mig calls
@@ -82,6 +108,7 @@ func messageCall(c *cli.Context, call packet.MessageCall, to *common.Address, va
 	address, keystore, gas, gasPrice, isSync, isDefault := getGlobalParam(c)
 	from := common.HexToAddress(address)
 
+	// todo: delete the if statement
 	if call == nil {
 		utils.Fatalf("")
 	}
@@ -357,6 +384,6 @@ func CnsParse(contract string) *packet.Cns {
 	if isAddress {
 		return packet.NewCns(contract, "", executeContract)
 	} else {
-		return packet.NewCns("", contract, cnsTxType)
+		return packet.NewCns(cnsInvokeAddress, contract, cnsTxType)
 	}
 }

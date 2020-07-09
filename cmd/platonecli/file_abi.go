@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strings"
 
+	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/precompiled"
+
 	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
@@ -54,6 +56,7 @@ func storeAbiFile(key string, abiBytes []byte) {
 	}
 }
 
+// todo: update the notation
 // AbiParse gets the abi bytes by the input parameters provided
 // The abi file can be obtained through following ways:
 // 1. user provide the abi file path
@@ -65,7 +68,12 @@ func AbiParse(abiFilePath, str string) []byte {
 	var abiBytes []byte
 
 	if abiFilePath == "" {
-		abiFilePath = getAbiFileFromLocal(str)
+		if p := precompiledList[str]; p != "" {
+			precompiledAbi, _ := precompile.Asset(p)
+			return precompiledAbi
+		}
+
+		/// abiFilePath = getAbiFileFromLocal(str)
 	}
 
 	abiBytes, err = utl.ParseFileToBytes(abiFilePath)
@@ -78,6 +86,7 @@ func AbiParse(abiFilePath, str string) []byte {
 
 // getAbiFileFromLocal get the abi files from default directory by file name
 // currently it is designed to get the system contract abi files
+// [2020 - 07 -07] added, the method is deprecated, the system contract is moved to pre compiled contract
 func getAbiFileFromLocal(str string) string {
 
 	var abiFilePath string

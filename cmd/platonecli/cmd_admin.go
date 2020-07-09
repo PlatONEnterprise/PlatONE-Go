@@ -345,7 +345,7 @@ func nodeDelete(c *cli.Context) {
 	utl.ParamValid(name, "name")
 
 	funcParams := CombineFuncParams(name, str)
-	result := contractCommon(c, funcParams, "update", "__sys_NodeManager")
+	result := contractCommon(c, funcParams, "update", nodeManagementAddress)
 	fmt.Printf("result: %s\n", result)
 }
 
@@ -360,7 +360,7 @@ func nodeUpdate(c *cli.Context) {
 	utl.ParamValid(name, "name")
 
 	funcParams := CombineFuncParams(name, str)
-	result := contractCommon(c, funcParams, "update", "__sys_NodeManager")
+	result := contractCommon(c, funcParams, "update", nodeManagementAddress)
 	fmt.Printf("result: %s\n", result)
 }
 
@@ -370,7 +370,7 @@ func nodeQuery(c *cli.Context) {
 
 	all := c.Bool(ShowAllFlags.Name)
 	if all {
-		result := contractCommon(c, nil, "getAllNodes", "__sys_NodeManager")
+		result := contractCommon(c, nil, "getAllNodes", nodeManagementAddress)
 		utl.PrintJson([]byte(result.(string)))
 		return
 	}
@@ -378,7 +378,7 @@ func nodeQuery(c *cli.Context) {
 	str := combineJson(c, nil, []byte(strJson))
 	funcParams := CombineFuncParams(str)
 
-	result := contractCommon(c, funcParams, "getNodes", "__sys_NodeManager")
+	result := contractCommon(c, funcParams, "getNodes", nodeManagementAddress)
 	utl.PrintJson([]byte(result.(string)))
 }
 
@@ -388,7 +388,7 @@ func nodeStat(c *cli.Context) {
 	str := combineJson(c, nil, []byte(strJson))
 	funcParams := CombineFuncParams(str)
 
-	result := contractCommon(c, funcParams, "nodesNum", "__sys_NodeManager")
+	result := contractCommon(c, funcParams, "nodesNum", nodeManagementAddress)
 	fmt.Printf("result: %v\n", result)
 }
 

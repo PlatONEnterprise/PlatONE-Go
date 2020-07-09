@@ -47,6 +47,8 @@ const (
 	ENODE = "enode://a24ac7c5484ef4ed0c5eb2d36620ba4e4aa13b8c84684e1b4aab0cebea2ae45cb4d375b77eab56516d34bfbd3c1a833fc51296ff084b770b94fb9028c4d25ccf@127.0.0.1:6792"
 
 	BLOCK_NUM = "latest"
+
+	deployContract = 1
 )
 
 func init() {
@@ -90,7 +92,7 @@ func getData() string {
 	codeBytes, _ := utils.ParseFileToBytes(codePath)
 	abiBytes, _ := utils.ParseFileToBytes(abiPath)
 
-	call := packet.NewDeployCall(codeBytes, abiBytes, vm, packet.DEPLOY_CONTRACT)
+	call := packet.NewDeployCall(codeBytes, abiBytes, vm, deployContract)
 
 	data, _, _, _ := call.CombineData()
 
@@ -99,7 +101,7 @@ func getData() string {
 
 func getConAddr(address common.Address) interface{} {
 	_, _ = utils.RpcCalls("personal_unlockAccount", []interface{}{account, PASSWORD1, 10})
-	txDeploy = packet.NewTxParams(address, nil, "", "", "", getData(), packet.DEPLOY_CONTRACT)
+	txDeploy = packet.NewTxParams(address, nil, "", "", "", getData(), deployContract)
 	txHash, _ = utils.RpcCalls("eth_sendTransaction", []interface{}{txDeploy})
 	return packet.GetResponseByReceipt(txHash.(string))
 }

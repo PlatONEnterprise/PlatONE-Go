@@ -15,19 +15,19 @@ const (
 
 type cnsMap struct {
 	StateDB
-	codeAddr *common.Address
+	codeAddr common.Address
 }
 
-func NewCnsMap(db StateDB, addr *common.Address) *cnsMap {
+func NewCnsMap(db StateDB, addr common.Address) *cnsMap {
 	return &cnsMap{db, addr}
 }
 
 func (c *cnsMap) setState(key, value []byte) {
-	c.SetState(*c.codeAddr, key, value)
+	c.SetState(c.codeAddr, key, value)
 }
 
 func (c *cnsMap) getState(key []byte) []byte {
-	return c.GetState(*c.codeAddr, key)
+	return c.GetState(c.codeAddr, key)
 }
 
 func (c *cnsMap) getKey(index int) []byte {

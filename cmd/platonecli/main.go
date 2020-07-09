@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
-	"gopkg.in/urfave/cli.v1"
 	"os"
 	"sort"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
+	"gopkg.in/urfave/cli.v1"
 )
 
 var (
@@ -35,6 +36,7 @@ func init() {
 
 }
 
+//go:generate go-bindata -pkg precompile -o precompiled/bindata.go ../../release/linux/conf/contracts/...
 func main() {
 
 	// Initialize the related file

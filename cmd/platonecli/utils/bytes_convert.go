@@ -4,16 +4,18 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	ethmath "github.com/PlatONEnetwork/PlatONE-Go/common/math"
 	"math"
 	"math/big"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	ethmath "github.com/PlatONEnetwork/PlatONE-Go/common/math"
 )
 
 func BytesCombine(pBytes ...[]byte) []byte {
 	return bytes.Join(pBytes, []byte(""))
 }
 
+// existed
 func Int32ToBytes(n int32) []byte {
 	tmp := int32(n)
 	bytesBuffer := bytes.NewBuffer([]byte{})
@@ -21,6 +23,7 @@ func Int32ToBytes(n int32) []byte {
 	return bytesBuffer.Bytes()
 }
 
+// existed
 func BytesToInt32(b []byte) int32 {
 	bytesBuffer := bytes.NewBuffer(b)
 	var tmp int32
@@ -28,6 +31,7 @@ func BytesToInt32(b []byte) int32 {
 	return int32(tmp)
 }
 
+// existed
 func Int64ToBytes(n int64) []byte {
 	tmp := int64(n)
 	bytesBuffer := bytes.NewBuffer([]byte{})
@@ -35,6 +39,7 @@ func Int64ToBytes(n int64) []byte {
 	return bytesBuffer.Bytes()
 }
 
+// existed
 func BytesToInt64(b []byte) int64 {
 	bytesBuffer := bytes.NewBuffer(b)
 	var tmp int64
@@ -42,6 +47,7 @@ func BytesToInt64(b []byte) int64 {
 	return int64(tmp)
 }
 
+// existed
 func BytesToUint64(b []byte) uint64 {
 	return binary.BigEndian.Uint64(b)
 }
@@ -124,6 +130,7 @@ func CallResAsFloat128(bts []byte) *big.Float {
 	return F
 }*/
 
+// existed
 func BoolToBytes(b bool) []byte {
 	buf := bytes.NewBuffer([]byte{})
 	_ = binary.Write(buf, binary.BigEndian, b)
@@ -144,8 +151,8 @@ func BytesConverter(source []byte, t string) interface{} {
 	case "float64":
 		return BytesToFloat64(source)
 	/*
-	case "float128":
-		return CallResAsFloat128(source)*/
+		case "float128":
+			return CallResAsFloat128(source)*/
 	case "string":
 		source = bytes.TrimRight(source, "\x00")
 
@@ -162,6 +169,7 @@ func BytesConverter(source []byte, t string) interface{} {
 	}
 }
 
+// deprecated
 // U256 converts a big Int into a 256bit EVM number.
 func U256(n *big.Int) []byte {
 	return ethmath.PaddedBigBytes(ethmath.U256(n), 32)

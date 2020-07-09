@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
@@ -9,7 +10,6 @@ import (
 )
 
 var (
-	// cns
 	CnsCmd = cli.Command{
 		Name:     "cns",
 		Usage:    "Manage Contract Named Service",
@@ -17,7 +17,7 @@ var (
 		Subcommands: []cli.Command{
 			CnsResolveCmd,
 			CnsRegisterCmd,
-			CnsUnregisterCmd,
+			CnsRedirectCmd,
 			CnsQueryCmd,
 			CnsStateCmd,
 		},
@@ -33,14 +33,14 @@ var (
 		platonecli cns register <name> <version> <address>`,
 	}
 
-	CnsUnregisterCmd = cli.Command{
-		Name:      "unregister",
-		Usage:     "Unregister a contract name in the CNS by specifying the version",
-		ArgsUsage: "<name>",
+	CnsRedirectCmd = cli.Command{
+		Name:      "redirect",
+		Usage:     "redirect a contract name in the CNS to another contract address by specifying the version",
+		ArgsUsage: "<name> <version>",
 		Action:    cnsRedirect,
-		Flags:     cnsResolveCmdFlags,
+		Flags:     globalCmdFlags,
 		Description: `
-		platonecli cns unregister <name>`,
+		platonecli cns redirect <name> <version>`,
 	}
 
 	CnsResolveCmd = cli.Command{
@@ -53,7 +53,6 @@ var (
 		platonecli cns resolve <name>`,
 	}
 
-	//TODO 仔细梳理
 	CnsQueryCmd = cli.Command{
 		Name:   "query",
 		Usage:  "Query the CNS Info by the search key provided",
@@ -82,14 +81,11 @@ func cnsRegister(c *cli.Context) {
 	ver := c.Args().Get(1)
 	address := c.Args().Get(2)
 
-	//paramNumCheck(3,len(c.Args()))
 	utl.ParamValid(name, "name")
 	utl.ParamValid(ver, "version")
 	utl.ParamValid(address, "address")
 
 	funcParams := CombineFuncParams(name, ver, address)
-
-	// __sys_CnsManager不能进行名字访问 未注册
 	result := contractCommon(c, funcParams, "cnsRegister", cnsManagementAddress)
 	fmt.Printf("result: %v\n", result)
 }
@@ -97,17 +93,12 @@ func cnsRegister(c *cli.Context) {
 func cnsRedirect(c *cli.Context) {
 
 	name := c.Args().First()
-	ver := c.String(CnsVersionFlags.Name)
+	ver := c.Args().Get(1)
 
-	//paramNumCheck(2,len(c.Args()))
 	utl.ParamValid(name, "name")
-	if ver != "latest" {
-		utl.ParamValid(ver, "version")
-	}
+	utl.ParamValid(ver, "version")
 
 	funcParams := CombineFuncParams(name, ver)
-
-	// __sys_CnsManager不能进行名字访问 未注册
 	result := contractCommon(c, funcParams, "cnsRedirect", cnsManagementAddress)
 	fmt.Printf("result: %s\n", result)
 }
@@ -118,19 +109,17 @@ func cnsResolve(c *cli.Context) {
 	ver := c.String(CnsVersionFlags.Name)
 
 	utl.ParamValid(name, "name")
-	if ver != "latest" {
+	if !strings.EqualFold(ver, "latest") {
 		utl.ParamValid(ver, "version")
 	}
 
 	funcParams := CombineFuncParams(name, ver)
-
-	// __sys_CnsManager不能进行名字访问 未注册
 	result := contractCommon(c, funcParams, "getContractAddress", cnsManagementAddress)
 	fmt.Printf("result: %s\n", result)
 
 }
 
-// todo: lack of method, getRegisteredContractsByOrigin
+// todo: the code and the cmd flags need optimization
 func cnsQuery(c *cli.Context) {
 	var funcName string
 	var result interface{}
@@ -152,29 +141,28 @@ func cnsQuery(c *cli.Context) {
 
 		funcParams := CombineFuncParams(pageNum, pageSize)
 		result = contractCommon(c, funcParams, "getRegisteredContracts", cnsManagementAddress)
+
 	case contract != "":
 		isAddress := ParamParse(contract, "contract").(bool)
 		if isAddress {
-			funcName = "getContractInfoByAddress"
+			funcName = "getRegisteredContractsByAddress"
 		} else {
-			funcName = "getHistoryContractsByName"
+			funcName = "getRegisteredContractsByName"
 		}
 
 		result = contractCommon(c, []string{contract}, funcName, cnsManagementAddress)
+
 	case user != "":
 		utl.ParamValid(user, "address")
-		utl.ParamValid(pageNum, "num")
-		utl.ParamValid(pageSize, "num")
 
-		funcName = "getRegisteredContractsByAddress"
-		funcParams := CombineFuncParams(user, pageNum, pageSize)
-
+		funcName = "getRegisteredContractsByOrigin"
+		funcParams := CombineFuncParams(user)
 		result = contractCommon(c, funcParams, funcName, cnsManagementAddress)
+
 	default:
 		result = "no search key provided!"
 	}
 
-	// fmt.Printf("result: %s\n", result)
 	utl.PrintJson([]byte(result.(string)))
 }
 
@@ -182,7 +170,6 @@ func cnsState(c *cli.Context) {
 	var funcName string
 	contract := c.Args().First()
 
-	// __sys_CnsManager不能进行名字访问 未注册
 	isAddress := ParamParse(contract, "contract").(bool)
 	if isAddress {
 		funcName = "ifRegisteredByAddress"

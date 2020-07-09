@@ -93,6 +93,12 @@ func newReturnMsg(code int, msg string, arrary []*ContractInfo) *returnMsg {
 	}
 }
 
+func newCnsManager(db StateDB) *CnsManager {
+	return &CnsManager{
+		cMap: NewCnsMap(db, syscontracts.CnsManagementAddress),
+	}
+}
+
 func (c *ContractInfo) encode() ([]byte, error) {
 	return rlp.EncodeToBytes(c)
 }
@@ -426,4 +432,9 @@ func serializeCnsInfo(code int, msg string, array []*ContractInfo) (string, erro
 	data := newReturnMsg(code, msg, array)
 	cBytes, err := json.Marshal(data)
 	return string(cBytes), err
+}
+
+func getCnsAddress(db StateDB, name, vesion string) (string, error) {
+	cns := newCnsManager(db)
+	return cns.getContractAddress(name, vesion)
 }

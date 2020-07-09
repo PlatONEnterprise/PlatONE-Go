@@ -46,6 +46,7 @@ var (
 	// transfer
 	TransferValueFlag = cli.StringFlag{
 		Name:  "value",
+		Value: "0x0",
 		Usage: "Amount of <Token> to transfer",
 	}
 
@@ -160,7 +161,7 @@ var (
 
 	// cns
 	CnsVersionFlags = cli.StringFlag{
-		Name:  "version, ver",
+		Name:  "version",
 		Value: "latest",
 		Usage: `Specify the version of the cns name. 
 		Usage: --version X.X.X.X, where X is number between 0 and 9`,
@@ -192,13 +193,13 @@ var (
 	PageNumFlags = cli.StringFlag{
 		Name:  "pageNum",
 		Value: "0",
-		Usage: "Used when --all or --user flag is provided, limit the output to the terminal",
+		Usage: "Used with --pageSize, limit the output to the terminal",
 	}
 
 	PageSizeFlags = cli.StringFlag{
 		Name:  "pageSize",
-		Value: "100",
-		Usage: "Used when ---all or --user flag is provided, limit the output to the terminal",
+		Value: "0",
+		Usage: "Used with --pageNum, limit the output to the terminal",
 	}
 
 	// system configurations
@@ -208,7 +209,7 @@ var (
 	}
 
 	TxGasLimitFlags = cli.StringFlag{
-		Name:  "tx-gaslimit",
+		Name: "tx-gaslimit",
 		// Value: "1500000000",
 		Usage: "the gas limit of transactions",
 	}
@@ -236,7 +237,7 @@ var (
 	}
 
 	// system config
-	sysConfigCmdFlags = append(globalCmdFlags, BlockGasLimitFlags, TxGasLimitFlags)
+	sysConfigCmdFlags    = append(globalCmdFlags, BlockGasLimitFlags, TxGasLimitFlags)
 	getSysConfigCmdFlags = append(globalCmdFlags, GetBlockGasLimitFlags, GetTxGasLimitFlags)
 
 	// transfer
