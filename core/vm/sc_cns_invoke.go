@@ -38,7 +38,7 @@ func (c *CnsInvoke) Run(input []byte) ([]byte, error) {
 		return nil, nil
 	}
 
-	addr, err := c.GetCnsAddr(c.evm, string(cnsData[1]))
+	addr, err := c.getCnsAddr(string(cnsData[1]))
 	if err != nil {
 		log.Warn("GetCnsAddr failed", "err", err)
 		c.evm.StateDB.SetNonce(c.caller, c.evm.StateDB.GetNonce(c.caller)+1)
@@ -58,13 +58,13 @@ func (c *CnsInvoke) Run(input []byte) ([]byte, error) {
 	}
 
 	//msg := inputRevert(input)
-	res, _, err := c.evm.Call(AccountRef(common.Address{}), *addr, cnsRawData, uint64(0xffffffffff), big.NewInt(0))
+	res, _, err := c.evm.Call(AccountRef(c.caller), *addr, cnsRawData, uint64(0xffffffffff), big.NewInt(0))
 	if err != nil {
 		return nil, err
 	}
 	return res, nil
 }
-func (c *CnsInvoke) GetCnsAddr(evm *EVM, cnsName string) (*common.Address, error) {
+func (c *CnsInvoke) getCnsAddr(cnsName string) (*common.Address, error) {
 	addrProxy := syscontracts.CnsManagementAddress
 
 	var contractName, contractVer string
@@ -76,63 +76,38 @@ func (c *CnsInvoke) GetCnsAddr(evm *EVM, cnsName string) (*common.Address, error
 	if posOfColon == -1 {
 		contractName = cnsName
 		contractVer = "latest"
-
-		if contractName == "cnsManager" {
-			return &addrProxy, nil
-		}
-
-		var isSystemContract bool = false
-		for _, v := range common.SystemContractList {
-			if v == contractName {
-				isSystemContract = true
-				break
-			}
-		}
-
-		callContract := func(conAddr common.Address, data []byte) []byte {
-			res, _, err := evm.Call(AccountRef(common.Address{}), conAddr, data, uint64(0xffffffffff), big.NewInt(0))
-			if err != nil {
-				return nil
-			}
-			return res
-		}
-
-		if isSystemContract {
-			ToAddr = cnsSysContractsMap[contractName]
-		} else {
-			var fh string = "getContractAddress"
-			callParams := []interface{}{contractName, "latest"}
-			btsRes := callContract(addrProxy, common.GenCallData(fh, callParams))
-			strRes := common.CallResAsString(btsRes)
-			if !(len(strRes) == 0 || common.IsHexZeroAddress(strRes)) {
-				ToAddr = common.HexToAddress(strRes)
-			}
-		}
-
-		return &ToAddr, nil
 	} else {
 		contractName = cnsName[:posOfColon]
 		contractVer = cnsName[posOfColon+1:]
-		if contractName == "" || contractVer == "" {
-			return nil, errors.New("cns name do not has the right format")
+	}
+
+	if contractName == "" || contractVer == "" {
+		return nil, errors.New("cns name do not has the right format")
+	}
+
+	if contractName == "cnsManager" {
+		return &addrProxy, nil
+	}
+
+	var isSystemContract = false
+	for _, v := range common.SystemContractList {
+		if v == contractName {
+			isSystemContract = true
+			break
 		}
-
-		if contractName == "cnsManager" {
-			return &addrProxy, nil
-		}
-
-		params := []interface{}{contractName, contractVer}
-
-		snapshot := evm.StateDB.Snapshot()
-		ret, err := common.InnerCall(addrProxy, "getContractAddress", params)
+	}
+	if isSystemContract {
+		ToAddr = cnsSysContractsMap[contractName]
+	} else {
+		strRes, err := getCnsAddress(c.evm.StateDB, contractName, contractVer)
 		if err != nil {
 			return nil, err
 		}
-		evm.StateDB.RevertToSnapshot(snapshot)
-
-		toAddrStr := common.CallResAsString(ret)
-		ToAddr = common.HexToAddress(toAddrStr)
-
-		return &ToAddr, nil
+		if !(len(strRes) == 0 || common.IsHexZeroAddress(strRes)) {
+			ToAddr = common.HexToAddress(strRes)
+		}
 	}
+
+	return &ToAddr, nil
+
 }

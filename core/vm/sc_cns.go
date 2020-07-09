@@ -434,7 +434,7 @@ func serializeCnsInfo(code int, msg string, array []*ContractInfo) (string, erro
 	return string(cBytes), err
 }
 
-func getCnsAddress(db StateDB, name, vesion string) (string, error) {
+func getCnsAddress(db StateDB, name, version string) (string, error) {
 	cns := newCnsManager(db)
-	return cns.getContractAddress(name, vesion)
+	return cns.getContractAddress(name, version)
 }
