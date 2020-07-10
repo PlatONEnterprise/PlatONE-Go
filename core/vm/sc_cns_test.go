@@ -63,7 +63,7 @@ func TestMain(m *testing.M) {
 	addr := common.HexToAddress("")
 
 	cns = &CnsManager{
-		cMap:       NewCnsMap(db, &addr),
+		cMap:       NewCnsMap(db, addr),
 		callerAddr: common.HexToAddress(testCaller),
 		origin:     common.HexToAddress(testOrigin),
 		isInit:     -1,
