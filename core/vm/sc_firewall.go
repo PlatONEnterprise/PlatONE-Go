@@ -53,9 +53,9 @@ func (u *FireWall) isOwner(contractAddr string) bool {
 
 	if callerAddr.Hex() == contractOwnerAddr.Hex() {
 		return true
-	} else {
-		return false
 	}
+
+	return false
 }
 
 func (u *FireWall) openFirewall(contractAddr string) (int, error) {
@@ -81,9 +81,9 @@ func (u *FireWall) fwClear(contractAddr, action string) (int, error) {
 		return failure, fwErrNotOwner
 	}
 
-	act, err := actConvert(action)
+	act, err := state.NewAction(action)
 	if err != nil {
-		return failure, err
+		return failure, err // todo: how to handle error
 	}
 
 	u.db.FwClear(common.HexToAddress(contractAddr), act)
@@ -95,12 +95,12 @@ func (u *FireWall) fwAdd(contractAddr, action, lst string) (int, error) {
 		return failure, fwErrNotOwner
 	}
 
-	act, err := actConvert(action)
+	act, err := state.NewAction(action)
 	if err != nil {
 		return failure, err
 	}
 
-	list, err := listConvert(lst)
+	list, err := convertToFwElem(lst)
 	if err != nil {
 		return failure, err
 	}
@@ -114,12 +114,12 @@ func (u *FireWall) fwDel(contractAddr, action, lst string) (int, error) {
 		return failure, fwErrNotOwner
 	}
 
-	act, err := actConvert(action)
+	act, err := state.NewAction(action)
 	if err != nil {
 		return failure, err
 	}
 
-	list, err := listConvert(lst)
+	list, err := convertToFwElem(lst)
 	if err != nil {
 		return failure, err
 	}
@@ -133,12 +133,12 @@ func (u *FireWall) fwSet(contractAddr, action, lst string) (int, error) {
 		return failure, fwErrNotOwner
 	}
 
-	act, err := actConvert(action)
+	act, err := state.NewAction(action)
 	if err != nil {
 		return failure, err
 	}
 
-	list, err := listConvert(lst)
+	list, err := convertToFwElem(lst)
 	if err != nil {
 		return failure, err
 	}
@@ -169,11 +169,11 @@ func (u *FireWall) getFwStatus(contractAddr string) (string, error) {
 		errStr := fmt.Sprintf("FW : fwStatus Marshal error: %v", err)
 		return "", errors.New(errStr)
 	}
-	return string(makeReturnBytes(returnBytes)), nil
+	return string(returnBytes), nil
 }
 
-func listConvert(l string) ([]state.FwElem, error) {
-	var list []state.FwElem
+func convertToFwElem(l string) ([]state.FwElem, error) {
+	var list = make([]state.FwElem, 0)
 
 	elements := strings.Split(l, "|")
 	for _, e := range elements {
@@ -186,41 +186,11 @@ func listConvert(l string) ([]state.FwElem, error) {
 		addr := tmp[0]
 		api := tmp[1]
 		if addr == "*" {
-			addr = state.FWALLADDR
+			addr = state.FireWallAddr
 		}
 		fwElem := state.FwElem{Addr: common.HexToAddress(addr), FuncName: api}
 		list = append(list, fwElem)
 	}
 
 	return list, nil
-}
-
-func actConvert(action string) (state.Action, error) {
-	if strings.EqualFold(action, "ACCEPT") {
-		return state.ACCEPT, nil
-	} else if strings.EqualFold(action, "REJECT") {
-		return state.REJECT, nil
-	} else {
-		return 0, errors.New("FW : error, action is invalid!") // todo fix the return value
-	}
-}
-
-// todo optimize: code is duplicated, see state_transition.go
-func makeReturnBytes(ret []byte) []byte {
-
-	strHash := common.BytesToHash(common.Int32ToBytes(32))
-	sizeHash := common.BytesToHash(common.Int64ToBytes(int64((len(ret)))))
-	var dataRealSize = len(ret)
-	if (dataRealSize % 32) != 0 {
-		dataRealSize = dataRealSize + (32 - (dataRealSize % 32))
-	}
-	dataByt := make([]byte, dataRealSize)
-	copy(dataByt[0:], ret)
-
-	finalData := make([]byte, 0)
-	finalData = append(finalData, strHash.Bytes()...)
-	finalData = append(finalData, sizeHash.Bytes()...)
-	finalData = append(finalData, dataByt...)
-
-	return finalData
 }

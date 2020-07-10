@@ -22,9 +22,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"io"
 	"math/big"
+	"strings"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
@@ -41,10 +43,10 @@ type Abi []byte
 type Action uint64
 
 const (
-	ACCEPT Action = 0
-	REJECT Action = 1
+	accept Action = 0
+	reject Action = 1
 )
-const FWALLADDR = "0xffffffffffffffffffffffffffffffffffffffff"
+const FireWallAddr = "0xffffffffffffffffffffffffffffffffffffffff"
 
 type FwElem struct {
 	Addr     common.Address
@@ -63,6 +65,16 @@ type FwStatus struct {
 type FwData struct {
 	AcceptedList map[string]bool
 	DeniedList   map[string]bool
+}
+
+func NewAction(action string) (Action, error) {
+	if strings.EqualFold(action, "ACCEPT") {
+		return accept, nil
+	} else if strings.EqualFold(action, "REJECT") {
+		return reject, nil
+	} else {
+		return 0, errors.New("action is invalid")
+	}
 }
 
 func (l FwElems) Len() int {
@@ -94,7 +106,7 @@ func FwMarshal(fw FwData) []byte {
 	return rawData
 }
 
-func FwUnMarshal(raw []byte, fw *FwData) (*FwData) {
+func FwUnMarshal(raw []byte, fw *FwData) *FwData {
 	err := json.Unmarshal(raw, fw)
 	if err != nil {
 		log.Warn(err.Error())

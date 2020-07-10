@@ -155,7 +155,6 @@ func fwStatus(c *cli.Context) {
 	utl.PrintJson([]byte(result.(string)))
 }
 
-// todo: the output file has error code
 func fwExport(c *cli.Context) {
 	funcName := "__sys_FwExport"
 	filePath := c.String(FilePathFlags.Name)

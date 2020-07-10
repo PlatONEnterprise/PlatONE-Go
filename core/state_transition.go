@@ -20,6 +20,10 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"math"
+	"math/big"
+	"strings"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
@@ -28,18 +32,16 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
-	"math"
-	"math/big"
-	"strings"
 )
 
 var (
 	errInsufficientBalanceForGas = errors.New("insufficient balance to pay for gas")
-	errWithholdingFee = errors.New("withHolding fee error")
-	errRefundFee = errors.New("refund fee error")
+	errWithholdingFee            = errors.New("withHolding fee error")
+	errRefundFee                 = errors.New("refund fee error")
 )
 
 const CnsManagerAddr string = "0x0000000000000000000000000000000000000011"
+
 var ZeroAddress common.Address
 
 var fwProcessErr = errors.New("firewall process error!")
@@ -220,7 +222,7 @@ func GetCnsAddr(evm *vm.EVM, msg Message, cnsName string) (*common.Address, erro
 // the gas used (which includes gas refunds) and an error if it failed. An error always
 // indicates a core error meaning that the message would always fail for that particular
 // state and would never be accepted within a block.
-func ApplyMessage(evm *vm.EVM, msg Message, gp *GasPool) ([]byte, uint64, int64,  bool, error) {
+func ApplyMessage(evm *vm.EVM, msg Message, gp *GasPool) ([]byte, uint64, int64, bool, error) {
 
 	return NewStateTransition(evm, msg, gp).TransitionDb()
 }
@@ -395,7 +397,7 @@ func fwCheck(stateDb vm.StateDB, contractAddr common.Address, caller common.Addr
 	* Reject List!
 	 */
 	for _, fwElem := range fwStatus.RejectedList {
-		if addressCompare(fwElem.Addr, common.HexToAddress(state.FWALLADDR)) {
+		if addressCompare(fwElem.Addr, common.HexToAddress(state.FireWallAddr)) {
 			if fwElem.FuncName == "*" {
 				// 1. [*:*] and reject any address and any function access!
 				log.Debug("FW : 1. Reject, pattern [*:*], reject any address and any function access!")
@@ -432,7 +434,7 @@ func fwCheck(stateDb vm.StateDB, contractAddr common.Address, caller common.Addr
 	* Accept List!
 	 */
 	for _, fwElem := range fwStatus.AcceptedList {
-		if addressCompare(fwElem.Addr, common.HexToAddress(state.FWALLADDR)) {
+		if addressCompare(fwElem.Addr, common.HexToAddress(state.FireWallAddr)) {
 			if fwElem.FuncName == "*" {
 				// 1. [*:*] and allow any address and any function access!
 				log.Debug("FW : 1. Accept, pattern [*:*], allow any address and any function access!")
@@ -495,29 +497,28 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, gasPrice 
 	var (
 		isUseContractToken = false
 		feeContractAddr    = ""
-
 	)
 
 	//TODO comment temporarily for performance test
 	feeContractAddr, isUseContractToken, err = st.ifUseContractTokenAsFee()
-	if nil != err{
-		return nil, 0, 0,false, err
+	if nil != err {
+		return nil, 0, 0, false, err
 	}
 
 	//Call method invoke
 	isUseContractToken = msg.Nonce() != 0 && isUseContractToken
 
-	if isUseContractToken{
+	if isUseContractToken {
 		// init initialGas value = txMsg.gas
 		if err = st.preContractGasCheck(feeContractAddr); err != nil {
 			log.Error("PreContractGasCheck", "err:", err)
-			return nil, 0, 0,false, err
+			return nil, 0, 0, false, err
 		}
 		params := []interface{}{}
 		ret, _, err := st.doCallContract(feeContractAddr, "getGasPrice", params)
 		if nil != err {
 			log.Error("get gas price error", "err", err.Error())
-			return nil, 0, 0,false, err
+			return nil, 0, 0, false, err
 		}
 		gasPrice = utils.BytesToInt64(ret)
 	} else {
@@ -535,7 +536,7 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, gasPrice 
 	gas, err := IntrinsicGas(st.data, contractCreation)
 	log.Debug("IntrinsicGas amount", "IntrinsicGas:", gas)
 	if err != nil {
-		return nil, 0, gasPrice,false, err
+		return nil, 0, gasPrice, false, err
 	}
 	if err = st.useGas(gas); err != nil {
 		log.Error("GasLimitTooLow", "err:", err)
@@ -579,7 +580,7 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, gasPrice 
 		// sufficient balance to make the transfer happen. The first
 		// balance transfer may never fail.
 		if vmerr == vm.ErrInsufficientBalance {
-			return nil, 0, gasPrice,false, vmerr
+			return nil, 0, gasPrice, false, vmerr
 		}
 	}
 

@@ -490,7 +490,7 @@ func (self *StateDB) CreateAccount(addr common.Address) {
 	}
 }
 
-func (self *StateDB) CloneAccount(src common.Address, dest common.Address) (error) {
+func (self *StateDB) CloneAccount(src common.Address, dest common.Address) error {
 
 	srcObject := self.getStateObject(src)
 	if srcObject == nil {
@@ -500,7 +500,7 @@ func (self *StateDB) CloneAccount(src common.Address, dest common.Address) (erro
 	for it.Next() {
 
 		var value []byte
-		
+
 		keyTrieCode := self.trie.GetKey(it.Key)
 		if keyTrieCode == nil {
 			log.Warn("CloneAccount Iterator: unable to get keyTrie from hashKey.")
@@ -786,63 +786,63 @@ func (s *StateDB) SetAbi(addr common.Address, abi []byte) {
 	}
 }
 
-func (s *StateDB) FwAdd(addr common.Address, action Action, list []FwElem)  {
+func (s *StateDB) FwAdd(addr common.Address, action Action, list []FwElem) {
 	stateObject := s.GetOrNewStateObject(addr)
 	fwData := stateObject.FwData()
-	switch action{
-	case REJECT:
-		for _, addr := range list{
+	switch action {
+	case reject:
+		for _, addr := range list {
 			fwData.DeniedList[addr.FuncName+":"+addr.Addr.String()] = true
 		}
-	case ACCEPT:
-		for _, addr := range list{
+	case accept:
+		for _, addr := range list {
 			fwData.AcceptedList[addr.FuncName+":"+addr.Addr.String()] = true
 		}
 	}
 	stateObject.SetFwData(fwData)
 }
-func (s *StateDB) FwClear(addr common.Address, action Action)  {
+func (s *StateDB) FwClear(addr common.Address, action Action) {
 	stateObject := s.GetOrNewStateObject(addr)
 
 	fwData := stateObject.FwData()
-	switch action{
-	case REJECT:
-		fwData.DeniedList =  make(map[string]bool)
-	case ACCEPT:
+	switch action {
+	case reject:
+		fwData.DeniedList = make(map[string]bool)
+	case accept:
 		fwData.AcceptedList = make(map[string]bool)
 	}
 	stateObject.SetFwData(fwData)
 }
-func (s *StateDB) FwDel(addr common.Address, action Action, list []FwElem)  {
+func (s *StateDB) FwDel(addr common.Address, action Action, list []FwElem) {
 	stateObject := s.GetOrNewStateObject(addr)
 
 	fwData := stateObject.FwData()
-	switch action{
-	case REJECT:
-		for _, addr := range list{
+	switch action {
+	case reject:
+		for _, addr := range list {
 			fwData.DeniedList[addr.FuncName+":"+addr.Addr.String()] = false
-			delete(fwData.DeniedList, (addr.FuncName+":"+addr.Addr.String()))
+			delete(fwData.DeniedList, (addr.FuncName + ":" + addr.Addr.String()))
 		}
-	case ACCEPT:
-		for _, addr := range list{
+	case accept:
+		for _, addr := range list {
 			fwData.AcceptedList[addr.FuncName+":"+addr.Addr.String()] = false
-			delete(fwData.AcceptedList, (addr.FuncName+":"+addr.Addr.String()))
+			delete(fwData.AcceptedList, (addr.FuncName + ":" + addr.Addr.String()))
 		}
 	}
 	stateObject.SetFwData(fwData)
 }
-func (s *StateDB) FwSet(addr common.Address, action Action, list []FwElem)  {
+func (s *StateDB) FwSet(addr common.Address, action Action, list []FwElem) {
 	stateObject := s.GetOrNewStateObject(addr)
 
 	fwData := NewFwData()
-	switch action{
-	case REJECT:
-		for _, addr := range list{
+	switch action {
+	case reject:
+		for _, addr := range list {
 			fwData.DeniedList[addr.FuncName+":"+addr.Addr.String()] = true
 		}
 		fwData.AcceptedList = stateObject.FwData().AcceptedList
-	case ACCEPT:
-		for _, addr := range list{
+	case accept:
+		for _, addr := range list {
 			fwData.AcceptedList[addr.FuncName+":"+addr.Addr.String()] = true
 		}
 		fwData.DeniedList = stateObject.FwData().DeniedList
@@ -854,18 +854,16 @@ func (s *StateDB) SetFwStatus(addr common.Address, status FwStatus) {
 	fwActive := status.FwActive
 	stateObject.SetFwActive(fwActive)
 
-	accept := status.AcceptedList
-	s.FwSet(addr, ACCEPT, accept)
+	acc := status.AcceptedList
+	s.FwSet(addr, accept, acc)
 
 	denied := status.RejectedList
-	s.FwSet(addr, REJECT, denied)
+	s.FwSet(addr, reject, denied)
 }
-
-
 
 func (s *StateDB) GetFwStatus(addr common.Address) FwStatus {
 	stateObject := s.getStateObject(addr)
-	if stateObject == nil{
+	if stateObject == nil {
 		return FwStatus{
 			ContractAddress: addr,
 			FwActive:        false,
@@ -878,9 +876,9 @@ func (s *StateDB) GetFwStatus(addr common.Address) FwStatus {
 
 	var deniedList, acceptedList []FwElem
 
-	for elem, b := range fwData.DeniedList{
+	for elem, b := range fwData.DeniedList {
 		tmp := strings.Split(elem, ":")
-		if(len(tmp) <2){
+		if len(tmp) < 2 {
 			return FwStatus{
 				ContractAddress: addr,
 				FwActive:        false,
@@ -894,7 +892,7 @@ func (s *StateDB) GetFwStatus(addr common.Address) FwStatus {
 			deniedList = append(deniedList, FwElem{Addr: common.HexToAddress(addr), FuncName: api})
 		}
 	}
-	for elem, b := range fwData.AcceptedList{
+	for elem, b := range fwData.AcceptedList {
 		tmp := strings.Split(elem, ":")
 		if len(tmp) != 2 {
 			return FwStatus{
@@ -922,42 +920,38 @@ func (s *StateDB) GetFwStatus(addr common.Address) FwStatus {
 	}
 }
 
-
 func (s *StateDB) FwImport(addr common.Address, data []byte) error {
-		status := FwStatus{}
-		err := json.Unmarshal(data, &status)
-		if err != nil{
-			return errors.New("Firewall import failed")
-		}
-		s.SetFwStatus(addr,status)
-		return nil
+	status := FwStatus{}
+	err := json.Unmarshal(data, &status)
+	if err != nil {
+		return errors.New("Firewall import failed")
+	}
+	s.SetFwStatus(addr, status)
+	return nil
 }
 
-
-
-func (s *StateDB) SetContractCreator(addr, creator common.Address)  {
+func (s *StateDB) SetContractCreator(addr, creator common.Address) {
 	stateObject := s.GetOrNewStateObject(addr)
 	stateObject.SetContractCreator(creator)
 }
-func (s *StateDB) GetContractCreator(addr common.Address) (common.Address) {
+func (s *StateDB) GetContractCreator(addr common.Address) common.Address {
 	stateObject := s.getStateObject(addr)
-	if stateObject == nil{
+	if stateObject == nil {
 		return common.Address{}
 	}
-	creator:= stateObject.ContractCreator()
+	creator := stateObject.ContractCreator()
 	return creator
 }
 
-func (s *StateDB)OpenFirewall(addr common.Address){
+func (s *StateDB) OpenFirewall(addr common.Address) {
 	stateObject := s.GetOrNewStateObject(addr)
 	stateObject.SetFwActive(true)
 }
-func (s *StateDB)CloseFirewall(addr common.Address){
+func (s *StateDB) CloseFirewall(addr common.Address) {
 	stateObject := s.GetOrNewStateObject(addr)
 	stateObject.SetFwActive(false)
 }
-func (s *StateDB)IsFwOpened(addr common.Address) bool{
+func (s *StateDB) IsFwOpened(addr common.Address) bool {
 	stateObject := s.GetOrNewStateObject(addr)
 	return stateObject.FwActive()
 }
-

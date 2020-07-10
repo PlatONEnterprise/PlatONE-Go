@@ -1,11 +1,20 @@
 package vm
 
 import (
+	"math/big"
+	"testing"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-	"math/big"
 )
+
+func TestMain(m *testing.M) {
+	// inital the data needed for sc_cns_test.go and sc_cns_db_test.go
+	cnsTestInital()
+
+	m.Run()
+}
 
 func newMockStateDB() *mockStateDB {
 	return &mockStateDB{

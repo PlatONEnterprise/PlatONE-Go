@@ -147,7 +147,7 @@
         "type": "function"
     },
     {
-        "name": "__sys_Import",
+        "name": "__sys_FwImport",
         "inputs": [
             {
                 "name": "address",
@@ -165,6 +165,23 @@
             }
         ],
         "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "__sys_FwExport",
+        "inputs": [
+            {
+                "name": "address",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "true",
         "type": "function"
     }
 ]
