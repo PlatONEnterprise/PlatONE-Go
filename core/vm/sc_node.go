@@ -2,7 +2,6 @@ package vm
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
@@ -15,13 +14,13 @@ import (
 )
 
 const (
-	NodeStatusNormal  = 1
-	NodeStatusDeleted = 2
+	NodeStatusNormal  = uint32(1)
+	NodeStatusDeleted = uint32(2)
 )
 
 const (
-	NodeTypeObserver  = 0
-	NodeTypeValidator = 1
+	NodeTypeObserver  = uint32(0)
+	NodeTypeValidator = uint32(1)
 )
 
 const (
@@ -62,7 +61,7 @@ const (
 type eNode struct {
 	PublicKey string
 	IP        string
-	Port      int32
+	Port      uint32
 }
 
 func (en *eNode) String() string {
@@ -73,7 +72,7 @@ func checkRequiredFieldsIsEmpty(node *syscontracts.NodeInfo) error {
 	return common.CheckRequiredFieldsIsEmpty(node)
 }
 
-func checkNodeStatus(status int32) error {
+func checkNodeStatus(status uint32) error {
 	if status != NodeStatusDeleted &&
 		status != NodeStatusNormal {
 		return errors.New(
@@ -86,7 +85,7 @@ func checkNodeStatus(status int32) error {
 	return nil
 }
 
-func checkNodeType(typ int32) error {
+func checkNodeType(typ uint32) error {
 	if typ != NodeTypeObserver &&
 		typ != NodeTypeValidator {
 		return errors.New(
@@ -267,7 +266,7 @@ func (n *SCNode) add(node *syscontracts.NodeInfo) error {
 		return err
 	}
 
-	encodedBin, err := json.Marshal(node)
+	encodedBin, err := rlp.EncodeToBytes(node)
 	if err != nil {
 		n.emitNotifyEvent(addNodeBadParameter, fmt.Sprintf("Failed to add node. err:%s", err.Error()))
 		log.Error("Failed to add node.", "error", err.Error(), "node", node)
@@ -293,7 +292,7 @@ func (n *SCNode) update(name string, update *syscontracts.UpdateNode) error {
 		return err
 	}
 
-	encodedBin, err := json.Marshal(node)
+	encodedBin, err := rlp.EncodeToBytes(node)
 	if err != nil {
 		n.emitNotifyEvent(updateNodeBadParameter, fmt.Sprintf("parameter is invalid"))
 		log.Error("Failed to update node.", "error", err.Error(), "update", update)
@@ -378,7 +377,7 @@ func (n *SCNode) getNodeByName(name string) (*syscontracts.NodeInfo, error) {
 	}
 
 	var node syscontracts.NodeInfo
-	err := json.Unmarshal(bin, &node)
+	err := rlp.DecodeBytes(bin, &node)
 	if err != nil {
 		return nil, err
 	}
