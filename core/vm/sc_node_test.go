@@ -242,10 +242,10 @@ func TestSCNode_Add(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			n := &SCNode{
-				stateDB:         tt.fields.stateDB,
-				contractAddress: tt.fields.address,
-				caller:          tt.fields.caller,
-				blockNumber:     big.NewInt(0),
+				stateDB:      tt.fields.stateDB,
+				contractAddr: tt.fields.address,
+				caller:       tt.fields.caller,
+				blockNumber:  big.NewInt(0),
 			}
 			if err := n.add(tt.args.node); (err != nil) != tt.wantErr {
 				t.Errorf("add() error = %v, wantErr %v", err, tt.wantErr)
@@ -276,9 +276,9 @@ func TestSCNode_AddName(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			n := &SCNode{
-				stateDB:         tt.fields.stateDB,
-				contractAddress: tt.fields.address,
-				caller:          tt.fields.caller,
+				stateDB:      tt.fields.stateDB,
+				contractAddr: tt.fields.address,
+				caller:       tt.fields.caller,
 			}
 			if err := n.addName(tt.args.name); (err != nil) != tt.wantErr {
 				t.Errorf("addName() error = %v, wantErr %v", err, tt.wantErr)
@@ -316,9 +316,9 @@ func TestSCNode_CheckParamsOfAddNode(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			n := &SCNode{
-				stateDB:         tt.fields.stateDB,
-				contractAddress: tt.fields.address,
-				caller:          tt.fields.caller,
+				stateDB:      tt.fields.stateDB,
+				contractAddr: tt.fields.address,
+				caller:       tt.fields.caller,
 			}
 			if err := n.checkParamsOfAddNode(tt.args.node); (err != nil) != tt.wantErr {
 				t.Errorf("checkParamsOfAddNode() error = %v, wantErr %v", err, tt.wantErr)
@@ -546,9 +546,9 @@ func TestSCNode_isNameExist(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			n := &SCNode{
-				stateDB:         tt.fields.stateDB,
-				contractAddress: tt.fields.address,
-				caller:          tt.fields.caller,
+				stateDB:      tt.fields.stateDB,
+				contractAddr: tt.fields.address,
+				caller:       tt.fields.caller,
 			}
 			if got := n.isNameExist(tt.args.names, tt.args.name); got != tt.want {
 				t.Errorf("isNameExist() = %v, want %v", got, tt.want)
