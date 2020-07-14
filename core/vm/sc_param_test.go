@@ -138,7 +138,7 @@ func TestParamManager_gasName(t *testing.T) {
 	um := UserManagement{state: db, caller: caller, address: addr1}
 	um.setSuperAdmin()
 	um.addChainAdminByAddress(caller)
-	p := ParamManager{contractAddr: &addr, stateDB: db, caller: caller}
+	p := ParamManager{contractAddr: &addr, stateDB: db, caller: caller, blockNumber:big.NewInt(100)}
 	p.setGasContractName("abc" )
 	ret, err := p.getGasContractName()
 	if nil != err {
@@ -155,7 +155,7 @@ func TestParamManager_emptyBlock(t *testing.T) {
 	um := UserManagement{state: db, caller: caller, address: addr1}
 	um.setSuperAdmin()
 	um.addChainAdminByAddress(caller)
-	p := ParamManager{contractAddr: &addr, stateDB: db, caller: caller}
+	p := ParamManager{contractAddr: &addr, stateDB: db, caller: caller,blockNumber:big.NewInt(100)}
 	p.setIsProduceEmptyBlock(1 )
 	ret, err := p.getIsProduceEmptyBlock()
 	if nil != err {
@@ -172,7 +172,7 @@ func TestParamManager_contractPer(t *testing.T) {
 	um := UserManagement{state: db, caller: caller, address: addr1}
 	um.setSuperAdmin()
 	um.addChainAdminByAddress(caller)
-	p := ParamManager{contractAddr: &addr, stateDB: db, caller: caller}
+	p := ParamManager{contractAddr: &addr, stateDB: db, caller: caller,blockNumber:big.NewInt(100)}
 	p.setCheckContractDeployPermission(1 )
 	ret, err := p.getCheckContractDeployPermission()
 	if nil != err {
