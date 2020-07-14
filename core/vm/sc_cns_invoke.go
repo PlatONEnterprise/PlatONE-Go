@@ -7,13 +7,13 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
-	"math/big"
 	"strings"
 )
 
 type CnsInvoke struct {
-	evm    *EVM
-	caller common.Address
+	evm      *EVM
+	caller   common.Address
+	contract *Contract
 }
 
 func (c *CnsInvoke) RequiredGas(input []byte) uint64 {
@@ -58,7 +58,7 @@ func (c *CnsInvoke) Run(input []byte) ([]byte, error) {
 	}
 
 	//msg := inputRevert(input)
-	res, _, err := c.evm.Call(AccountRef(c.caller), *addr, cnsRawData, uint64(0xffffffffff), big.NewInt(0))
+	res, _, err := c.evm.Call(AccountRef(c.caller), *addr, cnsRawData, c.contract.Gas, c.contract.value)
 	if err != nil {
 		return nil, err
 	}
