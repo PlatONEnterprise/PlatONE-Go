@@ -3,6 +3,7 @@ package vm
 import (
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
+	"math/big"
 	"testing"
 )
 
@@ -120,7 +121,7 @@ func TestParamManager_getTxLimit(t *testing.T) {
 	um := UserManagement{state: db, caller: caller, address: addr1}
 	um.setSuperAdmin()
 	um.addChainAdminByAddress(caller)
-	p := ParamManager{codeAddr: &addr, state: db, callerAddr: caller}
+	p := ParamManager{contractAddr: &addr, stateDB: db, caller: caller, blockNumber: big.NewInt(100)}
 	p.setIsApproveDeployedContract(1 )
 	ret, err := p.getIsApproveDeployedContract()
 	if nil != err {
@@ -129,11 +130,61 @@ func TestParamManager_getTxLimit(t *testing.T) {
 	}
 	t.Logf("%d", ret)
 }
-
+func TestParamManager_gasName(t *testing.T) {
+	db := newMockStateDB()
+	addr := syscontracts.ParameterManagementAddress
+	addr1 := syscontracts.UserManagementAddress
+	caller := common.HexToAddress("0x62fb664c49cfa4fa35931760c704f9b3ab664666")
+	um := UserManagement{state: db, caller: caller, address: addr1}
+	um.setSuperAdmin()
+	um.addChainAdminByAddress(caller)
+	p := ParamManager{contractAddr: &addr, stateDB: db, caller: caller}
+	p.setGasContractName("abc" )
+	ret, err := p.getGasContractName()
+	if nil != err {
+		t.Error(err)
+		return
+	}
+	t.Logf("%s", ret)
+}
+func TestParamManager_emptyBlock(t *testing.T) {
+	db := newMockStateDB()
+	addr := syscontracts.ParameterManagementAddress
+	addr1 := syscontracts.UserManagementAddress
+	caller := common.HexToAddress("0x62fb664c49cfa4fa35931760c704f9b3ab664666")
+	um := UserManagement{state: db, caller: caller, address: addr1}
+	um.setSuperAdmin()
+	um.addChainAdminByAddress(caller)
+	p := ParamManager{contractAddr: &addr, stateDB: db, caller: caller}
+	p.setIsProduceEmptyBlock(1 )
+	ret, err := p.getIsProduceEmptyBlock()
+	if nil != err {
+		t.Error(err)
+		return
+	}
+	t.Logf("%d", ret)
+}
+func TestParamManager_contractPer(t *testing.T) {
+	db := newMockStateDB()
+	addr := syscontracts.ParameterManagementAddress
+	addr1 := syscontracts.UserManagementAddress
+	caller := common.HexToAddress("0x62fb664c49cfa4fa35931760c704f9b3ab664666")
+	um := UserManagement{state: db, caller: caller, address: addr1}
+	um.setSuperAdmin()
+	um.addChainAdminByAddress(caller)
+	p := ParamManager{contractAddr: &addr, stateDB: db, caller: caller}
+	p.setCheckContractDeployPermission(1 )
+	ret, err := p.getCheckContractDeployPermission()
+	if nil != err {
+		t.Error(err)
+		return
+	}
+	t.Logf("%d", ret)
+}
 //func TestParamManager_getFn(t *testing.T) {
 //	db := newMockDB()
 //	addr := syscontracts.ParameterManagementAddress
-//	p := ParamManager{CodeAddr:&addr, StateDB: db}
+//	p := ParamManager{contractAddr:&addr, StateDB: db}
 //	set := "abc"
 //	res, err := p.setGasContractName(set)
 //	if nil != err{

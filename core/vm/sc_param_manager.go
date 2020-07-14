@@ -2,9 +2,11 @@ package vm
 
 import (
 	"errors"
+	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"math/big"
 )
 
 var (
@@ -23,26 +25,32 @@ var (
 )
 
 const (
-	txGasLimitMinValue     uint64 = 12771596 * 100 // 12771596 大致相当于 0.012772s
-	txGasLimitMaxValue     uint64 = 2e9            // 相当于 2s
-	txGasLimitDefaultValue uint64      = 1.5e9          // 相当于 1.5s
-	blockGasLimitMinValue  uint64 = 12771596 * 100 // 12771596 大致相当于 0.012772s
-	blockGasLimitMaxValue  uint64 = 2e10           // 相当于 20s
-	blockGasLimitDefaultValue uint64 = 1e10        // 相当于 10s
+	txGasLimitMinValue        uint64 = 12771596 * 100 // 12771596 大致相当于 0.012772s
+	txGasLimitMaxValue        uint64 = 2e9            // 相当于 2s
+	txGasLimitDefaultValue    uint64 = 1.5e9          // 相当于 1.5s
+	blockGasLimitMinValue     uint64 = 12771596 * 100 // 12771596 大致相当于 0.012772s
+	blockGasLimitMaxValue     uint64 = 2e10           // 相当于 20s
+	blockGasLimitDefaultValue uint64 = 1e10           // 相当于 10s
 	//produceDurationMaxValue = 60
 	//produceDurationDefaultValue = 10
 	//blockIntervalMinValue = 1
 	//blockIntervalDefaultValue = 1
-	errFlag  = -1
-	failFlag = 0
-	sucFlag  = 1
-
+	//errFlag  = -1
+	failFlag = -1
+	sucFlag  = 0
+)
+const (
+	callerHasNoPermission CodeType = 0
+	encodeFailure         CodeType = 1
+	doParamSetSuccess     CodeType = 2
+	paramInvalid          CodeType = 2
 )
 
 type ParamManager struct {
-	state      StateDB
-	codeAddr   *common.Address
-	callerAddr common.Address
+	stateDB      StateDB
+	contractAddr *common.Address
+	caller       common.Address
+	blockNumber  *big.Int
 }
 
 func encode(i interface{}) ([]byte, error) {
@@ -57,40 +65,31 @@ func (u *ParamManager) RequiredGas(input []byte) uint64 {
 }
 
 func (u *ParamManager) Run(input []byte) ([]byte, error) {
-	err :=u.setDefaultValue()
-	if nil != err{
-		return nil, err
-	}
+	//err := u.setDefaultValue()
+	//if nil != err {
+	//	return nil, err
+	//}
 	return execSC(input, u.AllExportFns())
 }
 
 func (u *ParamManager) setState(key, value []byte) {
-	u.state.SetState(*u.codeAddr, key, value)
+	u.stateDB.SetState(*u.contractAddr, key, value)
 }
 
 func (u *ParamManager) getState(key []byte) []byte {
-	return u.state.GetState(*u.codeAddr, key)
+	return u.stateDB.GetState(*u.contractAddr, key)
 }
 
-func (u *ParamManager) setGasContractName(contractName string) ([]byte, error) {
-	if !u.hasPermission() {
-		//event here
-		return nil, ErrHasNoPermission
-	}
+func (u *ParamManager) setGasContractName(contractName string) (int32, error) {
 	if len(contractName) == 0 {
-		//event here
-		return nil, ErrInvalid
+		u.emitNotifyEventInParam(paramInvalid, fmt.Sprintf("param is invalid."))
+		return failFlag, ErrInvalid
 	}
-	key, err := encode(gasContractNameKey)
+	ret, err := u.doParamSet(gasContractNameKey, contractName)
 	if err != nil {
-		return nil, err
+		return failFlag, err
 	}
-	value, err := encode(contractName)
-	if err != nil {
-		return nil, err
-	}
-	u.setState(key, value)
-	return nil, nil
+	return ret, err
 }
 
 //pass
@@ -100,7 +99,7 @@ func (u *ParamManager) getGasContractName() (string, error) {
 		return "", err
 	}
 	contractName := u.getState(key)
-	if len(contractName) == 0{
+	if len(contractName) == 0 {
 		return "", nil
 	}
 	var ret string
@@ -112,26 +111,16 @@ func (u *ParamManager) getGasContractName() (string, error) {
 }
 
 //pass
-func (u *ParamManager) setIsProduceEmptyBlock(isProduceEmptyBlock uint32) ([]byte, error) {
-	if !u.hasPermission() {
-		//event here
-		return nil, ErrHasNoPermission
-	}
+func (u *ParamManager) setIsProduceEmptyBlock(isProduceEmptyBlock uint32) (int32, error) {
 	if 0 != isProduceEmptyBlock && 1 != isProduceEmptyBlock {
-		//event
-		return nil, ErrInvalid
+		u.emitNotifyEventInParam(paramInvalid, fmt.Sprintf("param is invalid."))
+		return failFlag, ErrInvalid
 	}
-	key, err := encode(isProduceEmptyBlockKey)
+	ret, err := u.doParamSet(isProduceEmptyBlockKey, isProduceEmptyBlock)
 	if err != nil {
-		return nil, err
+		return failFlag, err
 	}
-	value, err := encode(isProduceEmptyBlock)
-	if err != nil {
-		return nil, err
-	}
-	u.setState(key, value)
-	//event here
-	return nil, nil
+	return ret, err
 }
 
 func (u *ParamManager) getIsProduceEmptyBlock() (int32, error) {
@@ -140,70 +129,55 @@ func (u *ParamManager) getIsProduceEmptyBlock() (int32, error) {
 		return failFlag, err
 	}
 	isProduceEmptyBlock := u.getState(key)
-	if len(isProduceEmptyBlock) == 0{
-		return errFlag, nil
+	if len(isProduceEmptyBlock) == 0 {
+		return failFlag, nil
 	}
 	var ret uint64
 	if err := rlp.DecodeBytes(isProduceEmptyBlock, &ret); nil != err {
-		return 0, err
+		return failFlag, err
 	}
-	if ret == 1 {
-		return sucFlag, nil
-	}else {
-		return failFlag, nil
-	}
+	return int32(ret), nil
 }
 
-func (u *ParamManager) setTxGasLimit(txGasLimit uint64) ([]byte, error) {
-	var err error
-	if !u.hasPermission() {
-		//event here
-		//return encode(FAL)
-		return nil, err
-	}
+func (u *ParamManager) setTxGasLimit(txGasLimit uint64) (int32, error) {
 	if txGasLimit < txGasLimitMinValue || txGasLimit > txGasLimitMaxValue {
-		//event
-		return nil, err
+		u.emitNotifyEventInParam(paramInvalid, fmt.Sprintf("param is invalid."))
+
+		return failFlag, ErrInvalid
 	}
 	// 获取区块 gas limit，其值应大于或等于每笔交易 gas limit 参数的值
+
 	key, err := encode(blockGasLimitKey)
 	if err != nil {
-		return nil, err
+		return failFlag, err
 	}
 	blockGasLimit := u.getState(key)
 	if blockGasLimit != nil {
 		var ci uint64
 		if err := rlp.DecodeBytes(blockGasLimit, &ci); nil != err {
-			return nil, err
+			return failFlag, err
 		}
 		if txGasLimit > ci {
 			//event
-			return nil, ErrInvalid
+			return failFlag, ErrInvalid
 		}
 	}
+	ret, err := u.doParamSet(txGasLimitKey, txGasLimit)
+	if err != nil {
+		return failFlag, err
+	}
+	return ret, err
 
-	key, err = encode(txGasLimitKey)
-	if err != nil {
-		return nil, err
-	}
-	value, err := encode(txGasLimit)
-	if err != nil {
-		return nil, err
-	}
-	u.setState(key, value)
-	//event
-	return nil, nil
-	//return  encode(SUC)
 }
 
 func (u *ParamManager) getTxGasLimit() (uint64, error) {
 	key, err := encode(txGasLimitKey)
 	if err != nil {
-		return failFlag, err
+		return 0, err
 	}
 	txGasLimit := u.getState(key)
-	if len(txGasLimit) == 0{
-		return failFlag, nil
+	if len(txGasLimit) == 0 {
+		return 1.5e9, nil
 	}
 	var ret uint64
 	if err := rlp.DecodeBytes(txGasLimit, &ret); nil != err {
@@ -212,52 +186,43 @@ func (u *ParamManager) getTxGasLimit() (uint64, error) {
 	return ret, nil
 }
 
-func (u *ParamManager) setBlockGasLimit(blockGasLimit uint64) ([]byte, error) {
-	if !u.hasPermission() {
-		//event here
-		return nil, ErrHasNoPermission
-	}
+func (u *ParamManager) setBlockGasLimit(blockGasLimit uint64) (int32, error) {
 	if blockGasLimit < blockGasLimitMinValue || blockGasLimit > blockGasLimitMaxValue {
-		//event
-		return nil, ErrInvalid
+		u.emitNotifyEventInParam(paramInvalid, fmt.Sprintf("param is invalid."))
+
+		return failFlag, ErrInvalid
 	}
 	key, err := encode(txGasLimitKey)
 	if err != nil {
-		return nil, err
+		return failFlag, err
 	}
 	txGasLimit1 := u.getState(key)
 	if txGasLimit1 != nil {
 		var ci uint64
 		if err := rlp.DecodeBytes(txGasLimit1, &ci); nil != err {
-			return nil, err
+			return failFlag, err
 		}
 		if ci > blockGasLimit {
 			//event
-			return nil, err
+			return failFlag, err
 		}
 	}
-	key, err = encode(blockGasLimitKey)
+	ret, err := u.doParamSet(blockGasLimitKey, blockGasLimit)
 	if err != nil {
-		return nil, err
+		return failFlag, err
 	}
-	value, err := encode(blockGasLimit)
-	if err != nil {
-		return nil, err
-	}
-	u.setState(key, value)
-	//event here
-	return nil, nil
+	return ret, err
 }
 
 // 获取区块 gaslimit
 func (u *ParamManager) getBlockGasLimit() (uint64, error) {
 	key, err := encode(blockGasLimitKey)
 	if err != nil {
-		return failFlag, err
+		return 0, err
 	}
 	blockGasLimit := u.getState(key)
-	if len(blockGasLimit) == 0{
-		return failFlag, nil
+	if len(blockGasLimit) == 0 {
+		return 1e10, nil
 	}
 	var ret uint64
 	if err := rlp.DecodeBytes(blockGasLimit, &ret); nil != err {
@@ -270,26 +235,17 @@ func (u *ParamManager) getBlockGasLimit() (uint64, error) {
 // @isAllowAnyAccountDeployContract:
 // 0: 允许任意用户部署合约  1: 用户具有相应权限才可以部署合约
 // 默认为0，即允许任意用户部署合约
-func (u *ParamManager) setAllowAnyAccountDeployContract(isAllowAnyAccountDeployContract uint32) ([]byte, error) {
-	if !u.hasPermission() {
-		//event here
-		return nil, ErrHasNoPermission
-	}
+func (u *ParamManager) setAllowAnyAccountDeployContract(isAllowAnyAccountDeployContract uint32) (int32, error) {
 	if 0 != isAllowAnyAccountDeployContract && 1 != isAllowAnyAccountDeployContract {
-		//event here
-		return nil, ErrInvalid
+		u.emitNotifyEventInParam(paramInvalid, fmt.Sprintf("param is invalid."))
+
+		return failFlag, ErrInvalid
 	}
-	key, err := encode(isAllowAnyAccountDeployContractKey)
+	ret, err := u.doParamSet(isAllowAnyAccountDeployContractKey, isAllowAnyAccountDeployContract)
 	if err != nil {
-		return nil, err
+		return failFlag, err
 	}
-	value, err := encode(isAllowAnyAccountDeployContract)
-	if err != nil {
-		return nil, err
-	}
-	u.setState(key, value)
-	//event here
-	return nil, nil
+	return ret, err
 }
 
 // 获取是否允许任意用户部署合约的标志
@@ -299,43 +255,30 @@ func (u *ParamManager) getAllowAnyAccountDeployContract() (int32, error) {
 		return failFlag, err
 	}
 	isAllowAnyAccountDeployContract := u.getState(key)
-	if len(isAllowAnyAccountDeployContract) == 0{
+	if len(isAllowAnyAccountDeployContract) == 0 {
 		return failFlag, nil
 	}
 	var ret uint64
 	if err := rlp.DecodeBytes(isAllowAnyAccountDeployContract, &ret); nil != err {
 		return failFlag, err
 	}
-	if ret == 1 {
-		return sucFlag, nil
-	}else {
-		return failFlag, nil
-	}
+	return int32(ret), nil
 }
 
 // 设置是否检查合约部署权限
 // 0: 不检查合约部署权限，允许任意用户部署合约  1: 检查合约部署权限，用户具有相应权限才可以部署合约
 // 默认为0，不检查合约部署权限，即允许任意用户部署合约
-func (u *ParamManager) setCheckContractDeployPermission(checkPermission uint32) ([]byte, error) {
-	if !u.hasPermission() {
-		//event here
-		return nil, ErrHasNoPermission
+func (u *ParamManager) setCheckContractDeployPermission(permission uint32) (int32, error) {
+	if 0 != permission && 1 != permission {
+		u.emitNotifyEventInParam(paramInvalid, fmt.Sprintf("param is invalid."))
+
+		return failFlag, ErrInvalid
 	}
-	if 0 != checkPermission && 1 != checkPermission {
-		//event here
-		return nil, ErrInvalid
-	}
-	key, err := encode(isCheckContractDeployPermission)
+	ret, err := u.doParamSet(isCheckContractDeployPermission, permission)
 	if err != nil {
-		return nil, err
+		return failFlag, err
 	}
-	value, err := encode(checkPermission)
-	if err != nil {
-		return nil, err
-	}
-	u.setState(key, value)
-	//event here
-	return nil, nil
+	return ret, err
 }
 
 // 获取是否是否检查合约部署权限
@@ -347,44 +290,30 @@ func (u *ParamManager) getCheckContractDeployPermission() (int32, error) {
 		return failFlag, err
 	}
 	checkPermission := u.getState(key)
-	if len(checkPermission) == 0{
+	if len(checkPermission) == 0 {
 		return failFlag, nil
 	}
 	var ret uint64
 	if err := rlp.DecodeBytes(checkPermission, &ret); nil != err {
 		return failFlag, err
 	}
-	if ret == 1 {
-		return sucFlag, nil
-	}else {
-		return failFlag, nil
-	}
-
+	return int32(ret), nil
 }
 
 // 设置是否审核已部署的合约
 // @isApproveDeployedContract:
 // 1: 审核已部署的合约  0: 不审核已部署的合约
-func (u *ParamManager) setIsApproveDeployedContract(isApproveDeployedContract uint32) ([]byte, error) {
-	if !u.hasPermission() {
-		//event here
-		return nil, ErrHasNoPermission
-	}
+func (u *ParamManager) setIsApproveDeployedContract(isApproveDeployedContract uint32) (int32, error) {
 	if 0 != isApproveDeployedContract && 1 != isApproveDeployedContract {
-		//event here
-		return nil, nil
+		u.emitNotifyEventInParam(paramInvalid, fmt.Sprintf("param is invalid."))
+
+		return failFlag, ErrInvalid
 	}
-	key, err := encode(isApproveDeployedContractKey)
+	ret, err := u.doParamSet(isApproveDeployedContractKey, isApproveDeployedContract)
 	if err != nil {
-		return nil, err
+		return failFlag, err
 	}
-	value, err := encode(isApproveDeployedContract)
-	if err != nil {
-		return nil, err
-	}
-	u.setState(key, value)
-	//event here
-	return nil, nil
+	return ret, err
 }
 
 // 获取是否审核已部署的合约的标志
@@ -394,48 +323,35 @@ func (u *ParamManager) getIsApproveDeployedContract() (int32, error) {
 		return failFlag, err
 	}
 	isApproveDeployedContract := u.getState(key)
-	if len(isApproveDeployedContract) == 0{
+	if len(isApproveDeployedContract) == 0 {
 		return failFlag, nil
 	}
 	var ret uint64
 	if err := rlp.DecodeBytes(isApproveDeployedContract, &ret); nil != err {
 		return failFlag, err
 	}
-	if ret == 1 {
-		return sucFlag, nil
-	}else {
-		return failFlag, nil
-	}
+	return int32(ret), nil
 }
 
 // 本参数根据最新的讨论（2019.03.06之前）不再需要，即交易需要消耗gas。但是计费相关如消耗特定合约代币的参数由 setGasContractName 进行设置
 // 设置交易是否消耗 gas
 // @isTxUseGas:
 // 1:  交易消耗 gas  0: 交易不消耗 gas
-func (u *ParamManager) setIsTxUseGas(isTxUseGas uint64) ([]byte, error) {
-	if !u.hasPermission() {
-		//event here
-		return nil, ErrHasNoPermission
-	}
+func (u *ParamManager) setIsTxUseGas(isTxUseGas uint64) (int32, error) {
 	if 0 != isTxUseGas && 1 != isTxUseGas {
-		//event here
-		return nil, ErrInvalid
+		u.emitNotifyEventInParam(paramInvalid, fmt.Sprintf("param is invalid."))
+
+		return failFlag, ErrInvalid
 	}
-	key, err := encode(isTxUseGasKey)
+	ret, err := u.doParamSet(isTxUseGasKey, isTxUseGas)
 	if err != nil {
-		return nil, err
+		return failFlag, err
 	}
-	value, err := encode(isTxUseGas)
-	if err != nil {
-		return nil, err
-	}
-	u.setState(key, value)
-	//event here
-	return nil, nil
+	return ret, err
 }
 
 // 获取交易是否消耗 gas
-func (u *ParamManager) getIsTxUseGas() (uint64, error) {
+func (u *ParamManager) getIsTxUseGas() (int32, error) {
 	key, err := encode(isTxUseGasKey)
 	if err != nil {
 		return failFlag, err
@@ -448,41 +364,31 @@ func (u *ParamManager) getIsTxUseGas() (uint64, error) {
 	if err := rlp.DecodeBytes(isTxUseGas, &ret); nil != err {
 		return failFlag, err
 	}
-	return ret, nil
+	return int32(ret), nil
 }
+func (u *ParamManager) doParamSet(inputKey, inputValue interface{}) (int32, error) {
+	if !checkPermission(u.stateDB, u.caller, 1) {
+		u.emitNotifyEventInParam(callerHasNoPermission, fmt.Sprintf("%s has no permission to adjust param.", u.caller.String()))
+		return failFlag, ErrHasNoPermission
+	}
+	key, err := encode(inputKey)
+	if err != nil {
+		u.emitNotifyEventInParam(encodeFailure, fmt.Sprintf("%s failed to encode.", string(key)))
+		return failFlag, err
+	}
+	value, err := encode(inputValue)
+	if err != nil {
+		u.emitNotifyEventInParam(encodeFailure, fmt.Sprintf("%s failed to encode.", string(value)))
+		return failFlag, err
+	}
+	u.setState(key, value)
+	u.emitNotifyEventInParam(doParamSetSuccess, fmt.Sprintf("param set successful."))
+	return sucFlag, nil
 
-func (u *ParamManager)setDefaultValue() error{
-	gasLimit, err := rlp.EncodeToBytes(txGasLimitKey)
-	if err != nil {
-		return err
-	}
-	gasValue, err := rlp.EncodeToBytes(txGasLimitDefaultValue)
-	if err != nil {
-		return err
-	}
-	data := u.getState(gasLimit)
-	if len(data) == 0 {
-		u.setState(gasLimit, gasValue)
-	}
-	blockGasLimit, err := rlp.EncodeToBytes(blockGasLimitKey)
-	if err != nil {
-		return err
-	}
-	blockGasValue, err := rlp.EncodeToBytes(blockGasLimitDefaultValue)
-	if err != nil {
-		return err
-	}
-	data = u.getState(blockGasLimit)
-	if len(data) == 0 {
-		u.setState(blockGasLimit, blockGasValue)
-	}
-	return err
 }
-
-
-func (u *ParamManager) hasPermission() bool {
-	//在角色合约接口中查询对应角色信息并判断是否有权限
-	return checkPermission(u.state, u.callerAddr, 1) || checkPermission(u.state, u.callerAddr, 0)
+func (u *ParamManager) emitNotifyEventInParam(code CodeType, msg string) {
+	topic := "Notify"
+	emitEvent(*u.contractAddr, u.stateDB, u.blockNumber.Uint64(), topic, code, msg)
 }
 
 //for access control

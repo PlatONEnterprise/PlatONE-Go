@@ -60,9 +60,10 @@ func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Cont
 			return cns.Run(input)
 		case *ParamManager:
 			p := &ParamManager{
-				state:      evm.StateDB,
-				codeAddr:   contract.CodeAddr,
-				callerAddr: contract.CallerAddress,
+				stateDB:      evm.StateDB,
+				contractAddr: contract.CodeAddr,
+				caller:       evm.Context.Origin,
+				blockNumber:  evm.BlockNumber,
 			}
 			return p.Run(input)
 		case *FireWall:
