@@ -135,18 +135,18 @@ func TestUserRoles_hasRole(t *testing.T) {
 		},
 		{
 			roles: &UserRoles{roles: 0b10101},
-			args:  args{role: nodeAdmin},
+			args:  args{role: groupAdmin},
 			want:  true,
 		},
 		{
 			roles: &UserRoles{roles: 0b10101},
 			args:  args{role: contractAdmin},
-			want:  false,
+			want:  true,
 		},
 		{
 			roles: &UserRoles{roles: 0b10101},
 			args:  args{role: contractDeployer},
-			want:  true,
+			want:  false,
 		},
 	}
 	for _, tt := range tests {
