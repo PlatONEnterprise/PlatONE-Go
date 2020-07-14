@@ -14,14 +14,13 @@ func Test_emitEvent(t *testing.T) {
 	msg := "success"
 	code := uint64(1)
 
-	err := emitEvent(common.Address{}, stateDB, 1, topic, code, msg)
-	assert.NoError(t, err)
+	emitEvent(common.Address{}, stateDB, 1, topic, code, msg)
 	topicH := common.BytesToHash(crypto.Keccak256([]byte(topic)))
 	log := stateDB.eLogs[topicH.String()]
 	assert.NotEqual(t, nil, log)
 
 	var data []rlp.RawValue
-	err = rlp.DecodeBytes(log.Data, &data)
+	err := rlp.DecodeBytes(log.Data, &data)
 	assert.NoError(t, err)
 
 	var code2 uint64

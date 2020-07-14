@@ -8,6 +8,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"math/rand"
+	"strings"
 
 	"github.com/stretchr/testify/assert"
 	"math/big"
@@ -78,7 +79,7 @@ func TestENode_String(t *testing.T) {
 	type fields struct {
 		PublicKey string
 		IP        string
-		Port      int32
+		Port      uint32
 	}
 	tests := []struct {
 		name   string
@@ -164,7 +165,7 @@ func fakeNodeInfo() *syscontracts.NodeInfo {
 	ni.Typ = NodeTypeObserver
 	ni.Status = NodeStatusNormal
 	//ni.PublicKey = "0x294866ff9693257147c7AE69293609F4b6E59Aa1"
-	ni.PublicKey = "044b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc"
+	ni.PublicKey = "4b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc"
 	return ni
 }
 
@@ -173,7 +174,7 @@ func genPublicKeyInHex() string {
 	pub := crypto.FromECDSAPub(&prk.PublicKey)
 	//fmt.Println(hex.EncodeToString(pub))
 
-	return hex.EncodeToString(pub)
+	return strings.TrimLeft(hex.EncodeToString(pub), "04")
 }
 
 func TestSCNode_TxReceipt(t *testing.T) {
@@ -183,7 +184,7 @@ func TestSCNode_TxReceipt(t *testing.T) {
 	ni.Name = "万向区块链"
 	ni.Typ = NodeTypeObserver
 	ni.Status = NodeStatusNormal
-	ni.PublicKey = "044b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc"
+	ni.PublicKey = "4b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc"
 
 	stateDB := newMockStateDB()
 	n := NewSCNode(stateDB)
@@ -242,10 +243,10 @@ func TestSCNode_Add(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			n := &SCNode{
-				stateDB:         tt.fields.stateDB,
-				contractAddress: tt.fields.address,
-				caller:          tt.fields.caller,
-				blockNumber:     big.NewInt(0),
+				stateDB:      tt.fields.stateDB,
+				contractAddr: tt.fields.address,
+				caller:       tt.fields.caller,
+				blockNumber:  big.NewInt(0),
 			}
 			if err := n.add(tt.args.node); (err != nil) != tt.wantErr {
 				t.Errorf("add() error = %v, wantErr %v", err, tt.wantErr)
@@ -276,9 +277,9 @@ func TestSCNode_AddName(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			n := &SCNode{
-				stateDB:         tt.fields.stateDB,
-				contractAddress: tt.fields.address,
-				caller:          tt.fields.caller,
+				stateDB:      tt.fields.stateDB,
+				contractAddr: tt.fields.address,
+				caller:       tt.fields.caller,
 			}
 			if err := n.addName(tt.args.name); (err != nil) != tt.wantErr {
 				t.Errorf("addName() error = %v, wantErr %v", err, tt.wantErr)
@@ -294,7 +295,7 @@ func TestSCNode_CheckParamsOfAddNode(t *testing.T) {
 	ni.Name = "万向区块链"
 	ni.Typ = NodeTypeObserver
 	ni.Status = NodeStatusNormal
-	ni.PublicKey = "044b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc"
+	ni.PublicKey = "4b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc"
 
 	type fields struct {
 		stateDB StateDB
@@ -316,9 +317,9 @@ func TestSCNode_CheckParamsOfAddNode(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			n := &SCNode{
-				stateDB:         tt.fields.stateDB,
-				contractAddress: tt.fields.address,
-				caller:          tt.fields.caller,
+				stateDB:      tt.fields.stateDB,
+				contractAddr: tt.fields.address,
+				caller:       tt.fields.caller,
 			}
 			if err := n.checkParamsOfAddNode(tt.args.node); (err != nil) != tt.wantErr {
 				t.Errorf("checkParamsOfAddNode() error = %v, wantErr %v", err, tt.wantErr)
@@ -334,7 +335,7 @@ func addNodeInfoIntoDB() (*SCNode, *syscontracts.NodeInfo) {
 	ni.Name = "万向区块链"
 	ni.Typ = NodeTypeObserver
 	ni.Status = NodeStatusNormal
-	ni.PublicKey = "044b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc"
+	ni.PublicKey = "4b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc"
 
 	db := newMockStateDB()
 	n := NewSCNode(db)
@@ -379,12 +380,12 @@ func TestSCNode_CheckPublicKeyExist(t *testing.T) {
 	ni.Name = "万向区块链"
 	ni.Typ = NodeTypeObserver
 	ni.Status = NodeStatusNormal
-	ni.PublicKey = "044b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc"
+	ni.PublicKey = "4b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc"
 
 	err = n.add(ni)
 	assert.NoError(t, err)
 
-	err = n.checkPublicKeyExist("044b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc")
+	err = n.checkPublicKeyExist("4b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc")
 	assert.Error(t, err)
 }
 
@@ -476,7 +477,7 @@ func TestSCNode_IsNameExist(t *testing.T) {
 	ni2.Name = "通联支付"
 	ni2.Typ = NodeTypeObserver
 	ni2.Status = NodeStatusNormal
-	ni2.PublicKey = "044b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc"
+	ni2.PublicKey = "4b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc"
 
 	err = n.add(ni2)
 	assert.Error(t, err)
@@ -546,9 +547,9 @@ func TestSCNode_isNameExist(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			n := &SCNode{
-				stateDB:         tt.fields.stateDB,
-				contractAddress: tt.fields.address,
-				caller:          tt.fields.caller,
+				stateDB:      tt.fields.stateDB,
+				contractAddr: tt.fields.address,
+				caller:       tt.fields.caller,
 			}
 			if got := n.isNameExist(tt.args.names, tt.args.name); got != tt.want {
 				t.Errorf("isNameExist() = %v, want %v", got, tt.want)

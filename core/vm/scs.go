@@ -1,8 +1,10 @@
 package vm
 
 import (
+	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
 )
 
 //system contract export functions
@@ -24,6 +26,13 @@ var PlatONEPrecompiledContracts = map[common.Address]PrecompiledContract{
 }
 
 func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Contract, evm *EVM) (ret []byte, err error) {
+	defer func() {
+		if err := recover(); nil != err {
+			log.Error("failed to run precompiled system contract", "err", err)
+			ret, err = nil, fmt.Errorf("failed to run precompiled system contract,err:%v", err)
+		}
+	}()
+
 	gas := p.RequiredGas(input)
 
 	if contract.UseGas(gas) {
@@ -36,11 +45,10 @@ func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Cont
 			}
 			return um.Run(input)
 		case *scNodeWrapper:
-			node := newSCNodeWrapper(nil)
-			node.base.stateDB = evm.StateDB
-			node.base.caller = contract.CallerAddress
+			node := newSCNodeWrapper(evm.StateDB)
+			node.base.caller = evm.Origin
 			node.base.blockNumber = evm.BlockNumber
-			node.base.contractAddress = *contract.CodeAddr
+			node.base.contractAddr = *contract.CodeAddr
 
 			return node.Run(input)
 		case *CnsManager:
