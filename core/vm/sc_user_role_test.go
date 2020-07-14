@@ -46,13 +46,13 @@ func TestUserRoles_setRole(t *testing.T) {
 		{
 			roles:      &UserRoles{roles: 0b11},
 			args:       args{role: nodeAdmin},
-			targetRole: 0b111,
+			targetRole: 0b1011,
 			wantErr:    false,
 		},
 		{
 			roles:      &UserRoles{roles: 0b111},
 			args:       args{role: contractAdmin},
-			targetRole: 0b1111,
+			targetRole: 0b10111,
 			wantErr:    false,
 		},
 	}
