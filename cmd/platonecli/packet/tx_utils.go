@@ -37,7 +37,6 @@ type TxParams struct {
 	GasPrice string          `json:"gasPrice"`
 	Value    string          `json:"value"`
 	Data     string          `json:"data"`
-	TxType   int             `json:"txType"`
 }
 
 // ContractReturn, system contract return object
@@ -119,7 +118,6 @@ func NewTxParams(from common.Address, to *common.Address, value, gas, gasPrice, 
 		Gas:      gas,
 		Value:    value,
 		Data:     data,
-		TxType:   txType,
 	}
 
 	return tx
@@ -158,12 +156,11 @@ func (tx *TxParams) GetSignedTx(keystore string) string {
 	gas, _ := hexutil.DecodeUint64(tx.Gas)
 	gasPrice, _ := hexutil.DecodeBig(tx.GasPrice)
 	data, _ := hexutil.Decode(tx.Data)
-	txType := uint64(tx.TxType)
 
 	if tx.To == nil {
 		txSign = types.NewContractCreation(nonce, value, gas, gasPrice, data)
 	} else {
-		txSign = types.NewTransaction(nonce, *tx.To, value, gas, gasPrice, data, txType)
+		txSign = types.NewTransaction(nonce, *tx.To, value, gas, gasPrice, data)
 	}
 
 	// extract pk from keystore file and sign the transaction

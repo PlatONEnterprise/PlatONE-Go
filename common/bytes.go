@@ -23,6 +23,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"math"
 	"math/big"
 	"strings"
@@ -360,5 +361,28 @@ func IsBytesEmpty(input []byte) bool {
 	} else {
 		return false
 	}
+}
+
+func GenerateWasmData(txType int64, funcName string, params []interface{}) ([]byte, error){
+	paramArr := [][]byte{
+		Int64ToBytes(txType),
+		[]byte(funcName),
+	}
+
+	for _, v := range params {
+		p, e := ToBytes(v)
+		if e != nil {
+			err := fmt.Errorf("convert %v to string failed", v)
+			return nil,  err
+		}
+		paramArr = append(paramArr, p)
+	}
+
+	paramBytes, err := rlp.EncodeToBytes(paramArr)
+	if err != nil{
+		return nil, err
+	}
+
+	return paramBytes, nil
 }
 

@@ -42,7 +42,7 @@ const (
 
 // tx-type
 const (
-	CALL_CANTRACT_FLAG = 9
+	CallContractFlag             = 9
 	TxTypeCallSollCompatibleWasm = 14
 )
 

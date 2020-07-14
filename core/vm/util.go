@@ -8,7 +8,7 @@ import (
 )
 
 func toContractReturnValueIntType(txType int, res int64) []byte {
-	if txType == common.CALL_CANTRACT_FLAG {
+	if txType == common.CallContractFlag {
 		return utils.Int64ToBytes(res)
 	}
 
@@ -19,7 +19,7 @@ func toContractReturnValueIntType(txType int, res int64) []byte {
 }
 
 func toContractReturnValueUintType(txType int, res uint64) []byte {
-	if txType == common.CALL_CANTRACT_FLAG {
+	if txType == common.CallContractFlag {
 		return utils.Uint64ToBytes(res)
 	}
 
@@ -28,7 +28,7 @@ func toContractReturnValueUintType(txType int, res uint64) []byte {
 }
 
 func toContractReturnValueStringType(txType int, res []byte) []byte {
-	if txType == common.CALL_CANTRACT_FLAG || txType == common.TxTypeCallSollCompatibleWasm {
+	if txType == common.CallContractFlag || txType == common.TxTypeCallSollCompatibleWasm {
 		return res
 	}
 

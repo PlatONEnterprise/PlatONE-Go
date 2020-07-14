@@ -790,11 +790,11 @@ func (s *StateDB) FwAdd(addr common.Address, action Action, list []FwElem) {
 	stateObject := s.GetOrNewStateObject(addr)
 	fwData := stateObject.FwData()
 	switch action {
-	case reject:
+	case Reject:
 		for _, addr := range list {
 			fwData.DeniedList[addr.FuncName+":"+addr.Addr.String()] = true
 		}
-	case accept:
+	case Accept:
 		for _, addr := range list {
 			fwData.AcceptedList[addr.FuncName+":"+addr.Addr.String()] = true
 		}
@@ -806,9 +806,9 @@ func (s *StateDB) FwClear(addr common.Address, action Action) {
 
 	fwData := stateObject.FwData()
 	switch action {
-	case reject:
+	case Reject:
 		fwData.DeniedList = make(map[string]bool)
-	case accept:
+	case Accept:
 		fwData.AcceptedList = make(map[string]bool)
 	}
 	stateObject.SetFwData(fwData)
@@ -818,12 +818,12 @@ func (s *StateDB) FwDel(addr common.Address, action Action, list []FwElem) {
 
 	fwData := stateObject.FwData()
 	switch action {
-	case reject:
+	case Reject:
 		for _, addr := range list {
 			fwData.DeniedList[addr.FuncName+":"+addr.Addr.String()] = false
 			delete(fwData.DeniedList, (addr.FuncName + ":" + addr.Addr.String()))
 		}
-	case accept:
+	case Accept:
 		for _, addr := range list {
 			fwData.AcceptedList[addr.FuncName+":"+addr.Addr.String()] = false
 			delete(fwData.AcceptedList, (addr.FuncName + ":" + addr.Addr.String()))
@@ -836,12 +836,12 @@ func (s *StateDB) FwSet(addr common.Address, action Action, list []FwElem) {
 
 	fwData := NewFwData()
 	switch action {
-	case reject:
+	case Reject:
 		for _, addr := range list {
 			fwData.DeniedList[addr.FuncName+":"+addr.Addr.String()] = true
 		}
 		fwData.AcceptedList = stateObject.FwData().AcceptedList
-	case accept:
+	case Accept:
 		for _, addr := range list {
 			fwData.AcceptedList[addr.FuncName+":"+addr.Addr.String()] = true
 		}
@@ -855,10 +855,10 @@ func (s *StateDB) SetFwStatus(addr common.Address, status FwStatus) {
 	stateObject.SetFwActive(fwActive)
 
 	acc := status.AcceptedList
-	s.FwSet(addr, accept, acc)
+	s.FwSet(addr, Accept, acc)
 
 	denied := status.RejectedList
-	s.FwSet(addr, reject, denied)
+	s.FwSet(addr, Reject, denied)
 }
 
 func (s *StateDB) GetFwStatus(addr common.Address) FwStatus {

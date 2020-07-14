@@ -183,12 +183,13 @@ func convertToFwElem(l string) ([]state.FwElem, error) {
 			return nil, errors.New("FW : error, incorrect firewall rule format")
 		}
 
-		addr := tmp[0]
+		addr := ZeroAddress
+		addrStr := tmp[0]
 		api := tmp[1]
-		if addr == "*" {
-			addr = state.FireWallAddr
+		if addrStr == "*" {
+			addr = state.FwWildchardAddr
 		}
-		fwElem := state.FwElem{Addr: common.HexToAddress(addr), FuncName: api}
+		fwElem := state.FwElem{Addr: addr, FuncName: api}
 		list = append(list, fwElem)
 	}
 

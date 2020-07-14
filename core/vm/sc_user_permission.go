@@ -28,7 +28,7 @@ func hasNodeOpPermmision(state StateDB, addr common.Address) bool {
 		checkPermission(state, addr, nodeAdmin)
 }
 
-func hasContractDeployPermission(state StateDB, addr common.Address) bool {
+func HasContractDeployPermission(state StateDB, addr common.Address) bool {
 	return checkPermission(state, addr, chainAdmin) ||
 		checkPermission(state, addr, contractDeployer) ||
 		checkPermission(state, addr, contractAdmin)

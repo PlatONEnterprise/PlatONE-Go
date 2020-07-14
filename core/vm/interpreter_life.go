@@ -231,7 +231,7 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 	// todo: more type need to be completed
 	switch returnType {
 	case "void", "int8", "int", "int32", "int64":
-		if txType == common.CALL_CANTRACT_FLAG {
+		if txType == common.CallContractFlag {
 			return utils.Int64ToBytes(res), nil
 		}
 		bigRes := new(big.Int)
@@ -239,7 +239,7 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 		finalRes := utils.Align32Bytes(math.U256(bigRes).Bytes())
 		return finalRes, nil
 	case "uint8", "uint16", "uint32", "uint64":
-		if txType == common.CALL_CANTRACT_FLAG {
+		if txType == common.CallContractFlag {
 			return utils.Uint64ToBytes(uint64(res)), nil
 		}
 		finalRes := utils.Align32Bytes(utils.Uint64ToBytes((uint64(res))))
@@ -253,7 +253,7 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 			}
 			returnBytes = append(returnBytes, v)
 		}
-		if txType == common.CALL_CANTRACT_FLAG || txType == common.TxTypeCallSollCompatibleWasm {
+		if txType == common.CallContractFlag || txType == common.TxTypeCallSollCompatibleWasm {
 			return returnBytes, nil
 		}
 		strHash := common.BytesToHash(common.Int32ToBytes(32))

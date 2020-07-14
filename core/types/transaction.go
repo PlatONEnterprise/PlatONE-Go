@@ -63,8 +63,6 @@ type txdata struct {
 	Recipient    *common.Address `json:"to"       rlp:"nil"` // nil means contract creation
 	Amount       *big.Int        `json:"value"    gencodec:"required"`
 	Payload      []byte          `json:"input"    gencodec:"required"`
-	//CnsData      []byte          `json:"cnsData"`
-	TxType uint64 `json:"txType" gencodec:"required"`
 
 	// Signature values
 	V *big.Int `json:"v" gencodec:"required"`
@@ -81,22 +79,20 @@ type txdataMarshaling struct {
 	GasLimit     hexutil.Uint64
 	Amount       *hexutil.Big
 	Payload      hexutil.Bytes
-	//CnsData	     hexutil.Bytes
-	TxType  hexutil.Uint64
 	V      *hexutil.Big
 	R      *hexutil.Big
 	S      *hexutil.Big
 }
 
-func NewTransaction(nonce uint64, to common.Address, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte, txType uint64) *Transaction {
-	return newTransaction(nonce, &to, amount, gasLimit, gasPrice, data, txType)
+func NewTransaction(nonce uint64, to common.Address, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte) *Transaction {
+	return newTransaction(nonce, &to, amount, gasLimit, gasPrice, data)
 }
 
 func NewContractCreation(nonce uint64, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte) *Transaction {
-	return newTransaction(nonce, nil, amount, gasLimit, gasPrice, data, CreateTxType)
+	return newTransaction(nonce, nil, amount, gasLimit, gasPrice, data)
 }
 
-func newTransaction(nonce uint64, to *common.Address, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte, txType uint64) *Transaction {
+func newTransaction(nonce uint64, to *common.Address, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte) *Transaction {
 	if len(data) > 0 {
 		data = common.CopyBytes(data)
 	}
@@ -104,7 +100,6 @@ func newTransaction(nonce uint64, to *common.Address, amount *big.Int, gasLimit 
 		AccountNonce: nonce,
 		Recipient:    to,
 		Payload:      data,
-		TxType:       txType,
 		Amount:       new(big.Int),
 		GasLimit:     gasLimit,
 		Price:        new(big.Int),
@@ -185,7 +180,6 @@ func (tx *Transaction) UnmarshalJSON(input []byte) error {
 	return nil
 }
 
-func (tx *Transaction) Type() uint64 { return tx.data.TxType }
 
 //func (tx *Transaction) Cns() []byte    { return common.CopyBytes(tx.data.CnsData) }
 func (tx *Transaction) Data() []byte       { return common.CopyBytes(tx.data.Payload) }
@@ -242,7 +236,6 @@ func (tx *Transaction) AsMessage(s Signer) (*Message, error) {
 		amount:     tx.data.Amount,
 		data:       tx.data.Payload,
 		checkNonce: true,
-		txType:     tx.data.TxType,
 	}
 
 	var err error
@@ -417,7 +410,6 @@ type Message struct {
 }
 
 func NewMessage(from common.Address, to *common.Address, nonce uint64, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte, checkNonce bool, txType uint64) *Message {
-
 	msg := Message{
 		from:       from,
 		to:         to,
