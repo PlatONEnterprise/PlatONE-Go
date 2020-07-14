@@ -138,7 +138,7 @@ func TestParamManager_gasName(t *testing.T) {
 	um := UserManagement{state: db, caller: caller, address: addr1}
 	um.setSuperAdmin()
 	um.addChainAdminByAddress(caller)
-	p := ParamManager{contractAddr: &addr, stateDB: db, caller: caller}
+	p := ParamManager{contractAddr: &addr, stateDB: db, caller: caller, blockNumber:big.NewInt(100)}
 	p.setGasContractName("abc" )
 	ret, err := p.getGasContractName()
 	if nil != err {
