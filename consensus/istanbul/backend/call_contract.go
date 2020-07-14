@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
 	"github.com/PlatONEnetwork/PlatONE-Go/core"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
@@ -13,7 +12,6 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/life/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
-	"math"
 	"math/big"
 )
 
@@ -140,50 +138,6 @@ func CallSystemContractAtBlockNumber(
 }
 
 func loadLastConsensusNodesList(chain consensus.ChainReader, sb *backend, headers []*types.Header) {
-	innerCall := func(conAddr common.Address, data []byte) ([]byte, error) {
-		//ctx := context.Background()
-		if sb == nil {
-			log.Info("backend is nil")
-		}
-
-		log.Info("this is for test loadLastConsensusNodesList", chain.CurrentHeader().Root)
-		// Get the state
-		state, err := state.New(chain.CurrentHeader().Root, state.NewDatabase(sb.db))
-		if state == nil {
-			return nil, err
-		}
-
-		from := common.Address{}
-		to := &conAddr
-		gas := uint64(0x999999999)
-		gasPrice := (hexutil.Big)(*big.NewInt(0x333333))
-		nonce := uint64(0)
-		value := (hexutil.Big)(*big.NewInt(0))
-
-		// Create new call message
-		msg := types.NewMessage(from, to, nonce, value.ToInt(), gas, gasPrice.ToInt(), data, false, types.NormalTxType)
-		cc := ChainContext{&chain, sb}
-		context := core.NewEVMContext(msg, chain.CurrentHeader(), &cc, nil)
-
-		evm := vm.NewEVM(context, state, chain.Config(), vm.Config{})
-
-		// Get a new instance of the EVM.
-		//evm, vmError, err := ethPtr.APIBackend.GetEVM(ctx, msg, state, header, vm.Config{})
-		//if err != nil {
-		//	return nil
-		//}
-
-		// Setup the gas pool (also for unmetered requests)
-		// and apply the message.
-		gp := new(core.GasPool).AddGas(math.MaxUint64)
-		res, _, _, _,err := core.ApplyMessage(evm, msg, gp)
-		if err != nil {
-			return nil, err
-		}
-
-		return res, err
-	}
-
 	sysContractCall := func(sc *common.SystemConfig) {
 		//ctx := context.Background()
 
@@ -300,6 +254,4 @@ func loadLastConsensusNodesList(chain consensus.ChainReader, sb *backend, header
 
 	common.InitSystemconfig(common.NodeInfo{})
 	common.SetSysContractCallFunc(sysContractCall)
-	common.SetInnerCallFunc(innerCall)
-
 }

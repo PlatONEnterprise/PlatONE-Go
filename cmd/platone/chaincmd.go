@@ -18,31 +18,28 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
-	"math"
-	"math/big"
-	"os"
-	"runtime"
-	"strconv"
-	"sync/atomic"
-	"time"
-	lutils "github.com/PlatONEnetwork/PlatONE-Go/life/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/console"
 	"github.com/PlatONEnetwork/PlatONE-Go/core"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/downloader"
 	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
+	lutils "github.com/PlatONEnetwork/PlatONE-Go/life/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/trie"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"gopkg.in/urfave/cli.v1"
+	"math/big"
+	"os"
+	"runtime"
+	"strconv"
+	"sync/atomic"
+	"time"
 )
 
 var (
@@ -478,38 +475,6 @@ func hashish(x string) bool {
 }
 
 func InitInnerCallFuncFromChain(bc *core.BlockChain) {
-	innerCall := func(conAddr common.Address, data []byte) ([]byte, error) {
-		// Get the state
-		state, err := bc.State()
-		// state, header, err := ethPtr.APIBackend.StateAndHeaderByNumber(ctx, -1)
-		if err != nil {
-			return nil, err
-		} else if state == nil {
-			return nil, errors.New("state is nil")
-		}
-
-		from := common.Address{}
-		to := &conAddr
-		gas := uint64(0x999999999)
-		gasPrice := (hexutil.Big)(*big.NewInt(0x333333))
-		nonce := uint64(0)
-		value := (hexutil.Big)(*big.NewInt(0))
-
-		// Create new call message
-		msg := types.NewMessage(from, to, nonce, value.ToInt(), gas, gasPrice.ToInt(), data, false, types.NormalTxType)
-
-		header := bc.CurrentHeader()
-
-		context := core.NewEVMContext(msg, header, bc, nil)
-		evm :=  vm.NewEVM(context, state, bc.Config(), vm.Config{})
-
-		// Setup the gas pool (also for unmetered requests)
-		// and apply the message.
-		gp := new(core.GasPool).AddGas(math.MaxUint64)
-		res, _, _, _, err := core.ApplyMessage(evm, msg, gp)
-		return res, err
-	}
-
 	sysContractCall := func(sc *common.SystemConfig) {
 		// Get the state
 		state, err := bc.State()
@@ -626,7 +591,5 @@ func InitInnerCallFuncFromChain(bc *core.BlockChain) {
 	}
 
 	common.SetSysContractCallFunc(sysContractCall)
-	common.SetInnerCallFunc(innerCall)
-
 	common.InitSystemconfig(common.NodeInfo{})
 }

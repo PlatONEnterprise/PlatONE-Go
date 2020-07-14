@@ -22,7 +22,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math"
 	"math/big"
 	"runtime"
 	"sync"
@@ -72,44 +71,6 @@ func InitInnerCallFunc(ethPtr *Ethereum) {
 			P2pPort:    int32(rootNode.UDP),
 			ExternalIP: rootNode.IP.String(),
 		}
-	}
-
-	innerCall := func(conAddr common.Address, data []byte) ([]byte, error) {
-		ctx := context.Background()
-
-		// Get the state
-		state, header, err := ethPtr.APIBackend.StateAndHeaderByNumber(ctx, -1)
-		if err != nil {
-			return nil, err
-		} else if state == nil {
-			return nil, errors.New("state is nil")
-		}
-
-		from := common.Address{}
-		to := &conAddr
-		gas := uint64(0x999999999)
-		gasPrice := (hexutil.Big)(*big.NewInt(0x333333))
-		nonce := uint64(0)
-		value := (hexutil.Big)(*big.NewInt(0))
-
-		// Create new call message
-		msg := types.NewMessage(from, to, nonce, value.ToInt(), gas, gasPrice.ToInt(), data, false, types.NormalTxType)
-
-		// Get a new instance of the EVM.
-		evm, vmError, err := ethPtr.APIBackend.GetEVM(ctx, msg, state, header, vm.Config{})
-		if err != nil {
-			return nil, err
-		}
-
-		// Setup the gas pool (also for unmetered requests)
-		// and apply the message.
-		gp := new(core.GasPool).AddGas(math.MaxUint64)
-		res, _, _, _, err := core.ApplyMessage(evm, msg, gp)
-		if err := vmError(); err != nil {
-			return nil, err
-		}
-
-		return res, err
 	}
 
 	sysContractCall := func(sc *common.SystemConfig) {
@@ -220,9 +181,6 @@ func InitInnerCallFunc(ethPtr *Ethereum) {
 			funcName := "getAllNodes"
 			funcParams := []interface{}{}
 			res := callContract(nodeManagerAddr, common.GenCallData(funcName, funcParams))
-			if res != nil {
-				sc.SysParam.GasContractAddr = common.HexToAddress(common.CallResAsString(res))
-			}
 
 			strRes := common.CallResAsString(res)
 
@@ -250,7 +208,6 @@ func InitInnerCallFunc(ethPtr *Ethereum) {
 	}
 
 	common.SetSysContractCallFunc(sysContractCall)
-	common.SetInnerCallFunc(innerCall)
 	if _, ok := ethPtr.engine.(consensus.Istanbul); !ok {
 		common.InitSystemconfig(root)
 		return
