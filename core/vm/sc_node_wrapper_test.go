@@ -101,7 +101,7 @@ func Test_scNodeWrapper_getENodesOfAllNormalNodes(t *testing.T) {
 	enode.Port = ni.P2pPort
 	enode.IP = ni.InternalIP
 	enode.PublicKey = ni.PublicKey
-	expected := enode.String()
+	expected :=newSuccessResult([]*eNode{enode}).String()
 	assert.Equal(t, toContractReturnValueStringType(E_INVOKE_CONTRACT, []byte(expected)), ret)
 }
 
@@ -166,5 +166,5 @@ func Test_scNodeWrapper_update(t *testing.T) {
 	var input = MakeInput(fnNameInput, ni.Name, string(bin))
 	ret, err := node.Run(input)
 	assert.NoError(t, err)
-	assert.Equal(t, toContractReturnValueIntType(E_INVOKE_CONTRACT, int64(1)), ret)
+	assert.Equal(t, toContractReturnValueIntType(E_INVOKE_CONTRACT, int64(updateNodeSuccess)), ret)
 }

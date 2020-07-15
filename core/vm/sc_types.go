@@ -24,6 +24,10 @@ func newSuccessResult(data interface{}) *result {
 	return newResult(resultCodeSuccess, "success", data)
 }
 
+func newInternalErrorResult(err error) *result {
+	return newResult(resultCodeInternalError, err.Error(), []string{})
+}
+
 func (res *result) String() string {
 	b, err := json.Marshal(res)
 	if err != nil {
