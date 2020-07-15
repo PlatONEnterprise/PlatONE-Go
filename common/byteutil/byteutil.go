@@ -32,10 +32,13 @@ var Bytes2X_CMD = map[string]interface{}{
 
 	"*syscontracts.NodeInfo":   BytesToNodeInfo,
 	"*syscontracts.UpdateNode": BytesToUpdateNode,
-	"common.Address": HexBytesToAddress,
+	"common.Address":           HexBytesToAddress,
 }
 
-func HexBytesToAddress(curByte []byte)common.Address {
+func HexBytesToAddress(curByte []byte) common.Address {
+	if !common.IsHexAddress(string(curByte)) {
+		panic("address format is invalid")
+	}
 	return common.HexToAddress(string(curByte))
 }
 func BytesToUpdateNode(curByte []byte) *syscontracts.UpdateNode {
