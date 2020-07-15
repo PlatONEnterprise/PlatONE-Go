@@ -239,7 +239,7 @@ func (n *SCNode) checkPermissionForAdd() error {
 		return nil
 	}
 
-	if !hasNodeOpPermmision(n.stateDB, n.caller) {
+	if !hasNodeOpPermission(n.stateDB, n.caller) {
 		log.Error("Failed to add node.", "error", n.caller.String()+" has no permission to add node.")
 		return errNoPermissionManageSCNode
 	}

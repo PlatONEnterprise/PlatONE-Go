@@ -47,3 +47,18 @@ type NodeInfo struct {
 	// delay set validatorSet
 	DelayNum uint64 `json:"delayNum,omitempty"` //共识节点延迟设置的区块高度 (可选, 默认实时设置)
 }
+
+type UserInfo struct {
+	Address    string `json:"address,omitempty,required"` // 地址，不可变更
+	Authorizer string `json:"authorizer,omitempty"`       // 授权者，不可变更
+	Name       string `json:"name,omitempty"`             // 用户名，不可变更
+
+	DescInfo string `json:"descInfo,omitempty"` // 描述信息，可变更
+	Version  uint32 `json:"version,omitempty"`  // 可变更
+}
+
+type UserDescInfo struct {
+	Email        string `json:"email,omitempty"`
+	Organization string `json:"organization,omitempty"`
+	Phone        string `json:"phone,omitempty"`
+}

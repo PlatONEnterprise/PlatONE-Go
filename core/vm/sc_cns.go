@@ -3,6 +3,7 @@ package vm
 import (
 	"encoding/json"
 	"errors"
+	"math/big"
 	"regexp"
 	"strings"
 	"time"
@@ -14,28 +15,30 @@ import (
 )
 
 const (
-	msgOk = "ok"
-	// MSG_ERR = "input is invalid"
-
-	codeOk = 0
-	// CODE_ERR = 1
-
-	success = 0
-	failure = 1
-
-	undefined    = -1
-	unregistered = 0
-	registered   = 1
-
-	namePattern    = `^[a-zA-Z]\w{2,15}$` // alice
-	versionPattern = `^([\d]\.){3}[\d]$`  // 0.0.0.1
+	cnsInvalidCall     CodeType = 0
+	cnsNoPermission    CodeType = 1
+	cnsInvalidArgument CodeType = 2
+	cnsRegExist        CodeType = 3
+	cnsRegNotExist     CodeType = 4
 )
 
-var (
-	errNameInvalid    = errors.New("[CNS] name format is invalid")
-	errVersionInvalid = errors.New("[CNS] version format is invalid")
-	errAddressInvalid = errors.New("[CNS] address format is invalid")
-	errNotOwner       = errors.New("[CNS] not owner of registered contract")
+const (
+	success int32 = 0
+	failure int32 = 1
+
+	undefined    int32 = -1
+	unregistered int32 = 0
+	registered   int32 = 1
+)
+
+const (
+	msgOk           = "ok"
+	codeOk CodeType = 0
+)
+
+const (
+	namePattern    = `^[a-zA-Z]\w{2,15}$` // alice
+	versionPattern = `^([\d]\.){3}[\d]$`  // 0.0.0.1
 )
 
 var (
@@ -54,10 +57,11 @@ var (
 
 // CnsManager
 type CnsManager struct {
-	callerAddr common.Address // callerAddr = Contract.CallerAddress
-	cMap       *cnsMap        // cMap 	  = NewCnsMap(StateDB, Contract.CodeAddr)
-	isInit     int            // isInit 	  = evm.InitEntryID
-	origin     common.Address // origin 	  = evm.Context.Origin // todo necessary?
+	caller      common.Address // caller = Contract.CallerAddress
+	cMap        *cnsMap        // cMap 	= NewCnsMap(StateDB, Contract.CodeAddr)
+	isInit      int            // isInit = evm.InitEntryID
+	origin      common.Address // origin = evm.Context.Origin
+	blockNumber *big.Int       // blockNumber = evm.BlockNumber
 }
 
 // ContractInfo stores cns registration info of a contract address
@@ -71,7 +75,7 @@ type ContractInfo struct {
 }
 
 type returnMsg struct {
-	Code  int
+	Code  CodeType
 	Msg   string
 	Array []*ContractInfo
 }
@@ -86,24 +90,25 @@ func newContractInfo(name, version, address, origin string) *ContractInfo {
 	}
 }
 
-func newReturnMsg(code int, msg string, arrary []*ContractInfo) *returnMsg {
+func newReturnMsg(code CodeType, msg string, array []*ContractInfo) *returnMsg {
 	return &returnMsg{
 		Code:  code,
 		Msg:   msg,
-		Array: arrary,
+		Array: array,
 	}
 }
 
-func newCnsManager(db StateDB) *CnsManager {
+func newCnsManager(stateDB StateDB) *CnsManager {
 	return &CnsManager{
-		cMap: NewCnsMap(db, syscontracts.CnsManagementAddress),
+		cMap: NewCnsMap(stateDB, syscontracts.CnsManagementAddress),
 	}
 }
 
-func (c *ContractInfo) encode() ([]byte, error) {
-	return rlp.EncodeToBytes(c)
+func (ci *ContractInfo) encode() ([]byte, error) {
+	return rlp.EncodeToBytes(ci)
 }
 
+// todo: deprecated
 // decodeCnsInfo decodes rlp bytes to ContractInfo struct
 func decodeCnsInfo(data []byte) (*ContractInfo, error) {
 	var ci ContractInfo
@@ -114,7 +119,7 @@ func decodeCnsInfo(data []byte) (*ContractInfo, error) {
 	return &ci, nil
 }
 
-func (u *CnsManager) RequiredGas(input []byte) uint64 {
+func (cns *CnsManager) RequiredGas(input []byte) uint64 {
 	if common.IsBytesEmpty(input) {
 		return 0
 	}
@@ -122,23 +127,23 @@ func (u *CnsManager) RequiredGas(input []byte) uint64 {
 }
 
 // Run runs the precompiled contract
-func (u *CnsManager) Run(input []byte) ([]byte, error) {
-	return execSC(input, u.AllExportFns())
+func (cns *CnsManager) Run(input []byte) ([]byte, error) {
+	return execSC(input, cns.AllExportFns())
 }
 
 // for access control
-func (u *CnsManager) AllExportFns() SCExportFns {
+func (cns *CnsManager) AllExportFns() SCExportFns {
 	return SCExportFns{
-		"cnsRegisterFromInit":             u.cnsRegisterFromInit,
-		"cnsRegister":                     u.cnsRegister,
-		"cnsRedirect":                     u.cnsRedirect, // cnsUnregister is deprecated, replaced by cnsRedirect
-		"getContractAddress":              u.getContractAddress,
-		"ifRegisteredByAddress":           u.ifRegisteredByAddress,
-		"ifRegisteredByName":              u.ifRegisteredByName,
-		"getRegisteredContracts":          u.getRegisteredContractsByRange,
-		"getRegisteredContractsByName":    u.getRegisteredContractsByName, // getHistoryContractsByName -> getRegisteredContractsByName
-		"getRegisteredContractsByAddress": u.getRegisteredContractsByAddress,
-		"getRegisteredContractsByOrigin":  u.getRegisteredContractsByOrigin, // getContractInfoByAddress -> getRegisteredContractsByOrigin
+		"cnsRegisterFromInit":             cns.cnsRegisterFromInit,
+		"cnsRegister":                     cns.cnsRegister,
+		"cnsRedirect":                     cns.cnsRedirect, // cnsUnregister is deprecated, replaced by cnsRedirect
+		"getContractAddress":              cns.getContractAddress,
+		"ifRegisteredByAddress":           cns.ifRegisteredByAddress,
+		"ifRegisteredByName":              cns.ifRegisteredByName,
+		"getRegisteredContracts":          cns.getRegisteredContractsByRange,
+		"getRegisteredContractsByName":    cns.getRegisteredContractsByName, // getHistoryContractsByName -> getRegisteredContractsByName
+		"getRegisteredContractsByAddress": cns.getRegisteredContractsByAddress,
+		"getRegisteredContractsByOrigin":  cns.getRegisteredContractsByOrigin, // getContractInfoByAddress -> getRegisteredContractsByOrigin
 	}
 }
 
@@ -163,41 +168,45 @@ func (cns *CnsManager) isFromInit() bool {
 	}
 }
 
-func (cns *CnsManager) cnsRegisterFromInit(name, version string) (int, error) {
+func (cns *CnsManager) cnsRegisterFromInit(name, version string) (int32, error) {
 	if !cns.isFromInit() {
+		cns.emitNotifyEvent(cnsInvalidCall, "[CNS] cnsRegisterFromInit can only be called from init()")
 		return failure, errors.New("[CNS] cnsRegisterFromInit can only be called from init()")
 	}
 
-	address := cns.callerAddr.Hex()
+	address := cns.caller
 	return cns.doCnsRegister(name, version, address)
 }
 
-func (cns *CnsManager) cnsRegister(name, version, address string) (int, error) {
+func (cns *CnsManager) cnsRegister(name, version string, contractAddr common.Address) (int32, error) {
 
 	if cns.isFromInit() {
+		cns.emitNotifyEvent(cnsInvalidCall, "[CNS] cnsRegister can't be called from init()")
 		return failure, errors.New("[CNS] cnsRegister can't be called from init()")
 	}
 
-	contractAddr := common.HexToAddress(address)
-
 	// check the owner
 	if !cns.isOwner(contractAddr) {
+		cns.emitNotifyEvent(cnsNoPermission, "[CNS] not owner of registered contract")
 		return failure, errNotOwner
 	}
 
-	return cns.doCnsRegister(name, version, address)
+	return cns.doCnsRegister(name, version, contractAddr)
 }
 
-func (cns *CnsManager) doCnsRegister(name, version, address string) (int, error) {
-	if !common.IsHexAddress(address) {
-		return failure, errAddressInvalid
-	}
+func (cns *CnsManager) doCnsRegister(name, version string, address common.Address) (int32, error) {
+	/*
+		if !common.IsHexAddress(address) {
+			return failure, errAddressInvalid
+		}*/
 
 	if !regName.MatchString(name) {
+		cns.emitNotifyEvent(cnsInvalidArgument, errNameInvalid.Error())
 		return failure, errNameInvalid
 	}
 
 	if !regVer.MatchString(version) {
+		cns.emitNotifyEvent(cnsInvalidArgument, errVersionInvalid.Error())
 		return failure, errVersionInvalid
 	}
 
@@ -205,30 +214,32 @@ func (cns *CnsManager) doCnsRegister(name, version, address string) (int, error)
 	key := getSearchKey(name, version)
 	value := cns.cMap.find(key)
 	if value != nil {
+		cns.emitNotifyEvent(cnsRegExist, "[CNS] name and version is already registered and activated in CNS")
 		return failure, errors.New("[CNS] name and version is already registered and activated in CNS")
 	}
 
 	// check is name unique
 	ori := cns.origin.Hex()
 	if cns.cMap.isNameRegByOthers(name, ori) {
+		cns.emitNotifyEvent(cnsRegExist, "[CNS] Name is already registered")
 		return failure, errors.New("[CNS] Name is already registered")
 	}
 
 	// check is version valid
 	largestVersion := cns.cMap.getLargestVersion(name)
 	if verCompare(version, largestVersion) != 1 {
+		cns.emitNotifyEvent(cnsInvalidArgument, "[CNS] Version must be larger than previous version")
 		return failure, errors.New("[CNS] Version must be larger than previous version")
 	}
 
 	// new a contractInfo struct and serialize it
-	cnsInfo := newContractInfo(name, version, address, ori)
-	cBytes, _ := cnsInfo.encode()
+	cnsInfo := newContractInfo(name, version, address.String(), ori)
 
 	// record the info to stateDB
-	cns.cMap.insert(key, cBytes)
+	cns.cMap.insert(key, cnsInfo)
 
-	// update the latest version of the cns name
-	cns.cMap.updateLatestVer(name, version)
+	// update the current version of the cns name
+	cns.cMap.setCurrentVer(name, version)
 
 	return success, nil
 }
@@ -255,14 +266,16 @@ func verCompare(ver1, ver2 string) int {
 }
 
 // cnsUnregister is deprecated, cnsUnregister -> cnsRedirect
-// cnsRedirect selects a specific version of a cns name and set it "latest"
-func (cns *CnsManager) cnsRedirect(name, version string) (int, error) {
+// cnsRedirect selects a specific version of a cns name and set it to current version
+func (cns *CnsManager) cnsRedirect(name, version string) (int32, error) {
 
 	if !regName.MatchString(name) {
+		cns.emitNotifyEvent(cnsInvalidArgument, errNameInvalid.Error())
 		return failure, errNameInvalid
 	}
 
 	if !regVer.MatchString(version) {
+		cns.emitNotifyEvent(cnsInvalidArgument, errVersionInvalid.Error())
 		return failure, errVersionInvalid
 	}
 
@@ -271,16 +284,18 @@ func (cns *CnsManager) cnsRedirect(name, version string) (int, error) {
 	// get cnsInfo
 	cnsInfo := cns.cMap.find(key)
 	if cnsInfo == nil {
+		cns.emitNotifyEvent(cnsRegNotExist, "[CNS] Name and version didn't register before")
 		return failure, errors.New("[CNS] Name and version didn't register before")
 	}
 
 	// check is Owner
 	contractAddr := common.HexToAddress(cnsInfo.Address)
 	if !cns.isOwner(contractAddr) {
+		cns.emitNotifyEvent(cnsNoPermission, errNotOwner.Error())
 		return failure, errNotOwner
 	}
 
-	cns.cMap.updateLatestVer(name, version)
+	cns.cMap.setCurrentVer(name, version)
 
 	return success, nil
 }
@@ -290,16 +305,17 @@ func (cns *CnsManager) getContractAddress(name, version string) (string, error) 
 	if sysCon, ok := cnsSysContractsMap[name]; ok {
 		return sysCon.String(), nil
 	}
-	if strings.EqualFold(version, "latest") {
-		version = cns.cMap.getLatestVer(name)
-	}
 
-	if !regVer.MatchString(version) {
-		return "", errVersionInvalid
+	if strings.EqualFold(version, "latest") {
+		version = cns.cMap.getCurrentVer(name)
 	}
 
 	if !regName.MatchString(name) {
 		return "", errNameInvalid
+	}
+
+	if !regVer.MatchString(version) {
+		return "", errVersionInvalid
 	}
 
 	key := getSearchKey(name, version)
@@ -313,13 +329,14 @@ func (cns *CnsManager) getContractAddress(name, version string) (string, error) 
 	return cnsInfo.Address, nil
 }
 
-func (cns *CnsManager) ifRegisteredByName(name string) (int, error) {
+func (cns *CnsManager) ifRegisteredByName(name string) (int32, error) {
+	var index uint64
 
 	if !regName.MatchString(name) {
 		return undefined, errNameInvalid
 	}
 
-	for index := 0; index < cns.cMap.total(); index++ {
+	for index = 0; index < cns.cMap.total(); index++ {
 		cnsInfo := cns.cMap.get(index)
 		if cnsInfo.Name == name {
 			return registered, nil
@@ -329,15 +346,16 @@ func (cns *CnsManager) ifRegisteredByName(name string) (int, error) {
 	return unregistered, nil
 }
 
-func (cns *CnsManager) ifRegisteredByAddress(address string) (int, error) {
+func (cns *CnsManager) ifRegisteredByAddress(address common.Address) (int32, error) {
+	var index uint64
+	/*
+		if !common.IsHexAddress(address) {
+			return undefined, errAddressInvalid
+		}*/
 
-	if !common.IsHexAddress(address) {
-		return undefined, errAddressInvalid
-	}
-
-	for index := 0; index < cns.cMap.total(); index++ {
+	for index = 0; index < cns.cMap.total(); index++ {
 		cnsInfo := cns.cMap.get(index)
-		if cnsInfo.Address == address {
+		if cnsInfo.Address == address.String() {
 			return registered, nil
 		}
 	}
@@ -345,8 +363,8 @@ func (cns *CnsManager) ifRegisteredByAddress(address string) (int, error) {
 	return unregistered, nil
 }
 
-func getSearchKey(name, version string) []byte {
-	return []byte(name + ":" + version)
+func getSearchKey(name, version string) string {
+	return name + ":" + version
 }
 
 // getRegisteredContractsByRange returns the cnsContractInfo within the ranges specified
@@ -355,21 +373,23 @@ func (cns *CnsManager) getRegisteredContractsByRange(head, size int) (string, er
 	var cnsInfoArray = make([]*ContractInfo, 0)
 	var tail int
 
+	total := int(cns.cMap.total())
+
 	// check the head and size are valid numbers
-	invalidRange := head >= cns.cMap.total() || size < 0
+	invalidRange := head >= total || size < 0
 	if invalidRange {
 		return "", errors.New("")
 	}
 
 	// make sure the head + size does not exceed the total numbers of cnsContractInfo
-	if size == 0 || head+size > cns.cMap.total() {
-		tail = cns.cMap.total()
+	if size == 0 || head+size > total {
+		tail = total
 	} else {
 		tail = head + size
 	}
 
 	for index := head; index < tail; index++ {
-		cnsInfo := cns.cMap.get(index)
+		cnsInfo := cns.cMap.get(uint64(index))
 		cnsInfoArray = append(cnsInfoArray, cnsInfo)
 	}
 
@@ -379,12 +399,13 @@ func (cns *CnsManager) getRegisteredContractsByRange(head, size int) (string, er
 // before: getHistoryContractsByName -> after refactory: getRegisteredContractsByName
 func (cns *CnsManager) getRegisteredContractsByName(name string) (string, error) {
 	var cnsInfoArray = make([]*ContractInfo, 0)
+	var index uint64
 
 	if !regName.MatchString(name) {
 		return "", errNameInvalid
 	}
 
-	for index := 0; index < cns.cMap.total(); index++ {
+	for index = 0; index < cns.cMap.total(); index++ {
 		cnsInfo := cns.cMap.get(index)
 		if cnsInfo.Name == name {
 			cnsInfoArray = append(cnsInfoArray, cnsInfo)
@@ -394,16 +415,18 @@ func (cns *CnsManager) getRegisteredContractsByName(name string) (string, error)
 	return serializeCnsInfo(codeOk, msgOk, cnsInfoArray)
 }
 
-func (cns *CnsManager) getRegisteredContractsByAddress(addr string) (string, error) {
+func (cns *CnsManager) getRegisteredContractsByAddress(addr common.Address) (string, error) {
 	var cnsInfoArray = make([]*ContractInfo, 0)
+	var index uint64
 
-	if !common.IsHexAddress(addr) {
-		return "", errAddressInvalid
-	}
+	/*
+		if !common.IsHexAddress(addr) {
+			return "", errAddressInvalid
+		}*/
 
-	for index := 0; index < cns.cMap.total(); index++ {
+	for index = 0; index < cns.cMap.total(); index++ {
 		cnsInfo := cns.cMap.get(index)
-		if cnsInfo.Address == addr {
+		if cnsInfo.Address == addr.String() {
 			cnsInfoArray = append(cnsInfoArray, cnsInfo)
 		}
 	}
@@ -412,16 +435,18 @@ func (cns *CnsManager) getRegisteredContractsByAddress(addr string) (string, err
 }
 
 // before: getContractInfoByAddress -> after refactory: getRegisteredContractsByOrigin
-func (cns *CnsManager) getRegisteredContractsByOrigin(origin string) (string, error) {
+func (cns *CnsManager) getRegisteredContractsByOrigin(origin common.Address) (string, error) {
 	var cnsInfoArray = make([]*ContractInfo, 0)
+	var index uint64
 
-	if !common.IsHexAddress(origin) {
-		return "", errAddressInvalid
-	}
+	/*
+		if !common.IsHexAddress(origin) {
+			return "", errAddressInvalid
+		}*/
 
-	for index := 0; index < cns.cMap.total(); index++ {
+	for index = 0; index < cns.cMap.total(); index++ {
 		cnsInfo := cns.cMap.get(index)
-		if cnsInfo.Origin == origin {
+		if cnsInfo.Origin == origin.String() {
 			cnsInfoArray = append(cnsInfoArray, cnsInfo)
 		}
 	}
@@ -429,13 +454,18 @@ func (cns *CnsManager) getRegisteredContractsByOrigin(origin string) (string, er
 	return serializeCnsInfo(codeOk, msgOk, cnsInfoArray)
 }
 
-func serializeCnsInfo(code int, msg string, array []*ContractInfo) (string, error) {
+func serializeCnsInfo(code CodeType, msg string, array []*ContractInfo) (string, error) {
 	data := newReturnMsg(code, msg, array)
 	cBytes, err := json.Marshal(data)
 	return string(cBytes), err
 }
 
-func getCnsAddress(db StateDB, name, version string) (string, error) {
-	cns := newCnsManager(db)
+func getCnsAddress(stateDB StateDB, name, version string) (string, error) {
+	cns := newCnsManager(stateDB)
 	return cns.getContractAddress(name, version)
+}
+
+func (cns *CnsManager) emitNotifyEvent(code CodeType, msg string) {
+	topic := "Notify"
+	emitEvent(cns.cMap.contractAddr, cns.cMap, cns.blockNumber.Uint64(), topic, code, msg)
 }

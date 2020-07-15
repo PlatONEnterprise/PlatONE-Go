@@ -3,10 +3,11 @@ package vm
 import (
 	"errors"
 	"fmt"
+	"math/big"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
-	"math/big"
 )
 
 var (
@@ -367,7 +368,7 @@ func (u *ParamManager) getIsTxUseGas() (int32, error) {
 	return int32(ret), nil
 }
 func (u *ParamManager) doParamSet(inputKey, inputValue interface{}) (int32, error) {
-	if !checkPermission(u.stateDB, u.caller, 1) {
+	if !hasParamOpPermission(u.stateDB, u.caller) {
 		u.emitNotifyEventInParam(callerHasNoPermission, fmt.Sprintf("%s has no permission to adjust param.", u.caller.String()))
 		return failFlag, ErrHasNoPermission
 	}

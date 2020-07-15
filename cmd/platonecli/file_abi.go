@@ -68,7 +68,7 @@ func AbiParse(abiFilePath, str string) []byte {
 	var abiBytes []byte
 
 	if abiFilePath == "" {
-		if p := precompiledList[str]; p != "" {
+		if p := precompiledList[str]; p != "" { // todo: equalFold string?
 			precompiledAbi, _ := precompile.Asset(p)
 			return precompiledAbi
 		}

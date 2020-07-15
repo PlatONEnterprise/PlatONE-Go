@@ -122,8 +122,8 @@ func transfer(c *cli.Context) {
 	value = utl.ChainParamConvert(value, "value").(string)
 	toNew := utl.ChainParamConvert(to, "to").(common.Address)
 
-	call := packet.NewContractCallDemo(nil, "", transferType)
-	result := messageCall(c, call, &toNew, value, call.TxType)
+	call := packet.NewContractCallDemo(nil, "", 0)
+	result := messageCall(c, call, &toNew, value)
 	fmt.Printf("result: %v\n", result)
 }
 

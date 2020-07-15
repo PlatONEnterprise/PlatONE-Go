@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
+	"reflect"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
-	"reflect"
 )
 
 func ConvertBytesTo(input []byte, targetType string) reflect.Value {
@@ -30,9 +31,11 @@ var Bytes2X_CMD = map[string]interface{}{
 	"int32": BytesToInt32,
 	"int64": BytesToInt64,
 
-	"*syscontracts.NodeInfo":   BytesToNodeInfo,
-	"*syscontracts.UpdateNode": BytesToUpdateNode,
-	"common.Address":           HexBytesToAddress,
+	"*syscontracts.NodeInfo":     BytesToNodeInfo,
+	"*syscontracts.UpdateNode":   BytesToUpdateNode,
+	"*syscontracts.UserInfo":     BytesToUserInfo,
+	"*syscontracts.UserDescInfo": BytesToUserDescInfo,
+	"common.Address":             HexBytesToAddress,
 }
 
 func HexBytesToAddress(curByte []byte) common.Address {
@@ -53,6 +56,22 @@ func BytesToNodeInfo(curByte []byte) *syscontracts.NodeInfo {
 	var info syscontracts.NodeInfo
 	if err := json.Unmarshal(curByte, &info); nil != err {
 		panic("BytesToNodeInfo:" + err.Error() + " bytes:" + string(curByte))
+	}
+	return &info
+}
+
+func BytesToUserInfo(curByte []byte) *syscontracts.UserInfo {
+	var info syscontracts.UserInfo
+	if err := json.Unmarshal(curByte, &info); nil != err {
+		panic("BytesToUserInfo:" + err.Error() + " bytes:" + string(curByte))
+	}
+	return &info
+}
+
+func BytesToUserDescInfo(curByte []byte) *syscontracts.UserDescInfo {
+	var info syscontracts.UserDescInfo
+	if err := json.Unmarshal(curByte, &info); nil != err {
+		panic("BytesToUserInfo:" + err.Error() + " bytes:" + string(curByte))
 	}
 	return &info
 }
