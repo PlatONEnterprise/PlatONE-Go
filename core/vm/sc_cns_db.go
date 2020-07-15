@@ -1,99 +1,149 @@
 package vm
 
 import (
+	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 )
 
 const (
-	cnsName   = "cnsManager"
-	cnsTotal  = "total"
-	cnsLatest = "latest"
+	cnsName    = "cnsManager"
+	cnsTotal   = "total"
+	cnsCurrent = "current"
 )
 
 type cnsMap struct {
 	StateDB
-	codeAddr common.Address
+	contractAddr common.Address
 }
 
-func NewCnsMap(db StateDB, addr common.Address) *cnsMap {
-	return &cnsMap{db, addr}
+func NewCnsMap(stateDB StateDB, contractAddr common.Address) *cnsMap {
+	return &cnsMap{stateDB, contractAddr}
 }
 
+/*
 func (c *cnsMap) setState(key, value []byte) {
-	c.SetState(c.codeAddr, key, value)
+	c.SetState(c.contractAddr, key, value)
 }
 
 func (c *cnsMap) getState(key []byte) []byte {
-	return c.GetState(c.codeAddr, key)
+	return c.GetState(c.contractAddr, key)
+}*/
+
+func (c *cnsMap) setState(key, value interface{}) {
+
+	keyBytes, err := rlp.EncodeToBytes(key)
+	if err != nil {
+		// todo: panic?
+	}
+
+	valueBytes, err := rlp.EncodeToBytes(value)
+	if err != nil {
+		// todo: panic?
+	}
+
+	c.SetState(c.contractAddr, keyBytes, valueBytes)
 }
 
-func (c *cnsMap) getKey(index int) []byte {
-	indexStr := strconv.Itoa(index)
-	value := c.getState(wrapper(indexStr))
+func (c *cnsMap) getState(key interface{}) []byte {
 
-	return value
+	keyBytes, err := rlp.EncodeToBytes(key)
+	if err != nil {
+		// todo
+	}
+
+	return c.GetState(c.contractAddr, keyBytes)
 }
 
-func (c *cnsMap) find(key []byte) *ContractInfo {
+// todo: if could optimize the getState() by go reflect
+func (c *cnsMap) getKeyByIndex(index uint64) string {
+	value := c.getState(indexWrapper(index))
+	if len(value) == 0 {
+		return ""
+	}
+
+	var result string
+
+	err := rlp.DecodeBytes(value, &result)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return result
+}
+
+func (c *cnsMap) find(key string) *ContractInfo {
 	value := c.getState(key)
-	if value == nil {
+	if len(value) == 0 {
 		return nil
 	}
 
-	cnsInfo, _ := decodeCnsInfo(value)
-	return cnsInfo
+	var result ContractInfo
+
+	err := rlp.DecodeBytes(value, &result)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return &result
 }
 
-func (c *cnsMap) get(index int) *ContractInfo {
-	value := c.getKey(index)
-	if value == nil {
+func (c *cnsMap) get(index uint64) *ContractInfo {
+	value := c.getKeyByIndex(index)
+	if value == "" {
 		return nil
 	}
 
 	return c.find(value)
 }
 
-func (c *cnsMap) total() int {
+func (c *cnsMap) total() uint64 {
 	value := c.getState(totalWrapper())
-
-	if value == nil || len(value) == 0 {
+	if len(value) == 0 {
 		return 0
 	}
 
-	totalStr := string(value)
-	total, _ := strconv.Atoi(totalStr)
-	return total
+	var result uint64
+
+	err := rlp.DecodeBytes(value, &result)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return result
 }
 
-func (c *cnsMap) insert(key, value []byte) {
+func (c *cnsMap) insert(key string, value *ContractInfo) {
 	total := c.total()
-	index := strconv.Itoa(total)
-
 	c.setState(key, value)
-	c.setState(wrapper(index), key)
+	c.setState(indexWrapper(total), key)
+	c.setState(totalWrapper(), total+1)
 
-	update := strconv.Itoa(total + 1)
-	c.setState(totalWrapper(), []byte(update))
+	fmt.Printf("total is %v type is %v, key is %v, value is %v\n", total, reflect.TypeOf(total), key, value)
 }
 
 func (c *cnsMap) update(key, value []byte) {
 	c.setState(key, value)
 }
 
-func wrapper(str string) []byte {
-	return []byte(cnsName + str)
+func indexWrapper(index uint64) string {
+	return cnsName + strconv.FormatUint(index, 10)
 }
 
-func totalWrapper() []byte {
-	return []byte(cnsName + cnsTotal)
+func totalWrapper() string {
+	return cnsName + cnsTotal
 }
 
-func (cMap *cnsMap) isNameRegByOthers(name, origin string) bool {
-	for index := 0; index < cMap.total(); index++ {
-		cnsInfo := cMap.get(index)
+func (c *cnsMap) isNameRegByOthers(name, origin string) bool {
+	var index uint64
+
+	for index = 0; index < c.total(); index++ {
+		cnsInfo := c.get(index)
 		if cnsInfo.Name == name && cnsInfo.Origin != origin {
 			return true
 		}
@@ -103,9 +153,11 @@ func (cMap *cnsMap) isNameRegByOthers(name, origin string) bool {
 }
 
 func (c *cnsMap) isNameRegByOthers_Method2(name, origin string) bool {
-	for index := 0; index < c.total(); index++ {
-		key := c.getKey(index)
-		existedName := strings.Split(string(key), ":")[0]
+	var index uint64
+
+	for index = 0; index < c.total(); index++ {
+		key := c.getKeyByIndex(index)
+		existedName := strings.Split(key, ":")[0]
 		if existedName == name {
 			cnsInfo := c.find(key)
 			if cnsInfo.Origin != origin {
@@ -121,8 +173,9 @@ func (c *cnsMap) isNameRegByOthers_Method2(name, origin string) bool {
 
 func (c *cnsMap) getLargestVersion(name string) string {
 	tempVersion := "0.0.0.0"
+	var index uint64
 
-	for index := 0; index < c.total(); index++ {
+	for index = 0; index < c.total(); index++ {
 		cnsInfo := c.get(index)
 		if cnsInfo.Name == name {
 			if verCompare(cnsInfo.Version, tempVersion) == 1 {
@@ -136,11 +189,15 @@ func (c *cnsMap) getLargestVersion(name string) string {
 
 func (c *cnsMap) getLargestVersion_Method2(name string) string {
 	tempVersion := "0.0.0.0"
+	var index uint64 = 0
 
-	for index := 0; index < c.total(); index++ {
-		key := c.getKey(index)
-		existedName := strings.Split(string(key), ":")[0]
-		existedVersion := strings.Split(string(key), ":")[1]
+	for ; index < c.total(); index++ {
+		key := c.getKeyByIndex(index)
+
+		ary := strings.Split(string(key), ":")
+		existedName := ary[0]
+		existedVersion := ary[1]
+
 		if existedName == name {
 			if verCompare(existedVersion, tempVersion) == 1 {
 				tempVersion = existedVersion
@@ -151,15 +208,26 @@ func (c *cnsMap) getLargestVersion_Method2(name string) string {
 	return tempVersion
 }
 
-func latestWrapper(name string) []byte {
-	return []byte(cnsName + cnsLatest + name)
+func currentVerWrapper(name string) []byte {
+	return []byte(cnsName + cnsCurrent + name)
 }
 
-func (c *cnsMap) getLatestVer(name string) string {
-	ver := c.getState(latestWrapper(name))
-	return string(ver)
+func (c *cnsMap) getCurrentVer(name string) string {
+	value := c.getState(currentVerWrapper(name))
+	if len(value) == 0 {
+		return ""
+	}
+
+	var result string
+
+	err := rlp.DecodeBytes(value, &result)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return result
 }
 
-func (c *cnsMap) updateLatestVer(name, ver string) {
-	c.setState(latestWrapper(name), []byte(ver))
+func (c *cnsMap) setCurrentVer(name, ver string) {
+	c.setState(currentVerWrapper(name), []byte(ver))
 }

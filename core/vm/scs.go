@@ -2,6 +2,7 @@ package vm
 
 import (
 	"fmt"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
@@ -53,9 +54,10 @@ func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Cont
 			return node.Run(input)
 		case *CnsManager:
 			cns := newCnsManager(evm.StateDB)
-			cns.callerAddr = contract.CallerAddress
+			cns.caller = contract.CallerAddress
+			cns.origin = evm.Origin
 			cns.isInit = evm.InitEntryID
-			cns.origin = evm.Context.Origin
+			cns.blockNumber = evm.BlockNumber
 
 			return cns.Run(input)
 		case *ParamManager:
@@ -68,9 +70,9 @@ func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Cont
 			return p.Run(input)
 		case *FireWall:
 			fw := &FireWall{
-				db:           evm.StateDB,
-				contractAddr: contract.self.Address(),
-				caller:       contract.caller.Address(),
+				stateDB:     evm.StateDB,
+				caller:      contract.CallerAddress,
+				blockNumber: evm.BlockNumber,
 			}
 			return fw.Run(input)
 		case *GroupManagement:

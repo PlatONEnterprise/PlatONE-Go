@@ -192,7 +192,7 @@ func fwCommon(c *cli.Context, funcName string) {
 	utl.ParamValid(targetAddr, "fw")
 	utl.ParamValid(api, "name")
 
-	rules := CombineRule(addr, api) //TODO batch rules
+	rules := CombineRule(targetAddr, api) //TODO batch rules
 	// stringslice --rule addr1:func1 --rule addr2:func2
 	// string --rule addr1:func1|addr2:func2|...
 	// string --addr addr1 --api func1

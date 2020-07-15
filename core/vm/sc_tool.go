@@ -27,6 +27,15 @@ var (
 	ZeroAddress = common.Address{}
 )
 
+var (
+	errNameInvalid    = errors.New("[CNS] name format is invalid")
+	errVersionInvalid = errors.New("[CNS] version format is invalid")
+	errAddressInvalid = errors.New("[CNS] address format is invalid")
+	errNotOwner       = errors.New("[CNS] not owner of registered contract")
+)
+
+var fwErrNotOwner = errors.New("FW : error, only contract owner can set firewall setting")
+
 func execSC(input []byte, fns SCExportFns) ([]byte, error) {
 	txType, fnName, fn, params, err := retrieveFnAndParams(input, fns)
 	if nil != err {

@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	ErrRepeatedGroupID = errors.New("Repeated GroupID")
+	ErrRepeatedGroupID = errors.New("Repeated GroupID ")
 )
 
 const (
@@ -74,7 +74,7 @@ func (g *GroupManagement) AllExportFns() SCExportFns {
 
 // export functions
 func (g *GroupManagement) hasGroupOpPermission() (int32, error) {
-	if hasGroupCreatePermmision(g.state, g.caller) {
+	if hasGroupCreatePermission(g.state, g.caller) {
 		return 1, nil
 	}
 	return 0, nil
@@ -90,7 +90,9 @@ func (g *GroupManagement) createGroup(groupInfo string) (int32, error) {
 		return -1, err
 	}
 	group.Creator = g.Caller().String()
-	g.addGroup(group)
+	if err := g.addGroup(group); err != nil{
+		return -1, err
+	}
 	return 0, nil
 }
 func (g *GroupManagement) getAllGroups() (string, error) {
@@ -123,7 +125,7 @@ func (g *GroupManagement) updateBootNodes(groupID uint64, nodes string) (int32, 
 	if group.Creator != g.Caller().String() {
 		return -1, ErrNoPermission
 	}
-	bootNodes := []string{}
+	var bootNodes []string
 	err = json.Unmarshal([]byte(nodes), &bootNodes)
 	if err != nil{
 		return -1, err
@@ -153,7 +155,9 @@ func (g *GroupManagement) addBootNode(groupID uint64, node string) (int32, error
 	}
 	group.BootNodes = append(group.BootNodes, node)
 
-	g.updateGroupInfo(*group)
+	if err := g.updateGroupInfo(*group); err != nil{
+		return -1, err
+	}
 	return 0, nil
 }
 func (g *GroupManagement) delBootNode(groupID uint64, node string) (int32, error) {
@@ -172,7 +176,9 @@ func (g *GroupManagement) delBootNode(groupID uint64, node string) (int32, error
 	}
 	if pos != -1 {
 		group.BootNodes = append(group.BootNodes[:pos], group.BootNodes[pos+1:]...)
-		g.updateGroupInfo(*group)
+		if err := g.updateGroupInfo(*group); err != nil {
+			return -1, err
+		}
 	}
 
 	return 0, nil
@@ -191,8 +197,12 @@ func (g *GroupManagement) addGroup(info GroupInfo) error {
 		}
 	}
 
-	g.storeGroupInfo(&info)
-	g.addGroupToList(&info)
+	if err := g.storeGroupInfo(&info); err != nil{
+		return err
+	}
+	if err := g.addGroupToList(&info); err != nil{
+		return err
+	}
 
 	return nil
 }
@@ -209,8 +219,12 @@ func (g *GroupManagement) updateGroupInfo(info GroupInfo) error {
 		}
 	}
 
-	g.storeGroupInfo(&info)
-	g.updateGroupList(groups)
+	if err := g.storeGroupInfo(&info); err != nil{
+		return err
+	}
+	if err := g.updateGroupList(groups); err != nil{
+		return err
+	}
 
 	return nil
 }
@@ -296,7 +310,9 @@ func (g *GroupManagement) delGroupfromList(id uint64) error {
 	}
 	if pos > -1 {
 		groups = append(groups[:pos], groups[pos+1:]...)
-		g.storeGroupList(groups)
+		if err := g.storeGroupList(groups); err != nil{
+			return err
+		}
 	}
 	return nil
 }

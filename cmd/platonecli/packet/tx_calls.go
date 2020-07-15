@@ -6,7 +6,7 @@ import (
 
 // InnerCallCommon
 // extract the common part of all the inner calls
-func InnerCallCommon(funcName string, funcParams []string, txType int) *InnerCall {
+func InnerCallCommon(funcName string, funcParams []string, txType uint64) *InnerCall {
 	// parse the function parameters
 	funcName, funcParams = utl.FuncParse(funcName, funcParams)
 

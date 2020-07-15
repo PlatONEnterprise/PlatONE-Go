@@ -7,6 +7,9 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/packet"
 	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
@@ -15,16 +18,19 @@ import (
 	"gopkg.in/urfave/cli.v1"
 )
 
-const (
-	userManagementAddress        = "0x1000000000000000000000000000000000000001" // The PlatONE Precompiled contract addr for user management
-	nodeManagementAddress        = "0x1000000000000000000000000000000000000002" // The PlatONE Precompiled contract addr for node management
-	cnsManagementAddress         = "0x0000000000000000000000000000000000000011" // The PlatONE Precompiled contract addr for CNS
-	parameterManagementAddress   = "0x1000000000000000000000000000000000000004" // The PlatONE Precompiled contract addr for parameter management
-	firewallManagementAddress    = "0x1000000000000000000000000000000000000005" // The PlatONE Precompiled contract addr for fire wall management
-	groupManagementAddress       = "0x1000000000000000000000000000000000000006" // The PlatONE Precompiled contract addr for group management
-	contractDataProcessorAddress = "0x1000000000000000000000000000000000000007" // The PlatONE Precompiled contract addr for group management
-	cnsInvokeAddress             = "0x0000000000000000000000000000000000000000" // The PlatONE Precompiled contract addr for group management
+var (
+	userManagementAddress        = syscontracts.UserManagementAddress.String()        // The PlatONE Precompiled contract addr for user management
+	nodeManagementAddress        = syscontracts.NodeManagementAddress.String()        // The PlatONE Precompiled contract addr for node management
+	cnsManagementAddress         = syscontracts.CnsManagementAddress.String()         // The PlatONE Precompiled contract addr for CNS
+	parameterManagementAddress   = syscontracts.ParameterManagementAddress.String()   // The PlatONE Precompiled contract addr for parameter management
+	firewallManagementAddress    = syscontracts.FirewallManagementAddress.String()    // The PlatONE Precompiled contract addr for fire wall management
+	groupManagementAddress       = syscontracts.GroupManagementAddress.String()       // The PlatONE Precompiled contract addr for group management
+	contractDataProcessorAddress = syscontracts.ContractDataProcessorAddress.String() // The PlatONE Precompiled contract addr for group management
+	cnsInvokeAddress             = syscontracts.CnsInvokeAddress.String()             // The PlatONE Precompiled contract addr for group management
+)
 
+const (
+	// todo: duplicated with the constant var in types/transition.go -> deprecated
 	// Transaction types
 	transferType    = 0    // Used for transferring values
 	deployContract  = 1    // Used for deploying contracts
@@ -57,13 +63,14 @@ type convert struct {
 	paramName string
 }
 
+// temporary deprecated
 // innerCall extract the common parts of the actions of fw and mig calls
-func innerCall(c *cli.Context, funcName string, funcParams []string, txType int) interface{} {
+func innerCall(c *cli.Context, funcName string, funcParams []string, txType uint64) interface{} {
 	addr := c.Args().First()
 	to := utl.ChainParamConvert(addr, "to").(common.Address)
 
 	call := packet.InnerCallCommon(funcName, funcParams, txType)
-	return messageCall(c, call, &to, "", call.TxType)
+	return messageCall(c, call, &to, "")
 }
 
 // contractCommon extract the common parts of the actions of contract execution
@@ -83,12 +90,12 @@ func contractCommon(c *cli.Context, funcParams []string, funcName, contract stri
 	to := utl.ChainParamConvert(cns.To, "to").(common.Address)
 
 	call := packet.ContractCallCommon(funcName, funcParams, funcAbi, *cns, vm)
-	return messageCall(c, call, &to, value, call.TxType)
+	return messageCall(c, call, &to, value)
 }
 
 // messageCall extract the common parts of the transaction based calls
 // including eth_call, eth_sendTransaction, and eth_sendRawTransaction
-func messageCall(c *cli.Context, call packet.MessageCall, to *common.Address, value string, txType int) interface{} {
+func messageCall(c *cli.Context, call packet.MessageCall, to *common.Address, value string) interface{} {
 
 	// get the global parameters
 	address, keystore, gas, gasPrice, isSync, isDefault := getGlobalParam(c)
@@ -106,7 +113,7 @@ func messageCall(c *cli.Context, call packet.MessageCall, to *common.Address, va
 	}
 
 	// packet the transaction and select the transaction based calls
-	tx := packet.NewTxParams(from, to, value, gas, gasPrice, data, txType)
+	tx := packet.NewTxParams(from, to, value, gas, gasPrice, data)
 	params, action := tx.SendMode(isWrite, keystore)
 
 	// print the RPC JSON param to the terminal
@@ -341,10 +348,10 @@ func GetAddressByName(name string) (string, error) {
 
 	// packet the contract all data
 	rawData := packet.NewData("getContractAddress", []string{name, "latest"}, nil)
-	call := packet.NewInnerCallDemo(rawData, executeContract)
+	call := packet.NewInnerCallDemo(rawData, types.NormalTxType)
 	data, _, _, _ := call.CombineData()
 
-	tx := packet.NewTxParams(from, &to, "", "", "", data, call.TxType)
+	tx := packet.NewTxParams(from, &to, "", "", "", data)
 	params := utl.CombineParams(tx, "latest")
 
 	response, err := utl.RpcCalls("eth_call", params)
@@ -368,8 +375,8 @@ func CnsParse(contract string) *packet.Cns {
 	isAddress, _ := utl.IsNameOrAddress(contract)
 
 	if isAddress {
-		return packet.NewCns(contract, "", executeContract)
+		return packet.NewCns(contract, "", types.NormalTxType)
 	} else {
-		return packet.NewCns(cnsInvokeAddress, contract, cnsTxType)
+		return packet.NewCns(cnsInvokeAddress, contract, types.CnsTxType)
 	}
 }

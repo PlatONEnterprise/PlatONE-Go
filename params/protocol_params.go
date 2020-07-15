@@ -90,10 +90,10 @@ const (
 
 	//system contract
 	UserManagementGas uint64 = 80000 //
-	CnsManagerGas 	  uint64 = 80000 //
+	CnsManagerGas     uint64 = 80000 //
 	SCNodeGas         uint64 = 80000 //
 	ParamManagerGas   uint64 = 80000 //
-	FireWall		  uint64 = 0
+	FireWall          uint64 = 10000
 	CnsInvokeGas      uint64 = 80000 //
 
 )

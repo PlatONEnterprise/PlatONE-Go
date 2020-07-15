@@ -4,20 +4,25 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/big"
 	"strings"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 )
 
-// var fwProcessErr = errors.New("firewall process error!")
-var fwErrNotOwner = errors.New("FW : error, only contract owner can set firewall setting!")
+const (
+	fwNoPermission    CodeType = 0
+	fwInvalidArgument CodeType = 1
+)
 
 type FireWall struct {
-	db           StateDB
-	contractAddr common.Address // st.to()		contract.self
-	caller       common.Address // msg.From()	contract.caller
+	stateDB     StateDB
+	caller      common.Address // msg.From()	contract.caller
+	blockNumber *big.Int
 }
 
 func (u *FireWall) RequiredGas(input []byte) uint64 {
@@ -47,8 +52,8 @@ func (u *FireWall) AllExportFns() SCExportFns {
 	}
 }
 
-func (u *FireWall) isOwner(contractAddr string) bool {
-	contractOwnerAddr := u.db.GetContractCreator(common.HexToAddress(contractAddr))
+func (u *FireWall) isOwner(contractAddr common.Address) bool {
+	contractOwnerAddr := u.stateDB.GetContractCreator(contractAddr)
 	callerAddr := u.caller
 
 	if callerAddr.Hex() == contractOwnerAddr.Hex() {
@@ -58,118 +63,137 @@ func (u *FireWall) isOwner(contractAddr string) bool {
 	return false
 }
 
-func (u *FireWall) openFirewall(contractAddr string) (int, error) {
+func (u *FireWall) openFirewall(contractAddr common.Address) (int32, error) {
 	if !u.isOwner(contractAddr) {
+		u.emitNotifyEvent(fwNoPermission, fwErrNotOwner.Error())
 		return failure, fwErrNotOwner
 	}
 
-	u.db.OpenFirewall(common.HexToAddress(contractAddr))
+	u.stateDB.OpenFirewall(contractAddr)
 	return success, nil
 }
 
-func (u *FireWall) closeFirewall(contractAddr string) (int, error) {
+func (u *FireWall) closeFirewall(contractAddr common.Address) (int32, error) {
 	if !u.isOwner(contractAddr) {
+		u.emitNotifyEvent(fwNoPermission, fwErrNotOwner.Error())
 		return failure, fwErrNotOwner
 	}
 
-	u.db.CloseFirewall(common.HexToAddress(contractAddr))
+	u.stateDB.CloseFirewall(contractAddr)
 	return success, nil
 }
 
-func (u *FireWall) fwClear(contractAddr, action string) (int, error) {
+func (u *FireWall) fwClear(contractAddr common.Address, action string) (int32, error) {
 	if !u.isOwner(contractAddr) {
+		u.emitNotifyEvent(fwNoPermission, fwErrNotOwner.Error())
 		return failure, fwErrNotOwner
 	}
 
 	act, err := state.NewAction(action)
 	if err != nil {
-		return failure, err // todo: how to handle error
+		u.emitNotifyEvent(fwInvalidArgument, err.Error())
+		return failure, err
 	}
 
-	u.db.FwClear(common.HexToAddress(contractAddr), act)
+	u.stateDB.FwClear(contractAddr, act)
 	return success, nil
 }
 
-func (u *FireWall) fwAdd(contractAddr, action, lst string) (int, error) {
+func (u *FireWall) fwAdd(contractAddr common.Address, action, lst string) (int32, error) {
 	if !u.isOwner(contractAddr) {
+		u.emitNotifyEvent(fwNoPermission, fwErrNotOwner.Error())
 		return failure, fwErrNotOwner
 	}
 
 	act, err := state.NewAction(action)
 	if err != nil {
+		u.emitNotifyEvent(fwInvalidArgument, err.Error())
 		return failure, err
 	}
 
 	list, err := convertToFwElem(lst)
 	if err != nil {
+		u.emitNotifyEvent(fwInvalidArgument, err.Error())
 		return failure, err
 	}
 
-	u.db.FwAdd(common.HexToAddress(contractAddr), act, list)
+	u.stateDB.FwAdd(contractAddr, act, list)
 	return success, nil
 }
 
-func (u *FireWall) fwDel(contractAddr, action, lst string) (int, error) {
+func (u *FireWall) fwDel(contractAddr common.Address, action, lst string) (int32, error) {
 	if !u.isOwner(contractAddr) {
+		u.emitNotifyEvent(fwNoPermission, fwErrNotOwner.Error())
 		return failure, fwErrNotOwner
 	}
 
 	act, err := state.NewAction(action)
 	if err != nil {
+		u.emitNotifyEvent(fwInvalidArgument, err.Error())
 		return failure, err
 	}
 
 	list, err := convertToFwElem(lst)
 	if err != nil {
+		u.emitNotifyEvent(fwInvalidArgument, err.Error())
 		return failure, err
 	}
 
-	u.db.FwDel(common.HexToAddress(contractAddr), act, list)
+	u.stateDB.FwDel(contractAddr, act, list)
 	return success, nil
 }
 
-func (u *FireWall) fwSet(contractAddr, action, lst string) (int, error) {
+// todo: input arguments type
+func (u *FireWall) fwSet(contractAddr common.Address, act, lst string) (int32, error) {
 	if !u.isOwner(contractAddr) {
+		u.emitNotifyEvent(fwNoPermission, fwErrNotOwner.Error())
 		return failure, fwErrNotOwner
 	}
 
-	act, err := state.NewAction(action)
+	action, err := state.NewAction(act)
 	if err != nil {
+		u.emitNotifyEvent(fwInvalidArgument, err.Error())
 		return failure, err
 	}
 
 	list, err := convertToFwElem(lst)
 	if err != nil {
+		u.emitNotifyEvent(fwInvalidArgument, err.Error())
 		return failure, err
 	}
 
-	u.db.FwSet(common.HexToAddress(contractAddr), act, list)
+	u.stateDB.FwSet(contractAddr, action, list)
 	return success, nil
 }
 
-func (u *FireWall) fwImport(contractAddr string, data []byte) (int, error) {
+func (u *FireWall) fwImport(contractAddr common.Address, data []byte) (int32, error) {
 	if !u.isOwner(contractAddr) {
+		u.emitNotifyEvent(fwNoPermission, fwErrNotOwner.Error())
 		return failure, fwErrNotOwner
 	}
 
-	err := u.db.FwImport(common.HexToAddress(contractAddr), data)
+	err := u.stateDB.FwImport(contractAddr, data)
 	return success, err
 }
 
-func (u *FireWall) getFwStatus(contractAddr string) (string, error) {
+func (u *FireWall) getFwStatus(contractAddr common.Address) (string, error) {
 	if !u.isOwner(contractAddr) {
 		return "", fwErrNotOwner
 	}
 
-	fwStatus := u.db.GetFwStatus(common.HexToAddress(contractAddr))
+	fwStatus := u.stateDB.GetFwStatus(contractAddr)
 
 	returnBytes, err := json.Marshal(fwStatus)
 	if err != nil {
-		/// log.Warn("FW : fwStatus Marshal error", "err", err)
 		errStr := fmt.Sprintf("FW : fwStatus Marshal error: %v", err)
 		return "", errors.New(errStr)
 	}
 	return string(returnBytes), nil
+}
+
+func (u *FireWall) emitNotifyEvent(code CodeType, msg string) {
+	topic := "Notify"
+	emitEvent(syscontracts.FirewallManagementAddress, u.stateDB, u.blockNumber.Uint64(), topic, code, msg)
 }
 
 func convertToFwElem(l string) ([]state.FwElem, error) {
