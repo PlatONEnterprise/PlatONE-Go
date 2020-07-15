@@ -67,10 +67,10 @@ type FuncDesc struct {
 type Cns struct {
 	To     string
 	Name   string // the cns name of contract
-	txType int    // the transaction type of the contract execution (EXECUTE_CONTRACT or CNS_TX_TYPE)
+	txType uint64 // the transaction type of the contract execution (EXECUTE_CONTRACT or CNS_TX_TYPE)
 }
 
-func NewCns(to, name string, txType int) *Cns {
+func NewCns(to, name string, txType uint64) *Cns {
 	return &Cns{
 		To:     to,
 		Name:   name,
@@ -109,7 +109,7 @@ func ParseAbiFromJson(abiBytes []byte) ([]FuncDesc, error) {
 }
 
 // NewTxParams news a TxParams object
-func NewTxParams(from common.Address, to *common.Address, value, gas, gasPrice, data string, txType int) *TxParams {
+func NewTxParams(from common.Address, to *common.Address, value, gas, gasPrice, data string) *TxParams {
 
 	tx := &TxParams{
 		From:     from,

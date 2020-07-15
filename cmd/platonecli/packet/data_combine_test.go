@@ -3,6 +3,8 @@ package packet
 import (
 	"testing"
 
+	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/test"
 	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
@@ -20,11 +22,11 @@ func TestDeploy(t *testing.T) {
 	codeBytes, _ := utl.ParseFileToBytes(CODE_PATH)
 	abiBytes, _ := utl.ParseFileToBytes(ABI_PATH)
 
-	call := NewDeployCall(codeBytes, abiBytes, "wasm", DEPLOY_CONTRACT)
+	call := NewDeployCall(codeBytes, abiBytes, "wasm", types.CreateTxType)
 
 	data, _, isWrite, _ := call.CombineData()
 	from := common.HexToAddress(test.TEST_ACCOUNT)
-	tx := NewTxParams(from, nil, "", "", "", data, call.TxType)
+	tx := NewTxParams(from, nil, "", "", "", data)
 	params, action := tx.SendMode(isWrite, "")
 
 	server := test.MockServer("rpc")

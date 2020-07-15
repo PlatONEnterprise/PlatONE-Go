@@ -46,6 +46,7 @@ const (
 	Accept Action = 0
 	Reject Action = 1
 )
+
 var FwWildchardAddr = common.HexToAddress("0xffffffffffffffffffffffffffffffffffffffff")
 
 type FwElem struct {
@@ -62,26 +63,26 @@ type FwStatus struct {
 	RejectedList    []FwElem
 }
 
-func (fw *FwStatus) canFindInList(funcName string, caller common.Address, act Action) bool{
+func (fw *FwStatus) canFindInList(funcName string, caller common.Address, act Action) bool {
 	list := fw.RejectedList
-	if act == 0{
+	if act == 0 {
 		list = fw.AcceptedList
 	}
 
 	for _, fwElem := range list {
 		if (fwElem.Addr == FwWildchardAddr || fwElem.Addr == caller) &&
-			(fwElem.FuncName == "*" || fwElem.FuncName == funcName){
+			(fwElem.FuncName == "*" || fwElem.FuncName == funcName) {
 			return true
 		}
 	}
 	return false
 }
 
-func (fw *FwStatus) IsRejected(funcName string, caller common.Address) bool{
+func (fw *FwStatus) IsRejected(funcName string, caller common.Address) bool {
 	return fw.canFindInList(funcName, caller, Reject)
 }
 
-func (fw *FwStatus) IsAccepted(funcName string, caller common.Address) bool{
+func (fw *FwStatus) IsAccepted(funcName string, caller common.Address) bool {
 	return fw.canFindInList(funcName, caller, Accept)
 }
 
@@ -96,7 +97,7 @@ func NewAction(action string) (Action, error) {
 	} else if strings.EqualFold(action, "REJECT") {
 		return Reject, nil
 	} else {
-		return 0, errors.New("action is invalid")
+		return 0, errors.New("FW: error, action is invalid")
 	}
 }
 

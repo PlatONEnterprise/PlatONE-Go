@@ -2,6 +2,7 @@ package packet
 
 import (
 	"bytes"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 )
 
@@ -13,7 +14,7 @@ type MessageCall interface {
 // ContractCallDemo, used for combining the data of contract execution
 type ContractCall struct {
 	data   *RawData
-	TxType int
+	TxType uint64
 	name   string
 	Interp Interpreter
 }
@@ -21,7 +22,7 @@ type ContractCall struct {
 // InnerCallDemo, used for combining the data of inner call methods (fw, mig, etc.)
 type InnerCall struct {
 	data   *RawData
-	TxType int
+	TxType uint64
 }
 
 // RawData, used to store function methods and abi
@@ -35,7 +36,7 @@ type RawData struct {
 type DeployCall struct {
 	codeBytes   []byte
 	abiBytes    []byte
-	TxType      int
+	TxType      uint64
 	Interpreter Interpreter
 }
 
@@ -52,7 +53,7 @@ type WasmInterpreter struct {
 	cnsName   string // contract name for contract execution by contract name
 	codeBytes []byte // code bytes for wasm contract deployment
 	abiBytes  []byte // abi bytes for wasm contract deployment
-	txType    int    // transaction type for contract deployment and execution
+	txType    uint64 // transaction type for contract deployment and execution
 }
 
 // Interpreter, the interface for different types of virtual machine(wasm or evm)
@@ -75,7 +76,7 @@ func NewData(funcName string, funcParams []string, funcAbi []byte) *RawData {
 }
 
 // NewContractCallDemo new a ContractCallDemo object
-func NewContractCallDemo(data *RawData, name string, txType int) *ContractCall {
+func NewContractCallDemo(data *RawData, name string, txType uint64) *ContractCall {
 
 	call := &ContractCall{
 		data:   data,
@@ -87,7 +88,7 @@ func NewContractCallDemo(data *RawData, name string, txType int) *ContractCall {
 }
 
 // NewInnerCallDemo new a InnerCallDemo object
-func NewInnerCallDemo(data *RawData, txType int) *InnerCall {
+func NewInnerCallDemo(data *RawData, txType uint64) *InnerCall {
 
 	call := &InnerCall{
 		data:   data,
@@ -98,7 +99,7 @@ func NewInnerCallDemo(data *RawData, txType int) *InnerCall {
 }
 
 // NewDeployCall new a DeployCall object
-func NewDeployCall(codeBytes, abiBytes []byte, vm string, txType int) *DeployCall {
+func NewDeployCall(codeBytes, abiBytes []byte, vm string, txType uint64) *DeployCall {
 
 	call := &DeployCall{
 		codeBytes: codeBytes,

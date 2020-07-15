@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/packet"
 	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
@@ -95,7 +97,6 @@ func contractReceipt(c *cli.Context) {
 	setUrl(c)
 
 	txHash := c.Args().First()
-	//paramValid(txHash, "txHash") //TODO
 
 	result, err := utl.GetTransactionReceipt(txHash)
 	if err != nil {
@@ -120,9 +121,9 @@ func deploy(c *cli.Context) {
 	}
 	utl.ParamValid(vm, "vm")
 
-	call := packet.NewDeployCall(codeBytes, abiBytes, vm, deployContract)
+	call := packet.NewDeployCall(codeBytes, abiBytes, vm, types.CreateTxType)
 
-	result := messageCall(c, call, nil, "", call.TxType)
+	result := messageCall(c, call, nil, "")
 	fmt.Printf("result: contract address is %s\n", result)
 
 	if utl.IsMatch(result.(string), "address") {
@@ -154,13 +155,17 @@ func execute(c *cli.Context) {
 //TODO test
 func migrate(c *cli.Context) {
 
-	funcName := "migrateFrom"     // 内置
-	sourceAddr := c.Args().Get(1) // 必选参数
+	funcName := "migrateFrom" // 内置
+	sourceAddr := c.Args().Get(1)
+	targetAddr := c.Args().Get(1) // 必选参数
 
-	if sourceAddr != "" {
-		utl.ParamValid(sourceAddr, "address")
-		funcParams := CombineFuncParams(sourceAddr)
-		result := innerCall(c, funcName, funcParams, migTxType)
+	utl.ParamValid(sourceAddr, "address")
+
+	if targetAddr != "" {
+		utl.ParamValid(targetAddr, "address")
+		funcParams := CombineFuncParams(sourceAddr, targetAddr)
+		// result := innerCall(c, funcName, funcParams, types.MigTxType)
+		result := contractCommon(c, funcParams, funcName, contractDataProcessorAddress)
 		fmt.Printf("result: %s\n", result)
 	} else {
 		// future feature

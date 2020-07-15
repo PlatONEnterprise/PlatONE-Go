@@ -3,6 +3,8 @@ package vm
 import (
 	"testing"
 
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -20,7 +22,7 @@ const (
 
 var (
 	cns *CnsManager
-	key = make([][]byte, 0)
+	key = make([]string, 0)
 )
 
 var testCases = []*ContractInfo{
@@ -38,6 +40,9 @@ func TestLatestVersion(t *testing.T) {
 	}{
 		{"0.0.0.0", "0.0.2.0"},
 		{"1.0.0.0", "0.0.0.1"},
+		{"1.0.0.0", "0.0.0.1"},
+		{"1.0.0.03011", "1.0.0.0301"},
+		{"1.0.0.07141108", "1.0.0.07141130"},
 	}
 
 	for _, data := range testCase {
@@ -63,7 +68,7 @@ func TestSerializeCnsInfo(t *testing.T) {
 }
 
 func TestCnsManager_cnsRegister(t *testing.T) {
-	result, err := cns.cnsRegister("alice", "0.0.0.1", testAddr1)
+	result, err := cns.cnsRegister("alice", "0.0.0.1", common.HexToAddress(testAddr1))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -95,7 +100,7 @@ func TestCnsManager_getContractAddress(t *testing.T) {
 
 func TestCnsManager_cnsRecall(t *testing.T) {
 
-	curVersion := cns.cMap.getLatestVer(testName)
+	curVersion := cns.cMap.getCurrentVer(testName)
 
 	result, err := cns.cnsRedirect(testName, testCases[2].Version)
 	if err != nil {
@@ -103,7 +108,7 @@ func TestCnsManager_cnsRecall(t *testing.T) {
 	}
 	assert.Equal(t, success, result, "cnsRecall FAILED")
 
-	actVersion := cns.cMap.getLatestVer(testName)
+	actVersion := cns.cMap.getCurrentVer(testName)
 	expVersion := testCases[2].Version
 	assert.Equal(t, expVersion, actVersion, "cnsRecall FAILED")
 
@@ -113,7 +118,7 @@ func TestCnsManager_cnsRecall(t *testing.T) {
 func TestCnsManager_ifRegisteredByName(t *testing.T) {
 	testCasesSub := []struct {
 		name     string
-		expected int
+		expected int32
 	}{
 		{testName, registered},
 		{"tom", unregistered},
