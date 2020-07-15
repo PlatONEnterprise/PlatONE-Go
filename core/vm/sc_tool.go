@@ -17,6 +17,15 @@ var (
 	errFuncNotFoundInExportFuncs = errors.New("the func not found in export function set")
 	errParamsNumInvalid          = errors.New("the number of params is invalid")
 )
+var (
+	ErrUnsupportedRole      = errors.New("Unsupported role ")
+	ErrNoPermission         = errors.New("No Permmision ")
+	ErrAlreadySetSuperAdmin = errors.New("Already Set SuperAdmin ")
+)
+
+var (
+	ZeroAddress = common.Address{}
+)
 
 func execSC(input []byte, fns SCExportFns) ([]byte, error) {
 	txType, fnName, fn, params, err := retrieveFnAndParams(input, fns)

@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 
+	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
@@ -20,36 +22,21 @@ const (
 	userListKey = "5af8141e0ecb4e3df3f35f6e6b0b387b"
 )
 
-var (
-	ZeroAddress = common.Address{}
+const (
+	maxUserNameLen = 512
 )
 
 var (
-	errUsernameUnsupported  = errors.New("Unsupported Username")
-	errUserNameAlreadyExist = errors.New(" UserName Already Exist")
-	errAlreadySetUserName   = errors.New("Already Set UserName")
-	errNoUserInfo           = errors.New("No UserInfo")
+	errUsernameUnsupported  = errors.New("Unsupported Username ")
+	errUserNameAlreadyExist = errors.New(" UserName Already Exist ")
+	errAlreadySetUserName   = errors.New("Already Set UserName ")
+	errNoUserInfo           = errors.New("No User Info ")
 )
 
-// 具备操作user权限的角色
-var permissionRolesForUserOps = []int32{chainAdmin}
+type UserInfo = syscontracts.UserInfo
+type DescInfo = syscontracts.UserDescInfo
 
-type UserInfo struct {
-	Address    string `json:"address"`    // 地址，不可变更
-	Authorizer string `json:"authorizer"` // 授权者，不可变更
-	Name       string `json:"name"`       // 用户名，不可变更
-
-	DescInfo string `json:"descInfo"` // 描述信息，可变更
-	Version  uint32 `json:"version"`  // 可变更
-}
-
-type DescInfoV1 struct {
-	Email        string `json:"email"`
-	Organization string `json:"organization"`
-	Phone        string `json:"phone"`
-}
-
-func (src *DescInfoV1) update(dest *DescInfoV1) {
+func updateDescInfo(src *DescInfo, dest *DescInfo) {
 	if src.Email != dest.Email {
 		src.Email = dest.Email
 	}
@@ -63,19 +50,12 @@ func (src *DescInfoV1) update(dest *DescInfoV1) {
 
 // export function
 // 管理员操作
-func (u *UserManagement) addUser(userInfo string) ([]byte, error) {
+func (u *UserManagement) addUser(info *UserInfo) ([]byte, error) {
 	if !u.callerPermissionCheck() {
 		return nil, ErrNoPermission
 	}
 
-	info := &UserInfo{}
-
-	if err := json.Unmarshal([]byte(userInfo), info); err != nil {
-		log.Error("json.Unmarshal([]byte(userInfo), info)")
-		return nil, err
-	}
-
-	if info.Name == "" {
+	if info.Name == "" || len(info.Name) > maxUserNameLen {
 		return nil, errUsernameUnsupported
 	}
 
@@ -89,7 +69,7 @@ func (u *UserManagement) addUser(userInfo string) ([]byte, error) {
 	}
 
 	if info.DescInfo != "" {
-		descInfo := &DescInfoV1{}
+		descInfo := &DescInfo{}
 		if err := json.Unmarshal([]byte(info.DescInfo), descInfo); err != nil {
 			log.Error("json.Unmarshal([]byte(info.DescInfo), descInfo)")
 			return nil, err
@@ -112,14 +92,9 @@ func (u *UserManagement) addUser(userInfo string) ([]byte, error) {
 }
 
 // 管理员操作，可以更新用户信息中的DescInfo字段
-func (u *UserManagement) updateUserDescInfo(addr common.Address, descInfo string) ([]byte, error) {
+func (u *UserManagement) updateUserDescInfo(addr common.Address, info *DescInfo) ([]byte, error) {
 	if !u.callerPermissionCheck() {
 		return nil, ErrNoPermission
-	}
-
-	info := &DescInfoV1{}
-	if err := json.Unmarshal([]byte(descInfo), info); err != nil {
-		return nil, err
 	}
 
 	userInfo, err := u.getUserInfo(addr)
@@ -127,13 +102,13 @@ func (u *UserManagement) updateUserDescInfo(addr common.Address, descInfo string
 		return nil, err
 	}
 
-	infoOnChain := &DescInfoV1{}
+	infoOnChain := &DescInfo{}
 	if userInfo.DescInfo != "" {
 		if err := json.Unmarshal([]byte(userInfo.DescInfo), infoOnChain); err != nil {
 			return nil, err
 		}
 	}
-	infoOnChain.update(info)
+	updateDescInfo(infoOnChain, info)
 
 	ser, err := json.Marshal(infoOnChain)
 	userInfo.DescInfo = string(ser)
@@ -198,9 +173,6 @@ func (u *UserManagement) getAllUsers() ([]byte, error) {
 
 	return json.Marshal(users)
 }
-
-//func (u *UserManagement) registerUserInfo(userInfo string) {}
-//func (u *UserManagement) approveUserInfo(userAddress string){}
 
 //internal function
 func (u *UserManagement) setUserInfo(info *UserInfo) error {
@@ -323,25 +295,5 @@ func (u *UserManagement) setUserList(addrs []common.Address) error {
 }
 
 func (u *UserManagement) callerPermissionCheck() bool {
-	caller := u.Caller()
-	role, err := u.getRolesByAddress(caller)
-	if err != nil {
-		return false
-	}
-
-	rolesStr := []string{}
-	if err := json.Unmarshal([]byte(role), &rolesStr); err != nil {
-		return false
-	}
-
-	ur := &UserRoles{}
-	ur.FromStrings(rolesStr)
-
-	for _, p := range permissionRolesForUserOps {
-		if ur.hasRole(p) {
-			return true
-		}
-	}
-
-	return false
+	return hasUserOpPermission(u.state, u.caller)
 }

@@ -15,42 +15,42 @@ func TestUserRoles_setRole(t *testing.T) {
 	}
 	tests := []struct {
 		name       string
-		roles      *UserRoles
+		roles      UserRoles
 		args       args
-		targetRole uint32
+		targetRole UserRoles
 		wantErr    bool
 	}{
 		// TODO: Add test cases.
 		{
-			roles:   &UserRoles{roles: 0},
+			roles:   UserRoles(0),
 			args:    args{role: -1},
 			wantErr: true,
 		},
 		{
-			roles:   &UserRoles{roles: 0},
-			args:    args{role: ROLES_CNT},
+			roles:   UserRoles(0),
+			args:    args{role: rolesCnt},
 			wantErr: true,
 		},
 		{
-			roles:      &UserRoles{roles: 0},
+			roles:      UserRoles(0),
 			args:       args{role: superAdmin},
 			targetRole: 0b1,
 			wantErr:    false,
 		},
 		{
-			roles:      &UserRoles{roles: 1},
+			roles:      UserRoles(1),
 			args:       args{role: chainAdmin},
 			targetRole: 0b11,
 			wantErr:    false,
 		},
 		{
-			roles:      &UserRoles{roles: 0b11},
+			roles:      UserRoles(0b11),
 			args:       args{role: nodeAdmin},
 			targetRole: 0b1011,
 			wantErr:    false,
 		},
 		{
-			roles:      &UserRoles{roles: 0b111},
+			roles:      UserRoles(0b111),
 			args:       args{role: contractAdmin},
 			targetRole: 0b10111,
 			wantErr:    false,
@@ -63,8 +63,8 @@ func TestUserRoles_setRole(t *testing.T) {
 				t.Errorf("UserRoles.setRole() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
-			if !tt.wantErr && tt.roles.roles != tt.targetRole {
-				t.Errorf("UserRoles.setRole() roles = %v, wantResult %v", tt.roles.roles, tt.targetRole)
+			if !tt.wantErr && tt.roles != tt.targetRole {
+				t.Errorf("UserRoles.setRole() roles = %v, wantResult %v", tt.roles, tt.targetRole)
 			}
 		})
 	}
@@ -76,20 +76,20 @@ func TestUserRoles_unsetRole(t *testing.T) {
 	}
 	tests := []struct {
 		name        string
-		roles       *UserRoles
+		roles       UserRoles
 		args        args
-		targetRoles uint32
+		targetRoles UserRoles
 		wantErr     bool
 	}{
 		// TODO: Add test cases.
 		{
-			roles:   &UserRoles{roles: 0},
+			roles:   UserRoles(0),
 			args:    args{role: -1},
 			wantErr: true,
 		},
 		{
-			roles:   &UserRoles{roles: 0},
-			args:    args{role: ROLES_CNT},
+			roles:   UserRoles(0),
+			args:    args{role: rolesCnt},
 			wantErr: true,
 		},
 	}
@@ -108,43 +108,43 @@ func TestUserRoles_hasRole(t *testing.T) {
 	}
 	tests := []struct {
 		name  string
-		roles *UserRoles
+		roles UserRoles
 		args  args
 		want  bool
 	}{
 		// TODO: Add test cases.
 		{
-			roles: &UserRoles{roles: 0b1},
+			roles: UserRoles(0b1),
 			args:  args{role: superAdmin},
 			want:  true,
 		},
 		{
-			roles: &UserRoles{roles: 0},
+			roles: UserRoles(0),
 			args:  args{role: superAdmin},
 			want:  false,
 		},
 		{
-			roles: &UserRoles{roles: 0b10101},
+			roles: UserRoles(0b10101),
 			args:  args{role: superAdmin},
 			want:  true,
 		},
 		{
-			roles: &UserRoles{roles: 0b10101},
+			roles: UserRoles(0b10101),
 			args:  args{role: chainAdmin},
 			want:  false,
 		},
 		{
-			roles: &UserRoles{roles: 0b10101},
+			roles: UserRoles(0b10101),
 			args:  args{role: groupAdmin},
 			want:  true,
 		},
 		{
-			roles: &UserRoles{roles: 0b10101},
+			roles: UserRoles(0b10101),
 			args:  args{role: contractAdmin},
 			want:  true,
 		},
 		{
-			roles: &UserRoles{roles: 0b10101},
+			roles: UserRoles(0b10101),
 			args:  args{role: contractDeployer},
 			want:  false,
 		},
@@ -463,7 +463,7 @@ func TestUserManagement_getRole(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    *UserRoles
+		want    UserRoles
 		wantErr bool
 	}{
 		// TODO: Add test cases.
@@ -490,7 +490,7 @@ func TestUserManagement_setRole(t *testing.T) {
 	}
 	type args struct {
 		addr  common.Address
-		roles *UserRoles
+		roles UserRoles
 	}
 	tests := []struct {
 		name    string
