@@ -21,6 +21,7 @@ var (
 	ErrUnsupportedRole      = errors.New("Unsupported role ")
 	ErrNoPermission         = errors.New("No Permmision ")
 	ErrAlreadySetSuperAdmin = errors.New("Already Set SuperAdmin ")
+	ErrParamInvalid         = errors.New("param is invalid")
 )
 
 var (

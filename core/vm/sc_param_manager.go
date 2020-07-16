@@ -1,7 +1,6 @@
 package vm
 
 import (
-	"errors"
 	"fmt"
 	"math/big"
 
@@ -20,10 +19,10 @@ var (
 	isApproveDeployedContractKey       = "IsApproveDeployedContract"
 	isTxUseGasKey                      = "IsTxUseGas"
 )
-var (
-	ErrHasNoPermission = errors.New("has no permission")
-	ErrInvalid         = errors.New("something invalid")
-)
+//var (
+//	ErrHasNoPermission = errors.New("has no permission")
+//	ErrParamInvalid         = errors.New("something invalid")
+//)
 
 const (
 	txGasLimitMinValue        uint64 = 12771596 * 100 // 12771596 大致相当于 0.012772s
@@ -84,7 +83,7 @@ func (u *ParamManager) getState(key []byte) []byte {
 func (u *ParamManager) setGasContractName(contractName string) (int32, error) {
 	if len(contractName) == 0 {
 		u.emitNotifyEventInParam(paramInvalid, fmt.Sprintf("param is invalid."))
-		return failFlag, ErrInvalid
+		return failFlag, ErrParamInvalid
 	}
 	ret, err := u.doParamSet(gasContractNameKey, contractName)
 	if err != nil {
@@ -115,7 +114,7 @@ func (u *ParamManager) getGasContractName() (string, error) {
 func (u *ParamManager) setIsProduceEmptyBlock(isProduceEmptyBlock uint32) (int32, error) {
 	if 0 != isProduceEmptyBlock && 1 != isProduceEmptyBlock {
 		u.emitNotifyEventInParam(paramInvalid, fmt.Sprintf("param is invalid."))
-		return failFlag, ErrInvalid
+		return failFlag, ErrParamInvalid
 	}
 	ret, err := u.doParamSet(isProduceEmptyBlockKey, isProduceEmptyBlock)
 	if err != nil {
@@ -144,7 +143,7 @@ func (u *ParamManager) setTxGasLimit(txGasLimit uint64) (int32, error) {
 	if txGasLimit < txGasLimitMinValue || txGasLimit > txGasLimitMaxValue {
 		u.emitNotifyEventInParam(paramInvalid, fmt.Sprintf("param is invalid."))
 
-		return failFlag, ErrInvalid
+		return failFlag, ErrParamInvalid
 	}
 	// 获取区块 gas limit，其值应大于或等于每笔交易 gas limit 参数的值
 
@@ -160,7 +159,7 @@ func (u *ParamManager) setTxGasLimit(txGasLimit uint64) (int32, error) {
 		}
 		if txGasLimit > ci {
 			//event
-			return failFlag, ErrInvalid
+			return failFlag, ErrParamInvalid
 		}
 	}
 	ret, err := u.doParamSet(txGasLimitKey, txGasLimit)
@@ -191,7 +190,7 @@ func (u *ParamManager) setBlockGasLimit(blockGasLimit uint64) (int32, error) {
 	if blockGasLimit < blockGasLimitMinValue || blockGasLimit > blockGasLimitMaxValue {
 		u.emitNotifyEventInParam(paramInvalid, fmt.Sprintf("param is invalid."))
 
-		return failFlag, ErrInvalid
+		return failFlag, ErrParamInvalid
 	}
 	key, err := encode(txGasLimitKey)
 	if err != nil {
@@ -240,7 +239,7 @@ func (u *ParamManager) setAllowAnyAccountDeployContract(isAllowAnyAccountDeployC
 	if 0 != isAllowAnyAccountDeployContract && 1 != isAllowAnyAccountDeployContract {
 		u.emitNotifyEventInParam(paramInvalid, fmt.Sprintf("param is invalid."))
 
-		return failFlag, ErrInvalid
+		return failFlag, ErrParamInvalid
 	}
 	ret, err := u.doParamSet(isAllowAnyAccountDeployContractKey, isAllowAnyAccountDeployContract)
 	if err != nil {
@@ -273,7 +272,7 @@ func (u *ParamManager) setCheckContractDeployPermission(permission uint32) (int3
 	if 0 != permission && 1 != permission {
 		u.emitNotifyEventInParam(paramInvalid, fmt.Sprintf("param is invalid."))
 
-		return failFlag, ErrInvalid
+		return failFlag, ErrParamInvalid
 	}
 	ret, err := u.doParamSet(isCheckContractDeployPermission, permission)
 	if err != nil {
@@ -308,7 +307,7 @@ func (u *ParamManager) setIsApproveDeployedContract(isApproveDeployedContract ui
 	if 0 != isApproveDeployedContract && 1 != isApproveDeployedContract {
 		u.emitNotifyEventInParam(paramInvalid, fmt.Sprintf("param is invalid."))
 
-		return failFlag, ErrInvalid
+		return failFlag, ErrParamInvalid
 	}
 	ret, err := u.doParamSet(isApproveDeployedContractKey, isApproveDeployedContract)
 	if err != nil {
@@ -342,7 +341,7 @@ func (u *ParamManager) setIsTxUseGas(isTxUseGas uint64) (int32, error) {
 	if 0 != isTxUseGas && 1 != isTxUseGas {
 		u.emitNotifyEventInParam(paramInvalid, fmt.Sprintf("param is invalid."))
 
-		return failFlag, ErrInvalid
+		return failFlag, ErrParamInvalid
 	}
 	ret, err := u.doParamSet(isTxUseGasKey, isTxUseGas)
 	if err != nil {
@@ -370,7 +369,7 @@ func (u *ParamManager) getIsTxUseGas() (int32, error) {
 func (u *ParamManager) doParamSet(inputKey, inputValue interface{}) (int32, error) {
 	if !hasParamOpPermission(u.stateDB, u.caller) {
 		u.emitNotifyEventInParam(callerHasNoPermission, fmt.Sprintf("%s has no permission to adjust param.", u.caller.String()))
-		return failFlag, ErrHasNoPermission
+		return failFlag, ErrNoPermission
 	}
 	key, err := encode(inputKey)
 	if err != nil {
