@@ -1,7 +1,6 @@
 package vm
 
 import (
-	"encoding/json"
 	"errors"
 	"math/big"
 	"regexp"
@@ -31,10 +30,11 @@ const (
 	registered   int32 = 1
 )
 
+/*
 const (
 	msgOk           = "ok"
 	codeOk CodeType = 0
-)
+)*/
 
 const (
 	namePattern    = `^[a-zA-Z]\w{2,15}$` // alice
@@ -74,11 +74,20 @@ type ContractInfo struct {
 	// Enabled 	bool			// deprecated
 }
 
+/*
 type returnMsg struct {
 	Code  CodeType
 	Msg   string
 	Array []*ContractInfo
 }
+
+func newReturnMsg(code CodeType, msg string, array []*ContractInfo) *returnMsg {
+	return &returnMsg{
+		Code:  code,
+		Msg:   msg,
+		Array: array,
+	}
+}*/
 
 func newContractInfo(name, version, address, origin string) *ContractInfo {
 	return &ContractInfo{
@@ -87,14 +96,6 @@ func newContractInfo(name, version, address, origin string) *ContractInfo {
 		Address:   address,
 		Origin:    origin,
 		TimeStamp: uint64(time.Now().Unix()),
-	}
-}
-
-func newReturnMsg(code CodeType, msg string, array []*ContractInfo) *returnMsg {
-	return &returnMsg{
-		Code:  code,
-		Msg:   msg,
-		Array: array,
 	}
 }
 
@@ -378,7 +379,8 @@ func (cns *CnsManager) getRegisteredContractsByRange(head, size int) (string, er
 	// check the head and size are valid numbers
 	invalidRange := head >= total || size < 0
 	if invalidRange {
-		return "", errors.New("")
+		// return "", errors.New("")	// todo
+		return newInternalErrorResult(errors.New("")).String(), nil
 	}
 
 	// make sure the head + size does not exceed the total numbers of cnsContractInfo
@@ -393,7 +395,8 @@ func (cns *CnsManager) getRegisteredContractsByRange(head, size int) (string, er
 		cnsInfoArray = append(cnsInfoArray, cnsInfo)
 	}
 
-	return serializeCnsInfo(codeOk, msgOk, cnsInfoArray)
+	return newSuccessResult(cnsInfoArray).String(), nil
+	// return serializeCnsInfo(codeOk, msgOk, cnsInfoArray)
 }
 
 // before: getHistoryContractsByName -> after refactory: getRegisteredContractsByName
@@ -402,7 +405,8 @@ func (cns *CnsManager) getRegisteredContractsByName(name string) (string, error)
 	var index uint64
 
 	if !regName.MatchString(name) {
-		return "", errNameInvalid
+		// return "", errNameInvalid
+		return newInternalErrorResult(errNameInvalid).String(), nil
 	}
 
 	for index = 0; index < cns.cMap.total(); index++ {
@@ -412,17 +416,13 @@ func (cns *CnsManager) getRegisteredContractsByName(name string) (string, error)
 		}
 	}
 
-	return serializeCnsInfo(codeOk, msgOk, cnsInfoArray)
+	return newSuccessResult(cnsInfoArray).String(), nil
+	// return serializeCnsInfo(codeOk, msgOk, cnsInfoArray)
 }
 
 func (cns *CnsManager) getRegisteredContractsByAddress(addr common.Address) (string, error) {
 	var cnsInfoArray = make([]*ContractInfo, 0)
 	var index uint64
-
-	/*
-		if !common.IsHexAddress(addr) {
-			return "", errAddressInvalid
-		}*/
 
 	for index = 0; index < cns.cMap.total(); index++ {
 		cnsInfo := cns.cMap.get(index)
@@ -431,18 +431,14 @@ func (cns *CnsManager) getRegisteredContractsByAddress(addr common.Address) (str
 		}
 	}
 
-	return serializeCnsInfo(codeOk, msgOk, cnsInfoArray)
+	return newSuccessResult(cnsInfoArray).String(), nil
+	// return serializeCnsInfo(codeOk, msgOk, cnsInfoArray)
 }
 
 // before: getContractInfoByAddress -> after refactory: getRegisteredContractsByOrigin
 func (cns *CnsManager) getRegisteredContractsByOrigin(origin common.Address) (string, error) {
 	var cnsInfoArray = make([]*ContractInfo, 0)
 	var index uint64
-
-	/*
-		if !common.IsHexAddress(origin) {
-			return "", errAddressInvalid
-		}*/
 
 	for index = 0; index < cns.cMap.total(); index++ {
 		cnsInfo := cns.cMap.get(index)
@@ -451,14 +447,16 @@ func (cns *CnsManager) getRegisteredContractsByOrigin(origin common.Address) (st
 		}
 	}
 
-	return serializeCnsInfo(codeOk, msgOk, cnsInfoArray)
+	return newSuccessResult(cnsInfoArray).String(), nil
+	// return serializeCnsInfo(codeOk, msgOk, cnsInfoArray)
 }
 
+/*
 func serializeCnsInfo(code CodeType, msg string, array []*ContractInfo) (string, error) {
 	data := newReturnMsg(code, msg, array)
 	cBytes, err := json.Marshal(data)
 	return string(cBytes), err
-}
+}*/
 
 func getCnsAddress(stateDB StateDB, name, version string) (string, error) {
 	cns := newCnsManager(stateDB)

@@ -54,6 +54,7 @@ func TestLatestVersion(t *testing.T) {
 	}
 }
 
+/*
 func TestSerializeCnsInfo(t *testing.T) {
 	cnsInfoArray := make([]*ContractInfo, 0)
 	cnsInfo := newContractInfo("tofu", "0.0.0.1", "0x123", "0x123")
@@ -65,7 +66,7 @@ func TestSerializeCnsInfo(t *testing.T) {
 	}
 
 	t.Logf("%s\n", sBytes)
-}
+}*/
 
 func TestCnsManager_cnsRegister(t *testing.T) {
 	result, err := cns.cnsRegister("alice", "0.0.0.1", common.HexToAddress(testAddr1))
