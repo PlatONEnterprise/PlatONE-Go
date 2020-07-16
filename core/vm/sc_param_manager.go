@@ -177,7 +177,7 @@ func (u *ParamManager) getTxGasLimit() (uint64, error) {
 	}
 	txGasLimit := u.getState(key)
 	if len(txGasLimit) == 0 {
-		return 1.5e9, nil
+		return txGasLimitDefaultValue, nil
 	}
 	var ret uint64
 	if err := rlp.DecodeBytes(txGasLimit, &ret); nil != err {
@@ -222,7 +222,7 @@ func (u *ParamManager) getBlockGasLimit() (uint64, error) {
 	}
 	blockGasLimit := u.getState(key)
 	if len(blockGasLimit) == 0 {
-		return 1e10, nil
+		return blockGasLimitDefaultValue, nil
 	}
 	var ret uint64
 	if err := rlp.DecodeBytes(blockGasLimit, &ret); nil != err {
