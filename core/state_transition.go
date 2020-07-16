@@ -34,8 +34,6 @@ var (
 	errInsufficientBalanceForGas = errors.New("insufficient balance to pay for gas")
 )
 
-const CnsManagerAddr string = "0x0000000000000000000000000000000000000011"
-
 var zeroAddress common.Address
 var PermissionErr = errors.New("Permission Denied!")
 
@@ -225,27 +223,8 @@ func (st *StateTransition) getGasPrice(contractAddr common.Address) (int64, erro
 	return gasPrice, nil
 }
 
-
 func addressCompare(addr1, addr2 common.Address) bool {
 	return strings.ToLower(addr1.String()) == strings.ToLower(addr2.String())
-}
-
-func makeReturnBytes(ret []byte) []byte {
-	strHash := common.BytesToHash(common.Int32ToBytes(32))
-	sizeHash := common.BytesToHash(common.Int64ToBytes(int64((len(ret)))))
-	var dataRealSize = len(ret)
-	if (dataRealSize % 32) != 0 {
-		dataRealSize = dataRealSize + (32 - (dataRealSize % 32))
-	}
-	dataByt := make([]byte, dataRealSize)
-	copy(dataByt[0:], ret)
-
-	finalData := make([]byte, 0)
-	finalData = append(finalData, strHash.Bytes()...)
-	finalData = append(finalData, sizeHash.Bytes()...)
-	finalData = append(finalData, dataByt...)
-
-	return finalData
 }
 
 // 合约防火墙的检查：
@@ -265,11 +244,11 @@ func fwCheck(stateDb vm.StateDB, contractAddr common.Address, caller common.Addr
 	var data [][]byte
 	if err := rlp.DecodeBytes(input, &data); err != nil {
 		log.Debug("FW : Input decode error")
-		return makeReturnBytes([]byte("FW : Input decode error")), false
+		return vm.MakeReturnBytes([]byte("FW : Input decode error")), false
 	}
 	if len(data) < 2 {
 		log.Debug("FW : Missing function name")
-		return makeReturnBytes([]byte("FW : Missing function name")), false
+		return vm.MakeReturnBytes([]byte("FW : Missing function name")), false
 	}
 	funcName := string(data[1])
 
@@ -282,14 +261,14 @@ func fwCheck(stateDb vm.StateDB, contractAddr common.Address, caller common.Addr
 	var fwLog string = "FW : Access to contract:" + contractAddr.String() + " by " + funcName + "is refused by firewall."
 
 	if fwStatus.IsRejected(funcName, caller) {
-		return makeReturnBytes([]byte(fwLog)), false
+		return vm.MakeReturnBytes([]byte(fwLog)), false
 	}
 
 	if fwStatus.IsAccepted(funcName, caller) {
 		return nil, true
 	}
 
-	return makeReturnBytes([]byte(fwLog)), false
+	return vm.MakeReturnBytes([]byte(fwLog)), false
 }
 
 func (st *StateTransition) ifUseContractTokenAsFee() (common.Address, bool) {
@@ -317,13 +296,13 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, gasPrice 
 	)
 
 	feeContractAddr, isUseContractToken := st.ifUseContractTokenAsFee()
-	isUseContractToken = isUseContractToken && msg.Nonce()!=0
-	if isUseContractToken{
+	isUseContractToken = isUseContractToken && msg.Nonce() != 0
+	if isUseContractToken {
 		if err = st.preContractGasCheck(feeContractAddr); err != nil {
 			log.Error("PreContractGasCheck", "err:", err)
 			return
 		}
-		if gasPrice, err = st.getGasPrice(feeContractAddr); err != nil{
+		if gasPrice, err = st.getGasPrice(feeContractAddr); err != nil {
 			log.Error("getGasPrice from feeContractAddr", "err:", err)
 			return
 		}
@@ -390,8 +369,8 @@ func (st *StateTransition) doCallContract(address common.Address, funcName strin
 	gas := uint64(0x999999999)
 	value := big.NewInt(0)
 
-	data, err := common.GenerateWasmData(common.CallContractFlag,funcName, funcParams)
-	if err != nil{
+	data, err := common.GenerateWasmData(common.CallContractFlag, funcName, funcParams)
+	if err != nil {
 		log.Error(err.Error())
 		return nil, gas, err
 	}

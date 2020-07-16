@@ -19,8 +19,16 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"math/big"
+	"os"
+	"runtime"
+	"strconv"
+	"sync/atomic"
+	"time"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 	"github.com/PlatONEnetwork/PlatONE-Go/console"
 	"github.com/PlatONEnetwork/PlatONE-Go/core"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
@@ -34,12 +42,6 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/trie"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"gopkg.in/urfave/cli.v1"
-	"math/big"
-	"os"
-	"runtime"
-	"strconv"
-	"sync/atomic"
-	"time"
 )
 
 var (
@@ -177,7 +179,7 @@ Use "ethereum dump 0" to dump the genesis block.`,
 func initGenesis(ctx *cli.Context) error {
 	// Make sure we have a valid genesis JSON
 	genesisPath := ctx.Args().First()
-	log.Debug("initGenesis","genesisPath", genesisPath)
+	log.Debug("initGenesis", "genesisPath", genesisPath)
 	if len(genesisPath) == 0 {
 		utils.Fatalf("Must supply path to genesis JSON file")
 	}
@@ -491,7 +493,7 @@ func InitInnerCallFuncFromChain(bc *core.BlockChain) {
 		header := bc.CurrentHeader()
 
 		context := core.NewEVMContext(msg, header, bc, nil)
-		evm :=  vm.NewEVM(context, state, bc.Config(), vm.Config{})
+		evm := vm.NewEVM(context, state, bc.Config(), vm.Config{})
 
 		// clusure method for call Contract
 		callContract := func(conAddr common.Address, data []byte) []byte {
@@ -505,7 +507,7 @@ func InitInnerCallFuncFromChain(bc *core.BlockChain) {
 		// Update system contract address
 		for _, contractName := range common.SystemContractList {
 			callParams := []interface{}{contractName, "latest"}
-			btsRes := callContract(common.HexToAddress(core.CnsManagerAddr), common.GenCallData(fh, callParams))
+			btsRes := callContract(syscontracts.CnsManagementAddress, common.GenCallData(fh, callParams))
 			strRes := common.CallResAsString(btsRes)
 			if !(len(strRes) == 0 || common.IsHexZeroAddress(strRes)) {
 				sc.ContractAddress[contractName] = common.HexToAddress(strRes)
@@ -558,7 +560,7 @@ func InitInnerCallFuncFromChain(bc *core.BlockChain) {
 		}
 
 		if sc.SysParam.GasContractName != "" {
-			cnsAddr := common.HexToAddress(core.CnsManagerAddr)
+			cnsAddr := syscontracts.CnsManagementAddress
 			funcName := "getContractAddress"
 			funcParams := []interface{}{sc.SysParam.GasContractName, "latest"}
 			res := callContract(cnsAddr, common.GenCallData(funcName, funcParams))

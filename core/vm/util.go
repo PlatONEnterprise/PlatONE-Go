@@ -1,10 +1,11 @@
 package vm
 
 import (
+	"math/big"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/math"
 	"github.com/PlatONEnetwork/PlatONE-Go/life/utils"
-	"math/big"
 )
 
 func toContractReturnValueIntType(txType int, res int64) []byte {
@@ -32,15 +33,19 @@ func toContractReturnValueStringType(txType int, res []byte) []byte {
 		return res
 	}
 
-	var dataRealSize = len(res)
+	return MakeReturnBytes(res)
+}
+
+func MakeReturnBytes(ret []byte) []byte {
+	var dataRealSize = len(ret)
 	if (dataRealSize % 32) != 0 {
 		dataRealSize = dataRealSize + (32 - (dataRealSize % 32))
 	}
 	dataByt := make([]byte, dataRealSize)
-	copy(dataByt[0:], res)
+	copy(dataByt[0:], ret)
 
 	strHash := common.BytesToHash(common.Int32ToBytes(32))
-	sizeHash := common.BytesToHash(common.Int64ToBytes(int64((len(res)))))
+	sizeHash := common.BytesToHash(common.Int64ToBytes(int64(len(ret))))
 
 	finalData := make([]byte, 0)
 	finalData = append(finalData, strHash.Bytes()...)

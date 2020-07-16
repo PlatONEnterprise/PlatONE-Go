@@ -3,7 +3,10 @@ package backend
 import (
 	"encoding/json"
 	"errors"
+	"math/big"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
 	"github.com/PlatONEnetwork/PlatONE-Go/core"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
@@ -12,7 +15,6 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/life/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
-	"math/big"
 )
 
 var (
@@ -127,7 +129,7 @@ func CallSystemContractAtBlockNumber(
 	}
 
 	callParams := []interface{}{sysContractName, "latest"}
-	btsRes := callContract(common.HexToAddress(core.CnsManagerAddr), common.GenCallData("getContractAddress", callParams))
+	btsRes := callContract(syscontracts.CnsManagementAddress, common.GenCallData("getContractAddress", callParams))
 	strRes := common.CallResAsString(btsRes)
 	if len(strRes) == 0 || common.IsHexZeroAddress(strRes) {
 		log.Warn("call system contract address fail")
@@ -181,7 +183,7 @@ func loadLastConsensusNodesList(chain consensus.ChainReader, sb *backend, header
 		// Update system contract address
 		for _, contractName := range systemContractList {
 			callParams := []interface{}{contractName, "latest"}
-			btsRes := callContract(common.HexToAddress(core.CnsManagerAddr), common.GenCallData(fh, callParams))
+			btsRes := callContract(syscontracts.CnsManagementAddress, common.GenCallData(fh, callParams))
 			strRes := common.CallResAsString(btsRes)
 			if !(len(strRes) == 0 || common.IsHexZeroAddress(strRes)) {
 				sc.ContractAddress[contractName] = common.HexToAddress(strRes)
@@ -219,7 +221,7 @@ func loadLastConsensusNodesList(chain consensus.ChainReader, sb *backend, header
 		}
 
 		if sc.SysParam.GasContractName != "" {
-			cnsAddr := common.HexToAddress(core.CnsManagerAddr)
+			cnsAddr := syscontracts.CnsManagementAddress
 			funcName := "getContractAddress"
 			funcParams := []interface{}{sc.SysParam.GasContractName, "latest"}
 			res := callContract(cnsAddr, common.GenCallData(funcName, funcParams))

@@ -28,6 +28,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/accounts"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
@@ -106,7 +108,7 @@ func InitInnerCallFunc(ethPtr *Ethereum) {
 		// Update system contract address
 		for _, contractName := range common.SystemContractList {
 			callParams := []interface{}{contractName, "latest"}
-			btsRes := callContract(common.HexToAddress(core.CnsManagerAddr), common.GenCallData(fh, callParams))
+			btsRes := callContract(syscontracts.CnsManagementAddress, common.GenCallData(fh, callParams))
 			strRes := common.CallResAsString(btsRes)
 			if !(len(strRes) == 0 || common.IsHexZeroAddress(strRes)) {
 				sc.ContractAddress[contractName] = common.HexToAddress(strRes)
@@ -166,7 +168,7 @@ func InitInnerCallFunc(ethPtr *Ethereum) {
 		}
 
 		if sc.SysParam.GasContractName != "" {
-			cnsAddr := common.HexToAddress(core.CnsManagerAddr)
+			cnsAddr := syscontracts.CnsManagementAddress
 			funcName := "getContractAddress"
 			funcParams := []interface{}{sc.SysParam.GasContractName, "latest"}
 			res := callContract(cnsAddr, common.GenCallData(funcName, funcParams))
@@ -382,7 +384,6 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	//eth.txPool = core.NewTxPool(config.TxPool, eth.chainConfig, eth.blockchain)
 	eth.txPool = core.NewTxPool(config.TxPool, eth.chainConfig, blockChainCache, chainDb, eth.extDb)
 	log.Debug("Transaction pool info", "pool", eth.txPool)
-
 
 	// modify by platone remove consensusCache
 	//var consensusCache *cbft.Cache = cbft.NewCache(eth.blockchain)
