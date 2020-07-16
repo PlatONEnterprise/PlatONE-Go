@@ -14,11 +14,12 @@ import (
 )
 
 const (
-	cnsInvalidCall     CodeType = 0
-	cnsNoPermission    CodeType = 1
-	cnsInvalidArgument CodeType = 2
-	cnsRegExist        CodeType = 3
-	cnsRegNotExist     CodeType = 4
+	cnsSuccess         CodeType = 0
+	cnsInvalidCall     CodeType = 1
+	cnsNoPermission    CodeType = 2
+	cnsInvalidArgument CodeType = 3
+	cnsRegDuplicate    CodeType = 4
+	cnsRegNotExist     CodeType = 5
 )
 
 const (
@@ -29,12 +30,6 @@ const (
 	unregistered int32 = 0
 	registered   int32 = 1
 )
-
-/*
-const (
-	msgOk           = "ok"
-	codeOk CodeType = 0
-)*/
 
 const (
 	namePattern    = `^[a-zA-Z]\w{2,15}$` // alice
@@ -68,28 +63,12 @@ type CnsManager struct {
 type ContractInfo struct {
 	Name      string
 	Version   string
-	Address   string
-	Origin    string
+	Address   common.Address
+	Origin    common.Address
 	TimeStamp uint64
-	// Enabled 	bool			// deprecated
 }
 
-/*
-type returnMsg struct {
-	Code  CodeType
-	Msg   string
-	Array []*ContractInfo
-}
-
-func newReturnMsg(code CodeType, msg string, array []*ContractInfo) *returnMsg {
-	return &returnMsg{
-		Code:  code,
-		Msg:   msg,
-		Array: array,
-	}
-}*/
-
-func newContractInfo(name, version, address, origin string) *ContractInfo {
+func newContractInfo(name, version string, address, origin common.Address) *ContractInfo {
 	return &ContractInfo{
 		Name:      name,
 		Version:   version,
@@ -148,7 +127,7 @@ func (cns *CnsManager) AllExportFns() SCExportFns {
 	}
 }
 
-// isOwner checks if the caller is the owner of the contract to be registerd
+// isOwner checks if the caller is the owner of the contract to be registered
 func (cns *CnsManager) isOwner(contractAddr common.Address) bool {
 	callerAddr := cns.origin
 	contractOwnerAddr := cns.cMap.GetContractCreator(contractAddr)
@@ -196,10 +175,6 @@ func (cns *CnsManager) cnsRegister(name, version string, contractAddr common.Add
 }
 
 func (cns *CnsManager) doCnsRegister(name, version string, address common.Address) (int32, error) {
-	/*
-		if !common.IsHexAddress(address) {
-			return failure, errAddressInvalid
-		}*/
 
 	if !regName.MatchString(name) {
 		cns.emitNotifyEvent(cnsInvalidArgument, errNameInvalid.Error())
@@ -215,14 +190,14 @@ func (cns *CnsManager) doCnsRegister(name, version string, address common.Addres
 	key := getSearchKey(name, version)
 	value := cns.cMap.find(key)
 	if value != nil {
-		cns.emitNotifyEvent(cnsRegExist, "[CNS] name and version is already registered and activated in CNS")
+		cns.emitNotifyEvent(cnsRegDuplicate, "[CNS] name and version is already registered and activated in CNS")
 		return failure, errors.New("[CNS] name and version is already registered and activated in CNS")
 	}
 
 	// check is name unique
-	ori := cns.origin.Hex()
+	ori := cns.origin
 	if cns.cMap.isNameRegByOthers(name, ori) {
-		cns.emitNotifyEvent(cnsRegExist, "[CNS] Name is already registered")
+		cns.emitNotifyEvent(cnsRegDuplicate, "[CNS] Name is already registered")
 		return failure, errors.New("[CNS] Name is already registered")
 	}
 
@@ -233,8 +208,8 @@ func (cns *CnsManager) doCnsRegister(name, version string, address common.Addres
 		return failure, errors.New("[CNS] Version must be larger than previous version")
 	}
 
-	// new a contractInfo struct and serialize it
-	cnsInfo := newContractInfo(name, version, address.String(), ori)
+	// new a contractInfo struct
+	cnsInfo := newContractInfo(name, version, address, ori)
 
 	// record the info to stateDB
 	cns.cMap.insert(key, cnsInfo)
@@ -242,6 +217,7 @@ func (cns *CnsManager) doCnsRegister(name, version string, address common.Addres
 	// update the current version of the cns name
 	cns.cMap.setCurrentVer(name, version)
 
+	cns.emitNotifyEvent(cnsSuccess, "[CNS] cns register succeed")
 	return success, nil
 }
 
@@ -290,7 +266,7 @@ func (cns *CnsManager) cnsRedirect(name, version string) (int32, error) {
 	}
 
 	// check is Owner
-	contractAddr := common.HexToAddress(cnsInfo.Address)
+	contractAddr := cnsInfo.Address
 	if !cns.isOwner(contractAddr) {
 		cns.emitNotifyEvent(cnsNoPermission, errNotOwner.Error())
 		return failure, errNotOwner
@@ -298,6 +274,7 @@ func (cns *CnsManager) cnsRedirect(name, version string) (int32, error) {
 
 	cns.cMap.setCurrentVer(name, version)
 
+	cns.emitNotifyEvent(cnsSuccess, "[CNS] cns redirect succeed")
 	return success, nil
 }
 
@@ -327,7 +304,7 @@ func (cns *CnsManager) getContractAddress(name, version string) (string, error) 
 		return "", errors.New("[CNS] name and version is not registered in CNS")
 	}
 
-	return cnsInfo.Address, nil
+	return cnsInfo.Address.String(), nil
 }
 
 func (cns *CnsManager) ifRegisteredByName(name string) (int32, error) {
@@ -349,23 +326,15 @@ func (cns *CnsManager) ifRegisteredByName(name string) (int32, error) {
 
 func (cns *CnsManager) ifRegisteredByAddress(address common.Address) (int32, error) {
 	var index uint64
-	/*
-		if !common.IsHexAddress(address) {
-			return undefined, errAddressInvalid
-		}*/
 
 	for index = 0; index < cns.cMap.total(); index++ {
 		cnsInfo := cns.cMap.get(index)
-		if cnsInfo.Address == address.String() {
+		if cnsInfo.Address == address {
 			return registered, nil
 		}
 	}
 
 	return unregistered, nil
-}
-
-func getSearchKey(name, version string) string {
-	return name + ":" + version
 }
 
 // getRegisteredContractsByRange returns the cnsContractInfo within the ranges specified
@@ -379,8 +348,7 @@ func (cns *CnsManager) getRegisteredContractsByRange(head, size int) (string, er
 	// check the head and size are valid numbers
 	invalidRange := head >= total || size < 0
 	if invalidRange {
-		// return "", errors.New("")	// todo
-		return newInternalErrorResult(errors.New("")).String(), nil
+		return newInternalErrorResult(errors.New("invalid range")).String(), nil
 	}
 
 	// make sure the head + size does not exceed the total numbers of cnsContractInfo
@@ -396,7 +364,6 @@ func (cns *CnsManager) getRegisteredContractsByRange(head, size int) (string, er
 	}
 
 	return newSuccessResult(cnsInfoArray).String(), nil
-	// return serializeCnsInfo(codeOk, msgOk, cnsInfoArray)
 }
 
 // before: getHistoryContractsByName -> after refactory: getRegisteredContractsByName
@@ -405,7 +372,6 @@ func (cns *CnsManager) getRegisteredContractsByName(name string) (string, error)
 	var index uint64
 
 	if !regName.MatchString(name) {
-		// return "", errNameInvalid
 		return newInternalErrorResult(errNameInvalid).String(), nil
 	}
 
@@ -417,7 +383,6 @@ func (cns *CnsManager) getRegisteredContractsByName(name string) (string, error)
 	}
 
 	return newSuccessResult(cnsInfoArray).String(), nil
-	// return serializeCnsInfo(codeOk, msgOk, cnsInfoArray)
 }
 
 func (cns *CnsManager) getRegisteredContractsByAddress(addr common.Address) (string, error) {
@@ -426,13 +391,12 @@ func (cns *CnsManager) getRegisteredContractsByAddress(addr common.Address) (str
 
 	for index = 0; index < cns.cMap.total(); index++ {
 		cnsInfo := cns.cMap.get(index)
-		if cnsInfo.Address == addr.String() {
+		if cnsInfo.Address == addr {
 			cnsInfoArray = append(cnsInfoArray, cnsInfo)
 		}
 	}
 
 	return newSuccessResult(cnsInfoArray).String(), nil
-	// return serializeCnsInfo(codeOk, msgOk, cnsInfoArray)
 }
 
 // before: getContractInfoByAddress -> after refactory: getRegisteredContractsByOrigin
@@ -442,21 +406,13 @@ func (cns *CnsManager) getRegisteredContractsByOrigin(origin common.Address) (st
 
 	for index = 0; index < cns.cMap.total(); index++ {
 		cnsInfo := cns.cMap.get(index)
-		if cnsInfo.Origin == origin.String() {
+		if cnsInfo.Origin == origin {
 			cnsInfoArray = append(cnsInfoArray, cnsInfo)
 		}
 	}
 
 	return newSuccessResult(cnsInfoArray).String(), nil
-	// return serializeCnsInfo(codeOk, msgOk, cnsInfoArray)
 }
-
-/*
-func serializeCnsInfo(code CodeType, msg string, array []*ContractInfo) (string, error) {
-	data := newReturnMsg(code, msg, array)
-	cBytes, err := json.Marshal(data)
-	return string(cBytes), err
-}*/
 
 func getCnsAddress(stateDB StateDB, name, version string) (string, error) {
 	cns := newCnsManager(stateDB)

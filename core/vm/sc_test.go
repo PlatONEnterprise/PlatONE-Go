@@ -10,7 +10,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	// inital the data needed for sc_cns_test.go and sc_cns_db_test.go
+	// initial the data needed for sc_cns_test.go and sc_cns_db_test.go
 	cnsTestInital()
 
 	m.Run()
@@ -47,7 +47,7 @@ func (m *mockStateDB) SetState(addr common.Address, key []byte, value []byte) {
 }
 
 func (m *mockStateDB) GetContractCreator(contractAddr common.Address) common.Address {
-	return common.HexToAddress(testOrigin)
+	return testOrigin
 }
 
 func (m *mockStateDB) CreateAccount(common.Address) {

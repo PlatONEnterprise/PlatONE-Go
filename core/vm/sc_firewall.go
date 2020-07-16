@@ -15,8 +15,9 @@ import (
 )
 
 const (
-	fwNoPermission    CodeType = 0
-	fwInvalidArgument CodeType = 1
+	fwOpSuccess       CodeType = 0
+	fwNoPermission    CodeType = 1
+	fwInvalidArgument CodeType = 2
 )
 
 type FireWall struct {
@@ -70,6 +71,8 @@ func (u *FireWall) openFirewall(contractAddr common.Address) (int32, error) {
 	}
 
 	u.stateDB.OpenFirewall(contractAddr)
+
+	u.emitNotifyEvent(fwOpSuccess, "fw start success")
 	return success, nil
 }
 
@@ -80,6 +83,8 @@ func (u *FireWall) closeFirewall(contractAddr common.Address) (int32, error) {
 	}
 
 	u.stateDB.CloseFirewall(contractAddr)
+
+	u.emitNotifyEvent(fwOpSuccess, "fw close success")
 	return success, nil
 }
 
@@ -96,6 +101,8 @@ func (u *FireWall) fwClear(contractAddr common.Address, action string) (int32, e
 	}
 
 	u.stateDB.FwClear(contractAddr, act)
+
+	u.emitNotifyEvent(fwOpSuccess, "fw clear success")
 	return success, nil
 }
 
@@ -118,6 +125,8 @@ func (u *FireWall) fwAdd(contractAddr common.Address, action, lst string) (int32
 	}
 
 	u.stateDB.FwAdd(contractAddr, act, list)
+
+	u.emitNotifyEvent(fwOpSuccess, "fw add success")
 	return success, nil
 }
 
@@ -140,6 +149,8 @@ func (u *FireWall) fwDel(contractAddr common.Address, action, lst string) (int32
 	}
 
 	u.stateDB.FwDel(contractAddr, act, list)
+
+	u.emitNotifyEvent(fwOpSuccess, "fw delete success")
 	return success, nil
 }
 
@@ -163,6 +174,8 @@ func (u *FireWall) fwSet(contractAddr common.Address, act, lst string) (int32, e
 	}
 
 	u.stateDB.FwSet(contractAddr, action, list)
+
+	u.emitNotifyEvent(fwOpSuccess, "fw reset success")
 	return success, nil
 }
 
@@ -173,6 +186,8 @@ func (u *FireWall) fwImport(contractAddr common.Address, data []byte) (int32, er
 	}
 
 	err := u.stateDB.FwImport(contractAddr, data)
+
+	u.emitNotifyEvent(fwOpSuccess, "fw import success")
 	return success, err
 }
 

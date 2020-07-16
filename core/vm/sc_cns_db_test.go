@@ -20,10 +20,11 @@ func cnsTestInital() {
 	addr := common.HexToAddress("")
 
 	cns = &CnsManager{
-		cMap:   NewCnsMap(db, addr),
-		caller: common.HexToAddress(testCaller),
-		origin: common.HexToAddress(testOrigin),
-		isInit: -1,
+		cMap:        NewCnsMap(db, addr),
+		caller:      testCaller,
+		origin:      testOrigin,
+		isInit:      -1,
+		blockNumber: big1,
 	}
 
 	for _, data := range testCases {

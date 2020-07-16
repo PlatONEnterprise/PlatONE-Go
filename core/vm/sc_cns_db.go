@@ -1,8 +1,6 @@
 package vm
 
 import (
-	"fmt"
-	"reflect"
 	"strconv"
 	"strings"
 
@@ -16,6 +14,8 @@ const (
 	cnsTotal   = "total"
 	cnsCurrent = "current"
 )
+
+const seperateChar = ":"
 
 type cnsMap struct {
 	StateDB
@@ -71,7 +71,7 @@ func (c *cnsMap) getKeyByIndex(index uint64) string {
 
 	err := rlp.DecodeBytes(value, &result)
 	if err != nil {
-		fmt.Println(err)
+		// todo: panic
 	}
 
 	return result
@@ -87,7 +87,7 @@ func (c *cnsMap) find(key string) *ContractInfo {
 
 	err := rlp.DecodeBytes(value, &result)
 	if err != nil {
-		fmt.Println(err)
+		// todo: panic
 	}
 
 	return &result
@@ -112,7 +112,7 @@ func (c *cnsMap) total() uint64 {
 
 	err := rlp.DecodeBytes(value, &result)
 	if err != nil {
-		fmt.Println(err)
+		// todo: panic
 	}
 
 	return result
@@ -123,8 +123,6 @@ func (c *cnsMap) insert(key string, value *ContractInfo) {
 	c.setState(key, value)
 	c.setState(indexWrapper(total), key)
 	c.setState(totalWrapper(), total+1)
-
-	fmt.Printf("total is %v type is %v, key is %v, value is %v\n", total, reflect.TypeOf(total), key, value)
 }
 
 func (c *cnsMap) update(key, value []byte) {
@@ -139,7 +137,12 @@ func totalWrapper() string {
 	return cnsName + cnsTotal
 }
 
-func (c *cnsMap) isNameRegByOthers(name, origin string) bool {
+func getSearchKey(name, version string) string {
+	return name + seperateChar + version
+}
+
+/*
+func (c *cnsMap) isNameRegByOthers_Old(name string, origin common.Address) bool {
 	var index uint64
 
 	for index = 0; index < c.total(); index++ {
@@ -150,14 +153,14 @@ func (c *cnsMap) isNameRegByOthers(name, origin string) bool {
 	}
 
 	return false
-}
+}*/
 
-func (c *cnsMap) isNameRegByOthers_Method2(name, origin string) bool {
+func (c *cnsMap) isNameRegByOthers(name string, origin common.Address) bool {
 	var index uint64
 
 	for index = 0; index < c.total(); index++ {
 		key := c.getKeyByIndex(index)
-		existedName := strings.Split(key, ":")[0]
+		existedName := strings.Split(key, seperateChar)[0]
 		if existedName == name {
 			cnsInfo := c.find(key)
 			if cnsInfo.Origin != origin {
@@ -171,7 +174,8 @@ func (c *cnsMap) isNameRegByOthers_Method2(name, origin string) bool {
 	return false
 }
 
-func (c *cnsMap) getLargestVersion(name string) string {
+/*
+func (c *cnsMap) getLargestVersion_Old(name string) string {
 	tempVersion := "0.0.0.0"
 	var index uint64
 
@@ -185,16 +189,16 @@ func (c *cnsMap) getLargestVersion(name string) string {
 	}
 
 	return tempVersion
-}
+}*/
 
-func (c *cnsMap) getLargestVersion_Method2(name string) string {
-	tempVersion := "0.0.0.0"
+func (c *cnsMap) getLargestVersion(name string) string {
 	var index uint64 = 0
+	tempVersion := "0.0.0.0"
 
 	for ; index < c.total(); index++ {
 		key := c.getKeyByIndex(index)
 
-		ary := strings.Split(string(key), ":")
+		ary := strings.Split(string(key), seperateChar)
 		existedName := ary[0]
 		existedVersion := ary[1]
 
@@ -222,7 +226,7 @@ func (c *cnsMap) getCurrentVer(name string) string {
 
 	err := rlp.DecodeBytes(value, &result)
 	if err != nil {
-		fmt.Println(err)
+		// todo: panic
 	}
 
 	return result
