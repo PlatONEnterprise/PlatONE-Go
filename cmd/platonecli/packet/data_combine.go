@@ -4,24 +4,25 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 
+	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
+
 	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/utils"
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )
 
 const (
-	EVM_ENCODE_LENGHT = 32
+	evmEncodeLength = 32
 )
 
 // CombineData of Contractcall data struct is used for packeting the data of wasm or evm contracts execution
 // Implement the MessageCallDemo interface
 func (call *ContractCall) CombineData() (string, string, bool, error) {
 
+	// todo: remove?
 	// only transfer value, no data provided
 	if call.data == nil {
 		return "", "", true, nil
@@ -50,7 +51,7 @@ func (call *ContractCall) combineContractData(funcBytes [][]byte) (string, error
 // combineData packet the data in the way defined by the evm virtual mechine
 // Implement the Interpreter interface
 func (i EvmInterpreter) combineData(funcBytes [][]byte) (string, error) {
-	utl.Logger.Printf("combine data in evm")
+	/// utl.Logger.Printf("combine data in evm")
 	return hexutil.Encode(bytes.Join(funcBytes, []byte(""))), nil
 }
 
@@ -66,7 +67,7 @@ func (i WasmInterpreter) combineData(funcBytes [][]byte) (string, error) {
 
 	// apend function params (contract method and parameters) to data
 	dataParams = append(dataParams, funcBytes...)
-	utl.Logger.Printf("combine data in wasm, dataParam is %v", dataParams)
+	/// utl.Logger.Printf("combine data in wasm, dataParam is %v", dataParams)
 	return rlpEncode(dataParams)
 }
 
@@ -74,6 +75,7 @@ func (i WasmInterpreter) combineData(funcBytes [][]byte) (string, error) {
 func (call *ContractCall) combineFunc() (string, bool, [][]byte, error) {
 	var outputType string
 
+	// todo: remove?
 	if call.data == nil {
 		return "", false, nil, errors.New("no data provided")
 	}
@@ -90,7 +92,10 @@ func (call *ContractCall) combineFunc() (string, bool, [][]byte, error) {
 	}
 
 	// encode the function and get the function constant
-	funcByte, isWrite := call.encodeFunction(abiFunc)
+	funcByte, isWrite, err := call.encodeFunction(abiFunc)
+	if err != nil {
+		return "", false, nil, err
+	}
 
 	// Get the function output type for further use
 	if len(abiFunc.Outputs) != 0 {
@@ -101,21 +106,22 @@ func (call *ContractCall) combineFunc() (string, bool, [][]byte, error) {
 }
 
 // encodeFunction converts the function params to bytes and combine them by specific encoding rules
-func (call *ContractCall) encodeFunction(abiFunc *FuncDesc) ([][]byte, bool) {
+func (call *ContractCall) encodeFunction(abiFunc *FuncDesc) ([][]byte, bool, error) {
 
 	var funcByte = make([][]byte, 1)
 
-	// TODO
-	if call.Interp == nil {
-		utils.Fatalf("interpreter is not provided")
-	}
+	/*
+		// todo: remove
+		if call.Interp == nil {
+			utils.Fatalf("interpreter is not provided")
+		}*/
 
 	// converts the function params to bytes
 	for i, v := range call.data.funcParams {
 		input := abiFunc.Inputs[i]
 		p, err := call.Interp.StringConverter(v, input.Type)
 		if err != nil {
-			utils.Fatalf(utl.ErrParamTypeFormat, v, i)
+			return nil, false, err
 		}
 
 		funcByte = append(funcByte, p)
@@ -130,14 +136,14 @@ func (call *ContractCall) encodeFunction(abiFunc *FuncDesc) ([][]byte, bool) {
 	// get the function constant
 	isWrite := call.Interp.setIsWrite(abiFunc)
 
-	utl.Logger.Printf("the function byte is %v, the write operation is %v\n", funcByte, isWrite)
-	return funcByte, isWrite
+	/// utl.Logger.Printf("the function byte is %v, the write operation is %v\n", funcByte, isWrite)
+	return funcByte, isWrite, nil
 }
 
 // encodeFuncName encodes the contract method in the way defined by the wasm virtual mechine
 // Implement the Interpreter interface
 func (i *WasmInterpreter) encodeFuncName(funcName string) []byte {
-	utl.Logger.Printf("combine functoin in wasm")
+	/// utl.Logger.Printf("combine functoin in wasm")
 	return []byte(funcName)
 }
 
@@ -216,7 +222,7 @@ func (i *EvmInterpreter) combineDeployData() (string, error) {
 // combineDeployData packet the data in the way defined by the wasm virtual mechine
 // Implement the Interpreter interface
 func (i *WasmInterpreter) combineDeployData() (string, error) {
-	utl.Logger.Printf("int wasm combineDeployData()")
+	/// utl.Logger.Printf("int wasm combineDeployData()")
 
 	dataParams := make([][]byte, 0)
 	dataParams = append(dataParams, utl.Int64ToBytes(int64(i.txType)))
@@ -248,7 +254,7 @@ func (i *EvmInterpreter) set(t string, isDynamic bool) {
 // defined in Solidity: contract ABI specification
 func (i *EvmInterpreter) funcByteSort(funcByte [][]byte) [][]byte {
 	var length = len(i.typeCat)
-	var offset = length * EVM_ENCODE_LENGHT
+	var offset = length * evmEncodeLength
 	var newFuncByte = funcByte
 
 	for j, value := range funcByte[1:] {
@@ -270,45 +276,10 @@ func (i *WasmInterpreter) funcByteSort(funcByte [][]byte) [][]byte {
 	return funcByte
 }
 
-// todo: duplicated with the StringConverter in abi/type.go
 // StringConverter encodes different types of function parameters into bytes in the way defined by the wasm virtual machine
 // Implement the Interpreter interface
 func (i WasmInterpreter) StringConverter(source string, t string) ([]byte, error) {
-	switch t {
-	case "int32", "uint32", "uint", "int":
-		dest, err := strconv.Atoi(source)
-		return utl.Int32ToBytes(int32(dest)), err
-	case "int64", "uint64":
-		dest, err := strconv.ParseInt(source, 10, 64)
-		return utl.Int64ToBytes(dest), err
-	/*
-		case "int128", "uint128":
-			dest, err := strconv.ParseInt(source, 10, 64)
-			return utl.BigToByte128(dest), err
-	*/
-	case "float32":
-		dest, err := strconv.ParseFloat(source, 32)
-		return utl.Float32ToBytes(float32(dest)), err
-	case "float64":
-		dest, err := strconv.ParseFloat(source, 64)
-		return utl.Float64ToBytes(dest), err
-	/*
-		case "float128":
-			F, _, err := big.ParseFloat(source, 10, math2.F128Precision, big.ToNearestEven)
-			if err != nil {
-				return []byte{}, err
-			}
-			F128, _ := math2.NewFromBig(F)
-			return append(Uint64ToBytes(F128.High()), Uint64ToBytes(F128.Low())...), nil*/
-	case "bool":
-		if "true" == source || "false" == source {
-			return utl.BoolToBytes("true" == source), nil
-		} else {
-			return []byte{}, errors.New("invalid boolean param")
-		}
-	default:
-		return []byte(source), nil
-	}
+	return abi.StringConverter(source, t)
 }
 
 // StringConverter encodes different types of function parameters into bytes
@@ -341,8 +312,6 @@ func (i *EvmInterpreter) StringConverter(source string, t string) ([]byte, error
 	// dynamic types
 	case t == "string":
 		isDynamic = true
-
-		fmt.Printf("the source is %v\n", source)
 
 		strRunes := []rune(source)
 		strBytes := utl.RuneToBytesArray(strRunes)

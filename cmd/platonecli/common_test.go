@@ -6,15 +6,15 @@ import (
 )
 
 const (
-	TEST_CONFIG_FILE_PATH = "./test/test_case/config.json"
-	TEST_ACCOUNT          = "0x60ceca9c1290ee56b98d4e160ef0453f7c40d219"
+	testConfigFilePath = "./test/test_case/config.json"
+	testAccount        = "0x60ceca9c1290ee56b98d4e160ef0453f7c40d219"
 )
 
 //TODO ???
 func TestWriteConfigFile(t *testing.T) {
-	WriteConfigFile(TEST_CONFIG_FILE_PATH, "account", TEST_ACCOUNT)
+	WriteConfigFile(testConfigFilePath, "account", testAccount)
 	//writeConfigFile(TEST_CONFIG_FILE_PATH, "wrong_key", "0x000..00")
-	config := ParseConfigJson(TEST_CONFIG_FILE_PATH)
+	config := ParseConfigJson(testConfigFilePath)
 
 	t.Logf("the config values are %+v", *config)
 }
@@ -27,7 +27,7 @@ func TestParamParse(t *testing.T) {
 		paramName string
 		result    interface{}
 	}{
-		{TEST_ACCOUNT, "contract", true},
+		{testAccount, "contract", true},
 		{"Alice_02", "contract", false},
 		//{"Alice.bob", "contract"},
 		//{"na*&2", "contract"},
@@ -55,4 +55,56 @@ func TestParamParse(t *testing.T) {
 
 func TestMessageCall(t *testing.T) {
 	// messageCall(nil, nil, nil, "", 0)
+}
+
+func TestChainParamConvert(t *testing.T) {
+	testCase := []struct {
+		param     string
+		paramName string
+	}{
+		{"0x002", "value"},
+		{"0020", "value"},
+		{"-20", "value"},
+		{"0xFD", "value"}, //TODO 负数?
+		{"0x020", "gas"},
+		{"002302", "gas"},
+		{testAccount, "to"},
+	}
+
+	for i, data := range testCase {
+		result := chainParamConvert(data.param, data.paramName)
+		t.Logf("case %d: Before: (%v) %s, After convert: (%v) %v\n", i, reflect.TypeOf(data.param), data.param, reflect.TypeOf(result), result)
+	}
+}
+
+func TestParamValid(t *testing.T) {
+	testCase := []struct {
+		param     string
+		paramName string
+	}{
+		{"*", "fw"},
+		{testAccount, "fw"},
+		{testAccount, "contract"},
+		{"Alice_02", "contract"},
+		//{"Alice.bob", "contract"},
+		{"accept", "action"},
+		//{"xxx", "action"},
+		{"127.0.0.1:6791", "url"},
+		{"127.0.0.1", "externalIP"},
+		{"[\"nodeAdmin \"]", "roles"},
+		{"fd.deng@wxblockchain.com", "email"},
+		{"13240283946", "mobile"},
+		{"0.0.0.1", "version"},
+		{"-123", "num"},
+		{"+13", "num"},
+		{"12459234", "num"},
+		// {"+-123", "num"},
+	}
+
+	for i, data := range testCase {
+		paramValid(data.param, data.paramName)
+		t.Logf("case %d: the %s \"%s\" is valid\n", i, data.paramName, data.param)
+
+	}
+
 }

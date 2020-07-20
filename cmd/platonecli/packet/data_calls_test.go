@@ -1,7 +1,6 @@
 package packet
 
 import (
-	"strings"
 	"testing"
 	"time"
 
@@ -15,6 +14,7 @@ const (
 	TEST_ADDRESS = "0x1e6c4c426dfc3ed2435f726fd9a0c2995df1afc7"
 )
 
+/*
 func TestGetAddressByName(t *testing.T) {
 
 	server := test.MockServer("rpc")
@@ -27,7 +27,7 @@ func TestGetAddressByName(t *testing.T) {
 	} else {
 		t.Logf("FAILED\n")
 	}
-}
+}*/
 
 func TestGetTransactionReceipt(t *testing.T) {
 

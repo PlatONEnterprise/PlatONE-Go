@@ -1,14 +1,16 @@
-package utils
+package platoneclient
 
 import (
 	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 	"io/ioutil"
 	"net/http"
 	"strings"
+
+	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/utils"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 )
 
 // JsonParam, JSON-RPC request
@@ -38,8 +40,8 @@ func SetHttpUrl(str string) {
 		str = str[7:]
 	}
 
-	if !IsUrl(str) {
-		utils.Fatalf(ErrParamInValidSyntax, "url")
+	if !utl.IsUrl(str) {
+		utils.Fatalf(utl.ErrParamInValidSyntax, "url")
 	}
 	url = str
 }
@@ -74,17 +76,18 @@ func HttpPost(param JsonParam) (string, error) {
 
 	switch {
 	case response == nil && err != nil:
-		return "", fmt.Errorf(ErrHttpNoResponseFormat, err.Error())
+		return "", fmt.Errorf(utl.ErrHttpNoResponseFormat, err.Error())
 	case err == nil && response == nil:
 		return "", nil // TODO no response
 	case err == nil && response.StatusCode == 200:
 		body, err := ioutil.ReadAll(response.Body)
 		if err != nil {
-			utils.Fatalf(ErrTODO, DEFAULT_LOG_DIRT)
+			// utils.Fatalf(ErrTODO, DEFAULT_LOG_DIRT)
+			return "", err
 		}
 		return string(body), nil
 	default:
-		return "", fmt.Errorf(ErrHttpResponseStatusFormat, response.Status)
+		return "", fmt.Errorf(utl.ErrHttpResponseStatusFormat, response.Status)
 	}
 }
 
@@ -98,12 +101,13 @@ func ParseRpcResponse(r string) (interface{}, error) {
 	}
 
 	err := json.Unmarshal([]byte(r), &resp)
-	Logger.Printf("the rpc response is %+v\n", resp)
+	/// Logger.Printf("the rpc response is %+v\n", resp)
 
 	switch {
 	case err != nil:
-		LogErr.Printf(ErrUnmarshalBytesFormat, "http response", err.Error())
-		return nil, fmt.Errorf(ErrTODO, DEFAULT_LOG_DIRT)
+		/// LogErr.Printf(ErrUnmarshalBytesFormat, "http response", err.Error())
+		errStr := fmt.Sprintf(utl.ErrUnmarshalBytesFormat, "http response", err.Error())
+		return nil, fmt.Errorf(errStr)
 	case resp.Error.Code != 0:
 		return nil, fmt.Errorf(resp.Error.Message)
 	default:

@@ -13,20 +13,9 @@ import (
 	"time"
 
 	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/utils"
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-)
-
-const (
-	TX_RECEIPT_STATUS_SUCCESS_CODE = "0x1"
-	TX_RECEIPT_STATUS_FAILURE_CODE = "0x0"
-
-	TX_RECEIPT_STATUS_SUCCESS_MSG = "Operation Succeeded"
-	TX_RECEIPT_STATUS_FAILURE_MSG = "Operation Failed"
-
-	SLEEP_TIME = 1000000000 // 1 seconds
 )
 
 // TxParamsDemo, the object of the eth_call, eth_sendTransaction
@@ -90,7 +79,32 @@ func ParseFuncFromAbi(abiBytes []byte, funcName string) (*FuncDesc, error) {
 			return &value, nil
 		}
 	}
-	return nil, fmt.Errorf("function %s not found in %s", funcName, abiBytes)
+
+	funcList := ListAbiFuncName(funcs)
+
+	return nil, fmt.Errorf("function %s not found in\n%s", funcName, funcList)
+}
+
+//
+func ListAbiFuncName(abiFuncs []FuncDesc) string {
+	var result string
+
+	result = fmt.Sprintf("-------------------contract methods list------------------------\n")
+
+	for i, function := range abiFuncs {
+		strInput := []string{}
+		strOutput := []string{}
+		for _, param := range function.Inputs {
+			strInput = append(strInput, param.Name+" "+param.Type)
+		}
+		for _, param := range function.Outputs {
+			strOutput = append(strOutput, param.Name+" "+param.Type)
+		}
+		result += fmt.Sprintf("Method %d:", i+1)
+		result += fmt.Sprintf("%s(%s)%s\n", function.Name, strings.Join(strInput, ","), strings.Join(strOutput, ","))
+	}
+
+	return result
 }
 
 // ParseAbiFromJson parses the application binary interface(abi) files to []FuncDesc object array
@@ -166,9 +180,13 @@ func (tx *TxParams) GetSignedTx(keystore string) string {
 	// extract pk from keystore file and sign the transaction
 	priv := utl.GetPrivateKey(tx.From, keystore)
 	txSign, _ = types.SignTx(txSign, types.HomesteadSigner{}, priv)
-	utl.Logger.Printf("the signed transaction is %v\n", txSign)
+	/// utl.Logger.Printf("the signed transaction is %v\n", txSign)
 
-	str, _ := rlpEncode(txSign)
+	str, err := rlpEncode(txSign)
+	if err != nil {
+		panic(err)
+	}
+
 	return str
 }
 
@@ -176,133 +194,17 @@ func (tx *TxParams) GetSignedTx(keystore string) string {
 // Warning: if the design of the nonce mechanism is modified
 // this part should be modified as well
 func getNonceRand() uint64 {
+	rand.Seed(time.Now().Unix())
 	return rand.Uint64()
 }
 
-// ParseTxResponse parse result based on the function constant and output type
-// if the isSync is ture, the function will get the receipt of the transaction in further
-func ParseTxResponse(resp interface{}, outputType string, isWrite, isSync bool) interface{} {
-
-	var respStr string
-
-	//TODO
-	temp, _ := json.Marshal(resp)
-	_ = json.Unmarshal(temp, &respStr)
-
-	switch {
-	case !isWrite:
-		return ParseNonConstantRespose(respStr, outputType)
-	case isSync:
-		return GetResponseByReceipt(respStr)
-	default:
-		return fmt.Sprintf("trasaction hash is %s\n", respStr)
-	}
-}
-
-// ParseNonConstantRespose wraps the utl.BytesConverter,
-// it converts the hex string response based the output type provided
-func ParseNonConstantRespose(respStr, outputType string) interface{} {
-	if outputType != "" {
-		b, _ := hexutil.Decode(respStr)
-		// bytesTrim := bytes.TrimRight(b, "\x00") // TODO
-		// utl.Logger.Printf("result: %v\n", utl.BytesConverter(bytesTrim, outputType))
-		return utl.BytesConverter(b, outputType)
-	} else {
-		return fmt.Sprintf("message call has no return value\n")
-	}
-}
-
-// GetReceiptByPolling creates a channel to get the transaction receipt by polling
-// The timeout is setted to 10 seconds
-func GetResponseByReceipt(respStr string) interface{} {
-	ch := make(chan string, 1)
-	go GetReceiptByPolling(respStr, ch)
-
-	select {
-	case str := <-ch:
-		runesTrim := TrimSpecialChar([]rune(str))
-		str = string(runesTrim)
-		utl.Logger.Printf("result: %s\n", str)
-		return str
-	case <-time.After(time.Second * 10):
-		temp1 := fmt.Sprintf("\nget contract receipt timeout...more than 10 second.\n")
-		temp2 := fmt.Sprintf("trasaction hash is %s\n", respStr)
-		return temp1 + temp2
-	}
-}
-
-func TrimSpecialChar(trimRunes []rune) []rune {
-
-	var newBytes = make([]rune, 0)
-
-	for _, v := range trimRunes {
-		if !isSpecialChar(v) {
-			newBytes = append(newBytes, v)
-		}
-	}
-
-	return newBytes
-}
-
-func isSpecialChar(r rune) bool {
-
-	if r >= 32 && r <= 126 { // ascii char
-		return false
-	} else if r >= 19968 && r <= 40869 { // unicode \u4e00-\u9fa5
-		return false
-	} else {
-		return true
-	}
-}
-
-// GetReceiptByPolling gets transaction receipt by polling. After getting the receipt, it
-// parses the receipt and get the infos (contract address, transaction status, logs, etc.)
-// The sleep time is designed to limit the times of the polling
-func GetReceiptByPolling(txHash string, ch chan string) {
-
-	for {
-		receipt, err := utl.GetTransactionReceipt(txHash)
-
-		// limit the times of the polling
-		switch {
-		case err != nil:
-			fmt.Println(err.Error())
-			fmt.Printf("try again 5s later...")
-			time.Sleep(5 * SLEEP_TIME)
-			fmt.Printf("try again...\n")
-			continue
-		case receipt == nil:
-			time.Sleep(2 * SLEEP_TIME)
-			continue
-		}
-
-		switch {
-		case receipt.Status == TX_RECEIPT_STATUS_FAILURE_CODE:
-			ch <- TX_RECEIPT_STATUS_FAILURE_MSG
-			break
-		case receipt.ContractAddress != "":
-			ch <- receipt.ContractAddress
-			break
-		case len(receipt.Logs) != 0:
-			tmp, _ := hexutil.Decode(receipt.Logs[0].Data) // currently it only take the first topic
-
-			fmt.Printf("the return string in log is %s\n", tmp)
-
-			ch <- string(tmp)
-			break
-		case receipt.Status == TX_RECEIPT_STATUS_SUCCESS_CODE:
-			ch <- TX_RECEIPT_STATUS_SUCCESS_MSG
-			break
-		}
-	}
-}
-
+// todo: handle error
 // ExtractContractData extract the role info from the contract return result
 func ExtractContractData(result, role string) string {
 	var inter = make([]interface{}, 0)
 	var count int
 
-	r := ParseSysContractResult([]byte(result))
+	r, _ := ParseSysContractResult([]byte(result))
 	data := r.Data.([]interface{})
 
 	length := len(data)
@@ -324,12 +226,14 @@ func ExtractContractData(result, role string) string {
 }
 
 // ParseSysContractResult parsed the result to ContractReturn object
-func ParseSysContractResult(result []byte) *ContractReturn {
+func ParseSysContractResult(result []byte) (*ContractReturn, error) {
 	a := ContractReturn{} //删除？
 	err := json.Unmarshal(result, &a)
 	if err != nil {
-		utils.Fatalf(utl.ErrUnmarshalBytesFormat, "contract return", err.Error())
+		// utils.Fatalf(utl.ErrUnmarshalBytesFormat, "contract return", err.Error())
+		errStr := fmt.Sprintf(utl.ErrUnmarshalBytesFormat, "contract return", err.Error())
+		return nil, errors.New(errStr)
 	}
 
-	return &a
+	return &a, nil
 }

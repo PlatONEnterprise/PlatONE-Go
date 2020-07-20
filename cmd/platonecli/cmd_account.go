@@ -119,10 +119,10 @@ func transfer(c *cli.Context) {
 	to := c.Args().First()
 	value := c.Args().Get(1)
 
-	value = utl.ChainParamConvert(value, "value").(string)
-	toNew := utl.ChainParamConvert(to, "to").(common.Address)
+	value = chainParamConvert(value, "value").(string)
+	toNew := chainParamConvert(to, "to").(common.Address)
 
-	call := packet.NewContractCallDemo(nil, "", 0)
+	call := packet.NewContractCall(nil, "", 0)
 	result := messageCall(c, call, &toNew, value)
 	fmt.Printf("result: %v\n", result)
 }
@@ -142,7 +142,7 @@ func registerUser(c *cli.Context) {
 func registerRole(c *cli.Context) {
 
 	roles := c.Args().First()
-	utl.ParamValid(roles, "roles")
+	paramValid(roles, "roles")
 
 	funcParams := CombineFuncParams(roles)
 
@@ -152,7 +152,7 @@ func registerRole(c *cli.Context) {
 
 func updateUser(c *cli.Context) {
 	account := c.Args().First()
-	utl.ParamValid(account, "address")
+	paramValid(account, "address")
 
 	strJson := "{\"mobile\":\"\",\"email\":\"\"}"
 	str := combineJson(c, nil, []byte(strJson))
@@ -212,7 +212,7 @@ func queryUser(c *cli.Context) {
 //TODO state by user name
 func stateUser(c *cli.Context) {
 	account := c.Args().First()
-	utl.ParamValid(account, "address")
+	paramValid(account, "address")
 
 	funcParams := CombineFuncParams(account)
 
@@ -240,7 +240,10 @@ func stateUser(c *cli.Context) {
 
 	// print the roles owned by the user
 	resultBytes := []byte(result.(string))
-	result2 := packet.ParseSysContractResult(resultBytes)
+	result2, err := packet.ParseSysContractResult(resultBytes)
+	if err != nil {
+		fmt.Printf(err.Error())
+	}
 	if result2.Code == 0 {
 		fmt.Printf("has Roles: %v\n", reflect.ValueOf(result2.Data))
 	} else {
@@ -250,7 +253,10 @@ func stateUser(c *cli.Context) {
 	// get the user roles in registration
 	result = contractCommon(c, funcParams, "getRegisterInfoByAddress", "__sys_RoleRegister")
 	resultBytes = []byte(result.(string))
-	result2 = packet.ParseSysContractResult(resultBytes)
+	result2, err = packet.ParseSysContractResult(resultBytes)
+	if err != nil {
+		fmt.Printf(err.Error())
+	}
 	if result2.Code == 0 {
 		roles := result2.Data.(map[string]interface{})["requireRoles"]
 		fmt.Printf("Roles in registration: %v\n", roles)

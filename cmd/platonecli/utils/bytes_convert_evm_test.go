@@ -1,14 +1,5 @@
 package utils
 
-import (
-	"bytes"
-	"fmt"
-	"testing"
-
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/packet"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-)
-
 const (
 	EVM_TRUE        = "0000000000000000000000000000000000000000000000000000000000000001"
 	EVM_FALSE       = "0000000000000000000000000000000000000000000000000000000000000000"
@@ -20,6 +11,7 @@ const (
 	EVM_STRING_DAVE = "00000000000000000000000000000000000000000000000000000000000000046461766500000000000000000000000000000000000000000000000000000000"
 )
 
+/*
 func TestStringConverterDemo(t *testing.T) {
 	var testCase = []struct {
 		value   string
@@ -56,4 +48,4 @@ func TestStringConverterDemo(t *testing.T) {
 			}
 		})
 	}
-}
+}*/

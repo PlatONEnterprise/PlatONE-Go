@@ -81,9 +81,9 @@ func cnsRegister(c *cli.Context) {
 	ver := c.Args().Get(1)
 	address := c.Args().Get(2)
 
-	utl.ParamValid(name, "name")
-	utl.ParamValid(ver, "version")
-	utl.ParamValid(address, "address")
+	paramValid(name, "name")
+	paramValid(ver, "version")
+	paramValid(address, "address")
 
 	funcParams := CombineFuncParams(name, ver, address)
 	result := contractCommon(c, funcParams, "cnsRegister", cnsManagementAddress)
@@ -95,8 +95,8 @@ func cnsRedirect(c *cli.Context) {
 	name := c.Args().First()
 	ver := c.Args().Get(1)
 
-	utl.ParamValid(name, "name")
-	utl.ParamValid(ver, "version")
+	paramValid(name, "name")
+	paramValid(ver, "version")
 
 	funcParams := CombineFuncParams(name, ver)
 	result := contractCommon(c, funcParams, "cnsRedirect", cnsManagementAddress)
@@ -108,9 +108,9 @@ func cnsResolve(c *cli.Context) {
 	name := c.Args().First()
 	ver := c.String(CnsVersionFlags.Name)
 
-	utl.ParamValid(name, "name")
+	paramValid(name, "name")
 	if !strings.EqualFold(ver, "latest") {
-		utl.ParamValid(ver, "version")
+		paramValid(ver, "version")
 	}
 
 	funcParams := CombineFuncParams(name, ver)
@@ -136,8 +136,8 @@ func cnsQuery(c *cli.Context) {
 
 	switch {
 	case all:
-		utl.ParamValid(pageNum, "num")
-		utl.ParamValid(pageSize, "num")
+		paramValid(pageNum, "num")
+		paramValid(pageSize, "num")
 
 		funcParams := CombineFuncParams(pageNum, pageSize)
 		result = contractCommon(c, funcParams, "getRegisteredContracts", cnsManagementAddress)
@@ -153,7 +153,7 @@ func cnsQuery(c *cli.Context) {
 		result = contractCommon(c, []string{contract}, funcName, cnsManagementAddress)
 
 	case user != "":
-		utl.ParamValid(user, "address")
+		paramValid(user, "address")
 
 		funcName = "getRegisteredContractsByOrigin"
 		funcParams := CombineFuncParams(user)

@@ -29,9 +29,9 @@ var (
 		Usage: `Use default local account to send the message call, 
 		the default local account keystore file locates at "<future feature>"`,
 	}
-	KeystoreFlags = cli.StringFlag{
-		Name:  "keystore",
-		Usage: "Use local account to send the message call by specifying the keystore file",
+	KeyfileFlags = cli.StringFlag{
+		Name:  "keyfile",
+		Usage: "Use local account to send the message call by specifying the key file",
 	}
 	SyncFlags = cli.BoolFlag{
 		Name:  "sync",
@@ -40,7 +40,7 @@ var (
 	DefaultFlags = cli.BoolFlag{
 		Name: "default",
 		Usage: `Default the account settings by storing the
-		current values of --account, --keystore, and --local flags  to "./config/config.json"`,
+		current values of --account, --keyfile, and --local flags  to "./config/config.json"`,
 	}
 
 	// transfer
@@ -231,7 +231,7 @@ var (
 		GasFlags,
 		GasPriceFlags,
 		LocalFlags,
-		KeystoreFlags,
+		KeyfileFlags,
 		SyncFlags,
 		DefaultFlags,
 	}

@@ -3,7 +3,6 @@ package utils
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
 	"math"
 	"math/big"
 
@@ -139,7 +138,6 @@ func BoolToBytes(b bool) []byte {
 
 // BytesConverter converts the bytes to the specific data type
 func BytesConverter(source []byte, t string) interface{} {
-	fmt.Printf("the length of the return byte is %d\n", len(source))
 
 	switch t {
 	case "int32":

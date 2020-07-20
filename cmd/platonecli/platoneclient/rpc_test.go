@@ -1,4 +1,4 @@
-package utils
+package platoneclient
 
 import (
 	"testing"
@@ -17,6 +17,6 @@ func TestGetNonce(t *testing.T) {
 	server := test.MockServer("rpc")
 	SetHttpUrl(server.URL)
 
-	nonce := GetNonce(common.HexToAddress(test.TEST_ACCOUNT))
+	nonce, _ := GetNonce(common.HexToAddress(test.TestAccount))
 	t.Logf("the nonce is %v\n", nonce)
 }

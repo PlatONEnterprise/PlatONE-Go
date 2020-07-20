@@ -1,11 +1,11 @@
 package utils
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 	"log"
 	"os"
-	"path/filepath"
 	"time"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 )
 
 var Logger *log.Logger
@@ -14,14 +14,13 @@ var LogDeg *log.Logger
 var logFileDirt string
 
 const (
-	FILE_CLEAR_TIME  = 3600 * 24 * 7 // 7 Days
-	DEFAULT_LOG_DIRT = "./log"
+	defaultLogDirt = "./platonecli_log"
 )
 
-//TODO LogFileSetup
-func init() {
+// LogInit is used while debugging utils, packet packages
+func LogInit() {
 	runPath := GetRunningTimePath()
-	logFileDirt = runPath + DEFAULT_LOG_DIRT
+	logFileDirt = runPath + defaultLogDirt
 
 	FileDirectoryInit(logFileDirt)
 	pathSep := string(os.PathSeparator)
@@ -44,22 +43,4 @@ func init() {
 	if err != nil {
 		LogErr.Printf("Delete %s file error: %s\n", logFileDirt, err.Error())
 	}
-}
-
-func DeleteOldFile(fileDirt string) error {
-	currentTime := time.Now().Unix()
-
-	return filepath.Walk(fileDirt, func(path string, fileInfo os.FileInfo, err error) error {
-
-		if fileInfo == nil {
-			return err
-		}
-		fileTime := fileInfo.ModTime().Unix()
-
-		if (currentTime - fileTime) > FILE_CLEAR_TIME {
-			_ = os.RemoveAll(path)
-		}
-
-		return nil
-	})
 }

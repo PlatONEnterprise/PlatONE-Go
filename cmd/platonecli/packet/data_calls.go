@@ -25,7 +25,21 @@ func ContractCallCommon(funcName string, funcParams []string, funcAbi []byte, cn
 
 	// new an contract call, set the interpreter(wasm or evm contract)
 	data := NewData(funcName, funcParams, funcAbi)
-	call := NewContractCallDemo(data, cns.Name, cns.txType)
+	call := NewContractCall(data, cns.Name, cns.txType)
+	call.SetInterpreter(vm) //TODO
+
+	return call
+}
+
+// ContractCallCommon
+// extract the common part of all the contract calls
+func ContractCallCommonTest(funcName string, funcParams []string, funcAbi []byte, cns Cns, vm string) *ContractCallTest {
+	// parse the function parameters
+	funcName, funcParams = utl.FuncParse(funcName, funcParams)
+
+	// new an contract call, set the interpreter(wasm or evm contract)
+	data := NewData(funcName, funcParams, funcAbi)
+	call := NewContractCallTest(data, cns.Name, cns.txType)
 	call.SetInterpreter(vm) //TODO
 
 	return call

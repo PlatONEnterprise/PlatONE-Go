@@ -5,7 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
 	"strconv"
+	"strings"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/platoneclient"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
@@ -54,20 +58,11 @@ var precompiledList = map[string]string{
 	contractDataProcessorAddress: "",
 }
 
-// convert, convert user input from key to value
-type convert struct {
-	key1      string      // user input 1
-	key2      string      // user input 2
-	value1    interface{} // the convert value of user input 1
-	value2    interface{} // the convert value of user input 2
-	paramName string
-}
-
 // temporary deprecated
 // innerCall extract the common parts of the actions of fw and mig calls
 func innerCall(c *cli.Context, funcName string, funcParams []string, txType uint64) interface{} {
 	addr := c.Args().First()
-	to := utl.ChainParamConvert(addr, "to").(common.Address)
+	to := chainParamConvert(addr, "to").(common.Address)
 
 	call := packet.InnerCallCommon(funcName, funcParams, txType)
 	return messageCall(c, call, &to, "")
@@ -75,59 +70,42 @@ func innerCall(c *cli.Context, funcName string, funcParams []string, txType uint
 
 // contractCommon extract the common parts of the actions of contract execution
 func contractCommon(c *cli.Context, funcParams []string, funcName, contract string) interface{} {
-	abiPath := c.String(ContractAbiFilePathFlag.Name)
 	vm := c.String(ContractVmFlags.Name)
-	value := c.String(TransferValueFlag.Name)
-
-	utl.ParamValid(vm, "vm")
-	value = utl.ChainParamConvert(value, "value").(string)
+	paramValid(vm, "vm")
 
 	// get the abi bytes of the contracts
+	abiPath := c.String(ContractAbiFilePathFlag.Name)
 	funcAbi := AbiParse(abiPath, contract)
 
 	// judge whether the input string is contract address or contract name
 	cns := CnsParse(contract)
-	to := utl.ChainParamConvert(cns.To, "to").(common.Address)
+	to := chainParamConvert(cns.To, "to").(common.Address)
 
-	call := packet.ContractCallCommon(funcName, funcParams, funcAbi, *cns, vm)
-	return messageCall(c, call, &to, value)
+	/// call := packet.ContractCallCommon(funcName, funcParams, funcAbi, *cns, vm) // defined in data_interpreter.go
+	call := packet.ContractCallCommonTest(funcName, funcParams, funcAbi, *cns, vm) // defined in interpreter.go
+
+	/// return messageCall(c, call, &to, "")
+	return clientCommon(c, call, &to)
 }
 
-// messageCall extract the common parts of the transaction based calls
-// including eth_call, eth_sendTransaction, and eth_sendRawTransaction
-func messageCall(c *cli.Context, call packet.MessageCall, to *common.Address, value string) interface{} {
+func clientCommon(c *cli.Context, call packet.MessageCall, to *common.Address) interface{} {
 
 	// get the global parameters
-	address, keystore, gas, gasPrice, isSync, isDefault := getGlobalParam(c)
-	from := common.HexToAddress(address)
+	account, isSync, isDefault, url := getClientConfig(c)
+	pc := platoneclient.SetupClient(url)
 
-	// todo: delete this statement
-	if call == nil {
-		utils.Fatalf("")
+	tx := getTxParams(c)
+	tx.From = account.address
+	tx.To = to
+
+	result := pc.MessageCall(call, account.keyfile, tx, isSync)
+
+	if isDefault && !reflect.ValueOf(result).IsZero() {
+		runPath := utl.GetRunningTimePath()
+		WriteConfig(runPath+defaultConfigFilePath, config)
 	}
 
-	// combine the data based on the types of the calls (contract call, inner call or deploy call)
-	data, outputType, isWrite, err := call.CombineData()
-	if err != nil {
-		utils.Fatalf(utl.ErrPackDataFormat, err.Error())
-	}
-
-	// packet the transaction and select the transaction based calls
-	tx := packet.NewTxParams(from, to, value, gas, gasPrice, data)
-	params, action := tx.SendMode(isWrite, keystore)
-
-	// print the RPC JSON param to the terminal
-	utl.PrintRequest(params)
-
-	// send the RPC calls
-	resp, err := utl.RpcCalls(action, params)
-	if err != nil {
-		utils.Fatalf(utl.ErrSendTransacionFormat, err.Error())
-	}
-
-	setDefault(address, keystore, isDefault)
-
-	return packet.ParseTxResponse(resp, outputType, isWrite, isSync)
+	return result
 }
 
 // CombineRule combines firewall rules
@@ -144,85 +122,6 @@ func CombineFuncParams(args ...string) []string {
 	}
 
 	return strArray
-}
-
-// getGlobalParam gets and converts the global parameters
-func getGlobalParam(c *cli.Context) (string, string, string, string, bool, bool) {
-
-	if c == nil {
-		panic("the cli.context pointer is nill")
-	}
-
-	// set the url for http request
-	setUrl(c)
-
-	// get the global parameters from cli.context
-	//TODO 分类规划???
-	gas := c.String(GasFlags.Name)
-	gasPrice := c.String(GasPriceFlags.Name)
-
-	address := c.String(AccountFlags.Name)
-	keystore := c.String(KeystoreFlags.Name)
-	isLocal := c.Bool(LocalFlags.Name)
-	isDefault := c.Bool(DefaultFlags.Name)
-
-	isSync := !c.Bool(SyncFlags.Name)
-
-	// check and covert the global parameters
-	utl.OptionParamValid(address, "address")
-	keystore = getKeystore(keystore, isLocal)
-	if address == "" && keystore == "" {
-		address = config.Account
-		keystore = config.Keystore
-	}
-
-	gas = utl.ChainParamConvert(gas, "gas").(string)
-	gasPrice = utl.ChainParamConvert(gasPrice, "gasPrice").(string)
-
-	return address, keystore, gas, gasPrice, isSync, isDefault
-}
-
-// setUrl sets the url for http request
-func setUrl(c *cli.Context) {
-	if c == nil {
-		panic("the cli.context pointer is nill")
-	}
-
-	url := c.String(UrlFlags.Name)
-
-	runPath := utl.GetRunningTimePath()
-
-	switch {
-	case url != "":
-		utl.ParamValid(url, "url")
-		config.Url = url
-		WriteConfigFile(runPath+DEFAULT_CONFIG_FILE_PATH, "url", config.Url)
-	case config.Url == "":
-		utils.Fatalf("Please set url first.\n")
-	default:
-		//utils.Fatalf(utl.PanicUnexpSituation, "SetUrl")
-	}
-
-	utl.SetHttpUrl(config.Url)
-}
-
-// getKeystore gets the path of keystore file based on the keystore and isLocal flags
-func getKeystore(keystore string, isLocal bool) string {
-	if isLocal && keystore == "" {
-		keystore, _ = utl.GetFileInDirt(DEFAULT_KEYSTORE_DIRT)
-	}
-	return keystore
-}
-
-// setDefault write values of account and keystore to config file if default flag provided
-func setDefault(account, keystore string, isDefault bool) {
-	if isDefault {
-
-		runPath := utl.GetRunningTimePath()
-
-		WriteConfigFile(runPath+DEFAULT_CONFIG_FILE_PATH, "account", account)
-		WriteConfigFile(runPath+DEFAULT_CONFIG_FILE_PATH, "keystore", keystore)
-	}
 }
 
 // Some of the contract function inputs are in complex json format,
@@ -242,7 +141,7 @@ func combineJson(c *cli.Context, arrayMust []string, bytes []byte) string {
 		// user input
 		tmp := c.String(key)
 		if tmp != "" {
-			utl.ParamValid(tmp, key)
+			paramValid(tmp, key)
 			temp := ParamParse(tmp, key)
 			m[key] = temp
 		}
@@ -251,7 +150,7 @@ func combineJson(c *cli.Context, arrayMust []string, bytes []byte) string {
 	// required value
 	for i, key := range arrayMust {
 		m[key] = c.Args().Get(i)
-		utl.ParamValid(m[key].(string), key)
+		paramValid(m[key].(string), key)
 	}
 
 	if len(m) == 0 {
@@ -259,38 +158,18 @@ func combineJson(c *cli.Context, arrayMust []string, bytes []byte) string {
 	}
 
 	bytes, _ = json.Marshal(m)
-	utl.Logger.Printf("the combine json is %s\n", bytes)
+	/// utl.Logger.Printf("the combine json is %s\n", bytes)
 
 	return string(bytes)
 }
 
-// ParamParse convert the user inputs to the value needed
-func ParamParse(param, paramName string) interface{} {
-	var err error
-	var i interface{}
-
-	switch paramName {
-	case "contract", "user":
-		i, err = utl.IsNameOrAddress(param)
-	case "delayNum", "p2pPort", "rpcPort":
-		if utl.IsInRange(param, 65535) {
-			i, err = strconv.ParseInt(param, 10, 0)
-		} else {
-			err = errors.New("value out of range")
-		}
-	case "operation", "status", "type":
-		i, err = convertSelect(param, paramName)
-	case "code", "abi":
-		i, err = utl.ParseFileToBytes(param)
-	default:
-		i, err = param, nil
-	}
-
-	if err != nil {
-		utils.Fatalf(utl.ErrParamParseFormat, paramName, err.Error())
-	}
-
-	return i
+// convert, convert user input from key to value
+type convert struct {
+	key1      string      // user input 1
+	key2      string      // user input 2
+	value1    interface{} // the convert value of user input 1
+	value2    interface{} // the convert value of user input 2
+	paramName string
 }
 
 // Some of the contract function inputs are numbers,
@@ -337,7 +216,6 @@ func (conv *convert) typeConvert(param string) (interface{}, error) {
 }
 
 // 2020.7.6 modified, moved from tx_call.go
-
 // GetAddressByName wraps the RpcCalls used to get the contract address by cns name
 // the parameters are packet into transaction before packet into rpc json data struct
 func GetAddressByName(name string) (string, error) {
@@ -354,7 +232,7 @@ func GetAddressByName(name string) (string, error) {
 	tx := packet.NewTxParams(from, &to, "", "", "", data)
 	params := utl.CombineParams(tx, "latest")
 
-	response, err := utl.RpcCalls("eth_call", params)
+	response, err := platoneclient.RpcCalls("eth_call", params)
 	if err != nil {
 		return "", err
 	}
@@ -368,7 +246,6 @@ func GetAddressByName(name string) (string, error) {
 }
 
 // 2020.7.6 modified, moved from tx_utils.go
-
 // CnsParse judge whether the input string is contract address or contract name
 // and return the corresponding infos
 func CnsParse(contract string) *packet.Cns {
@@ -378,5 +255,98 @@ func CnsParse(contract string) *packet.Cns {
 		return packet.NewCns(contract, "", types.NormalTxType)
 	} else {
 		return packet.NewCns(cnsInvokeAddress, contract, types.CnsTxType)
+	}
+}
+
+// ParamParse convert the user inputs to the value needed
+func ParamParse(param, paramName string) interface{} {
+	var err error
+	var i interface{}
+
+	switch paramName {
+	case "contract", "user":
+		i, err = utl.IsNameOrAddress(param)
+	case "delayNum", "p2pPort", "rpcPort":
+		if utl.IsInRange(param, 65535) {
+			i, err = strconv.ParseInt(param, 10, 0)
+		} else {
+			err = errors.New("value out of range")
+		}
+	case "operation", "status", "type":
+		i, err = convertSelect(param, paramName)
+	case "code", "abi":
+		i, err = utl.ParseFileToBytes(param)
+	default:
+		i, err = param, nil
+	}
+
+	if err != nil {
+		utils.Fatalf(utl.ErrParamParseFormat, paramName, err.Error())
+	}
+
+	return i
+}
+
+// ChainParamConvert convert the string to chain defined type
+func chainParamConvert(param, paramName string) interface{} {
+	var err error
+	var i interface{}
+
+	switch paramName {
+	case "value", "gasPrice":
+		i, err = utl.IntValueConvert(param)
+	case "gas":
+		i, err = utl.UintValueConvert(param)
+	case "address", "to", "from":
+		i, err = utl.AddressConvert(param)
+	default:
+		i, err = param, nil //TODO
+	}
+
+	if err != nil {
+		utils.Fatalf(utl.ErrParamParseFormat, paramName, err.Error())
+	}
+
+	return i
+}
+
+// OptionParamValid wraps ParamValid, it allows the input to be null
+func optionParamValid(param, paramName string) {
+	if param != "" {
+		paramValid(param, paramName)
+	}
+}
+
+// ParamValid check if the input is valid
+func paramValid(param, paramName string) {
+	var valid = true
+
+	switch paramName {
+	case "fw":
+		if param != "*" {
+			valid = utl.IsMatch(param, "address")
+		}
+	case "to":
+		valid = param == "" || utl.IsMatch(param, "address")
+	case "contract":
+		valid = utl.IsMatch(param, "address") || utl.IsMatch(param, "name")
+	case "action":
+		valid = strings.EqualFold(param, "accept") || strings.EqualFold(param, "reject")
+	case "vm":
+		valid = param == "" || strings.EqualFold(param, "evm") || strings.EqualFold(param, "wasm")
+	case "url":
+		valid = utl.IsUrl(param)
+	case "externalIP", "internalIP":
+		valid = utl.IsUrl(param + ":0")
+	case "roles":
+		valid = utl.IsValidRoles(param)
+	case "email", "mobile", "name", "version", "address", "num":
+		valid = utl.IsMatch(param, paramName)
+	default:
+		/// Logger.Printf("param valid function used but not validate the <%s> param\n", paramName)
+	}
+
+	if !valid {
+		utils.Fatalf(utl.ErrParamInValidSyntax, paramName)
 	}
 }

@@ -3,19 +3,20 @@ package test
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
-	"io/ioutil"
-	"net/http"
-	"net/http/httptest"
 )
 
 const (
-	TEST_TX_HASH = "0x31bbe55da1e59a9a0b79204afc7d89ccc8a5cea9722b252036cdcc6286a334ee"
-	TEST_ACCOUNT = "0x60ceca9c1290ee56b98d4e160ef0453f7c40d219"
-	TEST_RESULT  = "0x0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002a30783165366334633432366466633365643234333566373236666439613063323939356466316166633700000000000000000000000000000000000000000000"
+	testTxHash  = "0x31bbe55da1e59a9a0b79204afc7d89ccc8a5cea9722b252036cdcc6286a334ee"
+	TestAccount = "0x60ceca9c1290ee56b98d4e160ef0453f7c40d219"
+	testResult  = "0x0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002a30783165366334633432366466633365643234333566373236666439613063323939356466316166633700000000000000000000000000000000000000000000"
 )
 
 type f func(rw http.ResponseWriter, r *http.Request)
@@ -126,7 +127,7 @@ var rpcCallsServer = func(rw http.ResponseWriter, r *http.Request) {
 		_ = rlp.DecodeBytes(tempBytes, &dataBytes)
 
 		if string(dataBytes[2]) == "tofu" {
-			response.Result = TEST_RESULT
+			response.Result = testResult
 			response.Error.Code = 0
 			response.Error.Message = "success"
 		} else {
@@ -145,7 +146,7 @@ var rpcCallsServer = func(rw http.ResponseWriter, r *http.Request) {
 			response.Error.Code = 1
 			response.Error.Message = "failed"
 		} else {
-			response.Result = TEST_TX_HASH
+			response.Result = testTxHash
 			response.Error.Code = 0
 			response.Error.Message = "success"
 		}

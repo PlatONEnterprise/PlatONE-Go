@@ -1,52 +1,10 @@
 package utils
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 	"regexp"
 	"strconv"
 	"strings"
 )
-
-// OptionParamValid wraps ParamValid, it allows the input to be null
-func OptionParamValid(param, paramName string) {
-	if param != "" {
-		ParamValid(param, paramName)
-	}
-}
-
-// ParamValid check if the input is valid
-func ParamValid(param, paramName string) {
-	var valid = true
-
-	switch paramName {
-	case "fw":
-		if param != "*" {
-			valid = IsMatch(param, "address")
-		}
-	case "to":
-		valid = param == "" || IsMatch(param, "address")
-	case "contract":
-		valid = IsMatch(param, "address") || IsMatch(param, "name")
-	case "action":
-		valid = strings.EqualFold(param, "accept") || strings.EqualFold(param, "reject")
-	case "vm":
-		valid = param == "" || strings.EqualFold(param, "evm") || strings.EqualFold(param, "wasm")
-	case "url":
-		valid = IsUrl(param)
-	case "externalIP", "internalIP":
-		valid = IsUrl(param + ":0")
-	case "roles":
-		valid = isValidRoles(param)
-	case "email", "mobile", "name", "version", "address", "num":
-		valid = IsMatch(param, paramName)
-	default:
-		Logger.Printf("param valid function used but not validate the <%s> param\n", paramName)
-	}
-
-	if !valid {
-		utils.Fatalf(ErrParamInValidSyntax, paramName)
-	}
-}
 
 // regMatch check if string matches the pattern by regular expression
 func regMatch(param, pattern string) bool {
@@ -60,7 +18,7 @@ func IsMatch(param, paramName string) bool {
 
 	switch paramName {
 	case "name":
-		pattern = `^(__sys_){0,1}[a-zA-Z]\w{2,15}$` //english name: Alice_02 or __sys_NodeManager
+		pattern = `^[a-zA-Z]\w{2,15}$` //english name: Alice_02
 	case "num":
 		pattern = `^[+-]{0,1}\d+$` //1823..., +1, -123
 	case "email":
@@ -88,7 +46,7 @@ func IsUrl(url string) bool {
 		port = array[1]
 		ip = array[0]
 	} else {
-		Logger.Printf("verify url error, invalid url syntax <ip>:<port> %s", url)
+		/// Logger.Printf("verify url error, invalid url syntax <ip>:<port> %s", url)
 		return false
 	}
 
@@ -124,7 +82,7 @@ func IsInRange(value string, num int64) bool {
 }
 
 // isValidRoles wraps isRoleMatch, it extracts the roles in the array and validates the roles
-func isValidRoles(roles string) bool {
+func IsValidRoles(roles string) bool {
 	if roles == "" {
 		return false
 	}
