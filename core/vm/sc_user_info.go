@@ -50,62 +50,64 @@ func updateDescInfo(src *DescInfo, dest *DescInfo) {
 
 // export function
 // 管理员操作
-func (u *UserManagement) addUser(info *UserInfo) ([]byte, error) {
+func (u *UserManagement) addUser(info *UserInfo) (int32, error) {
+	topic := "addUser"
 	if !u.callerPermissionCheck() {
-		return nil, ErrNoPermission
+		return u.returnFail(topic, errNoPermission)
 	}
 
 	if info.Name == "" || len(info.Name) > maxUserNameLen {
-		return nil, errUsernameUnsupported
+		return u.returnFail(topic,  errUsernameUnsupported)
 	}
 
 	if u.getAddrByName(info.Name) != ZeroAddress {
-		return nil, errUserNameAlreadyExist
+		return u.returnFail(topic, errUserNameAlreadyExist)
 	}
 
 	addr := common.HexToAddress(info.Address)
 	if u.getNameByAddr(addr) != "" {
-		return nil, errAlreadySetUserName
+		return u.returnFail(topic,  errAlreadySetUserName)
 	}
 
 	if info.DescInfo != "" {
 		descInfo := &DescInfo{}
 		if err := json.Unmarshal([]byte(info.DescInfo), descInfo); err != nil {
 			log.Error("json.Unmarshal([]byte(info.DescInfo), descInfo)")
-			return nil, err
+			return u.returnFail(topic,  err)
 		}
 	}
 
 	info.Authorizer = u.Caller().String()
 
 	if err := u.setUserInfo(info); err != nil {
-		return nil, err
+		return u.returnFail(topic,  err)
 	}
 	u.addAddrNameMap(addr, info.Name)
 	u.addNameAddrMap(addr, info.Name)
 
 	if err := u.addUserList(addr); err != nil {
-		return nil, err
+		return u.returnFail(topic,  err)
 	}
 
-	return nil, nil
+	return u.returnSuccess(topic)
 }
 
 // 管理员操作，可以更新用户信息中的DescInfo字段
-func (u *UserManagement) updateUserDescInfo(addr common.Address, info *DescInfo) ([]byte, error) {
+func (u *UserManagement) updateUserDescInfo(addr common.Address, info *DescInfo) (int32, error) {
+	topic := "updateUserDescInfo"
 	if !u.callerPermissionCheck() {
-		return nil, ErrNoPermission
+		return u.returnFail(topic, errNoPermission)
 	}
 
 	userInfo, err := u.getUserInfo(addr)
 	if err != nil {
-		return nil, err
+		return u.returnFail(topic, err)
 	}
 
 	infoOnChain := &DescInfo{}
 	if userInfo.DescInfo != "" {
 		if err := json.Unmarshal([]byte(userInfo.DescInfo), infoOnChain); err != nil {
-			return nil, err
+			return u.returnFail(topic, err)
 		}
 	}
 	updateDescInfo(infoOnChain, info)
@@ -114,10 +116,10 @@ func (u *UserManagement) updateUserDescInfo(addr common.Address, info *DescInfo)
 	userInfo.DescInfo = string(ser)
 
 	if err := u.setUserInfo(userInfo); err != nil {
-		return nil, err
+		return u.returnFail(topic, err)
 	}
 
-	return nil, nil
+	return u.returnSuccess(topic)
 }
 
 // 查询用户信息，任意用户可查
@@ -295,5 +297,5 @@ func (u *UserManagement) setUserList(addrs []common.Address) error {
 }
 
 func (u *UserManagement) callerPermissionCheck() bool {
-	return hasUserOpPermission(u.state, u.caller)
+	return hasUserOpPermission(u.stateDB, u.caller)
 }

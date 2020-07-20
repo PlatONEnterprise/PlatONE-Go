@@ -44,8 +44,6 @@ var (
 	errNodeNotFound   = errors.New("node not found")
 )
 
-type CodeType uint8
-
 const (
 	addNodeSuccess      CodeType = 0
 	addNodeBadParameter CodeType = 1

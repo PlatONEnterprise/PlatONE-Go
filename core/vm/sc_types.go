@@ -10,6 +10,13 @@ const (
 	resultCodeInternalError = 1
 )
 
+type CodeType uint8
+
+const(
+	operateSuccess CodeType = 0
+	operateFail CodeType = 1
+)
+
 type result struct {
 	Code int         `json:"code"`
 	Msg  string      `json:"msg"`

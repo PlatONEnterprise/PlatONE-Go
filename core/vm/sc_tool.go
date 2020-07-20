@@ -18,24 +18,24 @@ var (
 	errFuncNotFoundInExportFuncs = errors.New("the func not found in export function set")
 	errParamsNumInvalid          = errors.New("the number of params is invalid")
 )
-var (
-	ErrUnsupportedRole      = errors.New("Unsupported role ")
-	ErrNoPermission         = errors.New("No Permission ")
-	ErrAlreadySetSuperAdmin = errors.New("Already Set SuperAdmin ")
-	ErrParamInvalid         = errors.New("param is invalid")
-)
 
 var (
-	ZeroAddress = common.Address{}
-)
+	errUnsupportedRole      = errors.New("Unsupported role ")
+	errNoPermission         = errors.New("No Permission ")
+	errAlreadySetSuperAdmin = errors.New("Already Set SuperAdmin ")
+	errParamInvalid         = errors.New("param is invalid")
 
-var (
 	errNameInvalid    = errors.New("[CNS] name format is invalid")
 	errVersionInvalid = errors.New("[CNS] version format is invalid")
 	errAddressInvalid = errors.New("[CNS] address format is invalid")
 	errNotOwner       = errors.New("[CNS] not owner of registered contract")
 	errEmptyValue     = errors.New("Empty value")
 )
+
+var (
+	ZeroAddress = common.Address{}
+)
+
 
 var fwErrNotOwner = errors.New("FW : error, only contract owner can set firewall setting")
 

@@ -83,7 +83,7 @@ func (g *GroupManagement) hasGroupOpPermission() (int32, error) {
 
 func (g *GroupManagement) createGroup(groupInfo string) (int32, error) {
 	if ok, _ := g.hasGroupOpPermission(); ok != 1 {
-		return 0, ErrNoPermission
+		return 0, errNoPermission
 	}
 	group := GroupInfo{}
 	err := json.Unmarshal([]byte(groupInfo), &group)
@@ -124,7 +124,7 @@ func (g *GroupManagement) updateBootNodes(groupID uint64, nodes string) (int32, 
 		return -1, err
 	}
 	if group.Creator != g.Caller().String() {
-		return -1, ErrNoPermission
+		return -1, errNoPermission
 	}
 	var bootNodes []string
 	err = json.Unmarshal([]byte(nodes), &bootNodes)
@@ -147,7 +147,7 @@ func (g *GroupManagement) addBootNode(groupID uint64, node string) (int32, error
 		return -1, err
 	}
 	if group.Creator != g.Caller().String() {
-		return -1, ErrNoPermission
+		return -1, errNoPermission
 	}
 	for _, n := range group.BootNodes {
 		if n == node {
@@ -167,7 +167,7 @@ func (g *GroupManagement) delBootNode(groupID uint64, node string) (int32, error
 		return -1, err
 	}
 	if group.Creator != g.Caller().String() {
-		return -1, ErrNoPermission
+		return -1, errNoPermission
 	}
 	pos := -1
 	for i, n := range group.BootNodes {

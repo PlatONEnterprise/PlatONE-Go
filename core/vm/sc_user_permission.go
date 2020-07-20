@@ -23,8 +23,8 @@ var PermissionMap = map[int32]UserRoles{
 
 func checkPermission(state StateDB, user common.Address, permission int32) bool {
 	um := &UserManagement{
-		state:   state,
-		address: syscontracts.UserManagementAddress,
+		stateDB:      state,
+		contractAddr: syscontracts.UserManagementAddress,
 	}
 
 	userRole, err := um.getRole(user)

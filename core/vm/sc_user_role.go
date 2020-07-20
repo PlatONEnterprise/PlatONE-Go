@@ -87,7 +87,7 @@ func (ur UserRoles) Strings() []string {
 
 func (ur *UserRoles) setRole(role int32) error {
 	if role >= rolesCnt || role < 0 {
-		return ErrUnsupportedRole
+		return errUnsupportedRole
 	}
 	*ur |= 1 << role
 	return nil
@@ -95,7 +95,7 @@ func (ur *UserRoles) setRole(role int32) error {
 
 func (ur *UserRoles) unsetRole(role int32) error {
 	if role >= rolesCnt || role < 0 {
-		return ErrUnsupportedRole
+		return errUnsupportedRole
 	}
 	*ur &= ^(1 << role)
 
@@ -111,191 +111,214 @@ func (ur UserRoles) hasRole(role int32) bool {
 
 // set superAdmin for a chain
 // only one superAdmin can be set for a chain
-// if there is already a superAdmin, this method will return error(ErrAlreadySetSuperAdmin)
+// if there is already a superAdmin, this method will return error(errAlreadySetSuperAdmin)
 func (u *UserManagement) setSuperAdmin() (int32, error) {
 	var key []byte
 	var err error
 	var addrs []common.Address
+	var topic = "setSuperAdmin"
 
 	if key, err = generateAddressListKey(superAdmin); err != nil {
-		return -1, err
+		return u.returnFail(topic, err)
 	}
 	if addrs, err = u.getAddrList(key); err != nil {
-		return -1, err
+		return u.returnFail(topic, err)
 	}
 
 	if len(addrs) >= 1 {
-		return -1, ErrAlreadySetSuperAdmin
+		return u.returnFail(topic, errAlreadySetSuperAdmin)
 	}
 
 	ur := UserRoles(0)
 	if err := ur.setRole(superAdmin); err != nil {
-		return -1, err
+		return u.returnFail(topic, err)
 	}
 
 	if err := u.addAddrListOfRole(u.Caller(), superAdmin); err != nil {
-		return -1, err
+		return u.returnFail(topic, err)
 	}
 	if err := u.setRole(u.Caller(), ur); err != nil {
-		return -1, err
+		return u.returnFail(topic, err)
 	}
 
-	return 0, nil
+	return u.returnSuccess(topic)
 }
 
 func (u *UserManagement) transferSuperAdminByAddress(addr common.Address) (int32, error) {
+	var topic = "transferSuperAdminByAddress"
 	if err := u.setRoleWithPermissionCheckByAddress(addr, superAdmin, roleActive); err != nil {
-		return -1, err
+		return u.returnFail(topic, err)
 	}
 	if err := u.setRoleWithPermissionCheckByAddress(u.Caller(), superAdmin, roleDeactive); err != nil {
-		return -1, err
+		return u.returnFail(topic, err)
 	}
-	return 0, nil
+	return u.returnSuccess(topic)
 }
 func (u *UserManagement) transferSuperAdminByName(name string) (int32, error) {
+	topic := "transferSuperAdminByName"
 	if err := u.setRoleWithPermissionCheckByName(name, superAdmin, roleActive); err != nil {
-		return -1, err
+		return u.returnFail(topic, err)
 	}
 	if err := u.setRoleWithPermissionCheckByAddress(u.Caller(), superAdmin, roleDeactive); err != nil {
-		return -1, err
+		return u.returnFail(topic, err)
 	}
-	return 0, nil
+	return u.returnSuccess(topic)
 }
 
 func (u *UserManagement) addChainAdminByAddress(addr common.Address) (int32, error) {
+	topic := "addChainAdminByAddress"
 	if err := u.setRoleWithPermissionCheckByAddress(addr, chainAdmin, roleActive); err != nil {
-		return -1, err
+		return u.returnFail(topic, err)
 	}
-	return 0, nil
+	return u.returnSuccess(topic)
 }
 
 func (u *UserManagement) addChainAdminByName(name string) (int32, error) {
+	topic := "addChainAdminByName"
 	if err := u.setRoleWithPermissionCheckByName(name, chainAdmin, roleActive); err != nil {
-		return -1, err
+		return u.returnFail(topic, err)
 	}
-	return 0, nil
+	return u.returnSuccess(topic)
 }
 
 func (u *UserManagement) delChainAdminByAddress(addr common.Address) (int32, error) {
+	topic := "delChainAdminByAddress"
 	if err := u.setRoleWithPermissionCheckByAddress(addr, chainAdmin, roleDeactive); err != nil {
-		return -1, err
+		return u.returnFail(topic, err)
 	}
-	return 0, nil
+	return u.returnSuccess(topic)
 }
 
 func (u *UserManagement) delChainAdminByName(name string) (int32, error) {
+	topic := "delChainAdminByName"
 	if err := u.setRoleWithPermissionCheckByName(name, chainAdmin, roleDeactive); err != nil {
-		return -1, err
+		return u.returnFail(topic, err)
 	}
-	return 0, nil
+	return u.returnSuccess(topic)
 }
 
 func (u *UserManagement) addGroupAdminByAddress(addr common.Address) (int32, error) {
+	topic := "addGroupAdminByAddress"
 	if err := u.setRoleWithPermissionCheckByAddress(addr, groupAdmin, roleActive); err != nil {
-		return -1, err
+		return u.returnFail(topic, err)
 	}
-	return 0, nil
+	return u.returnSuccess(topic)
 }
 
 func (u *UserManagement) addGroupAdminByName(name string) (int32, error) {
+	topic := "addGroupAdminByName"
 	if err := u.setRoleWithPermissionCheckByName(name, groupAdmin, roleActive); err != nil {
-		return -1, err
+		return u.returnFail(topic, err)
 	}
-	return 0, nil
+	return u.returnSuccess(topic)
 }
 
 func (u *UserManagement) delGroupAdminByAddress(addr common.Address) (int32, error) {
+	topic := "delGroupAdminByAddress"
 	if err := u.setRoleWithPermissionCheckByAddress(addr, groupAdmin, roleDeactive); err != nil {
-		return -1, err
+		return u.returnFail(topic, err)
 	}
-	return 0, nil
+	return u.returnSuccess(topic)
 }
 
 func (u *UserManagement) delGroupAdminByName(name string) (int32, error) {
+	topic := "delGroupAdminByName"
 	if err := u.setRoleWithPermissionCheckByName(name, groupAdmin, roleDeactive); err != nil {
-		return -1, err
+		return u.returnFail(topic, err)
 	}
-	return 0, nil
+	return u.returnSuccess(topic)
 }
 
 func (u *UserManagement) addNodeAdminByAddress(addr common.Address) (int32, error) {
+	topic := "addNodeAdminByAddress"
 	if err := u.setRoleWithPermissionCheckByAddress(addr, nodeAdmin, roleActive); err != nil {
-		return -1, err
+		return u.returnFail(topic, err)
 	}
-	return 0, nil
+	return u.returnSuccess(topic)
 }
 
 func (u *UserManagement) addNodeAdminByName(name string) (int32, error) {
+	topic := "addNodeAdminByName"
 	if err := u.setRoleWithPermissionCheckByName(name, nodeAdmin, roleActive); err != nil {
-		return -1, err
+		return u.returnFail(topic, err)
 	}
-	return 0, nil
+	return u.returnSuccess(topic)
 }
 
 func (u *UserManagement) delNodeAdminByAddress(addr common.Address) (int32, error) {
+	topic := "delNodeAdminByAddress"
 	if err := u.setRoleWithPermissionCheckByAddress(addr, nodeAdmin, roleDeactive); err != nil {
-		return -1, err
+		return u.returnFail(topic, err)
 	}
-	return 0, nil
+	return u.returnSuccess(topic)
 }
 
 func (u *UserManagement) delNodeAdminByName(name string) (int32, error) {
+	topic := "delNodeAdminByName"
 	if err := u.setRoleWithPermissionCheckByName(name, nodeAdmin, roleDeactive); err != nil {
-		return -1, err
+		return u.returnFail(topic, err)
 	}
-	return 0, nil
+	return u.returnSuccess(topic)
 }
 
 func (u *UserManagement) addContractAdminByAddress(addr common.Address) (int32, error) {
+	topic := "addContractAdminByAddress"
 	if err := u.setRoleWithPermissionCheckByAddress(addr, contractAdmin, roleActive); err != nil {
-		return -1, err
+		return u.returnFail(topic, err)
 	}
-	return 0, nil
+	return u.returnSuccess(topic)
 }
 func (u *UserManagement) addContractAdminByName(name string) (int32, error) {
+	topic := "addContractAdminByName"
 	if err := u.setRoleWithPermissionCheckByName(name, contractAdmin, roleActive); err != nil {
-		return -1, err
+		return u.returnFail(topic, err)
 	}
-	return 0, nil
+	return u.returnSuccess(topic)
 }
 func (u *UserManagement) delContractAdminByAddress(addr common.Address) (int32, error) {
+	topic := "delContractAdminByAddress"
 	if err := u.setRoleWithPermissionCheckByAddress(addr, contractAdmin, roleDeactive); err != nil {
-		return -1, err
+		return u.returnFail(topic, err)
 	}
-	return 0, nil
+	return u.returnSuccess(topic)
 }
 func (u *UserManagement) delContractAdminByName(name string) (int32, error) {
+	topic := "delContractAdminByName"
 	if err := u.setRoleWithPermissionCheckByName(name, contractAdmin, roleDeactive); err != nil {
-		return -1, err
+		return u.returnFail(topic, err)
 	}
-	return 0, nil
+	return u.returnSuccess(topic)
 }
 
 func (u *UserManagement) addContractDeployerByAddress(addr common.Address) (int32, error) {
+	topic := "addContractDeployerByAddress"
 	if err := u.setRoleWithPermissionCheckByAddress(addr, contractDeployer, roleActive); err != nil {
-		return -1, err
+		return u.returnFail(topic, err)
 	}
-	return 0, nil
+	return u.returnSuccess(topic)
 }
 func (u *UserManagement) addContractDeployerByName(name string) (int32, error) {
+	topic := "addContractDeployerByName"
 	if err := u.setRoleWithPermissionCheckByName(name, contractDeployer, roleActive); err != nil {
-		return -1, err
+		return u.returnFail(topic, err)
 	}
-	return 0, nil
+	return u.returnSuccess(topic)
 }
 
 func (u *UserManagement) delContractDeployerByAddress(addr common.Address) (int32, error) {
+	topic := "delContractDeployerByAddress"
 	if err := u.setRoleWithPermissionCheckByAddress(addr, contractDeployer, roleDeactive); err != nil {
-		return -1, err
+		return u.returnFail(topic, err)
 	}
-	return 0, nil
+	return u.returnSuccess(topic)
 }
 
 func (u *UserManagement) delContractDeployerByName(name string) (int32, error) {
+	topic := "delContractDeployerByName"
 	if err := u.setRoleWithPermissionCheckByName(name, contractDeployer, roleDeactive); err != nil {
-		return -1, err
+		return u.returnFail(topic, err)
 	}
-	return 0, nil
+	return u.returnSuccess(topic)
 }
 
 func (u *UserManagement) getRolesByName(name string) (string, error) {
@@ -319,7 +342,7 @@ func (u *UserManagement) getAddrListOfRoleStr(targetRole string) (string, error)
 	if role, ok := rolesMap[targetRole]; ok {
 		return u.getAddrListOfRole(role)
 	}
-	return "", ErrUnsupportedRole
+	return "", errUnsupportedRole
 }
 func (u *UserManagement) getAddrListOfRole(targetRole int32) (string, error) {
 	var key []byte
@@ -392,7 +415,7 @@ func (u *UserManagement) setRoleWithPermissionCheckByAddress(addr common.Address
 
 	permissionRoles := roleOpPermission[targetRole]
 	if permissionRoles&callerRole == 0 {
-		return ErrNoPermission
+		return errNoPermission
 	}
 
 	ur, err := u.getRole(addr)
@@ -529,7 +552,7 @@ func generateAddressListKey(targetRole int32) ([]byte, error) {
 	case contractDeployer:
 		key = contractDeployerAddrListKey
 	default:
-		return nil, ErrUnsupportedRole
+		return nil, errUnsupportedRole
 	}
 	return key, nil
 }

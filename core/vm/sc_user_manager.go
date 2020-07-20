@@ -3,12 +3,14 @@ package vm
 import (
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
+	"math/big"
 )
 
 type UserManagement struct {
-	state    StateDB
-	caller   common.Address
-	address common.Address
+	stateDB      StateDB
+	caller       common.Address
+	contractAddr common.Address
+	blockNumber  *big.Int
 }
 
 func (u *UserManagement) RequiredGas(input []byte) uint64 {
@@ -24,15 +26,31 @@ func (u *UserManagement) Run(input []byte) ([]byte, error) {
 }
 
 func (u *UserManagement) setState(key, value []byte) {
-	u.state.SetState(u.address, key, value)
+	u.stateDB.SetState(u.contractAddr, key, value)
 }
 func (u *UserManagement) getState(key []byte) []byte {
-	value := u.state.GetState(u.address, key)
+	value := u.stateDB.GetState(u.contractAddr, key)
 	return value
 }
 
 func (u *UserManagement) Caller() common.Address {
 	return u.caller
+}
+
+func (u *UserManagement) returnSuccess(topic string) (int32,error){
+	u.emitUserManagerEvent(topic, operateSuccess, "Success")
+	return int32(operateSuccess), nil
+}
+
+func (u *UserManagement) returnFail(topic string, err error) (int32, error){
+	u.emitUserManagerEvent(topic, operateFail, err.Error())
+	returnErr := err
+	// todo: in some cases, returnErr = nil
+	return int32(operateFail), returnErr
+}
+
+func (u *UserManagement) emitUserManagerEvent(topic string,code CodeType, msg string) {
+	emitEvent(u.contractAddr, u.stateDB, u.blockNumber.Uint64(), topic, code, msg)
 }
 
 //for access control

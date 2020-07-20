@@ -372,8 +372,8 @@ func TestUserManagement_addContractDeployerByAddress(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			u := &UserManagement{
-				state:  db,
-				caller: ZeroAddress,
+				stateDB: db,
+				caller:  ZeroAddress,
 			}
 			got, err := u.addContractDeployerByAddress(tt.args.addr)
 			if (err != nil) != tt.wantErr {
@@ -647,8 +647,8 @@ func TestUserManagement_addAddrList(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			u := &UserManagement{
-				state:  tt.fields.state,
-				caller: tt.fields.caller,
+				stateDB: tt.fields.state,
+				caller:  tt.fields.caller,
 			}
 			err := u.addAddrList(tt.args.key, tt.args.addr)
 			if err != tt.wantErr {
@@ -672,8 +672,8 @@ func TestUserManagement_delAddrList(t *testing.T) {
 	}
 	db := newMockStateDB()
 	u := UserManagement{
-		caller: ZeroAddress,
-		state:  db,
+		caller:  ZeroAddress,
+		stateDB: db,
 	}
 	key := generateKey(superAdmin)
 	u.addAddrList(key, ZeroAddress)
@@ -732,8 +732,8 @@ func TestUserManagement_delAddrList(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			u := &UserManagement{
-				state:  tt.fields.state,
-				caller: tt.fields.caller,
+				stateDB: tt.fields.state,
+				caller:  tt.fields.caller,
 			}
 			err := u.delAddrList(tt.args.key, tt.args.addr)
 			if err != tt.wantErr {
