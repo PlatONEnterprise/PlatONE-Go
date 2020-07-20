@@ -3,7 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/platoneclient"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 
@@ -98,7 +99,7 @@ func contractReceipt(c *cli.Context) {
 
 	txHash := c.Args().First()
 
-	result, err := utl.GetTransactionReceipt(txHash)
+	result, err := platoneclient.GetTransactionReceipt(txHash)
 	if err != nil {
 		utils.Fatalf("get receipt failed: %s\n", err.Error())
 	} else {
@@ -119,15 +120,18 @@ func deploy(c *cli.Context) {
 	if abiPath != "" {
 		abiBytes = ParamParse(abiPath, "abi").([]byte)
 	}
-	utl.ParamValid(vm, "vm")
+	paramValid(vm, "vm")
 
 	call := packet.NewDeployCall(codeBytes, abiBytes, vm, types.CreateTxType)
 
-	result := messageCall(c, call, nil, "")
-	fmt.Printf("result: contract address is %s\n", result)
+	// result := messageCall(c, call, nil, "")
+	result := clientCommon(c, call, nil)
 
 	if utl.IsMatch(result.(string), "address") {
 		storeAbiFile(result.(string), abiBytes)
+		fmt.Printf("result: contract address is %s\n", result)
+	} else {
+		fmt.Printf("result: %s\n", result)
 	}
 }
 
@@ -137,13 +141,14 @@ func execute(c *cli.Context) {
 	contract := c.Args().First()
 	funcName := c.Args().Get(1)
 	funcParams := c.StringSlice(ContractParamFlag.Name)
-	isListMethods := c.Bool(ShowContractMethodsFlag.Name)
+	isListMethods := c.Bool(ShowContractMethodsFlag.Name) // to be deprecated
 
-	utl.ParamValid(contract, "contract")
+	paramValid(contract, "contract")
 
 	if isListMethods {
 		abiPath := getAbiFile(contract)
-		_ = listAbiFunctions(abiPath)
+		result, _ := listAbiFunctions(abiPath)
+		fmt.Printf(result)
 		return
 	}
 
@@ -156,15 +161,14 @@ func execute(c *cli.Context) {
 func migrate(c *cli.Context) {
 
 	funcName := "migrateFrom" // 内置
-	sourceAddr := c.Args().Get(1)
+	sourceAddr := c.Args().Get(0)
 	targetAddr := c.Args().Get(1) // 必选参数
 
-	utl.ParamValid(sourceAddr, "address")
+	paramValid(sourceAddr, "address")
 
 	if targetAddr != "" {
-		utl.ParamValid(targetAddr, "address")
+		paramValid(targetAddr, "address")
 		funcParams := CombineFuncParams(sourceAddr, targetAddr)
-		// result := innerCall(c, funcName, funcParams, types.MigTxType)
 		result := contractCommon(c, funcParams, funcName, contractDataProcessorAddress)
 		fmt.Printf("result: %s\n", result)
 	} else {
@@ -179,29 +183,28 @@ func contractMethods(c *cli.Context) {
 	abi := c.String(ContractAbiFilePathFlag.Name)
 	contract := c.String(ContractIDFlag.Name)
 
-	utl.ParamValid(contract, "address")
-
 	switch {
 	case abi != "":
 		abiPath = abi
 	case contract != "":
+		paramValid(contract, "address")
 		abiPath = getAbiFile(contract)
 	default:
 		utils.Fatalf("no argument provided\n")
 	}
 
-	err := listAbiFunctions(abiPath)
+	result, err := listAbiFunctions(abiPath)
 	if err != nil {
 		utils.Fatalf("list contract methods error: %s\n", err.Error())
 	}
+
+	fmt.Printf(result)
 }
 
-func listAbiFunctions(abiPath string) error {
-	var strInput []string
-	var strOutput []string
+func listAbiFunctions(abiPath string) (string, error) {
 
 	if abiPath == "" {
-		return fmt.Errorf("the abi file is not found\n")
+		return "", fmt.Errorf("the abi file is not found\n")
 	}
 
 	abiBytes := ParamParse(abiPath, "abi").([]byte)
@@ -209,23 +212,10 @@ func listAbiFunctions(abiPath string) error {
 
 	abiFuncs, err := packet.ParseAbiFromJson(abiBytes)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	fmt.Printf("-------------------contract methods list------------------------\n")
+	result := packet.ListAbiFuncName(abiFuncs)
 
-	for i, function := range abiFuncs {
-		strInput = []string{}
-		strOutput = []string{}
-		for _, param := range function.Inputs {
-			strInput = append(strInput, param.Name+" "+param.Type)
-		}
-		for _, param := range function.Outputs {
-			strOutput = append(strOutput, param.Name+" "+param.Type)
-		}
-		fmt.Printf("Method %d:", i+1)
-		fmt.Printf("%s(%s)%s\n", function.Name, strings.Join(strInput, ","), strings.Join(strOutput, ","))
-	}
-
-	return nil
+	return result, nil
 }

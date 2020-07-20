@@ -1,37 +1,15 @@
 package utils
 
 import (
-	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
 	"math/big"
 	"strconv"
 	"strings"
+
+	"github.com/pkg/errors"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
 )
-
-// ChainParamConvert convert the string to chain defined type
-func ChainParamConvert(param, paramName string) interface{} {
-	var err error
-	var i interface{}
-
-	switch paramName {
-	case "value", "gasPrice":
-		i, err = IntValueConvert(param)
-	case "gas":
-		i, err = UintValueConvert(param)
-	case "address", "to", "from":
-		i, err = AddressConvert(param)
-	default:
-		i, err = param, nil //TODO
-	}
-
-	if err != nil {
-		utils.Fatalf(ErrParamParseFormat, paramName, err.Error())
-	}
-
-	return i
-}
 
 //TODO optimize ?
 func IntValueConvert(value string) (string, error) {
@@ -81,5 +59,5 @@ func AddressConvert(address string) (interface{}, error) {
 		return common.HexToAddress(address), nil
 	}
 
-	return nil, fmt.Errorf("TODO")
+	return nil, errors.New("address convert failed: invalid address")
 }

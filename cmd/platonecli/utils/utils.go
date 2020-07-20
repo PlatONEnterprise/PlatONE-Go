@@ -3,12 +3,16 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 )
+
+const fileClearTime = 3600 * 24 * 7 // 7 Days
 
 // get the path where the executable is executed
 func GetRunningTimePath() string {
@@ -58,25 +62,29 @@ func PrintRequest(params interface{}) {
 
 	if len(paramJson) > 500 {
 		fmt.Printf("\nrequest json data: %s... ...is too long\n", string(paramJson)[:500])
-		path, _ := filepath.Abs(DEFAULT_LOG_DIRT)
-		fmt.Printf("see full info at %s\n", path)
+		/// path, _ := filepath.Abs(DEFAULT_LOG_DIRT)
+		/// fmt.Printf("see full info at %s\n", path)
 	} else {
 		fmt.Printf("\nrequest json data: %s\n", string(paramJson))
 	}
-	Logger.Printf("request json data: %s\n", string(paramJson))
+	/// Logger.Printf("request json data: %s\n", string(paramJson))
 }
 
 // WriteFile writes the new data in the file, the old data will be override
-func WriteFile(fileBytes []byte, filePath string) {
+func WriteFile(fileBytes []byte, filePath string) error {
 	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0777)
 	if err != nil {
-		utils.Fatalf(ErrOpenFileFormat, filePath, err.Error())
+		// utils.Fatalf(ErrOpenFileFormat, filePath, err.Error())
+		return err
 	}
 
 	_, err = file.Write(fileBytes)
 	if err != nil {
-		utils.Fatalf(ErrWriteFileFormat, err.Error())
+		// utils.Fatalf(ErrWriteFileFormat, err.Error())
+		return err
 	}
+
+	return nil
 }
 
 // FileDirectoryInit creates a new folder if the file directory is not exist
@@ -85,6 +93,24 @@ func FileDirectoryInit(filedirt string) {
 	if os.IsNotExist(err) {
 		_ = os.Mkdir(filedirt, os.ModePerm)
 	}
+}
+
+func DeleteOldFile(fileDirt string) error {
+	currentTime := time.Now().Unix()
+
+	return filepath.Walk(fileDirt, func(path string, fileInfo os.FileInfo, err error) error {
+
+		if fileInfo == nil {
+			return err
+		}
+		fileTime := fileInfo.ModTime().Unix()
+
+		if (currentTime - fileTime) > fileClearTime {
+			_ = os.RemoveAll(path)
+		}
+
+		return nil
+	})
 }
 
 // TODO refactory
@@ -162,7 +188,7 @@ func ParseFileToBytes(filePath string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf(ErrFindFileFormat, err.Error())
 	}
-	Logger.Printf("the file being parsed: %s\n", filePath)
+	/// Logger.Printf("the file being parsed: %s\n", filePath)
 
 	bytes, err := ioutil.ReadFile(filePath)
 	if err != nil {
@@ -192,7 +218,7 @@ func FuncParse(funcName string, funcParams []string) (string, []string) {
 	}
 	funcParams = append(funcParams, funcParamsNew...)
 
-	Logger.Printf("after function parse, the function is %s, %s", funcName, funcParams)
+	/// Logger.Printf("after function parse, the function is %s, %s", funcName, funcParams)
 	return funcName, funcParams
 }
 
@@ -305,4 +331,11 @@ func recordFuncParamSplitPos(paramString string) []int {
 	}
 
 	return splitPos
+}
+
+// CombineParams combines multiple rpc json parameters into an array
+func CombineParams(args ...interface{}) []interface{} {
+	params := make([]interface{}, 0)
+	params = append(params, args...)
+	return params
 }

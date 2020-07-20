@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"fmt"
 	"testing"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
 )
 
 func TestStringConverter(t *testing.T) {
 	var call = NewContractCallDemo(nil, "", 0)
-	var interArray = []string{"wasm", "evm"}
+	var interArray = []string{"wasm"} // "evm"
 
 	var testCase = []struct {
 		value   string
@@ -52,4 +54,53 @@ func TestStringConverter(t *testing.T) {
 		}
 	}
 
+}
+
+const (
+	evmTrue       = "0000000000000000000000000000000000000000000000000000000000000001"
+	evmFalse      = "0000000000000000000000000000000000000000000000000000000000000000"
+	evm69         = "0000000000000000000000000000000000000000000000000000000000000045"
+	evmMinus69    = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFBB"
+	evm121        = "0000000000000000000000000000000000000000000000000000000000000079"
+	evmMinus121   = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF87"
+	evmStringTest = "7465737400000000000000000000000000000000000000000000000000000000"
+	evmStringDave = "00000000000000000000000000000000000000000000000000000000000000046461766500000000000000000000000000000000000000000000000000000000"
+)
+
+func TestStringConverterDemo(t *testing.T) {
+	var testCase = []struct {
+		value   string
+		strType string
+		result  string
+	}{
+		{"false", "bool", evmFalse},
+		{"true", "bool", evmTrue},
+		{"", "bool", ""},
+		{"-69", "int32", evmMinus69},
+		{"69", "uint32", evm69},
+		{"-121", "int", evmMinus121},
+		{"121", "uint", evm121},
+		{"test", "bytes4", evmStringTest},
+		{"dave", "bytes", evmStringDave},
+		{"dave", "string", evmStringDave},
+	}
+
+	var call = NewContractCallDemo(nil, "", 0)
+	call.SetInterpreter("evm")
+
+	for i, data := range testCase {
+		t.Run(fmt.Sprintf("case%d", i), func(t *testing.T) {
+			result, err := call.Interp.StringConverter(data.value, data.strType)
+			expectedBytes := common.Hex2BytesFixed(data.result, len(data.result)/2)
+
+			switch {
+			case err != nil:
+				t.Logf("(%s) %s convert error: %v\t", data.strType, data.value, err.Error())
+			case bytes.Equal(result, expectedBytes):
+				t.Logf("(%s) %s convert result: %v\n", data.strType, data.value, result)
+			default:
+				t.Errorf("(%s) %s convert failed: %v expected: %v\t", data.strType, data.value, result, expectedBytes)
+			}
+		})
+	}
 }

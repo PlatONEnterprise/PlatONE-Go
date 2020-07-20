@@ -2,6 +2,7 @@ package packet
 
 import (
 	"testing"
+	"time"
 
 	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
@@ -10,6 +11,19 @@ import (
 const (
 	TEST_ABI_FILE_PATH = "../test/test_case/wasm/contracta.cpp.abi.json"
 )
+
+func TestGetNonceRand(t *testing.T) {
+	r1 := getNonceRand()
+
+	time.Sleep(1000000000) // one second
+	r2 := getNonceRand()
+
+	if r1 == r2 {
+		t.Fail()
+	}
+
+	t.Logf("r1 is %v, r2 is %v\n", r1, r2)
+}
 
 func TestParseFuncFromAbi(t *testing.T) {
 

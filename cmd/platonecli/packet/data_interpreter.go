@@ -2,8 +2,7 @@ package packet
 
 import (
 	"bytes"
-
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
+	"errors"
 )
 
 // MessageCallDemo, the interface for different types of data package methods
@@ -76,7 +75,7 @@ func NewData(funcName string, funcParams []string, funcAbi []byte) *RawData {
 }
 
 // NewContractCallDemo new a ContractCallDemo object
-func NewContractCallDemo(data *RawData, name string, txType uint64) *ContractCall {
+func NewContractCall(data *RawData, name string, txType uint64) *ContractCall {
 
 	call := &ContractCall{
 		data:   data,
@@ -126,22 +125,26 @@ func (call *ContractCall) SetInterpreter(vm string) {
 }
 
 // SetInterpreter set the interpreter of DeployCall object
-func (call *DeployCall) SetInterpreter(vm string) {
+func (call *DeployCall) SetInterpreter(vm string) error {
 	switch vm {
 	case "evm":
 		if IsWasmContract(call.codeBytes) {
-			utils.Fatalf("the input  is not evm byte code")
+			// utils.Fatalf("the input  is not evm byte code")
+			return errors.New("the input  is not evm byte code")
 		}
 		call.Interpreter = &EvmInterpreter{codeBytes: call.codeBytes}
 	default:
 		if !IsWasmContract(call.codeBytes) {
-			utils.Fatalf("the input  is not wasm byte code")
+			// utils.Fatalf("the input  is not wasm byte code")
+			return errors.New("the input  is not wasm byte code")
 		}
 		call.Interpreter = &WasmInterpreter{
 			codeBytes: call.codeBytes,
 			abiBytes:  call.abiBytes,
 		}
 	}
+
+	return nil
 }
 
 // IsWasmContract judge whether the bytes satisfy the code format of wasm virtual machine

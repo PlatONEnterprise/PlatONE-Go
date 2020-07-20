@@ -1,13 +1,14 @@
 package utils
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"strconv"
 	"testing"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
 )
 
 const (
-	TEST_LONG_STRING = "11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111 "
+	testLongString = "11111111 11111111 11111111 11111111 11111111 11111111 11111111 11111111 "
 )
 
 func ByteConvertSwitch(value, expectValue interface{}, strType string) (interface{}, bool) {
@@ -68,7 +69,7 @@ func TestBytesConvert(t *testing.T) {
 		{i3, "int64", i3},
 		{u, "uint64", u},
 		{"123456", "string", "123456"},
-		{TEST_LONG_STRING, "string", TEST_LONG_STRING[64:]},
+		{testLongString, "string", testLongString[64:]},
 		{[]byte("wxblockchain"), "[]byte", []byte{119, 120, 98, 108, 111, 99, 107, 99, 104, 97, 105, 110}},
 	}
 

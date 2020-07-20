@@ -3,14 +3,15 @@ package utils
 import (
 	"crypto/ecdsa"
 	"encoding/json"
+	"strings"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/accounts/keystore"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/console"
-	"strings"
 )
 
-const DEFAULT_ACCOUNT_ADDRESS = "0x0000000000000000000000000000000000000000"
+const defaultAddress = "0x0000000000000000000000000000000000000000"
 
 type KeystoreJson struct {
 	Address string `json:"address"`
@@ -31,7 +32,7 @@ func GetPrivateKey(account common.Address, keyfilepath string) *ecdsa.PrivateKey
 
 	// check if the account address is matched
 	addr := account.String()
-	if addr != DEFAULT_ACCOUNT_ADDRESS && !strings.EqualFold(keyfile.Address, addr[2:]) {
+	if addr != defaultAddress && !strings.EqualFold(keyfile.Address, addr[2:]) {
 		utils.Fatalf("the keystore file mismatches the account address")
 	}
 
@@ -45,7 +46,7 @@ func GetPrivateKey(account common.Address, keyfilepath string) *ecdsa.PrivateKey
 	return key.PrivateKey
 }
 
-// TODO
+// todo: change prompt to --password flag?
 // promptPassphrase prompt the hint in the terminal to let user to input the password
 func promptPassphrase(confirmation bool) string {
 	passphrase, err := console.Stdin.PromptPassword("Passphrase: ")

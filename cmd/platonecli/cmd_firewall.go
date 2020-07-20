@@ -163,7 +163,7 @@ func fwExport(c *cli.Context) {
 	funcParams := []string{addr}
 	result := contractCommon(c, funcParams, funcName, firewallManagementAddress)
 
-	utl.WriteFile([]byte(result.(string)), filePath)
+	_ = utl.WriteFile([]byte(result.(string)), filePath)
 }
 
 func fwImport(c *cli.Context) {
@@ -188,9 +188,9 @@ func fwCommon(c *cli.Context, funcName string) {
 	targetAddr := c.Args().Get(2)
 	api := c.Args().Get(3)
 
-	utl.ParamValid(action, "action")
-	utl.ParamValid(targetAddr, "fw")
-	utl.ParamValid(api, "name")
+	paramValid(action, "action")
+	paramValid(targetAddr, "fw")
+	paramValid(api, "name")
 
 	rules := CombineRule(targetAddr, api) //TODO batch rules
 	// stringslice --rule addr1:func1 --rule addr2:func2
@@ -214,7 +214,7 @@ func fwDelete(c *cli.Context) {
 
 func fwClearCommon(c *cli.Context, addr, action string) {
 	funcName := "__sys_FwClear"
-	utl.ParamValid(action, "action")
+	paramValid(action, "action")
 
 	funcParams := []string{addr, action}
 	result := contractCommon(c, funcParams, funcName, firewallManagementAddress)

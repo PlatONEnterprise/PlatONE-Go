@@ -342,7 +342,7 @@ func nodeDelete(c *cli.Context) {
 	var str = "{\"status\":2}"
 
 	name := c.Args().First()
-	utl.ParamValid(name, "name")
+	paramValid(name, "name")
 
 	funcParams := CombineFuncParams(name, str)
 	result := contractCommon(c, funcParams, "update", nodeManagementAddress)
@@ -357,7 +357,7 @@ func nodeUpdate(c *cli.Context) {
 	str := combineJson(c, nil, []byte(strJson))
 
 	name := c.Args().First()
-	utl.ParamValid(name, "name")
+	paramValid(name, "name")
 
 	funcParams := CombineFuncParams(name, str)
 	result := contractCommon(c, funcParams, "update", nodeManagementAddress)
@@ -401,8 +401,8 @@ func contractAdd(c *cli.Context) {
 	name := c.Args().First()
 	account := c.Args().Get(1)
 
-	utl.ParamValid(name, "name")
-	utl.ParamValid(account, "address")
+	paramValid(name, "name")
+	paramValid(account, "address")
 
 	funcParams := CombineFuncParams(name, account, "[\"contractDeployer\"]")
 
@@ -412,7 +412,7 @@ func contractAdd(c *cli.Context) {
 
 func contractDelete(c *cli.Context) {
 	account := c.Args().First()
-	utl.ParamValid(account, "address")
+	paramValid(account, "address")
 
 	funcParams := CombineFuncParams(account, "[\"contractDeployer\"]")
 
@@ -459,7 +459,7 @@ func userApprove(c *cli.Context) {
 	account := c.Args().First()
 	statusString := c.Args().Get(1)
 
-	utl.ParamValid(account, "address")
+	paramValid(account, "address")
 	status := ParamParse(statusString, "operation").(string)
 
 	funcParams := CombineFuncParams(account, status)
@@ -479,7 +479,7 @@ func userAdd(c *cli.Context) {
 
 func userDelete(c *cli.Context) {
 	account := c.Args().First()
-	utl.ParamValid(account, "address")
+	paramValid(account, "address")
 
 	funcParams := []string{account}
 	result := contractCommon(c, funcParams, "delUser", "__sys_UserManager")
@@ -488,7 +488,7 @@ func userDelete(c *cli.Context) {
 
 func userEnable(c *cli.Context) {
 	account := c.Args().First()
-	utl.ParamValid(account, "address")
+	paramValid(account, "address")
 
 	funcParams := []string{account}
 	result := contractCommon(c, funcParams, "enable", "__sys_UserManager")
@@ -497,7 +497,7 @@ func userEnable(c *cli.Context) {
 
 func userDisable(c *cli.Context) {
 	account := c.Args().First()
-	utl.ParamValid(account, "address")
+	paramValid(account, "address")
 
 	funcParams := []string{account}
 	result := contractCommon(c, funcParams, "disable", "__sys_UserManager")
@@ -537,7 +537,7 @@ func supApprove(c *cli.Context) {
 	account := c.Args().First()
 	statusString := c.Args().Get(1)
 
-	utl.ParamValid(account, "address")
+	paramValid(account, "address")
 	status := ParamParse(statusString, "operation").(string)
 
 	funcParams := CombineFuncParams(account, status)
@@ -551,9 +551,9 @@ func supAdd(c *cli.Context) {
 	roles := c.Args().Get(2)
 
 	roles = utl.TrimSpace(roles)
-	utl.ParamValid(name, "name")
-	utl.ParamValid(account, "address")
-	utl.ParamValid(roles, "roles")
+	paramValid(name, "name")
+	paramValid(account, "address")
+	paramValid(roles, "roles")
 
 	funcParams := CombineFuncParams(name, account, roles)
 	result := contractCommon(c, funcParams, "addRole", "__sys_RoleManager")
@@ -565,8 +565,8 @@ func supDelete(c *cli.Context) {
 	roles := c.Args().Get(1)
 
 	roles = utl.TrimSpace(roles)
-	utl.ParamValid(account, "address")
-	utl.ParamValid(roles, "roles")
+	paramValid(account, "address")
+	paramValid(roles, "roles")
 
 	funcParams := CombineFuncParams(account, roles)
 

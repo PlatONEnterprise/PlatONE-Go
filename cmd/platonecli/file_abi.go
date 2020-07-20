@@ -8,6 +8,8 @@ import (
 
 	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/precompiled"
 
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/platoneclient"
+
 	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
@@ -52,7 +54,7 @@ func storeAbiFile(key string, abiBytes []byte) {
 	fileName := getAbiFile(key)
 	if fileName == "" {
 		filePath := abiFileDirt + "/" + key + ".abi.json"
-		utl.WriteFile(abiBytes, filePath)
+		_ = utl.WriteFile(abiBytes, filePath)
 	}
 }
 
@@ -115,7 +117,7 @@ func getAbiOnchain(addr string) ([]byte, error) {
 	var abiBytes []byte
 	var err error
 
-	utl.ParamValid(addr, "contract")
+	paramValid(addr, "contract")
 
 	// if the input parameter is a contract name, convert the name to address by executing cns
 	if utl.IsMatch(addr, "name") {
@@ -126,7 +128,7 @@ func getAbiOnchain(addr string) ([]byte, error) {
 	}
 
 	// get the contract code by address through eth_getCode
-	code, err := utl.GetCodeByAddress(addr)
+	code, err := platoneclient.GetCodeByAddress(addr)
 	if err != nil {
 		return nil, err
 	}

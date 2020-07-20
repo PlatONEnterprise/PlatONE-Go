@@ -21,14 +21,14 @@ type Config struct {
 var config = &Config{}
 
 const (
-	DEFAULT_CONFIG_FILE_PATH = "./config/config.json"
-	DEFAULT_KEYSTORE_DIRT    = "../../release/linux/data/node-0/keystore" //TODO temp keystore path
+	defaultConfigFilePath = "./config/config.json"
+	DEFAULT_KEYSTORE_DIRT = "../../release/linux/data/node-0/keystore" //TODO temp keystore path
 )
 
 // configInit read values from config file
 func configInit() {
 	runPath := utl.GetRunningTimePath()
-	configFile := runPath + DEFAULT_CONFIG_FILE_PATH
+	configFile := runPath + defaultConfigFilePath
 
 	// create the config folder if it is not exist
 	utl.FileDirectoryInit(runPath + "./config")
@@ -51,6 +51,25 @@ func isConfigKeys(key string) bool {
 	}
 
 	return isMatch
+}
+
+// WriteConfigFile writes data into config.json
+func WriteConfig(filePath string, config *Config) {
+	// Open or create file
+	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE, 0666)
+	if err != nil {
+		utils.Fatalf(utl.ErrOpenFileFormat, "config", err.Error())
+	}
+	defer file.Close()
+
+	fileBytes, _ := json.Marshal(config)
+
+	// write file
+	_ = file.Truncate(0)
+	_, err = file.Write(fileBytes)
+	if err != nil {
+		utils.Fatalf(utl.ErrWriteFileFormat, err.Error())
+	}
 }
 
 // WriteConfigFile writes data into config.json

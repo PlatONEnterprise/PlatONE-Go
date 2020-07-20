@@ -2,11 +2,12 @@
 package main
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
-	"gopkg.in/urfave/cli.v1"
 	"io"
 	"sort"
 	"strings"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
+	"gopkg.in/urfave/cli.v1"
 )
 
 // AppHelpTemplate is the test template for the default, global app help topic.
@@ -50,7 +51,7 @@ var AppHelpFlagGroups = []flagGroup{
 			GasFlags,
 			GasPriceFlags,
 			LocalFlags,
-			KeystoreFlags,
+			KeyfileFlags,
 			SyncFlags,
 			DefaultFlags,
 		},

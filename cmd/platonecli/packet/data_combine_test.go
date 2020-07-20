@@ -11,21 +11,19 @@ import (
 )
 
 const (
-	CODE_PATH = "../test/test_case/wasm/contracta.wasm"
-	ABI_PATH  = "../test/test_case/wasm/contracta.cpp.abi.json"
-	//TEST_ACCOUNT = "0x60ceca9c1290ee56b98d4e160ef0453f7c40d219"
-
+	codePath = "../test/test_case/wasm/contracta.wasm"
+	abiPath  = "../test/test_case/wasm/contracta.cpp.abi.json"
 )
 
 func TestDeploy(t *testing.T) {
 
-	codeBytes, _ := utl.ParseFileToBytes(CODE_PATH)
-	abiBytes, _ := utl.ParseFileToBytes(ABI_PATH)
+	codeBytes, _ := utl.ParseFileToBytes(codePath)
+	abiBytes, _ := utl.ParseFileToBytes(abiPath)
 
 	call := NewDeployCall(codeBytes, abiBytes, "wasm", types.CreateTxType)
 
 	data, _, isWrite, _ := call.CombineData()
-	from := common.HexToAddress(test.TEST_ACCOUNT)
+	from := common.HexToAddress(test.TestAccount)
 	tx := NewTxParams(from, nil, "", "", "", data)
 	params, action := tx.SendMode(isWrite, "")
 
