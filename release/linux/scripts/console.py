@@ -1,12 +1,13 @@
 #!/usr/bin/python
-from cmd import Cmd
 import os
 import sys
 import json
-import subprocess
 import copy
 import time
+import subprocess
+import re
 from shutil import copyfile
+from cmd import Cmd
 
 class Cli(Cmd):
     prompt =  '[group:0]>'
@@ -47,7 +48,8 @@ class Cli(Cmd):
         self.createAccount({"rootDir":rootDir})
 
         #create genesis and  init chain
-        self.createGenesis({"rootDir":rootDir,"groupid":groupid,"chainid":chainid,"ip":ip,"p2pPort":p2pPort})
+        creatorEnode = "enode://{0}@{1}:{2}".format(nodePubKey,ip,p2pPort)
+        self.createGenesis({"rootDir":rootDir,"groupid":groupid,"chainid":chainid,"creatorEnode":creatorEnode})
         self.initChain({"rootDir":rootDir,"groupid":groupid})
 
         #setup console config file
@@ -55,7 +57,7 @@ class Cli(Cmd):
         if bootnodes != '':
             bootstrapNodes = bootnodes.split(',')
         else:
-            bootstrapNodes = ["enode://{0}@{1}:{2}".format(nodePubKey,ip,p2pPort)]
+            bootstrapNodes = [creatorEnode]
         url = "http://{0}:{1}".format(ip,rpcPort)
         self.setupChainConfig({"rootDir":rootDir,"groupid":groupid,"p2pPort":p2pPort,"rpcPort":rpcPort,"wsPort":wsPort,"dashboardPort":dashboardPort,"bootstrapNodes":bootstrapNodes,"url":url,"status":1})
         
@@ -83,17 +85,16 @@ class Cli(Cmd):
                     --dashport                node dashboard api port,default 1090 + groupid
 
                 unique for join:
-                    --creator_pubkey  creator public key,required when you want to join a group
-                    --bootnodes             enodes,required when you want to join a group
+                    --creator_enode     creator's enode,required when you want to join a group
+                    --bootnodes             enodes,required when you want to join a group,default = creator_enode
 
-                unique for add:
+                unique for add:                      
+                    --name                        node name，required when you add a new node to the chain
                     --pubkey                    node public key to add a new node,required when you add a new node to the chain
-                    --addr                          node addr,required when you add a new node to the chain
-                    --name                        node name
-                    --type                          0=observer;1=validator  
+                    --addr                          node addr
+                    --type                          0=observer;1=validator，default 0  
                     --desc                          description of the node
-
-
+                    --enode                      this flag can be overwroten by pubkey,ip,port,name
         Options: """
         try:
             line = self.parse(line) 
@@ -116,6 +117,12 @@ class Cli(Cmd):
             return
 
     def do_start(self,line):
+        """start nodes
+                Usage:
+                   start [command options]
+                   Options::
+                            --groupid                   the specified group you want to start, default start all
+        """
         line = self.parse(line)
         groupid = findFlag(line,'--groupid','')
         if groupid == '':
@@ -125,6 +132,12 @@ class Cli(Cmd):
             self.startNode(groups[groupid])
 
     def do_stop(self,line):
+        """stop nodes
+                Usage:
+                   start [command options]
+                   Options::
+                            --groupid                   the specified group you want to stop, default start all
+        """
         line = self.parse(line)
         groupid = findFlag(line,'--groupid','')
         if groupid == '':
@@ -133,16 +146,32 @@ class Cli(Cmd):
         else:
             self.stopNode(groups[groupid])
 
+    def do_console(self,line):
+        """start a console to communicate with current group
+                Usage:
+                   console
+        """
+        url = groups[str(GROUP_ID)]["url"]
+        cmd = "{0}/platone attach {1}".format(BIN_PATH,url)
+        subprocess.call(cmd,shell=True)
+
     def addNode(self,line):
-        pubKey = findFlag(line,'--pubkey','')
-        addr = findFlag(line,'--addr','')
-        ip = findFlag(line,'--ip','')
-        p2pPort = findFlag(line,'--port','')
-        if pubKey =='' or addr == '' or ip == '' or p2pPort == '':
+        enode = findFlag(line,'--enode','')
+        enodeInfo = {}
+        if enode != '':
+            reg = re.compile('^enode://(?P<pubkey>[a-z0-9]+)@(?P<ip>[0-9.]+):(?P<port>[0-9]+)')
+            regMatch = reg.match(enode)
+            enodeInfo = regMatch.groupdict()
+        pubKey = findFlag(line,'--pubkey',enodeInfo.get("pubkey",''))
+        nodeName = findFlag(line,'--name',pubKey)
+        ip = findFlag(line,'--ip',enodeInfo.get("ip",''))
+        p2pPort = findFlag(line,'--port',enodeInfo.get("port",''))
+        if pubKey =='' or nodeName  == '' or ip == '' or p2pPort == '':
             print('[ERROR]: miss required flags,please read command help')
             self.do_help('add')
-        
-        nodeName = findFlag(line,'--name',addr)
+        if len(nodeName) > 50:
+            nodeName = nodeName[0:50]
+        addr = findFlag(line,'--addr',nodeName)
         nodeType = findFlag(line,'--type','0')
         desc = findFlag(line,'--desc','')
         rpcPort = findFlag(line,'--rpcport','0')
@@ -160,10 +189,35 @@ class Cli(Cmd):
         self.stopNode(groups[groupid])
 
     def do_switch(self,line):
+        """switch to another group
+                Usage:
+                   switch groupid
+        """
         try: 
             groupid = self.parse(line)[0]
             switch(groupid)
             self.prompt = '[group:' + groupid +']>'
+        except Exception as err:
+            print("[ERROR]: " + str(err))
+            return
+
+    def do_unlock(self,line):
+        """unlock account
+                Usage:
+                   unlock [command options]
+                   Options::
+                            --account                   the specified account you want to unlock, default "from" filed in config file
+                            --password               the password used to unlock the account default "0"
+        """
+        try:
+            line = self.parse(line)
+            account = findFlag(line,'--account',config["from"])
+            password = findFlag(line,'--password',"0")
+            jsonParam = {"jsonrpc": "2.0", "method": "personal_unlockAccount", "params": [account, password, 60], "id": 1}
+            cmd = "curl -H \"Content-Type: application/json\" --data '{0}'  {1}".format(json.dumps(jsonParam),groups[str(GROUP_ID)]["url"])
+            print(cmd)
+            subprocess.call(cmd,shell=True)
+            
         except Exception as err:
             print("[ERROR]: " + str(err))
             return
@@ -193,20 +247,20 @@ class Cli(Cmd):
     
     def createAccount(self,args):
         rootDir =  args["rootDir"]
+        keystoreDir = os.path.join(rootDir, 'keystore')
+
         cmd = "{0}/platone --datadir {1} account new <<EOF\n0\n0\nEOF".format(BIN_PATH,rootDir)
         ret = subprocess.check_output(cmd,shell=True).decode('utf-8')
         address = "0x" + ret.split("Address: {")[1].split("}")[0]
-
-        config["from"] = address
-        onConfigUpdate()
+        if config["from"] == "":
+            config["from"] = address
+            onConfigUpdate()
         print("[INFO]: create address " + address + " successfully")
 
     def createGenesis(self,args):
         rootDir =  args["rootDir"]
         groupid = args["groupid"]
         chainid = args["chainid"]
-        ip = args["ip"]
-        p2pPort = args["p2pPort"]
         groupDir = os.path.join(rootDir,'group_' + groupid)
         genesisPath = os.path.join(groupDir,'genesis.json')
         if os.path.exists(genesisPath):
@@ -217,11 +271,13 @@ class Cli(Cmd):
         genesis["config"]["interpreter"] = "all"    
         genesis["config"]["chainId"] = int(chainid)
 
-        creatorPubKey = args.get("creatorPubKey",readAllFromFile(os.path.join(rootDir,"node.pubkey")))
-        creator_enode="enode://{0}@{1}:{2}".format(creatorPubKey,ip,p2pPort)    
-        genesis["config"]["istanbul"]["validatorNodes"] = [creator_enode]        
+        creator_enode = args.get("creatorEnode",'')
+        if creator_enode == '':
+            print("[Error]: creator enode  can not be empty")
+            return     
+        genesis["config"]["istanbul"]["validatorNodes"] = [creator_enode]         
         genesis["config"]["istanbul"]["suggestObserverNodes"] = [creator_enode] 
-        writeToNewFile(genesisPath,json.dumps(genesis,indent=4))      
+        writeToNewFile(genesisPath,json.dumps(genesis,indent=4,sort_keys=True))      
         print("[INFO]: Create genesis.json successfully. File: " +genesisPath)
 
     def initChain(self,args):
@@ -238,12 +294,13 @@ class Cli(Cmd):
     
     def setupChainConfig(self,args):
         groupid = args["groupid"]
-        #keys = {'p2pPort','rpcPort','wsPort','dashboardPort','bootstrapNodes','url'}
 
         if groups.get(groupid,{}) == {}:
             tmp = {"id":groupid}
             for key,v in config["groups"][0].items():
-                       tmp[key] = args[key]
+                if key == "id":
+                            continue
+                tmp[key] = args[key]
             config["groups"].append(tmp)
         else:
             for i in range(len(config["groups"])):
@@ -270,7 +327,7 @@ class Cli(Cmd):
         keystorePath = os.path.join(config["datadir"],"keystore")
 
         if not os.path.exists(configPath):
-            print("[ERROR]: config file for group_" + group["id"] +" not found")\
+            print("[ERROR]: config file for group_" + group["id"] +" not found")
 
         logPath = os.path.join(dataPath,"logs")
         mkdir(logPath)
@@ -290,7 +347,7 @@ class Cli(Cmd):
         "67108864",
         json.dumps({"platone_log":["/"],"__dir__":[logPath],"__size__":["67108864"]}),
         logPath)
-
+        print(cmd)
         subprocess.Popen(cmd,shell=True,preexec_fn=os.setpgrp)
         print("[INFO]: start group_" + group["id"] + " successfully")
 
@@ -316,11 +373,12 @@ class Cli(Cmd):
         wsPort = findFlag(args,"--wsport",str(DEFAULT_WS_PORT + intGroupID))
         dashboardPort = findFlag(args,"--dashport",str(DEFAULT_DASHBOARD_PORT + intGroupID))
 
-        self.createGenesis({"rootDir":rootDir,"groupid":groupid,"chainid":chainid,"ip":ip,"p2pPort":p2pPort})
+        nodePriKey,nodePubKey,nodeAddress = self.createNodeKey({"rootDir":rootDir})
+        selfEnode = "enode://{0}@{1}:{2}".format(nodePubKey,ip,p2pPort)
+        self.createGenesis({"rootDir":rootDir,"groupid":groupid,"chainid":chainid,"creatorEnode":selfEnode})
         self.initChain({"rootDir":rootDir,"groupid":groupid})
 
-        nodePriKey,nodePubKey,nodeAddress = self.createNodeKey({"rootDir":rootDir})
-        bootstrapNodes = ["enode://{0}@{1}:{2}".format(nodePubKey,ip,p2pPort)]
+        bootstrapNodes = [selfEnode]
         url = "http://{0}:{1}".format(ip,rpcPort)
         self.setupChainConfig({"rootDir":rootDir,"groupid":groupid,"p2pPort":p2pPort,"rpcPort":rpcPort,"wsPort":wsPort,"dashboardPort":dashboardPort,"bootstrapNodes":bootstrapNodes,"url":url,"status":1})
         self.startNode(groups[groupid])
@@ -332,7 +390,11 @@ class Cli(Cmd):
         self.setSuperAdmin({})
         self.addChainAdmin({"addr":config["from"]})
         self.addNodeCMD({"name":nodeAddress,"type":1,"publicKey":nodePubKey,"desc":"","externalIP":ip,"internalIP":ip,"rpcPort":rpcPort,"p2pPort":p2pPort,"owner":nodeAddress,"status":1})
-        switch(str(GROUP_ID))
+        switch("0")
+
+        #register group in group0
+        paramJson = {"creator":selfEnode,"groupid":groupid,"bootNodes":bootstrapNodes}
+        self.callCreateGroupRegContract(paramJson)
 
     def joinGroup(self,args):
         rootDir =  config["datadir"]
@@ -349,18 +411,18 @@ class Cli(Cmd):
         if groupid == "0":
             self.createAccount({"rootDir":rootDir})
 
-        creatorPubKey = findFlag(args,"--creator_pubkey","")
-        if creatorPubKey == "":
-            print("[Error]: creator pubkey  can not be empty")
-            return
-        self.createGenesis({"rootDir":rootDir,"groupid":groupid,"chainid":chainid,"ip":ip,"p2pPort":p2pPort,"creatorPubKey":creatorPubKey})
-        self.initChain({"rootDir":rootDir,"groupid":groupid})
+        if not groupid == "0":
+            creatorEnode ,bootstrapNodes = self.callGetGroupByIDContract({"groupid":groupid})
+        else:
+            creatorEnode  =  findFlag(args,"--creator_enode","")
+            bootstrapNodes = findFlag(args,"--bootNodes",creatorEnode).split(",")
 
-        bootstrapNodes = findFlag(args,"--bootnodes","")
-        if bootstrapNodes == "":
-            print("[ERROR]: bootstrapNodes can not be empty")
+
+        if creatorEnode == '':
+            print("[Error]: creator enode  can not be empty")
             return
-        bootstrapNodes = bootstrapNodes.split(",")
+        self.createGenesis({"rootDir":rootDir,"groupid":groupid,"chainid":chainid,"creatorEnode":creatorEnode})
+        self.initChain({"rootDir":rootDir,"groupid":groupid})
 
         url = "http://{0}:{1}".format(ip,rpcPort)
         self.setupChainConfig({"rootDir":rootDir,"groupid":groupid,"p2pPort":p2pPort,"rpcPort":rpcPort,"wsPort":wsPort,"dashboardPort":dashboardPort,"bootstrapNodes":bootstrapNodes,"url":url,"status":1})
@@ -400,6 +462,27 @@ class Cli(Cmd):
         print(cmd)
         subprocess.call( cmd,shell=True)
         print("[INFO]: add node " + args["name"] + " successfully")
+
+    def callCreateGroupRegContract(self,args):
+        paramJson = {"creatorEnode":args["creator"],"groupID":int(args["groupid"]),"bootNodes":args["bootNodes"]}
+        contractAbiPath = os.path.join(os.path.dirname(configPath),"contracts","groupManager.cpp.abi.json")
+        cmd = '{0}/ctool invoke --config {1} --abi {2} --addr {3} --func createGroup --param \'{4}\''.format(BIN_PATH,ctoolConfPath,contractAbiPath,GROUP_MANAGER_ADDR,json.dumps(paramJson))
+        print(cmd)
+        subprocess.call(cmd,shell=True)
+        print("[INFO]: create group " + args["groupid"] + " successfully")
+
+    def callGetGroupByIDContract(self,args):
+        groupid = args["groupid"]
+        contractAbiPath = os.path.join(os.path.dirname(configPath),"contracts","groupManager.cpp.abi.json")
+        cmd = '{0}/ctool invoke --config {1} --abi {2} --addr {3} --func getGroupByID --param \'{4}\''.format(BIN_PATH,ctoolConfPath,contractAbiPath,GROUP_MANAGER_ADDR,groupid)
+        print(cmd)
+        ret = subprocess.check_output(cmd,shell=True).decode('utf-8').split("result:")[1].split("\x00")[0]
+        ret = json.loads(ret)
+        print("[INFO]: create group " + args["groupid"] + " successfully ") 
+        print("[INFO]: creator enode: {0}".format(ret["creatorEnode"]))
+        print("[INFO]: bootNodes: {0}".format(ret["bootNodes"]))
+        return ret["creatorEnode"],ret["bootNodes"]
+    
 
     #################################CLASS END#####################################################################################
 
@@ -453,7 +536,7 @@ def loadGroupsFromConfig(config):
 def onConfigUpdate():
         #write to console config
         f = open(configPath,'w')
-        f.write(json.dumps(config,indent=4))
+        f.write(json.dumps(config,indent=4,sort_keys=True))
         f.close()
 
         # reload groups from config
@@ -464,6 +547,7 @@ def onConfigUpdate():
         switch(str(GROUP_ID))
 
 
+GROUP_MANAGER_ADDR = "0x1000000000000000000000000000000000000006"
 NODE_MANAGER_ADDR = "0x1000000000000000000000000000000000000002"
 USER_MANAGER_ADDR = "0x1000000000000000000000000000000000000001"
 
@@ -607,7 +691,7 @@ if __name__ == '__main__':
         else:
             config = json.loads(json.dumps(CONF_TEMPLATE))
             config["datadir"] =  os.path.join(os.path.abspath('..'),'data/node_0')
-            writeToNewFile(configPath,json.dumps(config,indent=4))
+            writeToNewFile(configPath,json.dumps(config,indent=4,sort_keys=True))
         
         mkdir(config["datadir"])
         groups = loadGroupsFromConfig(config)
@@ -617,11 +701,22 @@ if __name__ == '__main__':
         GROUP_ID = 0
         switch(str(GROUP_ID))
         
+        cli = Cli()
         isDirect = findFlag(sys.argv,"--direct",False)
         if not isDirect:
-            cli = Cli()
             cli.cmdloop()
         else:
-            print(sys.argv)
+            dictFunc = {
+                "group":cli.do_group,
+                "one":cli.do_one,
+                "start":cli.do_start,
+                "stop":cli.do_stop,
+                "switch":cli.do_switch,
+                "unlock":cli.do_unlock
+            }
+
+            func = dictFunc.get(sys.argv[1],None)
+            if not func is None:
+                func(" ".join(sys.argv[2:]))
     except Exception as err:
         print("[ERROR]: " + str(err))
