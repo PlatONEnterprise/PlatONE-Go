@@ -70,6 +70,7 @@ life/resolver/softfloat/build
 cmd/SysContracts/build/
 cmd/SysContracts/buildTest/
 cmd/SysContracts/cmake-build-debug/
+cmd/SysContracts/libc++/cmake-build-debug/
 cmd/SysContracts/buildUnitTest/
 cmd/SysContracts/database/
 cmd/SysContracts/*.cmake
