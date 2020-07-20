@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/bcwasmutil"
 	"reflect"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
@@ -19,7 +20,7 @@ var (
 )
 var (
 	ErrUnsupportedRole      = errors.New("Unsupported role ")
-	ErrNoPermission         = errors.New("No Permmision ")
+	ErrNoPermission         = errors.New("No Permission ")
 	ErrAlreadySetSuperAdmin = errors.New("Already Set SuperAdmin ")
 	ErrParamInvalid         = errors.New("param is invalid")
 )
@@ -33,6 +34,7 @@ var (
 	errVersionInvalid = errors.New("[CNS] version format is invalid")
 	errAddressInvalid = errors.New("[CNS] address format is invalid")
 	errNotOwner       = errors.New("[CNS] not owner of registered contract")
+	errEmptyValue     = errors.New("Empty value")
 )
 
 var fwErrNotOwner = errors.New("FW : error, only contract owner can set firewall setting")
@@ -131,4 +133,9 @@ func CheckPublicKeyFormat(pub string) error {
 	}
 
 	return nil
+}
+
+// generate state key compatible with bcwasm state key
+func generateStateKey(key string) []byte {
+	return bcwasmutil.SerilizString(key)
 }

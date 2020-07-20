@@ -49,6 +49,15 @@ const (
 )
 
 var (
+	superAdminAddrListKey = generateStateKey(addressListKey + "superAdminAddrListKey")
+	chainAdminAddrListKey = generateStateKey(addressListKey + "chainAdminAddrListKey")
+	groupAdminAddrListKey = generateStateKey(addressListKey + "groupAdminAddrListKey")
+	nodeAdminAddrListKey = generateStateKey(addressListKey + "nodeAdminAddrListKey")
+	contractAdminAddrListKey = generateStateKey(addressListKey + "contractAdminAddrListKey")
+	contractDeployerAddrListKey = generateStateKey(addressListKey + "contractDeployerAddrListKey")
+)
+
+var (
 	// 操作某个权限角色所需要的权限
 	roleOpPermission map[int32]UserRoles
 )
@@ -76,17 +85,6 @@ func (ur UserRoles) Strings() []string {
 	return roles
 }
 
-func (ur *UserRoles) FromStrings(rolesStr []string) error {
-	for _, s := range rolesStr {
-		if role, ok := rolesMap[s]; ok {
-			if err := ur.setRole(role); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
 func (ur *UserRoles) setRole(role int32) error {
 	if role >= rolesCnt || role < 0 {
 		return ErrUnsupportedRole
@@ -111,7 +109,9 @@ func (ur UserRoles) hasRole(role int32) bool {
 	return ur&(1<<role) != 0
 }
 
-// export function
+// set superAdmin for a chain
+// only one superAdmin can be set for a chain
+// if there is already a superAdmin, this method will return error(ErrAlreadySetSuperAdmin)
 func (u *UserManagement) setSuperAdmin() (int32, error) {
 	var key []byte
 	var err error
@@ -280,7 +280,6 @@ func (u *UserManagement) getRolesByAddress(addr common.Address) (string, error) 
 	if err != nil {
 		return "", err
 	}
-
 	roles := ur.Strings()
 	str, err := json.Marshal(roles)
 	if err != nil {
@@ -312,30 +311,20 @@ func (u *UserManagement) getAddrListOfRole(targetRole int32) (string, error) {
 	return string(str), nil
 }
 
-// 0： the account(addr) doesn't has role
-// 1: the account(addr) doesn't role
 func (u *UserManagement) hasRole(addr common.Address, roleName string) (int32, error) {
-	key := append(addr[:], []byte(userRolesKey)...)
-	data := u.getState(key)
-	if len(data) == 0 {
-		return 0, nil
+	ur, err := u.getRole(addr)
+	if err != nil{
+		return roleDeactive, err
 	}
-
-	ur := UserRoles(0)
-	if err := rlp.DecodeBytes(data, &ur); nil != err {
-		return 0, nil
-	}
-
 	if role, ok := rolesMap[roleName]; ok && ur.hasRole(role) {
-		return 1, nil
+		return roleActive, nil
 	}
-
-	return 0, nil
+	return roleDeactive, nil
 }
 
 //internal function
 func (u *UserManagement) getRole(addr common.Address) (UserRoles, error) {
-	key := append(addr[:], []byte(userRolesKey)...)
+	key := generateRoleKey(addr)
 	data := u.getState(key)
 	if len(data) == 0 {
 		return UserRoles(0), nil
@@ -353,7 +342,7 @@ func (u *UserManagement) setRole(addr common.Address, roles UserRoles) error {
 	if err != nil {
 		return err
 	}
-	key := append(addr[:], []byte(userRolesKey)...)
+	key := generateRoleKey(addr)
 	u.setState(key, data)
 	return nil
 }
@@ -492,21 +481,27 @@ func (u *UserManagement) setAddrList(key []byte, addrs []common.Address) error {
 	return nil
 }
 
+func generateRoleKey(addr common.Address) []byte{
+	return generateStateKey(addr.String() + userRolesKey)
+}
+
 func generateAddressListKey(targetRole int32) ([]byte, error) {
-	key := addressListKey
+	var key []byte
 	switch targetRole {
 	case superAdmin:
-		key += "superAdmin"
+		key = superAdminAddrListKey
 	case chainAdmin:
-		key += "chainAdmin"
+		key = chainAdminAddrListKey
+	case groupAdmin:
+		key = groupAdminAddrListKey
 	case nodeAdmin:
-		key += "nodeAdmin"
+		key = nodeAdminAddrListKey
 	case contractAdmin:
-		key += "contractAdmin"
+		key = contractAdminAddrListKey
 	case contractDeployer:
-		key += "contractAdmin"
+		key = contractDeployerAddrListKey
 	default:
 		return nil, ErrUnsupportedRole
 	}
-	return []byte(key), nil
+	return key, nil
 }
