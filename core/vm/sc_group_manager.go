@@ -25,12 +25,13 @@ type GroupManagement struct {
 }
 
 type GroupInfo struct {
-	Creator   string `json:"creator"`
-	GroupID   uint64 `json:"groupID"`
-	BootNodes []string `json:"bootNodes"`
+	Creator      string   `json:"creator"`
+	GroupID      uint64   `json:"groupID"`
+	CreatorEnode string   `json:"creatorEnode"`
+	BootNodes    []string `json:"bootNodes"`
 }
 
-func (g GroupInfo) String() string{
+func (g GroupInfo) String() string {
 	data, _ := json.Marshal(g)
 	return string(data)
 }
@@ -62,13 +63,13 @@ func (g *GroupManagement) Caller() common.Address {
 //for access control
 func (g *GroupManagement) AllExportFns() SCExportFns {
 	return SCExportFns{
-		"hasGroupOpPermission":g.hasGroupOpPermission,
-		"createGroup": g.createGroup,
-		"getAllGroups": g.getAllGroups,
-		"getGroupByID": g.getGroupByID,
-		"updateBootNodes": g.updateBootNodes,
-		"addBootNode": g.addBootNode,
-		"delBootNode": g.delBootNode,
+		"hasGroupOpPermission": g.hasGroupOpPermission,
+		"createGroup":          g.createGroup,
+		"getAllGroups":         g.getAllGroups,
+		"getGroupByID":         g.getGroupByID,
+		"updateBootNodes":      g.updateBootNodes,
+		"addBootNode":          g.addBootNode,
+		"delBootNode":          g.delBootNode,
 	}
 }
 
@@ -90,20 +91,20 @@ func (g *GroupManagement) createGroup(groupInfo string) (int32, error) {
 		return -1, err
 	}
 	group.Creator = g.Caller().String()
-	if err := g.addGroup(group); err != nil{
+	if err := g.addGroup(group); err != nil {
 		return -1, err
 	}
 	return 0, nil
 }
 func (g *GroupManagement) getAllGroups() (string, error) {
 	groups, err := g.getGroupList()
-	if err != nil{
-		return "",err
+	if err != nil {
+		return "", err
 	}
 
 	data, err := json.Marshal(groups)
-	if err != nil{
-		return "",err
+	if err != nil {
+		return "", err
 	}
 
 	return string(data), nil
@@ -111,7 +112,7 @@ func (g *GroupManagement) getAllGroups() (string, error) {
 
 func (g *GroupManagement) getGroupByID(groupID uint64) (string, error) {
 	group, err := g.getGroupInfo(groupID)
-	if err != nil{
+	if err != nil {
 		return "", err
 	}
 	return group.String(), nil
@@ -119,7 +120,7 @@ func (g *GroupManagement) getGroupByID(groupID uint64) (string, error) {
 
 func (g *GroupManagement) updateBootNodes(groupID uint64, nodes string) (int32, error) {
 	group, err := g.getGroupInfo(groupID)
-	if err != nil{
+	if err != nil {
 		return -1, err
 	}
 	if group.Creator != g.Caller().String() {
@@ -127,14 +128,14 @@ func (g *GroupManagement) updateBootNodes(groupID uint64, nodes string) (int32, 
 	}
 	var bootNodes []string
 	err = json.Unmarshal([]byte(nodes), &bootNodes)
-	if err != nil{
+	if err != nil {
 		return -1, err
 	}
 
 	group.BootNodes = bootNodes
 
 	err = g.updateGroupInfo(*group)
-	if err != nil{
+	if err != nil {
 		return -1, err
 	}
 	return 0, nil
@@ -142,34 +143,34 @@ func (g *GroupManagement) updateBootNodes(groupID uint64, nodes string) (int32, 
 
 func (g *GroupManagement) addBootNode(groupID uint64, node string) (int32, error) {
 	group, err := g.getGroupInfo(groupID)
-	if err != nil{
+	if err != nil {
 		return -1, err
 	}
 	if group.Creator != g.Caller().String() {
 		return -1, ErrNoPermission
 	}
-	for _,n := range group.BootNodes{
+	for _, n := range group.BootNodes {
 		if n == node {
 			return -1, nil
 		}
 	}
 	group.BootNodes = append(group.BootNodes, node)
 
-	if err := g.updateGroupInfo(*group); err != nil{
+	if err := g.updateGroupInfo(*group); err != nil {
 		return -1, err
 	}
 	return 0, nil
 }
 func (g *GroupManagement) delBootNode(groupID uint64, node string) (int32, error) {
 	group, err := g.getGroupInfo(groupID)
-	if err != nil{
+	if err != nil {
 		return -1, err
 	}
 	if group.Creator != g.Caller().String() {
 		return -1, ErrNoPermission
 	}
 	pos := -1
-	for i,n := range group.BootNodes{
+	for i, n := range group.BootNodes {
 		if n == node {
 			pos = i
 		}
@@ -197,10 +198,10 @@ func (g *GroupManagement) addGroup(info GroupInfo) error {
 		}
 	}
 
-	if err := g.storeGroupInfo(&info); err != nil{
+	if err := g.storeGroupInfo(&info); err != nil {
 		return err
 	}
-	if err := g.addGroupToList(&info); err != nil{
+	if err := g.addGroupToList(&info); err != nil {
 		return err
 	}
 
@@ -219,10 +220,10 @@ func (g *GroupManagement) updateGroupInfo(info GroupInfo) error {
 		}
 	}
 
-	if err := g.storeGroupInfo(&info); err != nil{
+	if err := g.storeGroupInfo(&info); err != nil {
 		return err
 	}
-	if err := g.updateGroupList(groups); err != nil{
+	if err := g.updateGroupList(groups); err != nil {
 		return err
 	}
 
@@ -310,7 +311,7 @@ func (g *GroupManagement) delGroupfromList(id uint64) error {
 	}
 	if pos > -1 {
 		groups = append(groups[:pos], groups[pos+1:]...)
-		if err := g.storeGroupList(groups); err != nil{
+		if err := g.storeGroupList(groups); err != nil {
 			return err
 		}
 	}
