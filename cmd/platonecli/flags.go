@@ -294,4 +294,7 @@ var (
 	//fw
 	fwImportCmdFlags = append(globalCmdFlags, FilePathFlags)
 	fwClearCmdFlags  = append(globalCmdFlags, FwActionFlags, FwClearAllFlags)
+
+	// role
+	roleCmdFlags = globalCmdFlags
 )

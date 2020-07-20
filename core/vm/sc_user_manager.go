@@ -43,6 +43,8 @@ func (u *UserManagement) AllExportFns() SCExportFns {
 		"transferSuperAdminByName":     u.transferSuperAdminByName,
 		"addChainAdminByAddress":       u.addChainAdminByAddress,
 		"addChainAdminByName":          u.addChainAdminByName,
+		"addGroupAdminByAddress":       u.addGroupAdminByAddress,
+		"addGroupAdminByName":          u.addGroupAdminByName,
 		"addNodeAdminByAddress":        u.addNodeAdminByAddress,
 		"addNodeAdminByName":           u.addNodeAdminByName,
 		"addContractAdminByAddress":    u.addContractAdminByAddress,
@@ -52,6 +54,8 @@ func (u *UserManagement) AllExportFns() SCExportFns {
 
 		"delChainAdminByAddress":       u.delChainAdminByAddress,
 		"delChainAdminByName":          u.delChainAdminByName,
+		"delGroupAdminByAddress":       u.delGroupAdminByAddress,
+		"delGroupAdminByName":          u.delGroupAdminByName,
 		"delNodeAdminByAddress":        u.delNodeAdminByAddress,
 		"delNodeAdminByName":           u.delNodeAdminByName,
 		"delContractAdminByAddress":    u.delContractAdminByAddress,

@@ -190,6 +190,34 @@ func (u *UserManagement) delChainAdminByName(name string) (int32, error) {
 	return 0, nil
 }
 
+func (u *UserManagement) addGroupAdminByAddress(addr common.Address) (int32, error) {
+	if err := u.setRoleWithPermissionCheckByAddress(addr, groupAdmin, roleActive); err != nil {
+		return -1, err
+	}
+	return 0, nil
+}
+
+func (u *UserManagement) addGroupAdminByName(name string) (int32, error) {
+	if err := u.setRoleWithPermissionCheckByName(name, groupAdmin, roleActive); err != nil {
+		return -1, err
+	}
+	return 0, nil
+}
+
+func (u *UserManagement) delGroupAdminByAddress(addr common.Address) (int32, error) {
+	if err := u.setRoleWithPermissionCheckByAddress(addr, groupAdmin, roleDeactive); err != nil {
+		return -1, err
+	}
+	return 0, nil
+}
+
+func (u *UserManagement) delGroupAdminByName(name string) (int32, error) {
+	if err := u.setRoleWithPermissionCheckByName(name, groupAdmin, roleDeactive); err != nil {
+		return -1, err
+	}
+	return 0, nil
+}
+
 func (u *UserManagement) addNodeAdminByAddress(addr common.Address) (int32, error) {
 	if err := u.setRoleWithPermissionCheckByAddress(addr, nodeAdmin, roleActive); err != nil {
 		return -1, err

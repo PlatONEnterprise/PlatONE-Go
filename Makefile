@@ -14,6 +14,14 @@ GO ?= latest
 #syscontracts:
 #	build/build_syscontracts.sh
 
+platonecli:
+	build/build_deps.sh
+	build/env.sh go run build/ci.go install ./cmd/platonecli
+	@cp $(GOBIN)/platonecli $(shell pwd)/release/linux/bin/
+	@echo "Done building."
+	@echo "Run \"$(GOBIN)/platone\" to launch platone."
+
+
 platone:
 	build/build_deps.sh
 	build/env.sh go run build/ci.go install ./cmd/platone

@@ -27,6 +27,8 @@ func init() {
 		CnsCmd,
 		// see cmd_firewall.go
 		FwCmd,
+		// see cmd_role.go
+		RoleCmd,
 	}
 	sort.Sort(cli.CommandsByName(app.Commands))
 
