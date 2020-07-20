@@ -251,7 +251,7 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 	case "float32", "float64":
 		bytes := make([]byte, 8)
 		binary.BigEndian.PutUint64(bytes, uint64(res))
-		if txType == common.CALL_CANTRACT_FLAG {
+		if txType == common.CallContractFlag {
 			return bytes, nil
 		}
 		finalRes := utils.Align32Bytes(bytes)
@@ -261,7 +261,7 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 		// wo should revert bytes from little edian to big edian
 		returnBytes := lvm.Memory.Memory[params[0] : params[0]+16]
 		common.RevertBytes(returnBytes)
-		if txType == common.CALL_CANTRACT_FLAG {
+		if txType == common.CallContractFlag {
 			return returnBytes, nil
 		}
 		returnBytes = utils.Align32Bytes(returnBytes)
