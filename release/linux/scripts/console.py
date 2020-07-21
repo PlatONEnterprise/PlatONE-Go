@@ -28,13 +28,13 @@ class Cli(Cmd):
            one  [command options]
            Options::
                     --groupid                   the specified groupid, default 0
-                    --chainid                    the specified chainid, default 300
-                    --ip                               node ip,default 127.0.0.1
-                    --port                          node p2p port,default 16790
+                    --chainid                   the specified chainid, default 300
+                    --ip                        node ip,default 127.0.0.1
+                    --port                      node p2p port,default 16790
                     --rpcport                   node rpc api port,default 6790
                     --wsport                    node websocket port,default 3790
-                    --dashport                node dashboard api port,default 1090
-                    --password              password to lock or unlock account ,default 0
+                    --dashport                  node dashboard api port,default 1090
+                    --password                  password to lock or unlock account ,default 0
         """
         line = self.parse(line)
         rootDir =  config["datadir"]
@@ -83,25 +83,25 @@ class Cli(Cmd):
            group [create|add|join|leave] [command options] [arguments...]
            Options::
                     --groupid                   the specified groupid, default 0
-                    --chainid                    the specified chainid, default 300 + groupid
-                    --ip                               node ip,default 127.0.0.1
-                    --port                          node p2p port,default 16790 + groupid
+                    --chainid                   the specified chainid, default 300 + groupid
+                    --ip                        node ip,default 127.0.0.1
+                    --port                      node p2p port,default 16790 + groupid
                     --rpcport                   node rpc api port,default 6790 + groupid
                     --wsport                    node websocket port,default 3790 + groupid
-                    --dashport                node dashboard api port,default 1090 + groupid
-                    --password              password to lock or unlock the account
+                    --dashport                  node dashboard api port,default 1090 + groupid
+                    --password                  password to lock or unlock the account
 
                 unique for join:
-                    --creator_enode     creator's enode,required when you want to join a group
-                    --bootnodes             enodes,required when you want to join a group,default = creator_enode
+                    --creator_enode             creator's enode,required when you want to join a group
+                    --bootnodes                 enodes,required when you want to join a group,default = creator_enode
 
                 unique for add:                      
-                    --name                        node name,required when you add a new node to the chain
+                    --name                      node name,required when you add a new node to the chain
                     --pubkey                    node public key to add a new node,required when you add a new node to the chain
-                    --addr                          node addr
-                    --type                          0=observer;1=validator,default 0  
-                    --desc                          description of the node
-                    --enode                      this flag can be overwroten by pubkey,ip,port,name
+                    --addr                      node addr
+                    --type                      0=observer;1=validator,default 0
+                    --desc                      description of the node
+                    --enode                     this flag can be overwroten by pubkey,ip,port,name
         Options: """
         try:
             line = self.parse(line) 
@@ -240,7 +240,7 @@ class Cli(Cmd):
         Usage:
             unlock [command options]
             Options::
-                    --account                   the specified account you want to unlock, default "from" filed in config file
+                    --account                the specified account you want to unlock, default "from" filed in config file
                     --password               the password used to unlock the account default "0"
         """
         try:
