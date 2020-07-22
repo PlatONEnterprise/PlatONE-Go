@@ -49,6 +49,8 @@ const (
 
 var FwWildchardAddr = common.HexToAddress("0xffffffffffffffffffffffffffffffffffffffff")
 
+var ErrInvalidFwAction = errors.New("FW: error, action is invalid")
+
 type FwElem struct {
 	Addr     common.Address
 	FuncName string
@@ -57,16 +59,16 @@ type FwElem struct {
 type FwElems []FwElem
 
 type FwStatus struct {
-	contractAddr common.Address
-	active       bool
-	acceptedList []FwElem
-	rejectedList []FwElem
+	ContractAddr common.Address
+	Active       bool
+	AcceptedList []FwElem
+	RejectedList []FwElem
 }
 
 func (fw *FwStatus) canFindInList(funcName string, caller common.Address, act Action) bool {
-	list := fw.rejectedList
+	list := fw.RejectedList
 	if act == accept {
-		list = fw.acceptedList
+		list = fw.AcceptedList
 	}
 
 	for _, fwElem := range list {
@@ -97,7 +99,7 @@ func NewAction(action string) (Action, error) {
 	} else if strings.EqualFold(action, "REJECT") {
 		return reject, nil
 	} else {
-		return 0, errors.New("FW: error, action is invalid")
+		return 0, ErrInvalidFwAction
 	}
 }
 

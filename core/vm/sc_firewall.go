@@ -1,17 +1,12 @@
 package vm
 
 import (
-	"encoding/json"
-	"errors"
-	"fmt"
 	"math/big"
 	"strings"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
-
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
-	"github.com/PlatONEnetwork/PlatONE-Go/params"
 )
 
 const (
@@ -26,30 +21,11 @@ type FireWall struct {
 	blockNumber *big.Int
 }
 
-func (u *FireWall) RequiredGas(input []byte) uint64 {
-	if common.IsBytesEmpty(input) {
-		return 0
-	}
-	return params.FireWall
-}
-
-// Run runs the precompiled contract
-func (u *FireWall) Run(input []byte) ([]byte, error) {
-	return execSC(input, u.AllExportFns())
-}
-
-// for access control
-func (u *FireWall) AllExportFns() SCExportFns {
-	return SCExportFns{
-		"__sys_FwOpen":   u.openFirewall,
-		"__sys_FwClose":  u.closeFirewall,
-		"__sys_FwClear":  u.fwClear,
-		"__sys_FwAdd":    u.fwAdd,
-		"__sys_FwDel":    u.fwDel,
-		"__sys_FwSet":    u.fwSet,
-		"__sys_FwImport": u.fwImport,
-		"__sys_FwStatus": u.getFwStatus,
-		"__sys_FwExport": u.getFwStatus,
+func NewFireWall(evm *EVM, contract *Contract) *FireWall {
+	return &FireWall{
+		stateDB:     evm.StateDB,
+		caller:      contract.CallerAddress,
+		blockNumber: evm.BlockNumber,
 	}
 }
 
@@ -64,146 +40,140 @@ func (u *FireWall) isOwner(contractAddr common.Address) bool {
 	return false
 }
 
-func (u *FireWall) openFirewall(contractAddr common.Address) (int32, error) {
+func (u *FireWall) openFirewall(contractAddr common.Address) error {
 	if !u.isOwner(contractAddr) {
 		u.emitNotifyEvent(fwNoPermission, fwErrNotOwner.Error())
-		return failure, fwErrNotOwner
+		return fwErrNotOwner
 	}
 
 	u.stateDB.OpenFirewall(contractAddr)
 
 	u.emitNotifyEvent(fwOpSuccess, "fw start success")
-	return success, nil
+	return nil
 }
 
-func (u *FireWall) closeFirewall(contractAddr common.Address) (int32, error) {
+func (u *FireWall) closeFirewall(contractAddr common.Address) error {
 	if !u.isOwner(contractAddr) {
 		u.emitNotifyEvent(fwNoPermission, fwErrNotOwner.Error())
-		return failure, fwErrNotOwner
+		return fwErrNotOwner
 	}
 
 	u.stateDB.CloseFirewall(contractAddr)
 
 	u.emitNotifyEvent(fwOpSuccess, "fw close success")
-	return success, nil
+	return nil
 }
 
-func (u *FireWall) fwClear(contractAddr common.Address, action string) (int32, error) {
+func (u *FireWall) fwClear(contractAddr common.Address, action string) error {
 	if !u.isOwner(contractAddr) {
 		u.emitNotifyEvent(fwNoPermission, fwErrNotOwner.Error())
-		return failure, fwErrNotOwner
+		return fwErrNotOwner
 	}
 
 	act, err := state.NewAction(action)
 	if err != nil {
 		u.emitNotifyEvent(fwInvalidArgument, err.Error())
-		return failure, err
+		return err
 	}
 
 	u.stateDB.FwClear(contractAddr, act)
 
 	u.emitNotifyEvent(fwOpSuccess, "fw clear success")
-	return success, nil
+	return nil
 }
 
-func (u *FireWall) fwAdd(contractAddr common.Address, action, lst string) (int32, error) {
+func (u *FireWall) fwAdd(contractAddr common.Address, action, lst string) error {
 	if !u.isOwner(contractAddr) {
 		u.emitNotifyEvent(fwNoPermission, fwErrNotOwner.Error())
-		return failure, fwErrNotOwner
+		return fwErrNotOwner
 	}
 
 	act, err := state.NewAction(action)
 	if err != nil {
 		u.emitNotifyEvent(fwInvalidArgument, err.Error())
-		return failure, err
+		return err
 	}
 
 	list, err := convertToFwElem(lst)
 	if err != nil {
 		u.emitNotifyEvent(fwInvalidArgument, err.Error())
-		return failure, err
+		return err
 	}
 
 	u.stateDB.FwAdd(contractAddr, act, list)
 
 	u.emitNotifyEvent(fwOpSuccess, "fw add success")
-	return success, nil
+	return nil
 }
 
-func (u *FireWall) fwDel(contractAddr common.Address, action, lst string) (int32, error) {
+func (u *FireWall) fwDel(contractAddr common.Address, action, lst string) error {
 	if !u.isOwner(contractAddr) {
 		u.emitNotifyEvent(fwNoPermission, fwErrNotOwner.Error())
-		return failure, fwErrNotOwner
+		return fwErrNotOwner
 	}
 
 	act, err := state.NewAction(action)
 	if err != nil {
 		u.emitNotifyEvent(fwInvalidArgument, err.Error())
-		return failure, err
+		return err
 	}
 
 	list, err := convertToFwElem(lst)
 	if err != nil {
 		u.emitNotifyEvent(fwInvalidArgument, err.Error())
-		return failure, err
+		return err
 	}
 
 	u.stateDB.FwDel(contractAddr, act, list)
 
 	u.emitNotifyEvent(fwOpSuccess, "fw delete success")
-	return success, nil
+	return nil
 }
 
 // todo: input arguments type
-func (u *FireWall) fwSet(contractAddr common.Address, act, lst string) (int32, error) {
+func (u *FireWall) fwSet(contractAddr common.Address, act, lst string) error {
 	if !u.isOwner(contractAddr) {
 		u.emitNotifyEvent(fwNoPermission, fwErrNotOwner.Error())
-		return failure, fwErrNotOwner
+		return fwErrNotOwner
 	}
 
 	action, err := state.NewAction(act)
 	if err != nil {
 		u.emitNotifyEvent(fwInvalidArgument, err.Error())
-		return failure, err
+		return err
 	}
 
 	list, err := convertToFwElem(lst)
 	if err != nil {
 		u.emitNotifyEvent(fwInvalidArgument, err.Error())
-		return failure, err
+		return err
 	}
 
 	u.stateDB.FwSet(contractAddr, action, list)
 
 	u.emitNotifyEvent(fwOpSuccess, "fw reset success")
-	return success, nil
+	return nil
 }
 
-func (u *FireWall) fwImport(contractAddr common.Address, data []byte) (int32, error) {
+func (u *FireWall) fwImport(contractAddr common.Address, data []byte) error {
 	if !u.isOwner(contractAddr) {
 		u.emitNotifyEvent(fwNoPermission, fwErrNotOwner.Error())
-		return failure, fwErrNotOwner
+		return fwErrNotOwner
 	}
 
 	err := u.stateDB.FwImport(contractAddr, data)
 
 	u.emitNotifyEvent(fwOpSuccess, "fw import success")
-	return success, err
+	return err
 }
 
-func (u *FireWall) getFwStatus(contractAddr common.Address) (string, error) {
+func (u *FireWall) getFwStatus(contractAddr common.Address) (*state.FwStatus, error) {
 	if !u.isOwner(contractAddr) {
-		return "", fwErrNotOwner
+		return nil, fwErrNotOwner
 	}
 
 	fwStatus := u.stateDB.GetFwStatus(contractAddr)
-
-	returnBytes, err := json.Marshal(fwStatus)
-	if err != nil {
-		errStr := fmt.Sprintf("FW : fwStatus Marshal error: %v", err)
-		return "", errors.New(errStr)
-	}
-	return string(returnBytes), nil
+	return &fwStatus, nil
 }
 
 func (u *FireWall) emitNotifyEvent(code CodeType, msg string) {
@@ -219,7 +189,7 @@ func convertToFwElem(l string) ([]state.FwElem, error) {
 		tmp := strings.Split(e, ":")
 		if len(tmp) != 2 {
 			/// log.Warn("FW : error, wrong function parameters!")
-			return nil, errors.New("FW : error, incorrect firewall rule format")
+			return nil, ErrFwRule
 		}
 
 		addr := ZeroAddress

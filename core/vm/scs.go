@@ -17,9 +17,9 @@ type (
 var PlatONEPrecompiledContracts = map[common.Address]PrecompiledContract{
 	syscontracts.UserManagementAddress:        &UserManagement{},
 	syscontracts.NodeManagementAddress:        &scNodeWrapper{},
-	syscontracts.CnsManagementAddress:         &CnsManager{},
+	syscontracts.CnsManagementAddress:         &CnsWrapper{},
 	syscontracts.ParameterManagementAddress:   &ParamManager{},
-	syscontracts.FirewallManagementAddress:    &FireWall{},
+	syscontracts.FirewallManagementAddress:    &FwWrapper{},
 	syscontracts.GroupManagementAddress:       &GroupManagement{},
 	syscontracts.ContractDataProcessorAddress: &ContractDataProcessor{},
 	syscontracts.GroupManagementAddress:       &GroupManagement{},
@@ -53,14 +53,17 @@ func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Cont
 			node.base.contractAddr = *contract.CodeAddr
 
 			return node.Run(input)
-		case *CnsManager:
+		case *CnsWrapper:
 			cns := newCnsManager(evm.StateDB)
 			cns.caller = contract.CallerAddress
 			cns.origin = evm.Origin
 			cns.isInit = evm.InitEntryID
 			cns.blockNumber = evm.BlockNumber
 
-			return cns.Run(input)
+			cnsWrap := new(CnsWrapper)
+			cnsWrap.base = cns
+
+			return cnsWrap.Run(input)
 		case *ParamManager:
 			p := &ParamManager{
 				stateDB:      evm.StateDB,
@@ -69,12 +72,10 @@ func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Cont
 				blockNumber:  evm.BlockNumber,
 			}
 			return p.Run(input)
-		case *FireWall:
-			fw := &FireWall{
-				stateDB:     evm.StateDB,
-				caller:      contract.CallerAddress,
-				blockNumber: evm.BlockNumber,
-			}
+		case *FwWrapper:
+			fw := new(FwWrapper)
+			fw.base = NewFireWall(evm, contract)
+
 			return fw.Run(input)
 		case *GroupManagement:
 			gm := &GroupManagement{

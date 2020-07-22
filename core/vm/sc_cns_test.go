@@ -23,7 +23,7 @@ var (
 )
 
 var (
-	cns *CnsManager
+	cns = new(CnsWrapper)
 	key = make([]string, 0)
 )
 
@@ -109,7 +109,7 @@ func TestCnsManager_getContractAddress(t *testing.T) {
 
 func TestCnsManager_cnsRecall(t *testing.T) {
 
-	curVersion := cns.cMap.getCurrentVer(testName)
+	curVersion := cns.base.cMap.getCurrentVer(testName)
 
 	result, err := cns.cnsRedirect(testName, testCases[2].Version)
 	if err != nil {
@@ -117,7 +117,7 @@ func TestCnsManager_cnsRecall(t *testing.T) {
 	}
 	assert.Equal(t, success, result, "cnsRecall FAILED")
 
-	actVersion := cns.cMap.getCurrentVer(testName)
+	actVersion := cns.base.cMap.getCurrentVer(testName)
 	expVersion := testCases[2].Version
 	assert.Equal(t, expVersion, actVersion, "cnsRecall FAILED")
 
