@@ -34,11 +34,11 @@ func (n *scNodeWrapper) add(node *syscontracts.NodeInfo) (int, error) {
 	if err := n.base.add(node); nil != err {
 		switch err {
 		case errNoPermissionManageSCNode:
-			return int(addNodeNoPermission), nil
+			return int(addNodeNoPermission), err
 		case errParamsInvalid:
-			return int(addNodeBadParameter), nil
+			return int(addNodeBadParameter), err
 		default:
-			return 0, err
+			return int(addNodeBadParameter), err
 		}
 	}
 
@@ -62,7 +62,7 @@ func (n *scNodeWrapper) getAllNodes() (string, error) {
 	nodes, err := n.base.GetAllNodes()
 	if err != nil {
 		if errNodeNotFound == err {
-			return newInternalErrorResult(err).String(), nil
+			return newInternalErrorResult(err).String(), err
 		}
 
 		return "", err
@@ -75,7 +75,7 @@ func (n *scNodeWrapper) isPublicKeyExist(pub string) (int, error) {
 	err := n.base.checkPublicKeyExist(pub)
 	if err != nil {
 		if errPublicKeyExist == err {
-			return publicKeyExist, nil
+			return publicKeyExist, err
 		}
 
 		return 0, err
@@ -88,7 +88,7 @@ func (n *scNodeWrapper) getENodesOfAllNormalNodes() (string, error) {
 	enodes, err := n.base.getENodesOfAllNormalNodes()
 	if err != nil {
 		if err == errNodeNotFound {
-			return newInternalErrorResult(err).String(), nil
+			return newInternalErrorResult(err).String(), err
 		}
 
 		return "", err
@@ -101,7 +101,7 @@ func (n *scNodeWrapper) getENodesOfAllDeletedNodes() (string, error) {
 	enodes, err := n.base.getENodesOfAllDeletedNodes()
 	if err != nil {
 		if errNodeNotFound == err {
-			return "", nil
+			return "", err
 		}
 
 		return "", err
@@ -114,7 +114,7 @@ func (n *scNodeWrapper) getNodes(query *syscontracts.NodeInfo) (string, error) {
 	nodes, err := n.base.GetNodes(query)
 	if err != nil {
 		if errNodeNotFound == err {
-			return newInternalErrorResult(err).String(), nil
+			return newInternalErrorResult(err).String(), err
 		}
 		return "", err
 	}
@@ -126,7 +126,7 @@ func (n *scNodeWrapper) nodesNum(query *syscontracts.NodeInfo) (int, error) {
 	num, err := n.base.nodesNum(query)
 	if err != nil {
 		if errNodeNotFound == err {
-			return 0, nil
+			return 0, err
 		}
 
 		return 0, err

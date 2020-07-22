@@ -52,9 +52,9 @@ func execSC(input []byte, fns SCExportFns) ([]byte, error) {
 	result := reflect.ValueOf(fn).Call(params)
 	if err, ok := result[1].Interface().(error); ok {
 		log.Error("execute system contract failed.", "error", err)
-		return nil, err
 	}
 
+	//vm run successfully, so return nil
 	return toContractReturnValueType(txType, result[0]), nil
 }
 
