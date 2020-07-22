@@ -44,7 +44,7 @@ func messageCall(c *cli.Context, call packet.MessageCall, to *common.Address, va
 	// todo: move to another place?
 	setDefault(address, keystore, isDefault)
 
-	return platoneclient.ParseTxResponse(resp, nil, outputType, isWrite, isSync)
+	return platoneclient.ParseTxResponse(resp, outputType, isWrite, isSync)
 }
 
 // setDefault write values of account and keystore to config file if default flag provided

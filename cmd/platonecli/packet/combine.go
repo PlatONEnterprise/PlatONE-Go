@@ -14,14 +14,18 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 )
 
+func (call *ContractCallTest) GetAbiBytes() []byte {
+	return call.data.funcAbi
+}
+
 // CombineData of Contractcall data struct is used for packeting the data of wasm or evm contracts execution
 // Implement the MessageCallDemo interface
-func (call *ContractCallTest) CombineData() (string, string, bool, error) {
+func (call *ContractCallTest) CombineData() (string, []string, bool, error) {
 
 	// packet contract method and input parameters
 	outputType, isWrite, funcBytes, err := call.combineFunc()
 	if err != nil {
-		return "", "", false, err
+		return "", nil, false, err
 	}
 
 	// packet contract data
@@ -35,33 +39,30 @@ func (call *ContractCallTest) combineContractData(funcBytes [][]byte) (string, e
 }
 
 // combineFunc of Contractcall data struct is used for combining the
-func (call *ContractCallTest) combineFunc() (string, bool, [][]byte, error) {
-	var outputType string
+func (call *ContractCallTest) combineFunc() ([]string, bool, [][]byte, error) {
 
 	// Judging whether this method exists or not by abi file
 	abiFunc, err := ParseFuncFromAbi(call.data.funcAbi, call.data.funcName) //修改
 	if err != nil {
-		return "", false, nil, err
+		return nil, false, nil, err
 	}
 
 	// Judging whether the number of inputs matches
 	if len(abiFunc.Inputs) != len(call.data.funcParams) {
-		return "", false, nil, fmt.Errorf("param check error, required %d inputs, recieved %d.\n", len(abiFunc.Inputs), len(call.data.funcParams))
+		return nil, false, nil, fmt.Errorf("param check error, required %d inputs, recieved %d.\n", len(abiFunc.Inputs), len(call.data.funcParams))
 	}
 
 	// encode the function and get the function constant
 	funcByte, err := call.Interp.encodeFunction(abiFunc, call.data.funcParams, call.data.funcName)
 	if err != nil {
-		return "", false, nil, err
+		return nil, false, nil, err
 	}
 
 	// get the function constant
 	isWrite := call.Interp.setIsWrite(abiFunc)
 
 	// Get the function output type for further use
-	if len(abiFunc.Outputs) != 0 {
-		outputType = abiFunc.Outputs[0].Type
-	}
+	outputType := getOutputTypes(abiFunc)
 
 	return outputType, isWrite, funcByte, nil
 }
@@ -174,13 +175,13 @@ func (i WasmContractInterpreter) combineData(funcBytes [][]byte) (string, error)
 
 // CombineData of DeployCall data struct is used for packeting the data of wasm or evm contracts deployment
 // Implement the MessageCallDemo interface
-func (call DeployCallTest) CombineData() (string, string, bool, error) {
+func (call DeployCallTest) CombineData() (string, []string, bool, error) {
 	if call.Interpreter == nil {
-		return "", "", false, errors.New("interpreter is not provided")
+		return "", nil, false, errors.New("interpreter is not provided")
 	}
 
 	data, err := call.Interpreter.combineData()
-	return data, "", true, err
+	return data, nil, true, err
 }
 
 // combineDeployData packet the data in the way defined by the evm virtual mechine

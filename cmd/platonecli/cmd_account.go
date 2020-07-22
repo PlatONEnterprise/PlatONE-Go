@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"reflect"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/packet"
 	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/utils"
@@ -22,11 +21,9 @@ var (
 	`,
 		Subcommands: []cli.Command{
 			TransferCmd,
-			RegisterUserCmd,
-			RegisterRoleCmd,
-			UpdateUserCmd,
+			UserAdd,
+			UserUpdate,
 			QueryUserCmd,
-			StateUserCmd,
 		},
 	}
 
@@ -44,45 +41,35 @@ The unit conversion table are as follows:
 <TODO>"`,
 	}
 
-	RegisterUserCmd = cli.Command{
-		Name:      "register-user",
-		Usage:     "Register a user account to user platform.",
-		ArgsUsage: "<account> <name> <tel> <email>",
-		Action:    registerUser,
-		Flags:     userRegisterCmdFlags,
-		Description: `
-		platonecli account register-user <account> <name> <tel> <email>
+	/*
+		AdminUserCmd = cli.Command{
+			Name:  "user",
+			Usage: "Manage user accounts registered in the user platform",
 
-The roles could be attached by --roles flag when registering the user account, 
-the roles registration request will be approved once the user registration is accepted.`,
-	}
+			Subcommands: []cli.Command{
+				UserAdd,
+				UserUpdate,
+			},
+		}*/
 
-	RegisterRoleCmd = cli.Command{
-		Name:      "register-roles",
-		Usage:     "Register roles for a user account",
-		ArgsUsage: "<roles>",
-		Action:    registerRole,
+	UserAdd = cli.Command{
+		Name:      "add",
+		Usage:     "Add a user to the user platform",
+		ArgsUsage: "<address> <name> <tel> <email>",
+		Action:    userAdd,
 		Flags:     globalCmdFlags,
 		Description: `
-		platonecli account register-roles <roles>
-
-The roles are listed below:
-chainCreator: the first account of the chain is defaulted to chainCreator. There is only one chainCreator in the chain.
-chainAdmin: The chainAdmin has the right to add or delete ...<TODO>
-contractAdmin: <TODO>
-contractDeployer: The contractDeployer has the right to deploy and destroy the contracts
-nodeAdmin: The nodeAdmin has the right to add, delete, and update the node to the nodelist.
-`,
+		platonecli admin user add <address> <name> <tel> <email>`,
 	}
 
-	UpdateUserCmd = cli.Command{
+	UserUpdate = cli.Command{
 		Name:      "update",
-		Usage:     "Update the email and mobile info of a user account",
-		ArgsUsage: "<account>",
-		Action:    updateUser,
+		Usage:     "Update the mobile and email info of a user",
+		ArgsUsage: "<address>",
+		Action:    userUpdate,
 		Flags:     userUpdateCmdFlags,
 		Description: `
-		platonecli account update <account>`,
+		platonecli admin user update <address>`,
 	}
 
 	QueryUserCmd = cli.Command{
@@ -92,25 +79,6 @@ nodeAdmin: The nodeAdmin has the right to add, delete, and update the node to th
 		Flags:  userQueryCmdFlags,
 		Description: `
 		platonecli account query`,
-	}
-
-	StateUserCmd = cli.Command{
-		Name:      "state",
-		Usage:     "Trace a user's current registration state by user name or address",
-		ArgsUsage: "<account>",
-		Action:    stateUser,
-		Flags:     globalCmdFlags,
-		Description: `
-		platonecli account state <account>
-
-The tracing has one of the following results:
-1. the user application is under approving
-2. the user application is rejected
-3. the user is invalid
-4. the user is valid: the user is a normal user(no role)
-5. the user is valid: has Role(s): ...
-6. the user is valid: has Role(s): ...
-Role(s) in registration: ...`,
 	}
 )
 
@@ -127,30 +95,17 @@ func transfer(c *cli.Context) {
 	fmt.Printf("result: %v\n", result)
 }
 
-func registerUser(c *cli.Context) {
+func userAdd(c *cli.Context) {
+	// var strMustArray = []string{"address", "name", "mobile", "email"}
+	// strJson := combineJson(c, strMustArray, nil)
+	var strJson = c.Args().First()
 
-	var strMustArray = []string{"account", "name", "tel", "email"} // 必填
-	var strJson = "{\"roles\":\"\",\"remark\":\"user platform application\"}"
-
-	str := combineJson(c, strMustArray, []byte(strJson))
-	funcParams := CombineFuncParams(str)
-
-	result := contractCommon(c, funcParams, "registerUser", "__sys_UserRegister")
-	fmt.Printf("result: %v\n", result)
+	funcParams := []string{strJson}
+	result := contractCommon(c, funcParams, "addUser", userManagementAddress)
+	fmt.Printf("result: %s\n", result)
 }
 
-func registerRole(c *cli.Context) {
-
-	roles := c.Args().First()
-	paramValid(roles, "roles")
-
-	funcParams := CombineFuncParams(roles)
-
-	result := contractCommon(c, funcParams, "registerRole", "__sys_RoleRegister")
-	fmt.Printf("result: %v\n", result)
-}
-
-func updateUser(c *cli.Context) {
+func userUpdate(c *cli.Context) {
 	account := c.Args().First()
 	paramValid(account, "address")
 
@@ -159,18 +114,16 @@ func updateUser(c *cli.Context) {
 
 	funcParams := CombineFuncParams(account, str)
 
-	result := contractCommon(c, funcParams, "update", "__sys_UserManager")
+	result := contractCommon(c, funcParams, "updateUserDescInfo", userManagementAddress)
 	fmt.Printf("result: %v\n", result)
 }
 
 func queryUser(c *cli.Context) {
 	var funcName string
-	var contract string
-	var funcParams []string
+	var funcParams = make([]string, 0)
 
 	user := c.String(UserIDFlags.Name)
-	role := c.String(UserRoleFlag.Name)
-	status := c.String(UserStatusFlag.Name)
+	all := c.Bool(ShowAllFlags.Name)
 
 	if len(c.Args()) > 1 {
 		utils.Fatalf("please use one search key at a time")
@@ -180,85 +133,19 @@ func queryUser(c *cli.Context) {
 	case user != "":
 		isAddress := ParamParse(user, "user").(bool)
 		if isAddress {
-			funcName = "getAccountByAddress"
+			funcName = "getUserByAddress"
 		} else {
-			funcName = "getAccountByName"
+			funcName = "getUserByName"
 		}
 
-		contract = "__sys_UserManager"
 		funcParams = []string{user}
-
-	case role != "":
-		if !utl.IsRoleMatch(role) {
-			utils.Fatalf("invalid input role syntax\n")
-		}
-		funcName = "getAccountsByRole"
-		contract = "__sys_RoleManager"
-		funcParams = []string{role}
-
-	case status != "":
-		funcName = "getAccountsByStatus"
-		contract = "__sys_UserRegister"
-		funcParams = []string{"0", "10", status}
+	case all:
+		funcName = "getAllUsers"
 
 	default:
 		utils.Fatalf("no search key provided\n")
 	}
 
-	result := contractCommon(c, funcParams, funcName, contract)
+	result := contractCommon(c, funcParams, funcName, userManagementAddress)
 	utl.PrintJson([]byte(result.(string)))
-}
-
-//TODO state by user name
-func stateUser(c *cli.Context) {
-	account := c.Args().First()
-	paramValid(account, "address")
-
-	funcParams := CombineFuncParams(account)
-
-	// check the user status if the user registration is approved
-	result := contractCommon(c, funcParams, "getStatusByAddress", "__sys_UserRegister")
-	switch result.(int32) {
-	case 1:
-		fmt.Printf("the user application is under approving\n")
-		return
-	case 3:
-		fmt.Printf("the user application is rejected\n")
-		return
-	default:
-		result = contractCommon(c, funcParams, "isValidUser", "__sys_UserManager")
-	}
-
-	// get the user roles if the user is valid
-	if result.(int32) == 0 {
-		fmt.Printf("the user is invalid\n")
-		return
-	} else {
-		fmt.Printf("the user is valid: ")
-		result = contractCommon(c, funcParams, "getRolesByAddress", "__sys_RoleManager")
-	}
-
-	// print the roles owned by the user
-	resultBytes := []byte(result.(string))
-	result2, err := packet.ParseSysContractResult(resultBytes)
-	if err != nil {
-		fmt.Printf(err.Error())
-	}
-	if result2.Code == 0 {
-		fmt.Printf("has Roles: %v\n", reflect.ValueOf(result2.Data))
-	} else {
-		fmt.Printf("the user is a normal user (no roles)\n")
-	}
-
-	// get the user roles in registration
-	result = contractCommon(c, funcParams, "getRegisterInfoByAddress", "__sys_RoleRegister")
-	resultBytes = []byte(result.(string))
-	result2, err = packet.ParseSysContractResult(resultBytes)
-	if err != nil {
-		fmt.Printf(err.Error())
-	}
-	if result2.Code == 0 {
-		roles := result2.Data.(map[string]interface{})["requireRoles"]
-		fmt.Printf("Roles in registration: %v\n", roles)
-	}
 }

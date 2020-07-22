@@ -94,12 +94,13 @@ Get the full information of the transaction receipt by transaction hash`,
 
 func contractReceipt(c *cli.Context) {
 
-	//TODO 是否还能优化？
-	setUrl(c)
+	/// setUrl(c)
+	url := getUrl(c)
+	client := platoneclient.SetupClient(url)
 
 	txHash := c.Args().First()
 
-	result, err := platoneclient.GetTransactionReceipt(txHash)
+	result, err := client.GetTransactionReceipt(txHash)
 	if err != nil {
 		utils.Fatalf("get receipt failed: %s\n", err.Error())
 	} else {
@@ -128,7 +129,7 @@ func deploy(c *cli.Context) {
 	result := clientCommon(c, call, nil)
 
 	if utl.IsMatch(result.(string), "address") {
-		storeAbiFile(result.(string), abiBytes)
+		/// storeAbiFile(result.(string), abiBytes)
 		fmt.Printf("result: contract address is %s\n", result)
 	} else {
 		fmt.Printf("result: %s\n", result)

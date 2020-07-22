@@ -18,20 +18,32 @@ const (
 	evmEncodeLength = 32
 )
 
+func (call *ContractCall) GetAbiBytes() []byte {
+	return call.data.funcAbi
+}
+
+func (call *InnerCall) GetAbiBytes() []byte {
+	return call.data.funcAbi
+}
+
+func (call *DeployCall) GetAbiBytes() []byte {
+	return call.abiBytes
+}
+
 // CombineData of Contractcall data struct is used for packeting the data of wasm or evm contracts execution
 // Implement the MessageCallDemo interface
-func (call *ContractCall) CombineData() (string, string, bool, error) {
+func (call *ContractCall) CombineData() (string, []string, bool, error) {
 
 	// todo: remove?
 	// only transfer value, no data provided
 	if call.data == nil {
-		return "", "", true, nil
+		return "", nil, true, nil
 	}
 
 	// packet contract method and input parameters
 	outputType, isWrite, funcBytes, err := call.combineFunc()
 	if err != nil {
-		return "", "", false, err
+		return "", nil, false, err
 	}
 
 	// packet contract data
@@ -72,37 +84,49 @@ func (i WasmInterpreter) combineData(funcBytes [][]byte) (string, error) {
 }
 
 // combineFunc of Contractcall data struct is used for combining the
-func (call *ContractCall) combineFunc() (string, bool, [][]byte, error) {
-	var outputType string
+func (call *ContractCall) combineFunc() ([]string, bool, [][]byte, error) {
 
 	// todo: remove?
 	if call.data == nil {
-		return "", false, nil, errors.New("no data provided")
+		return nil, false, nil, errors.New("no data provided")
 	}
 
 	// Judging whether this method exists or not by abi file
 	abiFunc, err := ParseFuncFromAbi(call.data.funcAbi, call.data.funcName) //修改
 	if err != nil {
-		return "", false, nil, err
+		return nil, false, nil, err
 	}
 
 	// Judging whether the number of inputs matches
 	if len(abiFunc.Inputs) != len(call.data.funcParams) {
-		return "", false, nil, fmt.Errorf(utl.ErrParamNumCheckFormat, len(abiFunc.Inputs), len(call.data.funcParams))
+		return nil, false, nil, fmt.Errorf(utl.ErrParamNumCheckFormat, len(abiFunc.Inputs), len(call.data.funcParams))
 	}
 
 	// encode the function and get the function constant
 	funcByte, isWrite, err := call.encodeFunction(abiFunc)
 	if err != nil {
-		return "", false, nil, err
+		return nil, false, nil, err
 	}
 
 	// Get the function output type for further use
-	if len(abiFunc.Outputs) != 0 {
-		outputType = abiFunc.Outputs[0].Type
-	}
+	outputType := getOutputTypes(abiFunc)
 
 	return outputType, isWrite, funcByte, nil
+}
+
+func getOutputTypes(abiFunc *FuncDesc) []string {
+	var outputTypes = make([]string, 0)
+
+	/*
+		if len(abiFunc.Outputs) != 0 {
+			outputType = abiFunc.Outputs[0].Type
+		}*/
+
+	for _, output := range abiFunc.Outputs {
+		outputTypes = append(outputTypes, output.Type)
+	}
+
+	return outputTypes
 }
 
 // encodeFunction converts the function params to bytes and combine them by specific encoding rules
@@ -160,7 +184,7 @@ func (i *EvmInterpreter) encodeFuncName(funcName string) []byte {
 
 // CombineData of InnerCall data struct is used for packeting the data of the inner calls including fw, mig, etc.
 // Implement the MessageCallDemo interface
-func (call *InnerCall) CombineData() (string, string, bool, error) {
+func (call *InnerCall) CombineData() (string, []string, bool, error) {
 
 	outputType, isWrite, funcBytes, err := call.combineFunc()
 	data, err := call.combineInnerData(funcBytes)
@@ -168,12 +192,12 @@ func (call *InnerCall) CombineData() (string, string, bool, error) {
 	return data, outputType, isWrite, err
 }
 
-func (call *InnerCall) combineFunc() (string, bool, [][]byte, error) {
-	var outputType string
+func (call *InnerCall) combineFunc() ([]string, bool, [][]byte, error) {
+	var outputType = make([]string, 1)
 	var isWrite = true
 
 	if call.data == nil {
-		return "", false, nil, errors.New("no data provided")
+		return nil, false, nil, errors.New("no data provided")
 	}
 
 	// combine the function method and parameters
@@ -188,7 +212,7 @@ func (call *InnerCall) combineFunc() (string, bool, [][]byte, error) {
 	// get the inner call method constant and output type
 	if call.data.funcName == "__sys_FwStatus" {
 		isWrite = false
-		outputType = "string"
+		outputType[0] = "string"
 	}
 
 	return outputType, isWrite, funcByte, nil
@@ -204,13 +228,13 @@ func (call InnerCall) combineInnerData(funcBytes [][]byte) (string, error) {
 
 // CombineData of DeployCall data struct is used for packeting the data of wasm or evm contracts deployment
 // Implement the MessageCallDemo interface
-func (call DeployCall) CombineData() (string, string, bool, error) {
+func (call DeployCall) CombineData() (string, []string, bool, error) {
 	if call.Interpreter == nil {
-		return "", "", false, errors.New("interpreter is not provided")
+		return "", nil, false, errors.New("interpreter is not provided")
 	}
 
 	data, err := call.Interpreter.combineDeployData() //TODO seperate?
-	return data, "", true, err
+	return data, nil, true, err
 }
 
 // combineDeployData packet the data in the way defined by the evm virtual mechine

@@ -224,6 +224,31 @@ var (
 		Usage: "the gas limit of transactions",
 	}
 
+	IsTxUseGasFlags = cli.StringFlag{
+		Name:  "tx-usegas",
+		Usage: "",
+	}
+
+	IsApproveDeployedContractFlags = cli.StringFlag{
+		Name:  "",
+		Usage: "",
+	}
+
+	IsCheckContractDeployPermissionFlags = cli.StringFlag{
+		Name:  "",
+		Usage: "",
+	}
+
+	IsProduceEmptyBlockFlags = cli.StringFlag{
+		Name:  "",
+		Usage: "",
+	}
+
+	GasContractNameFlags = cli.StringFlag{
+		Name:  "",
+		Usage: "",
+	}
+
 	//=============================================================================
 	globalCmdFlags = []cli.Flag{
 		UrlFlags,
@@ -243,9 +268,8 @@ var (
 	// transfer
 
 	// user
-	userUpdateCmdFlags   = append(globalCmdFlags, TelFlags, EmailFlags)
-	userRegisterCmdFlags = append(globalCmdFlags, RolesFlag, UserRemarkFlags)
-	userQueryCmdFlags    = append(globalCmdFlags, UserIDFlags, UserRoleFlag, UserStatusFlag)
+	userUpdateCmdFlags = append(globalCmdFlags, TelFlags, EmailFlags)
+	userQueryCmdFlags  = append(globalCmdFlags, UserIDFlags, ShowAllFlags)
 
 	// node
 	nodeUpdateCmdFlags = append(globalCmdFlags, NodeDescFlags, NodeDelayNumFlags, NodeTypeFlags)
@@ -275,11 +299,6 @@ var (
 		TransferValueFlag,
 		ShowContractMethodsFlag)
 	contractMethodsCmd = append([]cli.Flag{}, ContractAbiFilePathFlag, ContractIDFlag)
-
-	// sup
-	supAdminCmdFlags      = append(globalCmdFlags, AdminApproveFlags, AdminDeleteFlags)
-	contractAdminCmdFlags = append(globalCmdFlags, AdminApproveFlags, AdminDeleteFlags)
-	userListCmdFlags      = append(globalCmdFlags, AdminApproveFlags)
 
 	// cns
 	cnsResolveCmdFlags = append(globalCmdFlags, CnsVersionFlags)

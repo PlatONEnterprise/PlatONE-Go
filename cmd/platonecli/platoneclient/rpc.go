@@ -86,10 +86,9 @@ func GetTransactionReceipt(txHash string) (*Receipt, error) {
 func ParseTxReceipt(response interface{}) (*Receipt, error) {
 	var receipt = &Receipt{}
 
-	/*
-		if response == nil {
-			return nil
-		}*/
+	if response == nil {
+		return nil, nil
+	}
 
 	temp, _ := json.Marshal(response)
 	err := json.Unmarshal(temp, receipt)
@@ -136,7 +135,7 @@ func GetCodeByAddress(addr string) (string, error) {
 
 // ParseTxResponse parse result based on the function constant and output type
 // if the isSync is ture, the function will get the receipt of the transaction in further
-func ParseTxResponse(resp interface{}, client *pClient, outputType string, isWrite, isSync bool) interface{} {
+func ParseTxResponse(resp interface{}, outputType []string, isWrite, isSync bool) interface{} {
 
 	var respStr string
 
@@ -148,7 +147,7 @@ func ParseTxResponse(resp interface{}, client *pClient, outputType string, isWri
 	case !isWrite:
 		return ParseNonConstantRespose(respStr, outputType)
 	case isSync:
-		return client.GetResponseByReceipt(respStr)
+		return GetResponseByReceipt(respStr)
 	default:
 		return fmt.Sprintf("trasaction hash is %s\n", respStr)
 	}
@@ -156,12 +155,12 @@ func ParseTxResponse(resp interface{}, client *pClient, outputType string, isWri
 
 // ParseNonConstantRespose wraps the utl.BytesConverter,
 // it converts the hex string response based the output type provided
-func ParseNonConstantRespose(respStr, outputType string) interface{} {
-	if outputType != "" {
+func ParseNonConstantRespose(respStr string, outputType []string) interface{} {
+	if len(outputType) != 0 {
 		b, _ := hexutil.Decode(respStr)
 		// bytesTrim := bytes.TrimRight(b, "\x00") // TODO
 		// utl.Logger.Printf("result: %v\n", utl.BytesConverter(bytesTrim, outputType))
-		return utl.BytesConverter(b, outputType)
+		return utl.BytesConverter(b, outputType[0])
 	} else {
 		return fmt.Sprintf("message call has no return value\n")
 	}

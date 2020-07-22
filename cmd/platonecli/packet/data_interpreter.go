@@ -7,7 +7,8 @@ import (
 
 // MessageCallDemo, the interface for different types of data package methods
 type MessageCall interface {
-	CombineData() (string, string, bool, error)
+	CombineData() (string, []string, bool, error)
+	GetAbiBytes() []byte
 }
 
 // ContractCallDemo, used for combining the data of contract execution

@@ -19,10 +19,12 @@ func init() {
 	app.Commands = []cli.Command{
 		AccountCmd,  // see cmd_account.go
 		ContractCmd, // see cmd_contract.go
-		AdminCmd,    // see cmd_admin.go
-		CnsCmd,      // see cmd_cns.go
-		FwCmd,       // see cmd_firewall.go
-		RoleCmd,     // see cmd_role.go
+		// AdminCmd,    // see cmd_admin.go, deprecated
+		CnsCmd,       // see cmd_cns.go
+		FwCmd,        // see cmd_firewall.go
+		RoleCmd,      // see cmd_role.go
+		NodeCmd,      // see cmd_node.go
+		SysConfigCmd, // see cmd_sysconfig.go
 	}
 	sort.Sort(cli.CommandsByName(app.Commands))
 

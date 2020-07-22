@@ -67,22 +67,22 @@ func NewCns(to, name string, txType uint64) *Cns {
 	}
 }
 
-// ParseFuncFromAbi searches the function names in the []FuncDesc object array
-func ParseFuncFromAbi(abiBytes []byte, funcName string) (*FuncDesc, error) {
+// ParseFuncFromAbi searches the function (or event) names in the []FuncDesc object array
+func ParseFuncFromAbi(abiBytes []byte, name string) (*FuncDesc, error) {
 	funcs, err := ParseAbiFromJson(abiBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, value := range funcs {
-		if value.Name == funcName {
+		if value.Name == name {
 			return &value, nil
 		}
 	}
 
 	funcList := ListAbiFuncName(funcs)
 
-	return nil, fmt.Errorf("function %s not found in\n%s", funcName, funcList)
+	return nil, fmt.Errorf("function/event %s is not found in\n%s", name, funcList)
 }
 
 //
@@ -91,7 +91,7 @@ func ListAbiFuncName(abiFuncs []FuncDesc) string {
 
 	result = fmt.Sprintf("-------------------contract methods list------------------------\n")
 
-	for i, function := range abiFuncs {
+	for _, function := range abiFuncs {
 		strInput := []string{}
 		strOutput := []string{}
 		for _, param := range function.Inputs {
@@ -100,7 +100,7 @@ func ListAbiFuncName(abiFuncs []FuncDesc) string {
 		for _, param := range function.Outputs {
 			strOutput = append(strOutput, param.Name+" "+param.Type)
 		}
-		result += fmt.Sprintf("Method %d:", i+1)
+		result += fmt.Sprintf("%s: ", function.Type)
 		result += fmt.Sprintf("%s(%s)%s\n", function.Name, strings.Join(strInput, ","), strings.Join(strOutput, ","))
 	}
 
