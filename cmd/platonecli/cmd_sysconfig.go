@@ -100,7 +100,7 @@ func setConfig(c *cli.Context, param string, name string) {
 	funcName := "set" + name
 	funcParams := CombineFuncParams(param)
 
-	result := contractCommon(c, funcParams, funcName, parameterManagementAddress)
+	result := contractCall(c, funcParams, funcName, parameterManagementAddress)
 	fmt.Printf("result: %s\n", result)
 }
 
@@ -131,7 +131,7 @@ func getSysConfig(c *cli.Context) {
 func getConfig(c *cli.Context, isGet bool, funcName string) {
 
 	if isGet {
-		result := contractCommon(c, nil, funcName, parameterManagementAddress)
+		result := contractCall(c, nil, funcName, parameterManagementAddress)
 		fmt.Printf("%s result: %v\n", funcName, result)
 	}
 }

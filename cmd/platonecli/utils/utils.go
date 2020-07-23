@@ -332,10 +332,3 @@ func recordFuncParamSplitPos(paramString string) []int {
 
 	return splitPos
 }
-
-// CombineParams combines multiple rpc json parameters into an array
-func CombineParams(args ...interface{}) []interface{} {
-	params := make([]interface{}, 0)
-	params = append(params, args...)
-	return params
-}

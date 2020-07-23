@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	TEST_PARSE_FILE_PATH = "../test/test_case/wasm/contracta.wasm"
+	testParseFile = "../test/test_case/wasm/contracta.wasm"
 )
 
 func TestParseFileToBytes(t *testing.T) {
@@ -19,7 +19,7 @@ func TestParseFileToBytes(t *testing.T) {
 		fileBytes []byte
 		err       error
 	}{
-		{TEST_PARSE_FILE_PATH, []byte("test"), nil},        // case 0: correct
+		{testParseFile, []byte("test"), nil},               // case 0: correct
 		{"", nil, testErr},                                 // case 1: path is null
 		{"../test/test_case", nil, testErr},                // case 2: file directory
 		{".//", nil, testErr},                              // case 3: ?

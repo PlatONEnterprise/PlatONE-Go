@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -25,6 +26,36 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
 )
+
+const (
+	txReceiptSuccessCode = "0x1"
+	txReceiptFailureCode = "0x0"
+
+	txReceiptSuccessMsg = "Operation Succeeded"
+	txReceiptFailureMsg = "Operation Failed"
+
+	sleepTime = 1000000000 // 1 seconds
+)
+
+// Receipt, eth_getTransactionReceipt return data struct
+type Receipt struct {
+	BlockHash         string `json:"blockHash"`          // hash of the block
+	BlockNumber       string `json:"blockNumber"`        // height of the block
+	ContractAddress   string `json:"contractAddress"`    // contract address of the contract deployment. otherwise null
+	CumulativeGasUsed string `json:"cumulativeGas_used"` //
+	From              string `json:"from"`               // the account address used to send the transaction
+	GasUsed           string `json:"gasUsed"`            // gas used by executing the transaction
+	Root              string `json:"root"`
+	To                string `json:"to"`               // the address the transaction is sent to
+	TransactionHash   string `json:"transactionHash"`  // the hash of the transaction
+	TransactionIndex  string `json:"transactionIndex"` // the index of the transaction
+	Logs              []struct {
+		Address string   `json:"address"`
+		Topics  []string `json:"topics"`
+		Data    string   `json:"data"`
+	} `json:"logs"`
+	Status string `json:"status"` // the execution status of the transaction, "0x1" for success
+}
 
 type pClient struct {
 	c *rpc.Client
@@ -56,9 +87,28 @@ func (p *pClient) GetTransactionReceipt(txHash string) (*Receipt, error) {
 	return receipt, nil
 }
 
+// ParseSysContractResult parsed the rpc response to Receipt object
+func ParseTxReceipt(response interface{}) (*Receipt, error) {
+	var receipt = &Receipt{}
+
+	if response == nil {
+		return nil, nil
+	}
+
+	temp, _ := json.Marshal(response)
+	err := json.Unmarshal(temp, receipt)
+	if err != nil {
+		// LogErr.Printf(ErrUnmarshalBytesFormat, "transaction receipt", err.Error())
+		errStr := fmt.Sprintf(utl.ErrUnmarshalBytesFormat, "transaction receipt", err.Error())
+		return nil, errors.New(errStr)
+	}
+
+	return receipt, nil
+}
+
 // messageCall extract the common parts of the transaction based calls
 // including eth_call, eth_sendTransaction, and eth_sendRawTransaction
-func (client *pClient) MessageCall(call packet.MessageCall, keyfile string, tx *packet.TxParams, isSync bool) interface{} {
+func (client *pClient) MessageCall(call packet.MsgDataGen, keyfile string, tx *packet.TxParams, isSync bool) interface{} {
 
 	// combine the data based on the types of the calls (contract call, inner call or deploy call)
 	data, outputType, isWrite, err := call.CombineData()
@@ -91,22 +141,31 @@ func (client *pClient) MessageCall(call packet.MessageCall, keyfile string, tx *
 	default:
 		return fmt.Sprintf("trasaction hash is %s\n", respStr)
 	}
-	/// return ParseTxResponse(resp, client, outputType, isWrite, isSync)
 }
 
-func (client *pClient) GetResponseByReceipt(respStr string, call packet.MessageCall) interface{} {
+// ParseNonConstantRespose wraps the utl.BytesConverter,
+// it converts the hex string response based the output type provided
+func ParseNonConstantRespose(respStr string, outputType []string) interface{} {
+	if len(outputType) != 0 {
+		b, _ := hexutil.Decode(respStr)
+		// bytesTrim := bytes.TrimRight(b, "\x00") // TODO
+		// utl.Logger.Printf("result: %v\n", utl.BytesConverter(bytesTrim, outputType))
+		return utl.BytesConverter(b, outputType[0])
+	} else {
+		return fmt.Sprintf("message call has no return value\n")
+	}
+}
+
+func (client *pClient) GetResponseByReceipt(respStr string, call packet.MsgDataGen) interface{} {
 	ch := make(chan interface{}, 1)
 	txHash := fmt.Sprintf("trasaction hash is %s\n", respStr)
 	go client.GetReceiptByPolling(respStr, call, ch)
 
 	select {
 	case str := <-ch:
-		// todo:
-		// runesTrim := TrimSpecialChar([]rune(str))
-		// str = string(runesTrim)
 		/// utl.Logger.Printf("result: %s\n", str)
-		// fmt.Printf(txHash)
 		return str
+
 	case <-time.After(time.Second * 10):
 		temp := fmt.Sprintf("\nget contract receipt timeout...more than 10 second.\n")
 		return temp + txHash
@@ -114,7 +173,7 @@ func (client *pClient) GetResponseByReceipt(respStr string, call packet.MessageC
 }
 
 // todo: end goroutine?
-func (client *pClient) GetReceiptByPolling(txHash string, call packet.MessageCall, ch chan interface{}) {
+func (client *pClient) GetReceiptByPolling(txHash string, call packet.MsgDataGen, ch chan interface{}) {
 
 	for {
 		receipt, err := client.GetTransactionReceipt(txHash)
@@ -238,15 +297,12 @@ func RlpBytesToUint32(b []byte) uint32 {
 func RlpBytesToUint64(b []byte) uint64 {
 	b = common.LeftPadBytes(b, 32)
 	return common.CallResAsUint64(b)
-	// return byteutil.BytesToUint64(b)
 }
 
 func RlpBytesToBool(b []byte) bool {
-
 	if bytes.Compare(b, []byte{1}) == 0 {
 		return true
 	}
-
 	return false
 }
 

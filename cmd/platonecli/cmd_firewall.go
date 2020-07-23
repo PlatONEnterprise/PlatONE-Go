@@ -133,7 +133,7 @@ func fwStart(c *cli.Context) {
 	addr := c.Args().First()
 	funcParams := []string{addr}
 
-	result := contractCommon(c, funcParams, funcName, firewallManagementAddress)
+	result := contractCall(c, funcParams, funcName, firewallManagementAddress)
 	fmt.Printf("result: %s\n", result)
 }
 
@@ -142,7 +142,7 @@ func fwStop(c *cli.Context) {
 	addr := c.Args().First()
 	funcParams := []string{addr}
 
-	result := contractCommon(c, funcParams, funcName, firewallManagementAddress)
+	result := contractCall(c, funcParams, funcName, firewallManagementAddress)
 	fmt.Printf("result: %s\n", result)
 }
 
@@ -151,7 +151,7 @@ func fwStatus(c *cli.Context) {
 	addr := c.Args().First()
 	funcParams := []string{addr}
 
-	result := contractCommon(c, funcParams, funcName, firewallManagementAddress)
+	result := contractCall(c, funcParams, funcName, firewallManagementAddress)
 	utl.PrintJson([]byte(result.(string)))
 }
 
@@ -161,7 +161,7 @@ func fwExport(c *cli.Context) {
 	addr := c.Args().First()
 
 	funcParams := []string{addr}
-	result := contractCommon(c, funcParams, funcName, firewallManagementAddress)
+	result := contractCall(c, funcParams, funcName, firewallManagementAddress)
 
 	_ = utl.WriteFile([]byte(result.(string)), filePath)
 }
@@ -177,7 +177,7 @@ func fwImport(c *cli.Context) {
 	}
 
 	funcParams := []string{addr, string(fileBytes)}
-	result := contractCommon(c, funcParams, funcName, firewallManagementAddress)
+	result := contractCall(c, funcParams, funcName, firewallManagementAddress)
 	fmt.Printf("result: %s\n", result)
 }
 
@@ -198,7 +198,7 @@ func fwCommon(c *cli.Context, funcName string) {
 	// string --addr addr1 --api func1
 
 	funcParams := CombineFuncParams(addr, action, rules)
-	result := contractCommon(c, funcParams, funcName, firewallManagementAddress)
+	result := contractCall(c, funcParams, funcName, firewallManagementAddress)
 	fmt.Printf("result: %s\n", result)
 }
 
@@ -217,7 +217,7 @@ func fwClearCommon(c *cli.Context, addr, action string) {
 	paramValid(action, "action")
 
 	funcParams := []string{addr, action}
-	result := contractCommon(c, funcParams, funcName, firewallManagementAddress)
+	result := contractCall(c, funcParams, funcName, firewallManagementAddress)
 	fmt.Printf("result: clear '%s' rule lists %s\n", action, result)
 }
 

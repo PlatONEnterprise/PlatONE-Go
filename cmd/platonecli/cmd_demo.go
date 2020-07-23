@@ -51,6 +51,6 @@ func nodeAddDemo(c *cli.Context) {
 	str := combineJson(c, strMustArray, []byte(strJson))
 
 	funcParams := []string{str}
-	result := contractCommon(c, funcParams, "add", "__sys_NodeManager")
+	result := contractCall(c, funcParams, "add", "__sys_NodeManager")
 	fmt.Printf("result: %s\n", result)
 }

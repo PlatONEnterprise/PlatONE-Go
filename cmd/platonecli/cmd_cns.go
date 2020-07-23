@@ -86,7 +86,7 @@ func cnsRegister(c *cli.Context) {
 	paramValid(address, "address")
 
 	funcParams := CombineFuncParams(name, ver, address)
-	result := contractCommon(c, funcParams, "cnsRegister", cnsManagementAddress)
+	result := contractCall(c, funcParams, "cnsRegister", cnsManagementAddress)
 	fmt.Printf("result: %v\n", result)
 }
 
@@ -99,7 +99,7 @@ func cnsRedirect(c *cli.Context) {
 	paramValid(ver, "version")
 
 	funcParams := CombineFuncParams(name, ver)
-	result := contractCommon(c, funcParams, "cnsRedirect", cnsManagementAddress)
+	result := contractCall(c, funcParams, "cnsRedirect", cnsManagementAddress)
 	fmt.Printf("result: %s\n", result)
 }
 
@@ -114,7 +114,7 @@ func cnsResolve(c *cli.Context) {
 	}
 
 	funcParams := CombineFuncParams(name, ver)
-	result := contractCommon(c, funcParams, "getContractAddress", cnsManagementAddress)
+	result := contractCall(c, funcParams, "getContractAddress", cnsManagementAddress)
 	fmt.Printf("result: %s\n", result)
 
 }
@@ -140,7 +140,7 @@ func cnsQuery(c *cli.Context) {
 		paramValid(pageSize, "num")
 
 		funcParams := CombineFuncParams(pageNum, pageSize)
-		result = contractCommon(c, funcParams, "getRegisteredContracts", cnsManagementAddress)
+		result = contractCall(c, funcParams, "getRegisteredContracts", cnsManagementAddress)
 
 	case contract != "":
 		isAddress := ParamParse(contract, "contract").(bool)
@@ -150,14 +150,14 @@ func cnsQuery(c *cli.Context) {
 			funcName = "getRegisteredContractsByName"
 		}
 
-		result = contractCommon(c, []string{contract}, funcName, cnsManagementAddress)
+		result = contractCall(c, []string{contract}, funcName, cnsManagementAddress)
 
 	case user != "":
 		paramValid(user, "address")
 
 		funcName = "getRegisteredContractsByOrigin"
 		funcParams := CombineFuncParams(user)
-		result = contractCommon(c, funcParams, funcName, cnsManagementAddress)
+		result = contractCall(c, funcParams, funcName, cnsManagementAddress)
 
 	default:
 		result = "no search key provided!"
@@ -178,7 +178,7 @@ func cnsState(c *cli.Context) {
 	}
 
 	funcParams := CombineFuncParams(contract)
-	result := contractCommon(c, funcParams, funcName, cnsManagementAddress)
+	result := contractCall(c, funcParams, funcName, cnsManagementAddress)
 
 	if result.(int32) == 1 {
 		fmt.Printf("result: the contract is registered in CNS\n")

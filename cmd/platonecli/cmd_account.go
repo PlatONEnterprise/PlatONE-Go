@@ -82,6 +82,7 @@ The unit conversion table are as follows:
 	}
 )
 
+// todo: need testing
 // transfer value from one account to another
 func transfer(c *cli.Context) {
 	to := c.Args().First()
@@ -90,8 +91,8 @@ func transfer(c *cli.Context) {
 	value = chainParamConvert(value, "value").(string)
 	toNew := chainParamConvert(to, "to").(common.Address)
 
-	call := packet.NewContractCall(nil, "", 0)
-	result := messageCall(c, call, &toNew, value)
+	call := packet.NewContractDataGen(nil, "", 0)
+	result := clientCommon(c, call, &toNew)
 	fmt.Printf("result: %v\n", result)
 }
 
@@ -101,7 +102,7 @@ func userAdd(c *cli.Context) {
 	var strJson = c.Args().First()
 
 	funcParams := []string{strJson}
-	result := contractCommon(c, funcParams, "addUser", userManagementAddress)
+	result := contractCall(c, funcParams, "addUser", userManagementAddress)
 	fmt.Printf("result: %s\n", result)
 }
 
@@ -114,7 +115,7 @@ func userUpdate(c *cli.Context) {
 
 	funcParams := CombineFuncParams(account, str)
 
-	result := contractCommon(c, funcParams, "updateUserDescInfo", userManagementAddress)
+	result := contractCall(c, funcParams, "updateUserDescInfo", userManagementAddress)
 	fmt.Printf("result: %v\n", result)
 }
 
@@ -146,6 +147,6 @@ func queryUser(c *cli.Context) {
 		utils.Fatalf("no search key provided\n")
 	}
 
-	result := contractCommon(c, funcParams, funcName, userManagementAddress)
+	result := contractCall(c, funcParams, funcName, userManagementAddress)
 	utl.PrintJson([]byte(result.(string)))
 }

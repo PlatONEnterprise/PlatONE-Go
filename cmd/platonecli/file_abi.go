@@ -3,17 +3,12 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 
 	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/precompiled"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/platoneclient"
-
 	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
 )
 
 const (
@@ -110,7 +105,8 @@ func getAbiFileFromLocal(str string) string {
 	return abiFilePath
 }
 
-// TODO
+// todo: deprecated?
+/*
 // getAbiOnchain get the abi files from chain
 // it is only available for wasm contracts
 func getAbiOnchain(addr string) ([]byte, error) {
@@ -141,4 +137,35 @@ func getAbiOnchain(addr string) ([]byte, error) {
 	}
 
 	return abiBytes, nil
-}
+}*/
+
+/*
+// 2020.7.6 modified, moved from tx_call.go
+// GetAddressByName wraps the RpcCalls used to get the contract address by cns name
+// the parameters are packet into transaction before packet into rpc json data struct
+func GetAddressByName(name string) (string, error) {
+
+	// chain defined data type convert
+	to := common.HexToAddress(cnsManagementAddress)
+	from := common.HexToAddress("")
+
+	// packet the contract all data
+	rawData := packet.NewData("getContractAddress", []string{name, "latest"}, nil)
+	call := packet.NewInnerCallDemo(rawData, types.NormalTxType)
+	data, _, _, _ := call.CombineData()
+
+	tx := packet.NewTxParams(from, &to, "", "", "", data)
+	params := utl.CombineParams(tx, "latest")
+
+	response, err := platoneclient.RpcCalls("eth_call", params)
+	if err != nil {
+		return "", err
+	}
+
+	// parse the rpc response
+	resultBytes, _ := hexutil.Decode(response.(string))
+	bytesTrim := bytes.TrimRight(resultBytes, "\x00")
+	result := utl.BytesConverter(bytesTrim, "string")
+
+	return result.(string), nil
+}*/

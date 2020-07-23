@@ -18,22 +18,43 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 )
 
-// TxParamsDemo, the object of the eth_call, eth_sendTransaction
-type TxParams struct {
-	From     common.Address  `json:"from"` // the address used to send the transaction
-	To       *common.Address `json:"to"`   // the address receives the transactions
-	Gas      string          `json:"gas"`
-	GasPrice string          `json:"gasPrice"`
-	Value    string          `json:"value"`
-	Data     string          `json:"data"`
-}
-
 // ContractReturn, system contract return object
 type ContractReturn struct {
 	Code int         `json:"code"`
 	Msg  string      `json:"msg"`
 	Data interface{} `json:"data"`
 }
+
+// ParseSysContractResult parsed the result to ContractReturn object
+func ParseSysContractResult(result []byte) (*ContractReturn, error) {
+	a := ContractReturn{} //删除？
+	err := json.Unmarshal(result, &a)
+	if err != nil {
+		// utils.Fatalf(utl.ErrUnmarshalBytesFormat, "contract return", err.Error())
+		errStr := fmt.Sprintf(utl.ErrUnmarshalBytesFormat, "contract return", err.Error())
+		return nil, errors.New(errStr)
+	}
+
+	return &a, nil
+}
+
+//================================CNS=================================
+
+type Cns struct {
+	To     string
+	Name   string // the cns name of contract
+	txType uint64 // the transaction type of the contract execution (EXECUTE_CONTRACT or CNS_TX_TYPE)
+}
+
+func NewCns(to, name string, txType uint64) *Cns {
+	return &Cns{
+		To:     to,
+		Name:   name,
+		txType: txType,
+	}
+}
+
+//================================ABI================================
 
 // FuncDesc, the object of the contract abi files
 type FuncDesc struct {
@@ -50,21 +71,6 @@ type FuncDesc struct {
 	Constant        interface{} `json:"constant"` // ???
 	Type            string      `json:"type"`
 	StateMutability string      `json:"stateMutability,omitempty"` // tag for solidity ver > 0.6.0
-}
-
-// Cns,
-type Cns struct {
-	To     string
-	Name   string // the cns name of contract
-	txType uint64 // the transaction type of the contract execution (EXECUTE_CONTRACT or CNS_TX_TYPE)
-}
-
-func NewCns(to, name string, txType uint64) *Cns {
-	return &Cns{
-		To:     to,
-		Name:   name,
-		txType: txType,
-	}
 }
 
 // ParseFuncFromAbi searches the function (or event) names in the []FuncDesc object array
@@ -120,6 +126,18 @@ func ParseAbiFromJson(abiBytes []byte) ([]FuncDesc, error) {
 	}
 
 	return a, nil
+}
+
+//=========================Transaction=================================
+
+// TxParamsDemo, the object of the eth_call, eth_sendTransaction
+type TxParams struct {
+	From     common.Address  `json:"from"` // the address used to send the transaction
+	To       *common.Address `json:"to"`   // the address receives the transactions
+	Gas      string          `json:"gas"`
+	GasPrice string          `json:"gasPrice"`
+	Value    string          `json:"value"`
+	Data     string          `json:"data"`
 }
 
 // NewTxParams news a TxParams object
@@ -196,44 +214,4 @@ func (tx *TxParams) GetSignedTx(keystore string) string {
 func getNonceRand() uint64 {
 	rand.Seed(time.Now().Unix())
 	return rand.Uint64()
-}
-
-// todo: handle error
-// ExtractContractData extract the role info from the contract return result
-func ExtractContractData(result, role string) string {
-	var inter = make([]interface{}, 0)
-	var count int
-
-	r, _ := ParseSysContractResult([]byte(result))
-	data := r.Data.([]interface{})
-
-	length := len(data)
-	for i := 0; i < length; i++ {
-		temp, _ := json.Marshal(data[0])
-		if strings.Contains(string(temp), role) {
-			inter = append(inter, data[i])
-			count++
-		}
-	}
-
-	if count == 0 {
-		return fmt.Sprintf("no %s in registration\n", role)
-	} else {
-		r.Data = inter
-		newContractData, _ := json.Marshal(r)
-		return string(newContractData)
-	}
-}
-
-// ParseSysContractResult parsed the result to ContractReturn object
-func ParseSysContractResult(result []byte) (*ContractReturn, error) {
-	a := ContractReturn{} //删除？
-	err := json.Unmarshal(result, &a)
-	if err != nil {
-		// utils.Fatalf(utl.ErrUnmarshalBytesFormat, "contract return", err.Error())
-		errStr := fmt.Sprintf(utl.ErrUnmarshalBytesFormat, "contract return", err.Error())
-		return nil, errors.New(errStr)
-	}
-
-	return &a, nil
 }

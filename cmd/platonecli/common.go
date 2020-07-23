@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -18,7 +17,6 @@ import (
 	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -33,20 +31,6 @@ var (
 	cnsInvokeAddress             = syscontracts.CnsInvokeAddress.String()             // The PlatONE Precompiled contract addr for group management
 )
 
-const (
-	// todo: duplicated with the constant var in types/transition.go -> deprecated
-	// Transaction types
-	transferType    = 0    // Used for transferring values
-	deployContract  = 1    // Used for deploying contracts
-	executeContract = 2    // Used for executing contract methods
-	cnsTxType       = 0x11 // Used for sending transactions without address
-	fwTxType        = 0x12 // Used fot sending transactions  about firewall
-	migTxType       = 0x13 // Used for update system contract.
-
-	// Currently it's under developing
-	migDpType = 0x14 // Used for update system contract without create a new contract manually
-)
-
 // link the precompiled contract addresses with abi file bytes
 var precompiledList = map[string]string{
 	userManagementAddress:        "../../release/linux/conf/contracts/userManager.cpp.abi.json",
@@ -59,6 +43,7 @@ var precompiledList = map[string]string{
 }
 
 // temporary deprecated
+/*
 // innerCall extract the common parts of the actions of fw and mig calls
 func innerCall(c *cli.Context, funcName string, funcParams []string, txType uint64) interface{} {
 	addr := c.Args().First()
@@ -66,10 +51,10 @@ func innerCall(c *cli.Context, funcName string, funcParams []string, txType uint
 
 	call := packet.InnerCallCommon(funcName, funcParams, txType)
 	return messageCall(c, call, &to, "")
-}
+}*/
 
-// contractCommon extract the common parts of the actions of contract execution
-func contractCommon(c *cli.Context, funcParams []string, funcName, contract string) interface{} {
+// contractCall extract the common parts of the actions of contract execution
+func contractCall(c *cli.Context, funcParams []string, funcName, contract string) interface{} {
 	vm := c.String(ContractVmFlags.Name)
 	paramValid(vm, "vm")
 
@@ -88,7 +73,8 @@ func contractCommon(c *cli.Context, funcParams []string, funcName, contract stri
 	return clientCommon(c, call, &to)
 }
 
-func clientCommon(c *cli.Context, call packet.MessageCall, to *common.Address) interface{} {
+// todo: rename genTxAndCall?
+func clientCommon(c *cli.Context, call packet.MsgDataGen, to *common.Address) interface{} {
 
 	// get the global parameters
 	account, isSync, isDefault, url := getClientConfig(c)
@@ -163,6 +149,8 @@ func combineJson(c *cli.Context, arrayMust []string, bytes []byte) string {
 	return string(bytes)
 }
 
+//===============================User Input Convert=======================================
+
 // convert, convert user input from key to value
 type convert struct {
 	key1      string      // user input 1
@@ -213,36 +201,6 @@ func (conv *convert) typeConvert(param string) (interface{}, error) {
 	} else {
 		return conv.value2, nil
 	}
-}
-
-// 2020.7.6 modified, moved from tx_call.go
-// GetAddressByName wraps the RpcCalls used to get the contract address by cns name
-// the parameters are packet into transaction before packet into rpc json data struct
-func GetAddressByName(name string) (string, error) {
-
-	// chain defined data type convert
-	to := common.HexToAddress(cnsManagementAddress)
-	from := common.HexToAddress("")
-
-	// packet the contract all data
-	rawData := packet.NewData("getContractAddress", []string{name, "latest"}, nil)
-	call := packet.NewInnerCallDemo(rawData, types.NormalTxType)
-	data, _, _, _ := call.CombineData()
-
-	tx := packet.NewTxParams(from, &to, "", "", "", data)
-	params := utl.CombineParams(tx, "latest")
-
-	response, err := platoneclient.RpcCalls("eth_call", params)
-	if err != nil {
-		return "", err
-	}
-
-	// parse the rpc response
-	resultBytes, _ := hexutil.Decode(response.(string))
-	bytesTrim := bytes.TrimRight(resultBytes, "\x00")
-	result := utl.BytesConverter(bytesTrim, "string")
-
-	return result.(string), nil
 }
 
 // 2020.7.6 modified, moved from tx_utils.go
@@ -309,6 +267,8 @@ func chainParamConvert(param, paramName string) interface{} {
 
 	return i
 }
+
+//===============================User Input Verification=======================================
 
 // OptionParamValid wraps ParamValid, it allows the input to be null
 func optionParamValid(param, paramName string) {

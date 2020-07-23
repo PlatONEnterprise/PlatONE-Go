@@ -123,7 +123,7 @@ func deploy(c *cli.Context) {
 	}
 	paramValid(vm, "vm")
 
-	call := packet.NewDeployCall(codeBytes, abiBytes, vm, types.CreateTxType)
+	call := packet.NewDeployDataGen(codeBytes, abiBytes, vm, types.CreateTxType)
 
 	// result := messageCall(c, call, nil, "")
 	result := clientCommon(c, call, nil)
@@ -153,7 +153,7 @@ func execute(c *cli.Context) {
 		return
 	}
 
-	result := contractCommon(c, funcParams, funcName, contract)
+	result := contractCall(c, funcParams, funcName, contract)
 	fmt.Printf("result: %v\n", result)
 	//utl.PrintJson([]byte(result.(string))) //TODO
 }
@@ -170,7 +170,7 @@ func migrate(c *cli.Context) {
 	if targetAddr != "" {
 		paramValid(targetAddr, "address")
 		funcParams := CombineFuncParams(sourceAddr, targetAddr)
-		result := contractCommon(c, funcParams, funcName, contractDataProcessorAddress)
+		result := contractCall(c, funcParams, funcName, contractDataProcessorAddress)
 		fmt.Printf("result: %s\n", result)
 	} else {
 		// future feature
