@@ -89,7 +89,6 @@ func (c *cnsMap) find(key string) *ContractInfo {
 	if err != nil {
 		// todo: panic
 	}
-
 	return &result
 }
 

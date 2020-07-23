@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 )
@@ -20,16 +22,13 @@ const (
 )
 
 const (
-	success int32 = 0
-	failure int32 = 1
-
-	unregistered int32 = 0
-	registered   int32 = 1
+	cnsUnregistered CodeType = 0
+	cnsRegistered   CodeType = 1
 )
 
 const (
-	namePattern    = `^[a-zA-Z]\w{2,15}$` // alice
-	versionPattern = `^([\d]\.){3}[\d]$`  // 0.0.0.1
+	namePattern    = `^[a-zA-Z]\w{2,15}$`  // alice
+	versionPattern = `^([\d]+\.){3}[\d]+$` // 0.0.0.1
 )
 
 var (
@@ -80,12 +79,6 @@ func newCnsManager(stateDB StateDB) *CnsManager {
 	}
 }
 
-/*
-func (ci *ContractInfo) encode() ([]byte, error) {
-	return rlp.EncodeToBytes(ci)
-}
-
-// todo: deprecated
 // decodeCnsInfo decodes rlp bytes to ContractInfo struct
 func decodeCnsInfo(data []byte) (*ContractInfo, error) {
 	var ci ContractInfo
@@ -94,7 +87,7 @@ func decodeCnsInfo(data []byte) (*ContractInfo, error) {
 	}
 
 	return &ci, nil
-}*/
+}
 
 // isOwner checks if the caller is the owner of the contract to be registered
 func (cns *CnsManager) isOwner(contractAddr common.Address) bool {

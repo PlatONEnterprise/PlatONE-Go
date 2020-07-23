@@ -130,7 +130,6 @@ func (u *FireWall) fwDel(contractAddr common.Address, action, lst string) error 
 	return nil
 }
 
-// todo: input arguments type
 func (u *FireWall) fwSet(contractAddr common.Address, act, lst string) error {
 	if !u.isOwner(contractAddr) {
 		u.emitNotifyEvent(fwNoPermission, fwErrNotOwner.Error())
@@ -188,7 +187,6 @@ func convertToFwElem(l string) ([]state.FwElem, error) {
 	for _, e := range elements {
 		tmp := strings.Split(e, ":")
 		if len(tmp) != 2 {
-			/// log.Warn("FW : error, wrong function parameters!")
 			return nil, ErrFwRule
 		}
 

@@ -59,23 +59,16 @@ func (cns *CnsWrapper) cnsRegister(name, version string, address common.Address)
 }
 
 func cnsRegisterErrHandle(err error) (int32, error) {
-	if err != nil {
-		if err == errInvalidCallFromInit || err == errInvalidCallNotFromInit {
-			return int32(cnsInvalidCall), nil
-		}
 
-		if err == errNotOwner {
-			return int32(cnsNoPermission), nil
-		}
-
-		if err == errNameInvalid || err == errVersionInvalid || err == errLowRegVersion {
-			return int32(cnsInvalidCall), nil
-		}
-
-		if err == errNameAndVerReg || err == errNameReg {
-			return int32(cnsRegErr), nil
-		}
-
+	switch err {
+	case errInvalidCallFromInit, errInvalidCallNotFromInit:
+		return int32(cnsInvalidCall), err
+	case errNotOwner:
+		return int32(cnsNoPermission), err
+	case errNameInvalid, errVersionInvalid, errLowRegVersion:
+		return int32(cnsInvalidArgument), err
+	case errNameAndVerReg, errNameReg:
+		return int32(cnsRegErr), err
 	}
 
 	return int32(cnsSuccess), nil
@@ -84,20 +77,13 @@ func cnsRegisterErrHandle(err error) (int32, error) {
 func (cns *CnsWrapper) cnsRedirect(name, version string) (int32, error) {
 	err := cns.base.cnsRedirect(name, version)
 
-	if err != nil {
-		if err == errNameInvalid || err == errVersionInvalid {
-			return int32(cnsInvalidCall), nil
-		}
-
-		if err == errNameAndVerUnReg {
-			return int32(cnsRegErr), nil
-		}
-
-		if err == errNotOwner {
-			return int32(cnsNoPermission), nil
-		}
-
-		return 0, err
+	switch err {
+	case errNotOwner:
+		return int32(cnsNoPermission), err
+	case errNameInvalid, errVersionInvalid:
+		return int32(cnsInvalidArgument), err
+	case errNameAndVerUnReg:
+		return int32(cnsRegErr), err
 	}
 
 	return int32(cnsSuccess), nil
@@ -113,27 +99,33 @@ func (cns *CnsWrapper) getContractAddress(name, version string) (string, error) 
 }
 
 func (cns *CnsWrapper) ifRegisteredByAddress(address common.Address) (int32, error) {
+	var code int32
 	isReg, _ := cns.base.ifRegisteredByAddress(address)
 
 	if isReg {
-		return int32(registered), nil
+		code = int32(cnsRegistered)
+	} else {
+		code = int32(cnsUnregistered)
 	}
 
-	return int32(unregistered), nil
+	return code, nil
 }
 
 func (cns *CnsWrapper) ifRegisteredByName(name string) (int32, error) {
+	var code int32
 	isReg, err := cns.base.ifRegisteredByName(name)
 
 	if err != nil {
-		return int32(cnsInvalidArgument), nil
+		return int32(cnsInvalidArgument), err
 	}
 
 	if isReg {
-		return int32(registered), nil
+		code = int32(cnsRegistered)
+	} else {
+		code = int32(cnsUnregistered)
 	}
 
-	return int32(unregistered), nil
+	return code, nil
 }
 
 func (cns *CnsWrapper) getRegisteredContractsByRange(head, size int) (string, error) {

@@ -45,10 +45,10 @@ func (u *FwWrapper) AllExportFns() SCExportFns {
 
 func (u *FwWrapper) openFirewall(contractAddr common.Address) (int32, error) {
 	err := u.base.openFirewall(contractAddr)
-	if err != nil {
-		if err == fwErrNotOwner {
-			return int32(fwNoPermission), nil
-		}
+
+	switch err {
+	case fwErrNotOwner:
+		return int32(fwNoPermission), err
 	}
 
 	return int32(fwOpSuccess), nil
@@ -56,10 +56,10 @@ func (u *FwWrapper) openFirewall(contractAddr common.Address) (int32, error) {
 
 func (u *FwWrapper) closeFirewall(contractAddr common.Address) (int32, error) {
 	err := u.base.closeFirewall(contractAddr)
-	if err != nil {
-		if err == fwErrNotOwner {
-			return int32(fwNoPermission), nil
-		}
+
+	switch err {
+	case fwErrNotOwner:
+		return int32(fwNoPermission), err
 	}
 
 	return int32(fwOpSuccess), nil
@@ -67,14 +67,12 @@ func (u *FwWrapper) closeFirewall(contractAddr common.Address) (int32, error) {
 
 func (u *FwWrapper) fwClear(contractAddr common.Address, action string) (int32, error) {
 	err := u.base.fwClear(contractAddr, action)
-	if err != nil {
-		if err == fwErrNotOwner {
-			return int32(fwNoPermission), nil
-		}
 
-		if err == state.ErrInvalidFwAction {
-			return int32(fwInvalidArgument), nil
-		}
+	switch err {
+	case fwErrNotOwner:
+		return int32(fwNoPermission), err
+	case state.ErrInvalidFwAction:
+		return int32(fwInvalidArgument), nil
 	}
 
 	return int32(fwOpSuccess), nil
@@ -82,14 +80,12 @@ func (u *FwWrapper) fwClear(contractAddr common.Address, action string) (int32, 
 
 func (u *FwWrapper) fwAdd(contractAddr common.Address, action, lst string) (int32, error) {
 	err := u.base.fwAdd(contractAddr, action, lst)
-	if err != nil {
-		if err == fwErrNotOwner {
-			return int32(fwNoPermission), nil
-		}
 
-		if err == state.ErrInvalidFwAction || err == ErrFwRule {
-			return int32(fwInvalidArgument), nil
-		}
+	switch err {
+	case fwErrNotOwner:
+		return int32(fwNoPermission), err
+	case state.ErrInvalidFwAction, ErrFwRule:
+		return int32(fwInvalidArgument), nil
 	}
 
 	return int32(fwOpSuccess), nil
@@ -97,14 +93,12 @@ func (u *FwWrapper) fwAdd(contractAddr common.Address, action, lst string) (int3
 
 func (u *FwWrapper) fwDel(contractAddr common.Address, action, lst string) (int32, error) {
 	err := u.base.fwDel(contractAddr, action, lst)
-	if err != nil {
-		if err == fwErrNotOwner {
-			return int32(fwNoPermission), nil
-		}
 
-		if err == state.ErrInvalidFwAction || err == ErrFwRule {
-			return int32(fwInvalidArgument), nil
-		}
+	switch err {
+	case fwErrNotOwner:
+		return int32(fwNoPermission), err
+	case state.ErrInvalidFwAction, ErrFwRule:
+		return int32(fwInvalidArgument), nil
 	}
 
 	return int32(fwOpSuccess), nil
@@ -112,14 +106,12 @@ func (u *FwWrapper) fwDel(contractAddr common.Address, action, lst string) (int3
 
 func (u *FwWrapper) fwSet(contractAddr common.Address, act, lst string) (int32, error) {
 	err := u.base.fwSet(contractAddr, act, lst)
-	if err != nil {
-		if err == fwErrNotOwner {
-			return int32(fwNoPermission), nil
-		}
 
-		if err == state.ErrInvalidFwAction || err == ErrFwRule {
-			return int32(fwInvalidArgument), nil
-		}
+	switch err {
+	case fwErrNotOwner:
+		return int32(fwNoPermission), err
+	case state.ErrInvalidFwAction, ErrFwRule:
+		return int32(fwInvalidArgument), nil
 	}
 
 	return int32(fwOpSuccess), nil
@@ -127,10 +119,10 @@ func (u *FwWrapper) fwSet(contractAddr common.Address, act, lst string) (int32, 
 
 func (u *FwWrapper) fwImport(contractAddr common.Address, data []byte) (int32, error) {
 	err := u.base.fwImport(contractAddr, data)
-	if err != nil {
-		if err == fwErrNotOwner {
-			return int32(fwNoPermission), nil
-		}
+
+	switch err {
+	case fwErrNotOwner:
+		return int32(fwNoPermission), err
 	}
 
 	return int32(fwOpSuccess), nil

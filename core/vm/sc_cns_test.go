@@ -82,7 +82,7 @@ func TestCnsManager_cnsRegister(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, success, result, "cnsRegister FAILED")
+	assert.Equal(t, int32(cnsSuccess), result, "cnsRegister FAILED")
 }
 
 func TestCnsManager_getContractAddress(t *testing.T) {
@@ -115,7 +115,7 @@ func TestCnsManager_cnsRecall(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	assert.Equal(t, success, result, "cnsRecall FAILED")
+	assert.Equal(t, int32(cnsSuccess), result, "cnsRecall FAILED")
 
 	actVersion := cns.base.cMap.getCurrentVer(testName)
 	expVersion := testCases[2].Version
@@ -129,8 +129,8 @@ func TestCnsManager_ifRegisteredByName(t *testing.T) {
 		name     string
 		expected int32
 	}{
-		{testName, registered},
-		{"tom", unregistered},
+		{testName, int32(cnsRegistered)},
+		{"tom", int32(cnsUnregistered)},
 	}
 
 	for _, data := range testCasesSub {
