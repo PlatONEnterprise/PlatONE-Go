@@ -87,7 +87,7 @@ func cnsRegister(c *cli.Context) {
 
 	funcParams := CombineFuncParams(name, ver, address)
 	result := contractCall(c, funcParams, "cnsRegister", cnsManagementAddress)
-	fmt.Printf("result: %v\n", result)
+	fmt.Printf("%v\n", result)
 }
 
 func cnsRedirect(c *cli.Context) {
@@ -100,7 +100,7 @@ func cnsRedirect(c *cli.Context) {
 
 	funcParams := CombineFuncParams(name, ver)
 	result := contractCall(c, funcParams, "cnsRedirect", cnsManagementAddress)
-	fmt.Printf("result: %s\n", result)
+	fmt.Printf("%s\n", result)
 }
 
 func cnsResolve(c *cli.Context) {
@@ -115,7 +115,7 @@ func cnsResolve(c *cli.Context) {
 
 	funcParams := CombineFuncParams(name, ver)
 	result := contractCall(c, funcParams, "getContractAddress", cnsManagementAddress)
-	fmt.Printf("result: %s\n", result)
+	fmt.Printf("%s\n", result)
 
 }
 

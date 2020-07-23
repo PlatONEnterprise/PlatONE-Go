@@ -137,6 +137,7 @@ func (client *pClient) MessageCall(call packet.MsgDataGen, keyfile string, tx *p
 	case !isWrite:
 		return ParseNonConstantRespose(respStr, outputType)
 	case isSync:
+		fmt.Printf("trasaction hash is %s\n", respStr)
 		return client.GetResponseByReceipt(respStr, call)
 	default:
 		return fmt.Sprintf("trasaction hash is %s\n", respStr)
@@ -197,18 +198,20 @@ func (client *pClient) GetReceiptByPolling(txHash string, call packet.MsgDataGen
 
 		switch {
 		case len(receipt.Logs) != 0:
+			var result string
+			for i, elog := range receipt.Logs{
+				var rlpList []interface{}
 
-			// currently it only take the first log
-			var resp []interface{}
-			dataBytes, _ := hexutil.Decode(receipt.Logs[0].Data)
-			topicTypes := findLogTopic(receipt.Logs[0].Topics[0], call.GetAbiBytes())
-			err = rlp.DecodeBytes(dataBytes, &resp)
-			if err != nil {
-				fmt.Printf("the error is %v\n", err)
+				eventName, topicTypes := findLogTopic(elog.Topics[0], call.GetAbiBytes())
+				dataBytes, _ := hexutil.Decode(elog.Data)
+				err = rlp.DecodeBytes(dataBytes, &rlpList)
+				if err != nil {
+					fmt.Printf("the error is %v\n", err)
+				}
+				result = fmt.Sprintf("\nEvent[%d]: %s", i, eventName)
+				result += parseReceiptLogData(rlpList, topicTypes)
+				result += "\n"
 			}
-
-			// future work: different calls(evm or wasm) may have diff. decoding
-			result := parseReceiptLogData(resp, topicTypes)
 			ch <- result
 
 		case receipt.Status == txReceiptFailureCode:
@@ -224,8 +227,9 @@ func (client *pClient) GetReceiptByPolling(txHash string, call packet.MsgDataGen
 	}
 }
 
-func findLogTopic(topic string, abiBytes []byte) []string {
+func findLogTopic(topic string, abiBytes []byte) (string,[]string) {
 	var types []string
+	var name string
 
 	abiFunc, _ := packet.ParseAbiFromJson(abiBytes)
 
@@ -234,26 +238,24 @@ func findLogTopic(topic string, abiBytes []byte) []string {
 			continue
 		}
 
-		strings.EqualFold(logTopicEncode(data.Name), topic)
-		for _, v := range data.Inputs {
-			types = append(types, v.Type)
+		if strings.EqualFold(logTopicEncode(data.Name), topic){
+			name = data.Name
+			for _, v := range data.Inputs {
+				types = append(types, v.Type)
+			}
+			break
 		}
-		break
 	}
 
-	return types
+	return name,types
 }
 
 func parseReceiptLogData(data []interface{}, types []string) string {
 	var str string
 
 	for i, v := range data {
-
-		if len(v.([]uint8)) == 0 {
-			continue
-		}
 		result := ConvertRlpBytesTo(v.([]uint8), types[i])
-		str += fmt.Sprintf("%v", result)
+		str += fmt.Sprintf(" %v", result)
 	}
 
 	return str
@@ -279,6 +281,11 @@ var Bytes2X_CMD = map[string]interface{}{
 	"uint16": RlpBytesToUint16,
 	"uint32": RlpBytesToUint32,
 	"uint64": RlpBytesToUint64,
+
+	// "uint8":  RlpBytesToUint,
+	"int16": RlpBytesToUint16,
+	"int32": RlpBytesToUint32,
+	"int64": RlpBytesToUint64,
 
 	"bool": RlpBytesToBool,
 }

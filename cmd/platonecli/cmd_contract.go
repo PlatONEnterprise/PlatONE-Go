@@ -154,7 +154,7 @@ func execute(c *cli.Context) {
 	}
 
 	result := contractCall(c, funcParams, funcName, contract)
-	fmt.Printf("result: %v\n", result)
+	fmt.Printf(" %v\n", result)
 	//utl.PrintJson([]byte(result.(string))) //TODO
 }
 
@@ -171,7 +171,7 @@ func migrate(c *cli.Context) {
 		paramValid(targetAddr, "address")
 		funcParams := CombineFuncParams(sourceAddr, targetAddr)
 		result := contractCall(c, funcParams, funcName, contractDataProcessorAddress)
-		fmt.Printf("result: %s\n", result)
+		fmt.Printf("%s\n", result)
 	} else {
 		// future feature
 		// txType := MIG_DP_TYPE

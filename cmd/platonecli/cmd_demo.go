@@ -52,5 +52,5 @@ func nodeAddDemo(c *cli.Context) {
 
 	funcParams := []string{str}
 	result := contractCall(c, funcParams, "add", "__sys_NodeManager")
-	fmt.Printf("result: %s\n", result)
+	fmt.Printf("%s\n", result)
 }

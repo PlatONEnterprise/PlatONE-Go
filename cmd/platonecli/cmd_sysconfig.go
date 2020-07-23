@@ -101,7 +101,7 @@ func setConfig(c *cli.Context, param string, name string) {
 	funcParams := CombineFuncParams(param)
 
 	result := contractCall(c, funcParams, funcName, parameterManagementAddress)
-	fmt.Printf("result: %s\n", result)
+	fmt.Printf("%s\n", result)
 }
 
 func getSysConfig(c *cli.Context) {

@@ -81,7 +81,7 @@ func nodeAdd(c *cli.Context) {
 
 	funcParams := []string{strJson}
 	result := contractCall(c, funcParams, "add", nodeManagementAddress)
-	fmt.Printf("result: %s\n", result)
+	fmt.Printf("%s\n", result)
 }
 
 func nodeDelete(c *cli.Context) {
@@ -93,7 +93,7 @@ func nodeDelete(c *cli.Context) {
 
 	funcParams := CombineFuncParams(name, str)
 	result := contractCall(c, funcParams, "update", nodeManagementAddress)
-	fmt.Printf("result: %s\n", result)
+	fmt.Printf("%s\n", result)
 }
 
 func nodeUpdate(c *cli.Context) {
@@ -108,7 +108,7 @@ func nodeUpdate(c *cli.Context) {
 
 	funcParams := CombineFuncParams(name, str)
 	result := contractCall(c, funcParams, "update", nodeManagementAddress)
-	fmt.Printf("result: %s\n", result)
+	fmt.Printf("%s\n", result)
 }
 
 // TODO enode

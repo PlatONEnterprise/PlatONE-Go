@@ -328,5 +328,5 @@ func hasRole(c *cli.Context) {
 
 func callUserManager(c *cli.Context, funcName string, funcParams []string) {
 	result := contractCall(c, funcParams, funcName, userManagementAddress)
-	fmt.Printf("result: %s\n", result)
+	fmt.Printf("%s\n", result)
 }

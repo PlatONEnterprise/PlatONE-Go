@@ -103,7 +103,7 @@ func userAdd(c *cli.Context) {
 
 	funcParams := []string{strJson}
 	result := contractCall(c, funcParams, "addUser", userManagementAddress)
-	fmt.Printf("result: %s\n", result)
+	fmt.Printf("%s\n", result)
 }
 
 func userUpdate(c *cli.Context) {
@@ -116,7 +116,7 @@ func userUpdate(c *cli.Context) {
 	funcParams := CombineFuncParams(account, str)
 
 	result := contractCall(c, funcParams, "updateUserDescInfo", userManagementAddress)
-	fmt.Printf("result: %v\n", result)
+	fmt.Printf("%v\n", result)
 }
 
 func queryUser(c *cli.Context) {
