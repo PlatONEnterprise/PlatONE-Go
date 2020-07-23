@@ -51,12 +51,13 @@ class Cli(Cmd):
         #create node key and account
         print("[INFO]: auto create node key, and create genesis.json")
         nodePriKey,nodePubKey,nodeAddress = self.createNodeKey({"rootDir":rootDir})
-        self.createAccount({"rootDir":rootDir,"password":password})
+        if config["from"] == "":
+            self.createAccount({"rootDir":rootDir,"password":password})
 
         #create genesis and  init chain
         creatorEnode = "enode://{0}@{1}:{2}".format(nodePubKey,ip,p2pPort)
         self.createGenesis({"rootDir":rootDir,"groupid":groupid,"chainid":chainid,"creatorEnode":creatorEnode})
-        self.initChain({"rootDir":rootDir,"groupid":groupid})
+        isFirst = self.initChain({"rootDir":rootDir,"groupid":groupid})
 
         #setup console config file
         bootnodes = findFlag(line,'--bootnodes','')
@@ -70,12 +71,78 @@ class Cli(Cmd):
         #start node
         self.startNode(groups[groupid])
 
+        if not isFirst:
+            return
+
         #add admin permision
         time.sleep(3)     
         self.unlockAccount({"addr":config["from"],"password":password,"url":url})
+        time.sleep(1)
         self.setSuperAdmin({})
+        time.sleep(2)
         self.addChainAdmin({"addr":config["from"]})
+        time.sleep(2)
         self.addNodeCMD({"name":nodeAddress,"type":1,"publicKey":nodePubKey,"desc":"","externalIP":ip,"internalIP":ip,"rpcPort":rpcPort,"p2pPort":p2pPort,"owner":nodeAddress,"status":1})
+
+    def do_four(self,line):
+        """start four node completely in group 0,node_1 and node_2 in  group 1
+        Usage:
+            four  [command options]
+            Options::
+                    --password              password to lock or unlock account ,default 0
+                     --ip                               node ip,default 127.0.0.1
+        """
+        line = self.parse(line)
+        password = findFlag(line,'--password','0')
+        ip = findFlag(line,'--ip',DEFAULT_IP)
+        print('==============================start one node======================================================')
+        cmd = "./console.py one --ip {0} --password {1} --direct".format(ip,password)
+        subprocess.call(cmd,shell=True)
+        time.sleep(5) 
+        print('==============================create group 1==========================================================')
+        cmd = "./console.py group create --groupid 1 --password {0} --ip {1} --direct".format(password,ip)
+        subprocess.call(cmd,shell=True)
+        time.sleep(5)
+        
+        global config 
+        config =  json.loads(readAllFromFile(configPath))
+        onConfigUpdate()
+        creatorEnodeOfGroup0 = groups["0"]["bootstrapNodes"][0]
+        creatorEnodeOfGroup1 = groups["1"]["bootstrapNodes"][0]
+        for i in range (1,5):
+            #i == 4 means add node1 to group1  
+            nodeId = 1 if i == 4 else i
+            nodeName = "node_" + str(nodeId)
+            cfgPath = os.path.join(os.path.dirname(configPath),'config_{0}.json'.format(str(nodeId)))
+            dataDir = os.path.join(os.path.dirname(config["datadir"]),'node_'+ str(nodeId))
+
+            groupId = 1 if i == 4 else 0
+            creatorEnode = creatorEnodeOfGroup1 if i == 4 else creatorEnodeOfGroup0
+
+            p2pPortT = str(DEFAULT_P2P_PORT + 100*nodeId + groupId)
+            rpcPortT = str(DEFAULT_RPC_PORT + 100*nodeId + groupId)
+            wsPortT =  str(DEFAULT_WS_PORT + 100*nodeId + groupId)
+            dashPortT = str(DEFAULT_DASHBOARD_PORT + 100*nodeId + groupId)
+            print('=============================add {0} to group_{1}===================================================='.format(nodeName,str(groupId)))
+            cmd = "./console.py group join --creator_enode {0} --password {1} --config {2} --datadir {3} --port {4} --rpcport {5} --wsport {6} --dashport {7} --ip {8} --groupid {9} --direct".format(
+                creatorEnode,
+                password,
+                cfgPath,
+                dataDir,
+                p2pPortT,
+                rpcPortT,
+                wsPortT,
+                dashPortT,
+                ip,
+                str(groupId))
+            print(cmd)
+            subprocess.call(cmd,shell=True)
+            time.sleep(5) 
+            pubkeyT = readAllFromFile(os.path.join(dataDir,"node.pubkey"))
+            switch(str(groupId))
+            self.unlockAccount({"addr":config["from"],"password":password,"url":"http://{0}:{1}".format(ip,str(DEFAULT_RPC_PORT + groupId))})
+            self.addNodeCMD({"name":nodeName,"type":1,"publicKey":pubkeyT,"desc":"","externalIP":ip,"internalIP":ip,"rpcPort": rpcPortT,"p2pPort":p2pPortT,"owner":nodeName,"status":1})
+            switch('0')
 
     def do_group(self,line):
         """Create,Join,Leave groups
@@ -333,10 +400,11 @@ class Cli(Cmd):
         datadir = os.path.join(rootDir,'group_' + groupid )
         if os.path.exists(os.path.join(datadir, 'platone')):
             print("[INFO]: Data dir found,skip init chain step")
-            return
+            return False
         
         subprocess.call("{0}/platone --datadir {1} --keystore {2} init {3}".format(BIN_PATH,datadir, os.path.join(rootDir, 'keystore'),os.path.join(datadir, 'genesis.json')) ,shell=True)
         print("[INFO]: group " + groupid + " built successfully")
+        return True
     
     def setupChainConfig(self,args):
         groupid = args["groupid"]
@@ -422,23 +490,29 @@ class Cli(Cmd):
         nodePriKey,nodePubKey,nodeAddress = self.createNodeKey({"rootDir":rootDir})
         selfEnode = "enode://{0}@{1}:{2}".format(nodePubKey,ip,p2pPort)
         self.createGenesis({"rootDir":rootDir,"groupid":groupid,"chainid":chainid,"creatorEnode":selfEnode})
-        self.initChain({"rootDir":rootDir,"groupid":groupid})
+        isFirst = self.initChain({"rootDir":rootDir,"groupid":groupid})
 
         bootstrapNodes = [selfEnode]
         url = "http://{0}:{1}".format(ip,rpcPort)
         self.setupChainConfig({"rootDir":rootDir,"groupid":groupid,"p2pPort":p2pPort,"rpcPort":rpcPort,"wsPort":wsPort,"dashboardPort":dashboardPort,"bootstrapNodes":bootstrapNodes,"url":url,"status":1})
         self.startNode(groups[groupid])
+        if not isFirst:
+            return
 
         #add admin permision
         time.sleep(3)
         switch(groupid)
         password = findFlag(args,"--password","0")
         self.unlockAccount({"addr":config["from"],"password":password,"url":url})
+        time.sleep(2)
         self.setSuperAdmin({})
+        time.sleep(2)
         self.addChainAdmin({"addr":config["from"]})
+        time.sleep(2)
         self.addNodeCMD({"name":nodeAddress,"type":1,"publicKey":nodePubKey,"desc":"","externalIP":ip,"internalIP":ip,"rpcPort":rpcPort,"p2pPort":p2pPort,"owner":nodeAddress,"status":1})
 
         #register group in group0
+        time.sleep(2)
         switch("0")
         self.unlockAccount({"addr":config["from"],"password":password,"url":groups["0"]["url"]})
         paramJson = {"creator":selfEnode,"groupid":groupid,"bootNodes":bootstrapNodes}
@@ -451,7 +525,7 @@ class Cli(Cmd):
         chainid = findFlag(args,"--chainid",str(DEFAULT_CHAIN_ID + intGroupID))
         ip = findFlag(args,"--ip",DEFAULT_IP)
         p2pPort = findFlag(args,"--port",str(DEFAULT_P2P_PORT + intGroupID))
-        rpcPort = findFlag(args,"--rpcPort",str(DEFAULT_RPC_PORT + intGroupID))
+        rpcPort = findFlag(args,"--rpcport",str(DEFAULT_RPC_PORT + intGroupID))
         wsPort = findFlag(args,"--wsport",str(DEFAULT_WS_PORT + intGroupID))
         dashboardPort = findFlag(args,"--dashport",str(DEFAULT_DASHBOARD_PORT + intGroupID))
 
@@ -459,17 +533,18 @@ class Cli(Cmd):
             switch('0')
         nodePriKey,nodePubKey,nodeAddress = self.createNodeKey({"rootDir":rootDir})
 
-        if groupid == "0":
+        if config["from"] == "":
             password = findFlag(args,"--password", "0")
             self.createAccount({"rootDir":rootDir,"password":password})
-            creatorEnode  =  findFlag(args,"--creator_enode","")
-            bootstrapNodes = findFlag(args,"--bootNodes",creatorEnode).split(",")
-        else:
-            creatorEnode ,bootstrapNodes = self.callGetGroupByIDContract({"groupid":groupid})
+
+        creatorEnode  =  findFlag(args,"--creator_enode","")
+        bootstrapNodes = findFlag(args,"--bootNodes",creatorEnode).split(",")
 
         if creatorEnode == '':
-            print("[Error]: creator enode  can not be empty")
-            return
+            creatorEnode ,bootstrapNodes = self.callGetGroupByIDContract({"groupid":groupid})
+            if creatorEnode == '':
+                print("[Error]: creator enode  can not be empty")
+                return
         self.createGenesis({"rootDir":rootDir,"groupid":groupid,"chainid":chainid,"creatorEnode":creatorEnode})
         self.initChain({"rootDir":rootDir,"groupid":groupid})
 
@@ -525,7 +600,9 @@ class Cli(Cmd):
         contractAbiPath = os.path.join(os.path.dirname(configPath),"contracts","groupManager.cpp.abi.json")
         cmd = '{0}/ctool invoke --config {1} --abi {2} --addr {3} --func getGroupByID --param \'{4}\''.format(BIN_PATH,ctoolConfPath,contractAbiPath,GROUP_MANAGER_ADDR,groupid)
         print(cmd)
-        ret = subprocess.check_output(cmd,shell=True).decode('utf-8').split("result:")[1].split("\x00")[0]
+        ret = subprocess.check_output(cmd,shell=True).decode('utf-8')
+        print(ret)
+        ret = ret.split("result:")[1].split("\x00")[0]
         ret = json.loads(ret)
         print("[INFO]: create group " + args["groupid"] + " successfully ") 
         print("[INFO]: creator enode: {0}".format(ret["creatorEnode"]))
@@ -605,7 +682,7 @@ DEFAULT_CHAIN_ID = 300
 DEFAULT_P2P_PORT = 16790
 DEFAULT_RPC_PORT = 6790
 DEFAULT_WS_PORT = 3790
-DEFAULT_DASHBOARD_PORT = 1090
+DEFAULT_DASHBOARD_PORT = 1790
 DEFAULT_IP = "127.0.0.1"
 
 CONF_TEMPLATE = {
@@ -754,7 +831,7 @@ if __name__ == '__main__':
         groups = loadGroupsFromConfig(config)
 
         #generate ctool config file
-        ctoolConfPath = os.path.join(os.path.dirname(configPath),"ctool.json")
+        ctoolConfPath = os.path.join(os.path.dirname(configPath),".ctool.json")
         GROUP_ID = 0
         switch(str(GROUP_ID))
         
@@ -766,6 +843,7 @@ if __name__ == '__main__':
             dictFunc = {
                 "group":cli.do_group,
                 "one":cli.do_one,
+                "four":cli.do_four,
                 "start":cli.do_start,
                 "stop":cli.do_stop,
                 "switch":cli.do_switch,
