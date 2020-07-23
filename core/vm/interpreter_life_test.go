@@ -373,7 +373,8 @@ func TestFloatInputAndOutput(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	retInFloat := common.BytesToFloat64(ret)
+	retInFloat := common.BytesToFloat64(ret[len(ret)-8:])
+
 	if retInFloat != array[0]+array[1] {
 		t.Fatal("result not correct")
 	}
