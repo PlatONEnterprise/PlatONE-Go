@@ -1,9 +1,7 @@
 package vm
 
 import (
-	"errors"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
@@ -65,7 +63,7 @@ func (c *CnsInvoke) Run(input []byte) ([]byte, error) {
 	return res, nil
 }
 func (c *CnsInvoke) getCnsAddr(cnsName string) (*common.Address, error) {
-	addrProxy := syscontracts.CnsManagementAddress
+	//addrProxy := syscontracts.CnsManagementAddress
 
 	var contractName, contractVer string
 	var ToAddr common.Address
@@ -81,31 +79,27 @@ func (c *CnsInvoke) getCnsAddr(cnsName string) (*common.Address, error) {
 		contractVer = cnsName[posOfColon+1:]
 	}
 
-	if contractName == "" || contractVer == "" {
-		return nil, errors.New("cns name do not has the right format")
-	}
+	//if contractName == "" || contractVer == "" {
+	//	return nil, errors.New("cns name do not has the right format")
+	//}
+	//
+	//if contractName == "cnsManager" {
+	//	return &addrProxy, nil
+	//}
 
-	if contractName == "cnsManager" {
-		return &addrProxy, nil
-	}
-
-	var isSystemContract = false
-	for _, v := range common.SystemContractList {
-		if v == contractName {
-			isSystemContract = true
-			break
-		}
-	}
-	if isSystemContract {
-		ToAddr = cnsSysContractsMap[contractName]
-	} else {
-		strRes, err := getCnsAddress(c.evm.StateDB, contractName, contractVer)
-		if err != nil {
-			return nil, err
-		}
-		if !(len(strRes) == 0 || common.IsHexZeroAddress(strRes)) {
-			ToAddr = common.HexToAddress(strRes)
-		}
+	//var isSystemContract = false
+	//for _, v := range common.SystemContractList {
+	//	if v == contractName {
+	//		isSystemContract = true
+	//		break
+	//	}
+	//}
+	//if isSystemContract {
+	//	ToAddr = cnsSysContractsMap[contractName]
+	//} else {
+	ToAddr, err := getCnsAddress(c.evm.StateDB, contractName, contractVer)
+	if err != nil {
+		return nil, err
 	}
 
 	return &ToAddr, nil

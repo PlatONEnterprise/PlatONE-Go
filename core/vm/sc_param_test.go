@@ -118,7 +118,7 @@ func TestParamManager_getTxLimit(t *testing.T) {
 	addr := syscontracts.ParameterManagementAddress
 	addr1 := syscontracts.UserManagementAddress
 	caller := common.HexToAddress("0x62fb664c49cfa4fa35931760c704f9b3ab664666")
-	um := UserManagement{stateDB: db, caller: caller, contractAddr: addr1}
+	um := UserManagement{stateDB: db, caller: caller, contractAddr: addr1,  blockNumber:big.NewInt(100)}
 	um.setSuperAdmin()
 	um.addChainAdminByAddress(caller)
 	p := ParamManager{contractAddr: &addr, stateDB: db, caller: caller, blockNumber: big.NewInt(100)}
@@ -135,7 +135,7 @@ func TestParamManager_gasName(t *testing.T) {
 	addr := syscontracts.ParameterManagementAddress
 	addr1 := syscontracts.UserManagementAddress
 	caller := common.HexToAddress("0x62fb664c49cfa4fa35931760c704f9b3ab664666")
-	um := UserManagement{stateDB: db, caller: caller, contractAddr: addr1}
+	um := UserManagement{stateDB: db, caller: caller, contractAddr: addr1,  blockNumber:big.NewInt(100)}
 	um.setSuperAdmin()
 	um.addChainAdminByAddress(caller)
 	p := ParamManager{contractAddr: &addr, stateDB: db, caller: caller, blockNumber:big.NewInt(100)}
@@ -152,7 +152,7 @@ func TestParamManager_emptyBlock(t *testing.T) {
 	addr := syscontracts.ParameterManagementAddress
 	addr1 := syscontracts.UserManagementAddress
 	caller := common.HexToAddress("0x62fb664c49cfa4fa35931760c704f9b3ab664666")
-	um := UserManagement{stateDB: db, caller: caller, contractAddr: addr1}
+	um := UserManagement{stateDB: db, caller: caller, contractAddr: addr1,  blockNumber:big.NewInt(100)}
 	um.setSuperAdmin()
 	um.addChainAdminByAddress(caller)
 	p := ParamManager{contractAddr: &addr, stateDB: db, caller: caller,blockNumber:big.NewInt(100)}
@@ -169,7 +169,7 @@ func TestParamManager_contractPer(t *testing.T) {
 	addr := syscontracts.ParameterManagementAddress
 	addr1 := syscontracts.UserManagementAddress
 	caller := common.HexToAddress("0x62fb664c49cfa4fa35931760c704f9b3ab664666")
-	um := UserManagement{stateDB: db, caller: caller, contractAddr: addr1}
+	um := UserManagement{stateDB: db, caller: caller, contractAddr: addr1,  blockNumber:big.NewInt(100)}
 	um.setSuperAdmin()
 	um.addChainAdminByAddress(caller)
 	p := ParamManager{contractAddr: &addr, stateDB: db, caller: caller,blockNumber:big.NewInt(100)}
