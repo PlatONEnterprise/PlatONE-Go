@@ -326,5 +326,205 @@
         ],
         "constant": "true",
         "type": "function"
+    },
+    {
+        "name":"setSuperAdmin",               
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"transferSuperAdminByAddress"  , 
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"transferSuperAdminByName"    ,  
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"addChainAdminByAddress" ,       
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"addChainAdminByName"  ,         
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"addGroupAdminByAddress"  ,      
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"addGroupAdminByName"   ,        
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"addNodeAdminByAddress" ,        
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"addNodeAdminByName"     ,       
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"addContractAdminByAddress"  ,   
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"addContractAdminByName" ,       
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"addContractDeployerByAddress" , 
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"addContractDeployerByName" ,    
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"delChainAdminByAddress"   ,     
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"delChainAdminByName"    ,       
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"delGroupAdminByAddress"   ,     
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"delGroupAdminByName"    ,       
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"delNodeAdminByAddress" ,        
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"delNodeAdminByName"     ,       
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"delContractAdminByAddress"   ,  
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"delContractAdminByName"    ,    
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"delContractDeployerByAddress" , 
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"delContractDeployerByName"   ,  
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name":"addUser"    ,        
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {   
+        "name":"updateUserDescInfo", 
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
     }
 ]
