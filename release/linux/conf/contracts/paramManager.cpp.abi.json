@@ -172,7 +172,7 @@
         "inputs": [
             {
                 "name": "isTxUseGas",
-                "type": "uint32"
+                "type": "uint64"
             }
         ],
         "outputs": [],
@@ -185,11 +185,23 @@
         "outputs": [
             {
                 "name": "",
-                "type": "uint32"
+                "type": "uint64"
             }
         ],
         "constant": "true",
         "type": "function"
+    },
+    {
+        "name": "Notify",
+        "inputs": [
+            {
+                "type": "uint64"
+            },
+            {
+                "type": "string"
+            }
+        ],
+        "type": "event"
     }
 ]
 

@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	DEFAULT_FIREWALL_FILE_PATH = "./config/fireWall.json"
+	defaultFwFilePath = "./fireWall.json"
 )
 
 var (

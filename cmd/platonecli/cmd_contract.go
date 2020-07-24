@@ -94,9 +94,11 @@ Get the full information of the transaction receipt by transaction hash`,
 
 func contractReceipt(c *cli.Context) {
 
-	/// setUrl(c)
 	url := getUrl(c)
-	client := platoneclient.SetupClient(url)
+	client, err := platoneclient.SetupClient(url)
+	if err != nil {
+		utils.Fatalf("set up client failed: %s\n", err.Error())
+	}
 
 	txHash := c.Args().First()
 

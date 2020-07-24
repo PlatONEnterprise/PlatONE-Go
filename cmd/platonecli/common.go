@@ -69,7 +69,6 @@ func contractCall(c *cli.Context, funcParams []string, funcName, contract string
 	/// call := packet.ContractCallCommon(funcName, funcParams, funcAbi, *cns, vm) // defined in data_interpreter.go
 	call := packet.ContractCallCommonTest(funcName, funcParams, funcAbi, *cns, vm) // defined in interpreter.go
 
-	/// return messageCall(c, call, &to, "")
 	return clientCommon(c, call, &to)
 }
 
@@ -78,7 +77,10 @@ func clientCommon(c *cli.Context, call packet.MsgDataGen, to *common.Address) in
 
 	// get the global parameters
 	account, isSync, isDefault, url := getClientConfig(c)
-	pc := platoneclient.SetupClient(url)
+	pc, err := platoneclient.SetupClient(url)
+	if err != nil {
+		utils.Fatalf("set up client failed: %s\n", err.Error())
+	}
 
 	tx := getTxParams(c)
 	tx.From = account.address
@@ -101,12 +103,7 @@ func CombineRule(addr, api string) string {
 
 // CombineFuncParams combines the function parameters
 func CombineFuncParams(args ...string) []string {
-	var strArray []string
-
-	for _, value := range args {
-		strArray = append(strArray, value)
-	}
-
+	strArray := append([]string{}, args...)
 	return strArray
 }
 
@@ -188,18 +185,37 @@ func convertSelect(param, paramName string) (interface{}, error) {
 		utils.Fatalf("")
 	}
 
-	return conv.typeConvert(param)
+	return conv.convert(param)
 }
 
-func (conv *convert) typeConvert(param string) (interface{}, error) {
-	if param != conv.key1 && param != conv.key2 {
+func (conv *convert) convert(param string) (interface{}, error) {
+	key1NotEqual := !strings.EqualFold(param, conv.key1)
+	key2NotEqual := !strings.EqualFold(param, conv.key2)
+
+	if key1NotEqual && key2NotEqual {
 		return nil, fmt.Errorf("the %s should be either \"%s\" or \"%s\"", conv.paramName, conv.key1, conv.key2)
 	}
 
-	if param == conv.key1 {
+	if key2NotEqual {
 		return conv.value1, nil
 	} else {
 		return conv.value2, nil
+	}
+}
+
+func (conv *convert) parse(param interface{}) string {
+
+	value1NotEqual := param != conv.value1
+	value2NotEqual := param != conv.value2
+
+	if value1NotEqual && value2NotEqual {
+		panic("not match")
+	}
+
+	if value2NotEqual {
+		return conv.key1
+	} else {
+		return conv.key2
 	}
 }
 
@@ -298,9 +314,11 @@ func paramValid(param, paramName string) {
 		valid = utl.IsUrl(param)
 	case "externalIP", "internalIP":
 		valid = utl.IsUrl(param + ":0")
+	//case "version":
+	//	valid = utl.IsVersion(param)
 	case "roles":
 		valid = utl.IsValidRoles(param)
-	case "email", "mobile", "name", "version", "address", "num":
+	case "email", "mobile", "version", "name", "address", "num":
 		valid = utl.IsMatch(param, paramName)
 	default:
 		/// Logger.Printf("param valid function used but not validate the <%s> param\n", paramName)

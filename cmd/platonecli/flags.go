@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -155,7 +157,7 @@ var (
 
 	FilePathFlags = cli.StringFlag{
 		Name:  "file",
-		Value: DEFAULT_FIREWALL_FILE_PATH,
+		Value: defaultFwFilePath,
 		Usage: "Specify the fire wall file path to be imported or exported",
 	}
 
@@ -209,9 +211,42 @@ var (
 	}
 
 	TxGasLimitFlags = cli.StringFlag{
-		Name: "tx-gaslimit",
-		// Value: "1500000000",
+		Name:  "tx-gaslimit",
 		Usage: "the gas limit of transactions",
+	}
+
+	IsTxUseGasFlags = cli.StringFlag{
+		Name: "tx-use-gas",
+		Usage: fmt.Sprintf("if transactions use gas, "+
+			"'%s' for transactions use gas, '%s' for not", txUseGas, txNotUseGas),
+	}
+
+	IsApproveDeployedContractFlags = cli.StringFlag{
+		Name: "audit-con",
+		Usage: fmt.Sprintf("approve the deployed contracts, "+
+			"'%s' for allowing contracts audit, '%s' for not", conAudit, conNotAudit),
+	}
+
+	IsCheckContractDeployPermissionFlags = cli.StringFlag{
+		Name: "check-perm",
+		Usage: fmt.Sprintf("check the sender permission when deploying contracts, "+
+			"'%s' for checking permission, '%s' for not", checkPerm, notCheckPerm),
+	}
+
+	IsProduceEmptyBlockFlags = cli.StringFlag{
+		Name: "empty-block",
+		Usage: fmt.Sprintf("consensus produces empty block, "+
+			"'%s' for allowing to produce empty block, '%s' for not", prodEmp, notProdEmp),
+	}
+
+	GasContractNameFlags = cli.StringFlag{
+		Name:  "gas-contract",
+		Usage: "register the gas contract by contract name",
+	}
+
+	GetBlockGasLimitFlags = cli.BoolFlag{
+		Name:  "block-gaslimit",
+		Usage: "the gas limit of the block",
 	}
 
 	GetTxGasLimitFlags = cli.BoolFlag{
@@ -219,34 +254,33 @@ var (
 		Usage: "the gas limit of transactions",
 	}
 
-	GetBlockGasLimitFlags = cli.BoolFlag{
-		Name:  "block-gaslimit",
-		Usage: "the gas limit of transactions",
+	GetIsTxUseGasFlags = cli.BoolFlag{
+		Name: "tx-use-gas",
+		Usage: fmt.Sprintf("if transactions use gas, "+
+			"'%s' for transactions use gas, '%s' for not", txUseGas, txNotUseGas),
 	}
 
-	IsTxUseGasFlags = cli.StringFlag{
-		Name:  "tx-usegas",
-		Usage: "",
+	GetIsApproveDeployedContractFlags = cli.BoolFlag{
+		Name: "audit-con",
+		Usage: fmt.Sprintf("approve the deployed contracts, "+
+			"'%s' for allowing contracts audit, '%s' for not", conAudit, conNotAudit),
 	}
 
-	IsApproveDeployedContractFlags = cli.StringFlag{
-		Name:  "",
-		Usage: "",
+	GetIsCheckContractDeployPermissionFlags = cli.BoolFlag{
+		Name: "check-perm",
+		Usage: fmt.Sprintf("check the sender permission when deploying contracts, "+
+			"'%s' for checking permission, '%s' for not", checkPerm, notCheckPerm),
 	}
 
-	IsCheckContractDeployPermissionFlags = cli.StringFlag{
-		Name:  "",
-		Usage: "",
+	GetIsProduceEmptyBlockFlags = cli.BoolFlag{
+		Name: "empty-block",
+		Usage: fmt.Sprintf("consensus produces empty block, "+
+			"'%s' for allowing to produce empty block, '%s' for not", prodEmp, notProdEmp),
 	}
 
-	IsProduceEmptyBlockFlags = cli.StringFlag{
-		Name:  "",
-		Usage: "",
-	}
-
-	GasContractNameFlags = cli.StringFlag{
-		Name:  "",
-		Usage: "",
+	GetGasContractNameFlags = cli.BoolFlag{
+		Name:  "gas-contract",
+		Usage: "register the gas contract by contract name",
 	}
 
 	//=============================================================================
@@ -262,10 +296,27 @@ var (
 	}
 
 	// system config
-	sysConfigCmdFlags    = append(globalCmdFlags, BlockGasLimitFlags, TxGasLimitFlags)
-	getSysConfigCmdFlags = append(globalCmdFlags, GetBlockGasLimitFlags, GetTxGasLimitFlags)
+	sysConfigCmdFlags = append(
+		globalCmdFlags,
+		BlockGasLimitFlags,
+		TxGasLimitFlags,
+		IsTxUseGasFlags,
+		IsApproveDeployedContractFlags,
+		IsCheckContractDeployPermissionFlags,
+		IsProduceEmptyBlockFlags,
+		GasContractNameFlags,
+	)
 
-	// transfer
+	getSysConfigCmdFlags = append(
+		globalCmdFlags,
+		GetBlockGasLimitFlags,
+		GetTxGasLimitFlags,
+		GetIsTxUseGasFlags,
+		GetIsApproveDeployedContractFlags,
+		GetIsCheckContractDeployPermissionFlags,
+		GetIsProduceEmptyBlockFlags,
+		GetGasContractNameFlags,
+	)
 
 	// user
 	userUpdateCmdFlags = append(globalCmdFlags, TelFlags, EmailFlags)

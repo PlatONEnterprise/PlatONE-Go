@@ -1,10 +1,7 @@
 package main
 
 import (
-	"strings"
-
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/packet"
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"gopkg.in/urfave/cli.v1"
 )
@@ -59,24 +56,15 @@ func getUrl(c *cli.Context) string {
 	url := c.String(UrlFlags.Name)
 
 	if url != "" {
-		url = reformatUrl(url)
 		paramValid(url, "url")
 		return url
 	}
 
 	if config.Url == "" {
-		utils.Fatalf("Please set url first.\n")
+		config.Url = "127.0.0.1:6791"
 	}
 
 	return config.Url
-}
-
-func reformatUrl(url string) string {
-	if strings.HasPrefix(url, "http://") {
-		url = url[len("http://"):]
-	}
-
-	return url
 }
 
 func getTxParams(c *cli.Context) *packet.TxParams {

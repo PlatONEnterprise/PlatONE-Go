@@ -136,6 +136,7 @@ func (u *ParamManager) setTxGasLimit(txGasLimit uint64) (int32, error) {
 		return failFlag, err
 	}
 	if txGasLimit > blockGasLimit {
+		u.emitNotifyEventInParam(paramInvalid, fmt.Sprintf("setting value is larger than block gas limit"))
 		return failFlag, errParamInvalid
 	}
 
@@ -167,6 +168,7 @@ func (u *ParamManager) setBlockGasLimit(blockGasLimit uint64) (int32, error) {
 		return failFlag, err
 	}
 	if txGasLimit > blockGasLimit {
+		u.emitNotifyEventInParam(paramInvalid, fmt.Sprintf("setting value is smaller than tx gas limit"))
 		return failFlag, nil
 	}
 

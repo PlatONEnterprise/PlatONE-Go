@@ -116,6 +116,11 @@ var AppHelpFlagGroups = []flagGroup{
 		Flags: []cli.Flag{
 			BlockGasLimitFlags,
 			TxGasLimitFlags,
+			IsTxUseGasFlags,
+			IsApproveDeployedContractFlags,
+			IsCheckContractDeployPermissionFlags,
+			IsProduceEmptyBlockFlags,
+			GasContractNameFlags,
 		},
 	},
 	{

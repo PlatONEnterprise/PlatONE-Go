@@ -61,22 +61,25 @@ type pClient struct {
 	c *rpc.Client
 }
 
-func SetupClient(url string) *pClient {
+func SetupClient(url string) (*pClient, error) {
 	var client = new(pClient)
 	var err error
 
 	client.c, err = rpc.DialContext(context.Background(), "http://"+url)
 	if err != nil {
-		utils.Fatalf(err.Error())
+		return nil, err
 	}
 
-	return client
+	return client, nil
 }
 
 func (p *pClient) GetTransactionReceipt(txHash string) (*Receipt, error) {
 
 	var response interface{}
 	_ = p.c.Call(&response, "eth_getTransactionReceipt", txHash)
+	if response == nil {
+		return nil, nil
+	}
 
 	// parse the rpc response
 	receipt, err := ParseTxReceipt(response)
@@ -90,10 +93,6 @@ func (p *pClient) GetTransactionReceipt(txHash string) (*Receipt, error) {
 // ParseSysContractResult parsed the rpc response to Receipt object
 func ParseTxReceipt(response interface{}) (*Receipt, error) {
 	var receipt = &Receipt{}
-
-	if response == nil {
-		return nil, nil
-	}
 
 	temp, _ := json.Marshal(response)
 	err := json.Unmarshal(temp, receipt)
@@ -199,10 +198,14 @@ func (client *pClient) GetReceiptByPolling(txHash string, call packet.MsgDataGen
 		switch {
 		case len(receipt.Logs) != 0:
 			var result string
-			for i, elog := range receipt.Logs{
+			for i, elog := range receipt.Logs {
 				var rlpList []interface{}
 
 				eventName, topicTypes := findLogTopic(elog.Topics[0], call.GetAbiBytes())
+				if len(topicTypes) == 0 {
+					continue
+				}
+
 				dataBytes, _ := hexutil.Decode(elog.Data)
 				err = rlp.DecodeBytes(dataBytes, &rlpList)
 				if err != nil {
@@ -222,12 +225,13 @@ func (client *pClient) GetReceiptByPolling(txHash string, call packet.MsgDataGen
 
 		case receipt.Status == txReceiptSuccessCode:
 			ch <- txReceiptSuccessMsg
-
 		}
+
+		break
 	}
 }
 
-func findLogTopic(topic string, abiBytes []byte) (string,[]string) {
+func findLogTopic(topic string, abiBytes []byte) (string, []string) {
 	var types []string
 	var name string
 
@@ -238,7 +242,7 @@ func findLogTopic(topic string, abiBytes []byte) (string,[]string) {
 			continue
 		}
 
-		if strings.EqualFold(logTopicEncode(data.Name), topic){
+		if strings.EqualFold(logTopicEncode(data.Name), topic) {
 			name = data.Name
 			for _, v := range data.Inputs {
 				types = append(types, v.Type)
@@ -247,7 +251,7 @@ func findLogTopic(topic string, abiBytes []byte) (string,[]string) {
 		}
 	}
 
-	return name,types
+	return name, types
 }
 
 func parseReceiptLogData(data []interface{}, types []string) string {

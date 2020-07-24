@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/utils"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/utils"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -118,7 +118,7 @@ func nodeQuery(c *cli.Context) {
 	all := c.Bool(ShowAllFlags.Name)
 	if all {
 		result := contractCall(c, nil, "getAllNodes", nodeManagementAddress)
-		utl.PrintJson([]byte(result.(string)))
+		utils.PrintJson([]byte(result.(string)))
 		return
 	}
 
@@ -126,7 +126,7 @@ func nodeQuery(c *cli.Context) {
 	funcParams := CombineFuncParams(str)
 
 	result := contractCall(c, funcParams, "getNodes", nodeManagementAddress)
-	utl.PrintJson([]byte(result.(string)))
+	utils.PrintJson([]byte(result.(string)))
 }
 
 func nodeStat(c *cli.Context) {
