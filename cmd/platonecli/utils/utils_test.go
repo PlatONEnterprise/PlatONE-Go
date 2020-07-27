@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -50,38 +52,55 @@ func TestFuncParse(t *testing.T) {
 	funcArray := []struct {
 		funcName   string
 		funcParams []string
+		expParams  []string
 	}{
 		//{"", nil},
-		{"set", []string{"123", "true"}},
-		{"set", []string{""}},
-		{"set", nil},
-		{"set()", []string{"123", "true"}},
+		{"set", []string{"123", "true"}, []string{"123", "true"}},
+		{"set", []string{""}, []string{""}},
+		{"set", nil, nil},
+		{"set()", []string{"123", "true"}, []string{"123", "true"}},
 	}
 
 	for i, data := range funcArray {
 		t.Logf("case %d: \n", i)
 		name, params := FuncParse(data.funcName, data.funcParams)
+		assert.Equal(t, "set", name, "name parse FAILED")
+		assert.Equal(t, data.expParams, params, "params parse FAILED")
 		t.Logf("Before: function name: %s, function params: %s\n", data.funcName, data.funcParams)
 		t.Logf("After:  function name: %s, function params: %s\n", name, params)
 	}
 }
 
 func TestGetFuncParam(t *testing.T) {
-	f := []string{
-		//"set",
-		"set()",
-		"set(\"1\",'b' , 1.2, true)",
-		"set('[\"chainAdmin\",\"nodeAdmin\"]', [\"chainAdmin\",\"nodeAdmin\"])",
-		"set({\"key\":\"value\"})",
-		"set(\"{\"key\":\"{\"name\": \"alice\", \"score\": \"[12, 25.0, 35]\"}\"}\")",
-		"set(show(), 1000 ) ",
+	testCases := []struct {
+		function  string
+		expName   string
+		expParams []string
+	}{
+		{"set()", "set", nil},
+		{"set(\"1\",'b' , 1.2, true)", "set", []string{"1", "b", "1.2", "true"}},
+		{"set('[\"chainAdmin\",\"nodeAdmin\"]', [\"chainAdmin\",\"nodeAdmin\"])", "set", []string{"[\"chainAdmin\",\"nodeAdmin\"]", "[\"chainAdmin\",\"nodeAdmin\"]"}},
+		{"set({\"key\":\"value\"})", "set", []string{"{\"key\":\"value\"}"}},
+		{"set(\"{\"key\":\"{\"name\": \"alice\", \"score\": \"[12, 25.0, 35]\"}\"}\")", "set", []string{"{\"key\":\"{\"name\":\"alice\",\"score\":\"[12,25.0,35]\"}\"}"}},
+		{"set(show(), 1000 ) ", "set", []string{"show()", "1000"}},
 	}
-	for i, data := range f {
+
+	for i, data := range testCases {
 		t.Logf("case %d: %s", i, data)
-		name, params := GetFuncNameAndParams(data)
+		name, params := GetFuncNameAndParams(data.function)
+		assert.Equal(t, data.expName, name, "name parse FAILED")
+		assert.Equal(t, data.expParams, params, "params parse FAILED")
+
 		t.Logf("result: function name: %s, function params: %s\n", name, params)
 	}
 
+}
+
+func TestPrintJson(t *testing.T) {
+	str := "{\"account\":\"\",\"url\":\"http://127.0.0.1:6794\",\"keystore\":" +
+		"\"../../release/linux/data/node-0/keystore/UTC--2020-07-27T03-08-50.310696196Z--8bc9cbeac3b9e89c47b3d0f21ba93b8a6e0aa818\"}"
+	result := PrintJson([]byte(str))
+	t.Logf("\n%s", result)
 }
 
 //TODO 重新设计测试

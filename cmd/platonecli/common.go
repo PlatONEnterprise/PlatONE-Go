@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 
+	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/precompiled"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/platoneclient"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
@@ -66,14 +68,13 @@ func contractCall(c *cli.Context, funcParams []string, funcName, contract string
 	cns := CnsParse(contract)
 	to := chainParamConvert(cns.To, "to").(common.Address)
 
-	/// call := packet.ContractCallCommon(funcName, funcParams, funcAbi, *cns, vm) // defined in data_interpreter.go
-	call := packet.ContractCallCommonTest(funcName, funcParams, funcAbi, *cns, vm) // defined in interpreter.go
+	dataGenerator := packet.NewContractDataGenWrap(funcName, funcParams, funcAbi, *cns, vm)
 
-	return clientCommon(c, call, &to)
+	return clientCommon(c, dataGenerator, &to)
 }
 
 // todo: rename genTxAndCall?
-func clientCommon(c *cli.Context, call packet.MsgDataGen, to *common.Address) interface{} {
+func clientCommon(c *cli.Context, dataGenerator packet.MsgDataGen, to *common.Address) interface{} {
 
 	// get the global parameters
 	account, isSync, isDefault, url := getClientConfig(c)
@@ -86,7 +87,7 @@ func clientCommon(c *cli.Context, call packet.MsgDataGen, to *common.Address) in
 	tx.From = account.address
 	tx.To = to
 
-	result := pc.MessageCall(call, account.keyfile, tx, isSync)
+	result := pc.MessageCall(dataGenerator, account.keyfile, tx, isSync)
 
 	if isDefault && !reflect.ValueOf(result).IsZero() {
 		runPath := utl.GetRunningTimePath()
@@ -144,6 +145,34 @@ func combineJson(c *cli.Context, arrayMust []string, bytes []byte) string {
 	/// utl.Logger.Printf("the combine json is %s\n", bytes)
 
 	return string(bytes)
+}
+
+//===============================Abi Parsing========================================
+// AbiParse gets the abi bytes by the input parameters provided
+// The abi file can be obtained through following ways:
+// 1. user provide the abi file path
+// 2. get the abi files from default file locations (for example, the system contracts are
+// all stored in ./PlatONE/release/linux/conf/contracts)
+// 3. get the abi bytes on chain (wasm contract only).
+func AbiParse(abiFilePath, str string) []byte {
+	var err error
+	var abiBytes []byte
+
+	if abiFilePath == "" {
+		if p := precompiledList[str]; p != "" { // todo: equalFold string?
+			precompiledAbi, _ := precompile.Asset(p)
+			return precompiledAbi
+		}
+
+		/// abiFilePath = getAbiFileFromLocal(str)
+	}
+
+	abiBytes, err = utl.ParseFileToBytes(abiFilePath)
+	if err != nil {
+		utils.Fatalf(utl.ErrParseFileFormat, "abi", err.Error())
+	}
+
+	return abiBytes
 }
 
 //===============================User Input Convert=======================================
@@ -310,7 +339,7 @@ func paramValid(param, paramName string) {
 		valid = strings.EqualFold(param, "accept") || strings.EqualFold(param, "reject")
 	case "vm":
 		valid = param == "" || strings.EqualFold(param, "evm") || strings.EqualFold(param, "wasm")
-	case "url":
+	case "ipAddress":
 		valid = utl.IsUrl(param)
 	case "externalIP", "internalIP":
 		valid = utl.IsUrl(param + ":0")

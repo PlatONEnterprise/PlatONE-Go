@@ -29,7 +29,7 @@ func GetRunningTimePath() string {
 }
 
 // PrintJson reformats the json printing style, easier for users to read
-func PrintJson(marshalJson []byte) {
+func PrintJson(marshalJson []byte) string {
 
 	var addBytes = []byte{'\n'}
 	var newJson = make([]byte, 0)
@@ -52,7 +52,7 @@ func PrintJson(marshalJson []byte) {
 		}
 	}
 
-	fmt.Printf("result:\n%s\n", newJson)
+	return string(newJson)
 }
 
 // PrintRequest print the request to terminal or log for debugging usage

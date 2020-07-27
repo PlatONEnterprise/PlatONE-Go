@@ -1,11 +1,15 @@
 package main
 
 import (
+	"strings"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/packet"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"gopkg.in/urfave/cli.v1"
 )
 
+/*
 type contract struct {
 	address string
 	funcAbi []byte
@@ -14,7 +18,7 @@ type contract struct {
 
 func newContract() *contract {
 	return &contract{}
-}
+}*/
 
 type TxAccount struct {
 	address common.Address
@@ -52,16 +56,31 @@ func getClientConfig(c *cli.Context) (*TxAccount, bool, bool, string) {
 	return account, isSync, isDefault, url
 }
 
+// <URL>: scheme://host:port/path?query#fragment
 func getUrl(c *cli.Context) string {
 	url := c.String(UrlFlags.Name)
-
 	if url != "" {
-		paramValid(url, "url")
+		index := strings.Index(url, "://")
+
+		if index != -1 {
+			// url = scheme://host:port
+			urlNotHttpScheme := !strings.EqualFold(url[:index], "http")
+			if urlNotHttpScheme {
+				utils.Fatalf("invalid url scheme %s, currently only support http", url[:index])
+			}
+
+			paramValid(url[index+3:], "ipAddress")
+		} else {
+			// url = host:port (default scheme: http://)
+			paramValid(url, "ipAddress")
+			url = "http://" + url
+		}
+
 		return url
 	}
 
 	if config.Url == "" {
-		config.Url = "127.0.0.1:6791"
+		config.Url = "http://127.0.0.1:6791"
 	}
 
 	return config.Url

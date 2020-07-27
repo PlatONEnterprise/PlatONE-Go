@@ -163,7 +163,8 @@ func cnsQuery(c *cli.Context) {
 		result = "no search key provided!"
 	}
 
-	utl.PrintJson([]byte(result.(string)))
+	strResult := utl.PrintJson([]byte(result.(string)))
+	fmt.Printf("result:\n%s\n", strResult)
 }
 
 func cnsState(c *cli.Context) {

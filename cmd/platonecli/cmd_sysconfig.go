@@ -162,10 +162,10 @@ func getSysConfig(c *cli.Context) {
 
 func getConfig(c *cli.Context, isGet bool, name string) {
 
-	funcName := "get" + name
-
 	if isGet {
+		funcName := "get" + name
 		result := contractCall(c, nil, funcName, parameterManagementAddress)
+
 		result = sysconfigToString(result)
 		str := sysConfigParsing(result, name)
 
@@ -196,12 +196,12 @@ func sysConfigParsing(param interface{}, paramName string) string {
 func sysConfigConvert(param, paramName string) (string, error) {
 
 	conv := genConfigConverter(paramName)
-	resutl, err := conv.convert(param)
+	result, err := conv.convert(param)
 	if err != nil {
 		return "", err
 	}
 
-	return resutl.(string), nil
+	return result.(string), nil
 }
 
 func genConfigConverter(paramName string) *convert {
@@ -212,7 +212,7 @@ func genConfigConverter(paramName string) *convert {
 		conv = newConvert(txUseGas, txNotUseGas, "1", "0", paramName)
 	case isApprDeployedCon:
 		conv = newConvert(conAudit, conNotAudit, "1", "0", paramName)
-	case isCheckConDeployPerm: // node type
+	case isCheckConDeployPerm:
 		conv = newConvert(checkPerm, notCheckPerm, "1", "0", paramName)
 	case isProdEmptyBlock:
 		conv = newConvert(prodEmp, notProdEmp, "1", "0", paramName)

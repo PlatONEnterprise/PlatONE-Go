@@ -5,22 +5,19 @@ package main
 import (
 	"strings"
 
-	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/precompiled"
-
 	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/utils"
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 )
 
 const (
-	DEAFAULT_ABI_DIRT            = "./abi"
-	DEFAULT_SYSTEM_CONTRACT_PATH = "../../release/linux/conf/contracts/"
+	defaultAbiDir            = "./abi"
+	defaultSystemContractAbi = "../../release/linux/conf/contracts/"
 )
 
 var abiFileDirt string
 
 func abiInit() {
 	runPath := utl.GetRunningTimePath()
-	abiFileDirt = runPath + DEAFAULT_ABI_DIRT
+	abiFileDirt = runPath + defaultAbiDir
 
 	utl.FileDirectoryInit(abiFileDirt)
 	_ = utl.DeleteOldFile(abiFileDirt)
@@ -53,34 +50,6 @@ func storeAbiFile(key string, abiBytes []byte) {
 	}
 }
 
-// todo: update the notation
-// AbiParse gets the abi bytes by the input parameters provided
-// The abi file can be obtained through following ways:
-// 1. user provide the abi file path
-// 2. get the abi files from default file locations (for example, the system contracts are
-// all stored in ./PlatONE/release/linux/conf/contracts)
-// 3. get the abi bytes on chain (wasm contract only).
-func AbiParse(abiFilePath, str string) []byte {
-	var err error
-	var abiBytes []byte
-
-	if abiFilePath == "" {
-		if p := precompiledList[str]; p != "" { // todo: equalFold string?
-			precompiledAbi, _ := precompile.Asset(p)
-			return precompiledAbi
-		}
-
-		/// abiFilePath = getAbiFileFromLocal(str)
-	}
-
-	abiBytes, err = utl.ParseFileToBytes(abiFilePath)
-	if err != nil {
-		utils.Fatalf(utl.ErrParseFileFormat, "abi", err.Error())
-	}
-
-	return abiBytes
-}
-
 // getAbiFileFromLocal get the abi files from default directory by file name
 // currently it is designed to get the system contract abi files
 // [2020 - 07 -07] added, the method is deprecated, the system contract is moved to pre compiled contract
@@ -97,7 +66,7 @@ func getAbiFileFromLocal(str string) string {
 
 	if strings.HasPrefix(str, "__sys_") {
 		sysFileName := strings.ToLower(str[6:7]) + str[7:] + ".cpp.abi.json"
-		abiFilePath = runPath + DEFAULT_SYSTEM_CONTRACT_PATH + sysFileName
+		abiFilePath = runPath + defaultSystemContractAbi + sysFileName
 	} else {
 		abiFilePath = getAbiFile(str)
 	}

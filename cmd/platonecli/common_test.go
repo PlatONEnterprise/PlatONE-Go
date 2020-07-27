@@ -3,6 +3,10 @@ package main
 import (
 	"reflect"
 	"testing"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -32,47 +36,41 @@ func TestParamParse(t *testing.T) {
 		//{"Alice.bob", "contract"},
 		//{"na*&2", "contract"},
 		//{"-1", "p2pPort"},
-		{"123", "p2pPort", 123},
+		{"123", "p2pPort", int64(123)},
 		//{"123456", "p2pPort"},
 		{"123456", "", "123456"},
 		{"invalid", "status", 2},
-		{"approve", "operation", 2},
+		{"approve", "operation", "2"},
 		{"observer", "type", 0},
 	}
 
 	for i, data := range testCase {
 		result := ParamParse(data.param, data.paramName)
-		if reflect.ValueOf(result) == data.result {
-			r = "SUCCESS"
-		} else {
-			r = "FAILED"
-			// t.Failed()
-		}
+		assert.Equal(t, data.result, result, "FAILED")
 
 		t.Logf("%s: case %d: Before: (%v) %s, After convert: (%v) %v\n", r, i, reflect.TypeOf(data.param), data.param, reflect.TypeOf(result), result)
 	}
-}
-
-func TestMessageCall(t *testing.T) {
-	// messageCall(nil, nil, nil, "", 0)
 }
 
 func TestChainParamConvert(t *testing.T) {
 	testCase := []struct {
 		param     string
 		paramName string
+		expResult interface{}
 	}{
-		{"0x002", "value"},
-		{"0020", "value"},
-		{"-20", "value"},
-		{"0xFD", "value"}, //TODO 负数?
-		{"0x020", "gas"},
-		{"002302", "gas"},
-		{testAccount, "to"},
+		{"0x002", "value", "0x2"},
+		{"0020", "value", "0x14"},
+		{"-20", "value", "-0x14"},
+		{"0xFD", "value", "0xfd"}, //TODO 负数?
+		{"0x020", "gas", "0x20"},
+		{"002302", "gas", "0x8fe"},
+		{testAccount, "to", common.HexToAddress(testAccount)},
 	}
 
 	for i, data := range testCase {
 		result := chainParamConvert(data.param, data.paramName)
+		assert.Equal(t, data.expResult, result, "FAILED")
+
 		t.Logf("case %d: Before: (%v) %s, After convert: (%v) %v\n", i, reflect.TypeOf(data.param), data.param, reflect.TypeOf(result), result)
 	}
 }
@@ -104,7 +102,6 @@ func TestParamValid(t *testing.T) {
 	for i, data := range testCase {
 		paramValid(data.param, data.paramName)
 		t.Logf("case %d: the %s \"%s\" is valid\n", i, data.paramName, data.param)
-
 	}
 
 }

@@ -65,7 +65,7 @@ func SetupClient(url string) (*pClient, error) {
 	var client = new(pClient)
 	var err error
 
-	client.c, err = rpc.DialContext(context.Background(), "http://"+url)
+	client.c, err = rpc.DialContext(context.Background(), url)
 	if err != nil {
 		return nil, err
 	}
@@ -136,10 +136,10 @@ func (client *pClient) MessageCall(call packet.MsgDataGen, keyfile string, tx *p
 	case !isWrite:
 		return ParseNonConstantRespose(respStr, outputType)
 	case isSync:
-		fmt.Printf("trasaction hash is %s\n", respStr)
+		/// fmt.Printf("trasaction hash is %s\n", respStr)
 		return client.GetResponseByReceipt(respStr, call)
 	default:
-		return fmt.Sprintf("trasaction hash is %s\n", respStr)
+		return fmt.Sprintf("trasaction hash: %s\n", respStr)
 	}
 }
 
@@ -158,7 +158,7 @@ func ParseNonConstantRespose(respStr string, outputType []string) interface{} {
 
 func (client *pClient) GetResponseByReceipt(respStr string, call packet.MsgDataGen) interface{} {
 	ch := make(chan interface{}, 1)
-	txHash := fmt.Sprintf("trasaction hash is %s\n", respStr)
+	txHash := fmt.Sprintf("trasaction hash: %s\n", respStr)
 	go client.GetReceiptByPolling(respStr, call, ch)
 
 	select {
@@ -167,8 +167,11 @@ func (client *pClient) GetResponseByReceipt(respStr string, call packet.MsgDataG
 		return str
 
 	case <-time.After(time.Second * 10):
-		temp := fmt.Sprintf("\nget contract receipt timeout...more than 10 second.\n")
-		return temp + txHash
+		// temp := fmt.Sprintf("\nget contract receipt timeout...more than %d second.\n", 10)
+		// return temp + txHash
+
+		fmt.Printf("\nget contract receipt timeout...more than %d second.\n", 10)
+		return txHash
 	}
 }
 
@@ -192,12 +195,13 @@ func (client *pClient) GetReceiptByPolling(txHash string, call packet.MsgDataGen
 			continue
 		}
 
+		var result string
 		receiptBytes, _ := json.Marshal(receipt)
-		utl.PrintJson(receiptBytes)
+		receiptStr := utl.PrintJson([]byte(receiptBytes))
+		fmt.Printf(receiptStr)
 
 		switch {
 		case len(receipt.Logs) != 0:
-			var result string
 			for i, elog := range receipt.Logs {
 				var rlpList []interface{}
 
@@ -211,23 +215,27 @@ func (client *pClient) GetReceiptByPolling(txHash string, call packet.MsgDataGen
 				if err != nil {
 					fmt.Printf("the error is %v\n", err)
 				}
-				result = fmt.Sprintf("\nEvent[%d]: %s", i, eventName)
+				result += fmt.Sprintf("\nEvent[%d]: %s ", i, eventName)
 				result += parseReceiptLogData(rlpList, topicTypes)
-				result += "\n"
+				// result += "\n"
 			}
-			ch <- result
+
+			// ch <- result
 
 		case receipt.Status == txReceiptFailureCode:
-			ch <- txReceiptFailureMsg
+			result += txReceiptFailureMsg
+			// ch <- txReceiptFailureMsg
 
 		case receipt.ContractAddress != "":
-			ch <- receipt.ContractAddress
+			// ch <- receipt.ContractAddress
+			result += receipt.ContractAddress
 
 		case receipt.Status == txReceiptSuccessCode:
-			ch <- txReceiptSuccessMsg
+			// ch <- txReceiptSuccessMsg
+			result += txReceiptSuccessMsg
 		}
 
-		break
+		ch <- result
 	}
 }
 
@@ -259,7 +267,7 @@ func parseReceiptLogData(data []interface{}, types []string) string {
 
 	for i, v := range data {
 		result := ConvertRlpBytesTo(v.([]uint8), types[i])
-		str += fmt.Sprintf(" %v", result)
+		str += fmt.Sprintf("%v ", result)
 	}
 
 	return str

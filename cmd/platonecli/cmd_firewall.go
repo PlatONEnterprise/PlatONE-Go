@@ -152,7 +152,8 @@ func fwStatus(c *cli.Context) {
 	funcParams := []string{addr}
 
 	result := contractCall(c, funcParams, funcName, firewallManagementAddress)
-	utl.PrintJson([]byte(result.(string)))
+	strResult := utl.PrintJson([]byte(result.(string)))
+	fmt.Printf("result:\n%s\n", strResult)
 }
 
 func fwExport(c *cli.Context) {

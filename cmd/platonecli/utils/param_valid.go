@@ -98,15 +98,17 @@ func IsValidRoles(roles string) bool {
 }
 
 var roleMap = map[string]bool{
-	"chainCreator":     true,
-	"chainAdmin":       true,
-	"nodeAdmin":        true,
-	"contractAdmin":    true,
-	"contractDeployer": true,
+	"chaincreator":     true,
+	"chainadmin":       true,
+	"nodeadmin":        true,
+	"contractadmin":    true,
+	"contractdeployer": true,
 }
 
 // isRoleMatch checks if the input role is valid
 func IsRoleMatch(role string) bool {
+	role = strings.Trim(role, " ")
+	role = strings.ToLower(role)
 	return roleMap[role]
 }
 

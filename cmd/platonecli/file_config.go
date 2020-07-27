@@ -22,7 +22,6 @@ var config = &Config{}
 
 const (
 	defaultConfigFilePath = "./config/config.json"
-	DEFAULT_KEYSTORE_DIRT = "../../release/linux/data/node-0/keystore" //TODO temp keystore path
 )
 
 // configInit read values from config file

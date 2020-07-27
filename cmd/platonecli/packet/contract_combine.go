@@ -30,8 +30,8 @@ type ContractDataGen struct {
 	Interp contractInter
 }
 
-// NewContractCallDemo new a ContractDataGen object
-func ContractCallCommonTest(funcName string, funcParams []string, funcAbi []byte, cns Cns, vm string) *ContractDataGen {
+// NewContractDataGen new a ContractDataGen object
+func NewContractDataGenWrap(funcName string, funcParams []string, funcAbi []byte, cns Cns, vm string) *ContractDataGen {
 	// parse the function parameters
 	funcName, funcParams = utils.FuncParse(funcName, funcParams)
 

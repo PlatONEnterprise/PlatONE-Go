@@ -107,7 +107,8 @@ func contractReceipt(c *cli.Context) {
 		utils.Fatalf("get receipt failed: %s\n", err.Error())
 	} else {
 		resultBytes, _ := json.Marshal(result)
-		utl.PrintJson(resultBytes)
+		strResult := utl.PrintJson(resultBytes)
+		fmt.Printf("result:\n%s\n", strResult)
 	}
 }
 
@@ -125,10 +126,8 @@ func deploy(c *cli.Context) {
 	}
 	paramValid(vm, "vm")
 
-	call := packet.NewDeployDataGen(codeBytes, abiBytes, vm, types.CreateTxType)
-
-	// result := messageCall(c, call, nil, "")
-	result := clientCommon(c, call, nil)
+	dataGenerator := packet.NewDeployDataGen(codeBytes, abiBytes, vm, types.CreateTxType)
+	result := clientCommon(c, dataGenerator, nil)
 
 	if utl.IsMatch(result.(string), "address") {
 		/// storeAbiFile(result.(string), abiBytes)
@@ -144,14 +143,12 @@ func execute(c *cli.Context) {
 	contract := c.Args().First()
 	funcName := c.Args().Get(1)
 	funcParams := c.StringSlice(ContractParamFlag.Name)
-	isListMethods := c.Bool(ShowContractMethodsFlag.Name) // to be deprecated
+	isListMethods := c.Bool(ShowContractMethodsFlag.Name)
 
 	paramValid(contract, "contract")
 
 	if isListMethods {
-		abiPath := getAbiFile(contract)
-		result, _ := listAbiFunctions(abiPath)
-		fmt.Printf(result)
+		contractMethods(c)
 		return
 	}
 
@@ -184,14 +181,16 @@ func contractMethods(c *cli.Context) {
 	var abiPath string
 
 	abi := c.String(ContractAbiFilePathFlag.Name)
-	contract := c.String(ContractIDFlag.Name)
+	// contract := c.String(ContractIDFlag.Name)
 
 	switch {
 	case abi != "":
 		abiPath = abi
-	case contract != "":
-		paramValid(contract, "address")
-		abiPath = getAbiFile(contract)
+	// currently deprecated, used when file_abi.go is enabled
+	/*
+		case contract != "":
+			paramValid(contract, "address")
+			abiPath = getAbiFile(contract)*/
 	default:
 		utils.Fatalf("no argument provided\n")
 	}
@@ -213,12 +212,15 @@ func listAbiFunctions(abiPath string) (string, error) {
 	abiBytes := ParamParse(abiPath, "abi").([]byte)
 	//abiBytes := abiParse(abi, contract) //TODO
 
+	return listAbiFunctionsByBytes(abiBytes)
+}
+
+func listAbiFunctionsByBytes(abiBytes []byte) (string, error) {
 	abiFuncs, err := packet.ParseAbiFromJson(abiBytes)
 	if err != nil {
 		return "", err
 	}
 
 	result := packet.ListAbiFuncName(abiFuncs)
-
 	return result, nil
 }

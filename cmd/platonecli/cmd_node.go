@@ -118,7 +118,8 @@ func nodeQuery(c *cli.Context) {
 	all := c.Bool(ShowAllFlags.Name)
 	if all {
 		result := contractCall(c, nil, "getAllNodes", nodeManagementAddress)
-		utils.PrintJson([]byte(result.(string)))
+		strResult := utils.PrintJson([]byte(result.(string)))
+		fmt.Printf("result:\n%s\n", strResult)
 		return
 	}
 
@@ -126,7 +127,8 @@ func nodeQuery(c *cli.Context) {
 	funcParams := CombineFuncParams(str)
 
 	result := contractCall(c, funcParams, "getNodes", nodeManagementAddress)
-	utils.PrintJson([]byte(result.(string)))
+	strResult := utils.PrintJson([]byte(result.(string)))
+	fmt.Printf("result:\n%s\n", strResult)
 }
 
 func nodeStat(c *cli.Context) {

@@ -148,5 +148,6 @@ func queryUser(c *cli.Context) {
 	}
 
 	result := contractCall(c, funcParams, funcName, userManagementAddress)
-	utl.PrintJson([]byte(result.(string)))
+	strResult := utl.PrintJson([]byte(result.(string)))
+	fmt.Printf("result:\n%s\n", strResult)
 }
