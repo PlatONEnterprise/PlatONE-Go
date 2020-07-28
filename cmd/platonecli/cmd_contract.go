@@ -103,6 +103,10 @@ func contractReceipt(c *cli.Context) {
 	txHash := c.Args().First()
 
 	result, err := client.GetTransactionReceipt(txHash)
+	if result == nil {
+		fmt.Printf("the tx receipt is not generated, please try again later\n")
+	}
+
 	if err != nil {
 		utils.Fatalf("get receipt failed: %s\n", err.Error())
 	} else {

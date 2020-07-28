@@ -17,35 +17,35 @@ type DeployDataGen struct {
 // NewDeployCall new a DeployCall object
 func NewDeployDataGen(codeBytes, abiBytes []byte, vm string, txType uint64) *DeployDataGen {
 
-	call := &DeployDataGen{
+	dataGen := &DeployDataGen{
 		codeBytes: codeBytes,
 		abiBytes:  abiBytes,
 		TxType:    txType,
 	}
 
 	// set the virtual machine interpreter
-	call.SetInterpreter(vm)
+	dataGen.SetInterpreter(vm)
 
-	return call
+	return dataGen
 }
 
 // SetInterpreter set the interpreter of DeployCall object
-func (call *DeployDataGen) SetInterpreter(vm string) error {
+func (dataGen *DeployDataGen) SetInterpreter(vm string) error {
 	switch vm {
 	case "evm":
-		if IsWasmContract(call.codeBytes) {
+		if IsWasmContract(dataGen.codeBytes) {
 			// utils.Fatalf("the input  is not evm byte code")
 			return errors.New("the input  is not evm byte code")
 		}
-		call.Interpreter = &EvmDeployInterpreter{codeBytes: call.codeBytes}
+		dataGen.Interpreter = &EvmDeployInterpreter{codeBytes: dataGen.codeBytes}
 	default:
-		if !IsWasmContract(call.codeBytes) {
+		if !IsWasmContract(dataGen.codeBytes) {
 			// utils.Fatalf("the input  is not wasm byte code")
 			return errors.New("the input  is not wasm byte code")
 		}
-		call.Interpreter = &WasmDeployInterpreter{
-			codeBytes: call.codeBytes,
-			abiBytes:  call.abiBytes,
+		dataGen.Interpreter = &WasmDeployInterpreter{
+			codeBytes: dataGen.codeBytes,
+			abiBytes:  dataGen.abiBytes,
 		}
 	}
 
@@ -54,17 +54,17 @@ func (call *DeployDataGen) SetInterpreter(vm string) error {
 
 // CombineData of DeployCall data struct is used for packeting the data of wasm or evm contracts deployment
 // Implement the MessageCallDemo interface
-func (call DeployDataGen) CombineData() (string, []string, bool, error) {
-	if call.Interpreter == nil {
+func (dataGen DeployDataGen) CombineData() (string, []string, bool, error) {
+	if dataGen.Interpreter == nil {
 		return "", nil, false, errors.New("interpreter is not provided")
 	}
 
-	data, err := call.Interpreter.combineData()
+	data, err := dataGen.Interpreter.combineData()
 	return data, nil, true, err
 }
 
-func (call *DeployDataGen) GetAbiBytes() []byte {
-	return call.abiBytes
+func (dataGen *DeployDataGen) GetAbiBytes() []byte {
+	return dataGen.abiBytes
 }
 
 // combineDeployData packet the data in the way defined by the evm virtual mechine

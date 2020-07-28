@@ -37,73 +37,73 @@ func NewContractDataGenWrap(funcName string, funcParams []string, funcAbi []byte
 
 	// new an contract call, set the interpreter(wasm or evm contract)
 	data := NewData(funcName, funcParams, funcAbi)
-	call := NewContractDataGen(data, cns.Name, cns.txType)
-	call.SetInterpreter(vm) //TODO
+	dataGen := NewContractDataGen(data, cns.Name, cns.txType)
+	dataGen.SetInterpreter(vm) //TODO
 
-	return call
+	return dataGen
 }
 
 func NewContractDataGen(data *RawData, name string, txType uint64) *ContractDataGen {
 
-	call := &ContractDataGen{
+	dataGen := &ContractDataGen{
 		data:   data,
 		name:   name,
 		TxType: txType,
 	}
 
-	return call
+	return dataGen
 }
 
 // SetInterpreter set the interpreter of ContractDataGen object
-func (call *ContractDataGen) SetInterpreter(vm string) {
+func (dataGen *ContractDataGen) SetInterpreter(vm string) {
 	switch vm {
 	case "evm":
-		call.Interp = &EvmContractInterpreter{}
+		dataGen.Interp = &EvmContractInterpreter{}
 	default: // the default interpreter is "wasm"
-		call.Interp = &WasmContractInterpreter{
-			cnsName: call.name,
-			txType:  call.TxType,
+		dataGen.Interp = &WasmContractInterpreter{
+			cnsName: dataGen.name,
+			txType:  dataGen.TxType,
 		}
 	}
 }
 
 // CombineData of Contractcall data struct is used for packeting the data of wasm or evm contracts execution
 // Implement the MessageCallDemo interface
-func (call *ContractDataGen) CombineData() (string, []string, bool, error) {
+func (dataGen *ContractDataGen) CombineData() (string, []string, bool, error) {
 
 	// packet contract method and input parameters
-	outputType, isWrite, funcBytes, err := call.combineFunc()
+	outputType, isWrite, funcBytes, err := dataGen.combineFunc()
 	if err != nil {
 		return "", nil, false, err
 	}
 
 	// packet contract data
-	data, err := call.combineContractData(funcBytes)
+	data, err := dataGen.combineContractData(funcBytes)
 	return data, outputType, isWrite, err
 }
 
 // combineFunc of Contractcall data struct is used for combining the
-func (call *ContractDataGen) combineFunc() ([]string, bool, [][]byte, error) {
+func (dataGen *ContractDataGen) combineFunc() ([]string, bool, [][]byte, error) {
 
 	// Judging whether this method exists or not by abi file
-	abiFunc, err := ParseFuncFromAbi(call.data.funcAbi, call.data.funcName) //修改
+	abiFunc, err := ParseFuncFromAbi(dataGen.data.funcAbi, dataGen.data.funcName) //修改
 	if err != nil {
 		return nil, false, nil, err
 	}
 
 	// Judging whether the number of inputs matches
-	if len(abiFunc.Inputs) != len(call.data.funcParams) {
-		return nil, false, nil, fmt.Errorf("param check error, required %d inputs, recieved %d.\n", len(abiFunc.Inputs), len(call.data.funcParams))
+	if len(abiFunc.Inputs) != len(dataGen.data.funcParams) {
+		return nil, false, nil, fmt.Errorf("param check error, required %d inputs, recieved %d.\n", len(abiFunc.Inputs), len(dataGen.data.funcParams))
 	}
 
 	// encode the function and get the function constant
-	funcByte, err := call.Interp.encodeFunction(abiFunc, call.data.funcParams, call.data.funcName)
+	funcByte, err := dataGen.Interp.encodeFunction(abiFunc, dataGen.data.funcParams, dataGen.data.funcName)
 	if err != nil {
 		return nil, false, nil, err
 	}
 
 	// get the function constant
-	isWrite := call.Interp.setIsWrite(abiFunc)
+	isWrite := dataGen.Interp.setIsWrite(abiFunc)
 
 	// Get the function output type for further use
 	outputType := getOutputTypes(abiFunc)
@@ -127,10 +127,10 @@ func getOutputTypes(abiFunc *FuncDesc) []string {
 }
 
 // combineContractData selects the interpreter for combining the contract call data
-func (call *ContractDataGen) combineContractData(funcBytes [][]byte) (string, error) {
-	return call.Interp.combineData(funcBytes)
+func (dataGen *ContractDataGen) combineContractData(funcBytes [][]byte) (string, error) {
+	return dataGen.Interp.combineData(funcBytes)
 }
 
-func (call *ContractDataGen) GetAbiBytes() []byte {
-	return call.data.funcAbi
+func (dataGen *ContractDataGen) GetAbiBytes() []byte {
+	return dataGen.data.funcAbi
 }

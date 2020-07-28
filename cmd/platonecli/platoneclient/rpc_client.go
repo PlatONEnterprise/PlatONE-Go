@@ -9,6 +9,8 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common/byteutil"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
@@ -16,14 +18,11 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
-
 	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/utils"
 
 	"time"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/packet"
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
 )
 
@@ -107,12 +106,13 @@ func ParseTxReceipt(response interface{}) (*Receipt, error) {
 
 // messageCall extract the common parts of the transaction based calls
 // including eth_call, eth_sendTransaction, and eth_sendRawTransaction
-func (client *pClient) MessageCall(call packet.MsgDataGen, keyfile string, tx *packet.TxParams, isSync bool) interface{} {
+func (client *pClient) MessageCall(dataGen packet.MsgDataGen, keyfile string, tx *packet.TxParams) (interface{}, bool, error) {
 
 	// combine the data based on the types of the calls (contract call, inner call or deploy call)
-	data, outputType, isWrite, err := call.CombineData()
+	data, outputType, isWrite, err := dataGen.CombineData()
 	if err != nil {
-		utils.Fatalf(utl.ErrPackDataFormat, err.Error())
+		errStr := fmt.Sprintf(utl.ErrPackDataFormat, err.Error())
+		return nil, false, errors.New(errStr)
 	}
 
 	// packet the transaction and select the transaction based calls
@@ -126,7 +126,41 @@ func (client *pClient) MessageCall(call packet.MsgDataGen, keyfile string, tx *p
 	var resp interface{}
 	err = client.c.Call(&resp, action, params...)
 	if err != nil {
-		utils.Fatalf(utl.ErrSendTransacionFormat, err.Error())
+		errStr := fmt.Sprintf(utl.ErrSendTransacionFormat, err.Error())
+		return nil, false, errors.New(errStr)
+	}
+
+	// parse transaction response
+	respStr := fmt.Sprint(resp)
+	if !isWrite {
+		return ParseNonConstantResponse(respStr, outputType), false, nil
+	}
+
+	return respStr, true, nil
+}
+
+func (client *pClient) MessageCallOld(dataGenerator packet.MsgDataGen, keyfile string, tx *packet.TxParams, isSync bool) (interface{}, error) {
+
+	// combine the data based on the types of the calls (contract call, inner call or deploy call)
+	data, outputType, isWrite, err := dataGenerator.CombineData()
+	if err != nil {
+		errStr := fmt.Sprintf(utl.ErrPackDataFormat, err.Error())
+		return nil, errors.New(errStr)
+	}
+
+	// packet the transaction and select the transaction based calls
+	tx.Data = data
+	params, action := tx.SendMode(isWrite, keyfile)
+
+	// print the RPC JSON param to the terminal
+	/// utl.PrintRequest(params)
+
+	// send the RPC calls
+	var resp interface{}
+	err = client.c.Call(&resp, action, params...)
+	if err != nil {
+		errStr := fmt.Sprintf(utl.ErrSendTransacionFormat, err.Error())
+		return nil, errors.New(errStr)
 	}
 
 	// parse transaction response
@@ -134,21 +168,26 @@ func (client *pClient) MessageCall(call packet.MsgDataGen, keyfile string, tx *p
 
 	switch {
 	case !isWrite:
-		return ParseNonConstantRespose(respStr, outputType)
+		return ParseNonConstantResponse(respStr, outputType), nil
 	case isSync:
-		/// fmt.Printf("trasaction hash is %s\n", respStr)
-		return client.GetResponseByReceipt(respStr, call)
+		result, err := client.GetReceiptByPolling(respStr)
+		if err != nil {
+			return respStr, nil
+		}
+
+		receiptBytes, _ := json.Marshal(result)
+		return string(receiptBytes), nil
 	default:
-		return fmt.Sprintf("trasaction hash: %s\n", respStr)
+		/// return fmt.Sprintf("trasaction hash: %s\n", respStr), nil
+		return respStr, nil
 	}
 }
 
 // ParseNonConstantRespose wraps the utl.BytesConverter,
 // it converts the hex string response based the output type provided
-func ParseNonConstantRespose(respStr string, outputType []string) interface{} {
+func ParseNonConstantResponse(respStr string, outputType []string) interface{} {
 	if len(outputType) != 0 {
 		b, _ := hexutil.Decode(respStr)
-		// bytesTrim := bytes.TrimRight(b, "\x00") // TODO
 		// utl.Logger.Printf("result: %v\n", utl.BytesConverter(bytesTrim, outputType))
 		return utl.BytesConverter(b, outputType[0])
 	} else {
@@ -156,27 +195,25 @@ func ParseNonConstantRespose(respStr string, outputType []string) interface{} {
 	}
 }
 
-func (client *pClient) GetResponseByReceipt(respStr string, call packet.MsgDataGen) interface{} {
+func (client *pClient) GetReceiptByPolling(txHash string) (*Receipt, error) {
 	ch := make(chan interface{}, 1)
-	txHash := fmt.Sprintf("trasaction hash: %s\n", respStr)
-	go client.GetReceiptByPolling(respStr, call, ch)
+	go client.getReceiptByPolling(txHash, ch)
 
 	select {
-	case str := <-ch:
-		/// utl.Logger.Printf("result: %s\n", str)
-		return str
+	case receipt := <-ch:
+		return receipt.(*Receipt), nil
 
 	case <-time.After(time.Second * 10):
 		// temp := fmt.Sprintf("\nget contract receipt timeout...more than %d second.\n", 10)
 		// return temp + txHash
 
-		fmt.Printf("\nget contract receipt timeout...more than %d second.\n", 10)
-		return txHash
+		errStr := fmt.Sprintf("get contract receipt timeout...more than %d second.", 10)
+		return nil, errors.New(errStr)
 	}
 }
 
 // todo: end goroutine?
-func (client *pClient) GetReceiptByPolling(txHash string, call packet.MsgDataGen, ch chan interface{}) {
+func (client *pClient) getReceiptByPolling(txHash string, ch chan interface{}) {
 
 	for {
 		receipt, err := client.GetTransactionReceipt(txHash)
@@ -195,48 +232,43 @@ func (client *pClient) GetReceiptByPolling(txHash string, call packet.MsgDataGen
 			continue
 		}
 
-		var result string
-		receiptBytes, _ := json.Marshal(receipt)
-		receiptStr := utl.PrintJson([]byte(receiptBytes))
-		fmt.Printf(receiptStr)
+		ch <- receipt
+	}
+}
 
-		switch {
-		case len(receipt.Logs) != 0:
-			for i, elog := range receipt.Logs {
-				var rlpList []interface{}
+func ReceiptParsing(receipt *Receipt, abiBytes []byte) string {
+	var result string
 
-				eventName, topicTypes := findLogTopic(elog.Topics[0], call.GetAbiBytes())
-				if len(topicTypes) == 0 {
-					continue
-				}
+	switch {
+	case len(receipt.Logs) != 0:
+		for i, elog := range receipt.Logs {
+			var rlpList []interface{}
 
-				dataBytes, _ := hexutil.Decode(elog.Data)
-				err = rlp.DecodeBytes(dataBytes, &rlpList)
-				if err != nil {
-					fmt.Printf("the error is %v\n", err)
-				}
-				result += fmt.Sprintf("\nEvent[%d]: %s ", i, eventName)
-				result += parseReceiptLogData(rlpList, topicTypes)
-				// result += "\n"
+			eventName, topicTypes := findLogTopic(elog.Topics[0], abiBytes)
+			if len(topicTypes) == 0 {
+				continue
 			}
 
-			// ch <- result
-
-		case receipt.Status == txReceiptFailureCode:
-			result += txReceiptFailureMsg
-			// ch <- txReceiptFailureMsg
-
-		case receipt.ContractAddress != "":
-			// ch <- receipt.ContractAddress
-			result += receipt.ContractAddress
-
-		case receipt.Status == txReceiptSuccessCode:
-			// ch <- txReceiptSuccessMsg
-			result += txReceiptSuccessMsg
+			dataBytes, _ := hexutil.Decode(elog.Data)
+			err := rlp.DecodeBytes(dataBytes, &rlpList)
+			if err != nil {
+				fmt.Printf("the error is %v\n", err)
+			}
+			result = fmt.Sprintf("\nEvent[%d]: %s ", i, eventName)
+			result += parseReceiptLogData(rlpList, topicTypes)
 		}
 
-		ch <- result
+	case receipt.Status == txReceiptFailureCode:
+		result = txReceiptFailureMsg
+
+	case receipt.ContractAddress != "":
+		result = receipt.ContractAddress
+
+	case receipt.Status == txReceiptSuccessCode:
+		result = txReceiptSuccessMsg
 	}
+
+	return result
 }
 
 func findLogTopic(topic string, abiBytes []byte) (string, []string) {

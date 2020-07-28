@@ -74,24 +74,44 @@ func contractCall(c *cli.Context, funcParams []string, funcName, contract string
 }
 
 // todo: rename genTxAndCall?
-func clientCommon(c *cli.Context, dataGenerator packet.MsgDataGen, to *common.Address) interface{} {
+func clientCommon(c *cli.Context, dataGen packet.MsgDataGen, to *common.Address) interface{} {
 
-	// get the global parameters
+	// get the client global parameters
 	account, isSync, isDefault, url := getClientConfig(c)
 	pc, err := platoneclient.SetupClient(url)
 	if err != nil {
 		utils.Fatalf("set up client failed: %s\n", err.Error())
 	}
 
+	// form transaction
 	tx := getTxParams(c)
 	tx.From = account.address
 	tx.To = to
 
-	result := pc.MessageCall(dataGenerator, account.keyfile, tx, isSync)
+	// do message call
+	result, isTxHash, err := pc.MessageCall(dataGen, account.keyfile, tx)
+	if err != nil {
+		utils.Fatalf(err.Error())
+	}
 
+	// store default values to config file
 	if isDefault && !reflect.ValueOf(result).IsZero() {
 		runPath := utl.GetRunningTimePath()
 		WriteConfig(runPath+defaultConfigFilePath, config)
+	}
+
+	// todo: move isSync from [pc.MessageCall] to here???
+	if isSync && isTxHash {
+		res, err := pc.GetReceiptByPolling(result.(string))
+		if err != nil {
+			return result
+		}
+
+		receiptBytes, _ := json.Marshal(res)
+		receiptStr := utl.PrintJson(receiptBytes)
+		fmt.Printf("%s\n", receiptStr)
+
+		return platoneclient.ReceiptParsing(res, dataGen.GetAbiBytes())
 	}
 
 	return result
