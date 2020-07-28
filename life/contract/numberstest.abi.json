@@ -1,0 +1,114 @@
+[
+    {
+        "name": "init",
+        "inputs": [],
+        "outputs": [],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "addLong",
+        "inputs": [
+            {
+                "name": "i1",
+                "type": "int128"
+            },
+            {
+                "name": "i2",
+                "type": "int128"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "int128"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "addUlong",
+        "inputs": [
+            {
+                "name": "i1",
+                "type": "uint128"
+            },
+            {
+                "name": "i2",
+                "type": "uint128"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint128"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "addFloat",
+        "inputs": [
+            {
+                "name": "f1",
+                "type": "float32"
+            },
+            {
+                "name": "f2",
+                "type": "float32"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "float32"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "addDouble",
+        "inputs": [
+            {
+                "name": "f1",
+                "type": "float64"
+            },
+            {
+                "name": "f2",
+                "type": "float64"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "float64"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "addLongDouble",
+        "inputs": [
+            {
+                "name": "f1",
+                "type": "float128"
+            },
+            {
+                "name": "f2",
+                "type": "float128"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "float128"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    }
+]

@@ -5,6 +5,10 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"math/big"
+	"reflect"
+	"strings"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/math"
@@ -12,12 +16,10 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/life/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
-	"math/big"
-	"reflect"
-	"strings"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/life/exec"
 	"github.com/PlatONEnetwork/PlatONE-Go/life/resolver"
+	//gomath "math"
 )
 
 var (
@@ -203,6 +205,9 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 		if txType == 0 {
 			return nil, nil
 		}
+		if returnType == "float128" || returnType == "uint128" || returnType == "int128" {
+			params = append([]int64{resolver.Malloc(lvm, 16)}, params...)
+		}
 	}
 	entryID, ok := lvm.GetFunctionExport(funcName)
 	if !ok {
@@ -227,7 +232,6 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 	if input == nil {
 		return contract.Code, nil
 	}
-
 	// todo: more type need to be completed
 	switch returnType {
 	case "void", "int8", "int", "int32", "int64":
@@ -244,7 +248,25 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 		}
 		finalRes := utils.Align32Bytes(utils.Uint64ToBytes((uint64(res))))
 		return finalRes, nil
-	case "string":
+	case "float32", "float64":
+		bytes := make([]byte, 8)
+		binary.BigEndian.PutUint64(bytes, uint64(res))
+		if txType == common.CALL_CANTRACT_FLAG {
+			return bytes, nil
+		}
+		finalRes := utils.Align32Bytes(bytes)
+		return finalRes, nil
+	case "float128", "uint128", "int128":
+		// float128 satisfy IEEE 754 Quadruple precision
+		// wo should revert bytes from little edian to big edian
+		returnBytes := lvm.Memory.Memory[params[0] : params[0]+16]
+		common.RevertBytes(returnBytes)
+		if txType == common.CALL_CANTRACT_FLAG {
+			return returnBytes, nil
+		}
+		returnBytes = utils.Align32Bytes(returnBytes)
+		return returnBytes, nil
+	case "string", "int128_s", "uint128_s", "int256_s", "uint256_s":
 		returnBytes := make([]byte, 0)
 		copyData := lvm.Memory.Memory[res:]
 		for _, v := range copyData {
@@ -388,7 +410,7 @@ func parseInputFromAbi(vm *exec.VirtualMachine, input []byte, abi []byte) (txTyp
 	for i, v := range args {
 		bts := argsRlp[i].([]byte)
 		switch v.Type {
-		case "string":
+		case "string", "int128_s", "uint128_s", "int256_s", "uint256_s":
 			pos := resolver.MallocString(vm, string(bts))
 			params = append(params, pos)
 		case "int8":
@@ -426,6 +448,41 @@ func parseInputFromAbi(vm *exec.VirtualMachine, input []byte, abi []byte) (txTyp
 				return -1, "", nil, returnType, fmt.Errorf("invalid parameter: want 8 bytes but got %d bytes", len(bts))
 			}
 			params = append(params, int64(binary.BigEndian.Uint64(bts)))
+		case "int128", "uint128":
+			if len(bts) > 16 {
+				return -1, "", nil, returnType, fmt.Errorf("invalid parameter: want 16 bytes but got %d bytes", len(bts))
+			}
+			var l, h int64
+			if len(bts) <= 8 {
+				h = int64(binary.BigEndian.Uint64(bts))
+			} else {
+				h = int64(binary.BigEndian.Uint64(bts[:8]))
+			}
+			if len(bts) > 8 {
+				l = int64(binary.BigEndian.Uint64(bts[8:]))
+			} else {
+				l = int64(0)
+			}
+			params = append(params, l, h)
+		case "float32":
+			if len(bts) > 4 {
+				return -1, "", nil, returnType, fmt.Errorf("invalid parameter: want 4 bytes but got %d bytes", len(bts))
+			}
+			//bits bits is the floating-point number corresponding to the IEEE 754 binary representation bts
+			bits := binary.BigEndian.Uint32(bts)
+			params = append(params, int64(bits))
+		case "float64":
+			if len(bts) > 8 {
+				return -1, "", nil, returnType, fmt.Errorf("invalid parameter: want 8 bytes but got %d bytes", len(bts))
+			}
+			bits := binary.BigEndian.Uint64(bts)
+			params = append(params, int64(bits))
+		case "float128":
+			if len(bts) != 16 {
+				return -1, "", nil, returnType, fmt.Errorf("invalid parameter: want 16 bytes but got %d bytes", len(bts))
+			}
+			// wasm is little edian
+			params = append(params, int64(binary.BigEndian.Uint64(bts[8:])), int64(binary.BigEndian.Uint64(bts[:8])))
 		case "bool":
 			if len(bts) > 1 {
 				return -1, "", nil, returnType, fmt.Errorf("invalid parameter: want 1 byte but got %d bytes", len(bts))

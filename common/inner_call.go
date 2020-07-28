@@ -1,7 +1,15 @@
 package common
 
 import (
+<<<<<<< HEAD
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+=======
+	"encoding/binary"
+	math2 "github.com/PlatONEnetwork/PlatONE-Go/common/math"
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"math"
+	"math/big"
+>>>>>>> develop
 )
 
 var (
@@ -20,7 +28,11 @@ func InnerCall(conAddr Address, funcName string, params []interface{}) ([]byte, 
 	}
 }
 
+<<<<<<< HEAD
 func GenCallData(funcName string, params []interface{}) ([]byte) {
+=======
+func GenCallData(funcName string, params []interface{}) []byte {
+>>>>>>> develop
 	data := [][]byte{}
 	data = append(data, Int64ToBytes(2)) // tx type, 2 for normal
 	data = append(data, []byte(funcName))
@@ -69,7 +81,18 @@ func GenCallData(funcName string, params []interface{}) ([]byte) {
 	}
 }
 
+<<<<<<< HEAD
 func CallResAsUint64(bts []byte) (uint64) {
+=======
+func CallResAsUint128(bts []byte) *big.Int {
+	if len(bts) < 32 {
+		return &big.Int{}
+	}
+	return Byte128ToBig(bts[len(bts)-16:], false)
+}
+
+func CallResAsUint64(bts []byte) uint64 {
+>>>>>>> develop
 	if len(bts) < 32 {
 		return 0
 	}
@@ -81,7 +104,11 @@ func CallResAsUint64(bts []byte) (uint64) {
 	return n
 }
 
+<<<<<<< HEAD
 func CallResAsUint32(bts []byte) (uint32) {
+=======
+func CallResAsUint32(bts []byte) uint32 {
+>>>>>>> develop
 	if len(bts) < 32 {
 		return 0
 	}
@@ -93,7 +120,49 @@ func CallResAsUint32(bts []byte) (uint32) {
 	return n
 }
 
+<<<<<<< HEAD
 func CallResAsInt64(bts []byte) (int64) {
+=======
+func CallResAsFloat128(bts []byte) *big.Float {
+	if len(bts) < 32 {
+		return &big.Float{}
+	}
+
+	bytes := bts[len(bts)-16:]
+	low := binary.BigEndian.Uint64(bytes[8:])
+	high := binary.BigEndian.Uint64(bytes[:8])
+
+	F, _ := math2.NewFromBits(high, low).Big()
+
+	return F
+}
+
+func CallResAsFloat64(bts []byte) float64 {
+	if len(bts) < 32 {
+		return 0
+	}
+	bits := binary.BigEndian.Uint64(bts[len(bts)-8:])
+	return math.Float64frombits(bits)
+}
+
+func CallResAsFloat32(bts []byte) float32 {
+	if len(bts) < 32 {
+		return 0
+	}
+	bits := binary.BigEndian.Uint32(bts[len(bts)-4:])
+	return math.Float32frombits(bits)
+}
+
+func CallResAsInt128(bts []byte) *big.Int {
+
+	if len(bts) < 32 {
+		return new(big.Int).SetInt64(0)
+	}
+	return Byte128ToBig(bts[len(bts)-16:], true)
+}
+
+func CallResAsInt64(bts []byte) int64 {
+>>>>>>> develop
 	if len(bts) < 32 {
 		return 0
 	}
@@ -105,7 +174,11 @@ func CallResAsInt64(bts []byte) (int64) {
 	return n
 }
 
+<<<<<<< HEAD
 func CallResAsInt32(bts []byte) (int32) {
+=======
+func CallResAsInt32(bts []byte) int32 {
+>>>>>>> develop
 	if len(bts) < 32 {
 		return 0
 	}
@@ -117,7 +190,11 @@ func CallResAsInt32(bts []byte) (int32) {
 	return n
 }
 
+<<<<<<< HEAD
 func CallResAsBool(bts []byte) (bool) {
+=======
+func CallResAsBool(bts []byte) bool {
+>>>>>>> develop
 	if len(bts) < 32 {
 		return false
 	}
@@ -129,7 +206,11 @@ func CallResAsBool(bts []byte) (bool) {
 	}
 }
 
+<<<<<<< HEAD
 func CallResAsString(bts []byte) (string) {
+=======
+func CallResAsString(bts []byte) string {
+>>>>>>> develop
 	if len(bts) < 64 {
 		return ""
 	}
@@ -140,3 +221,16 @@ func CallResAsString(bts []byte) (string) {
 	}
 	return string(bts[64 : 64+slen])
 }
+<<<<<<< HEAD
+=======
+
+func RevertBytes(bts []byte) {
+	for i, j := 0, len(bts)-1; i < j; {
+		temp := bts[i]
+		bts[i] = bts[j]
+		bts[j] = temp
+		i++
+		j--
+	}
+}
+>>>>>>> develop

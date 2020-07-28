@@ -1,6 +1,6 @@
 #!/bin/bash
 function help() {
-    echo
+    echo 
     echo "
 USAGE: platonectl.sh start [options]
     OPTIONS:
@@ -193,7 +193,6 @@ mkdir -p ${LOG_DIR}
 if [ -f ${LOG_DIR}/node-${NODE_ID}.log ]; then
     mv ${LOG_DIR}/node-${NODE_ID}.log ${LOG_DIR}/node-${NODE_ID}.log.bak.$ts
 fi
-
 
 nohup ${BIN_PATH}/platone --identity platone ${flag_datadir}  --nodiscover \
         --port ${P2P_PORT}  ${flag_nodekey} ${flag_rpc} --rpccorsdomain "*" ${flag_ws} \

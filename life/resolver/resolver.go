@@ -29,3 +29,10 @@ func MallocString(vm *exec.VirtualMachine, str string) int64 {
 	vm.ExternalParams = append(vm.ExternalParams, int64(pos))
 	return int64(pos)
 }
+
+func Malloc(vm *exec.VirtualMachine,size int) int64 {
+	mem := vm.Memory
+	pos := mem.Malloc(size)
+	vm.ExternalParams = append(vm.ExternalParams, int64(pos))
+	return int64(pos)
+}
