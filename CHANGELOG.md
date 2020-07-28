@@ -4,7 +4,7 @@
 ### Breaking Changes
 ### Improvements
 ### Features
-* [chain] WASM虚拟机对浮点数和大数的支持 --于宗坤
+* [chain] WASM虚拟机对大浮点数和大整数的支持 --于宗坤
 
 ### Bug Fixes
 
