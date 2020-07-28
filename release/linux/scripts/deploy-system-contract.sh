@@ -51,6 +51,7 @@ function create_account() {
         echo "New account: "${ACCOUNT}
         echo "passphrase: "${phrase}
         unlock_account ${ACCOUNT} ${phrase}
+        cp $DATA_DIR/node-0/keystore/UTC* $CONF_PATH/keyfile.json
     else
         echo "[ERROR]: create account failed!!!"
         exit
