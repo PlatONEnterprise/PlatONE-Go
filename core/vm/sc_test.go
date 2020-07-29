@@ -11,7 +11,7 @@ import (
 
 func TestMain(m *testing.M) {
 	// initial the data needed for sc_cns_test.go and sc_cns_db_test.go
-	cnsTestInital()
+	cnsTestInitial()
 
 	m.Run()
 }

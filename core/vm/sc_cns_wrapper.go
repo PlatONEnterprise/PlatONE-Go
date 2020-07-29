@@ -2,8 +2,10 @@ package vm
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 )
 
@@ -29,6 +31,14 @@ func (cns *CnsWrapper) RequiredGas(input []byte) uint64 {
 
 // Run runs the precompiled contract
 func (cns *CnsWrapper) Run(input []byte) ([]byte, error) {
+	defer func() {
+		if e := recover(); e != nil {
+			err := fmt.Errorf("[CNS] sc_cns_db.go rlp encode/decode error: %+v", e)
+			log.Error("[CNS] sc_cns_db.go rlp encode/decode", "error", err)
+			fmt.Println(err)
+		}
+	}()
+
 	return execSC(input, cns.AllExportFns())
 }
 

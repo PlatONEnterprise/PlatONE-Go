@@ -26,95 +26,67 @@ func NewCnsMap(stateDB StateDB, contractAddr common.Address) *cnsMap {
 	return &cnsMap{stateDB, contractAddr}
 }
 
-/*
-func (c *cnsMap) setState(key, value []byte) {
-	c.SetState(c.contractAddr, key, value)
-}
-
-func (c *cnsMap) getState(key []byte) []byte {
-	return c.GetState(c.contractAddr, key)
-}*/
-
 func (c *cnsMap) setState(key, value interface{}) {
 
 	keyBytes, err := rlp.EncodeToBytes(key)
 	if err != nil {
-		// todo: panic?
+		panic(err)
 	}
 
 	valueBytes, err := rlp.EncodeToBytes(value)
 	if err != nil {
-		// todo: panic?
+		panic(err)
 	}
 
 	c.SetState(c.contractAddr, keyBytes, valueBytes)
 }
 
-func (c *cnsMap) getState(key interface{}) []byte {
+//
+func (c *cnsMap) getState(key, value interface{}) {
 
 	keyBytes, err := rlp.EncodeToBytes(key)
 	if err != nil {
-		// todo
+		panic(err)
 	}
 
-	return c.GetState(c.contractAddr, keyBytes)
+	valueBytes := c.GetState(c.contractAddr, keyBytes)
+	if len(valueBytes) == 0 {
+		return
+	}
+
+	err = rlp.DecodeBytes(valueBytes, value)
+	if err != nil {
+		panic(err)
+	}
 }
 
-// todo: if could optimize the getState() by go reflect
 func (c *cnsMap) getKeyByIndex(index uint64) string {
-	value := c.getState(indexWrapper(index))
-	if len(value) == 0 {
-		return ""
-	}
-
-	var result string
-
-	err := rlp.DecodeBytes(value, &result)
-	if err != nil {
-		// todo: panic
-	}
-
-	return result
+	var key string
+	c.getState(indexWrapper(index), &key)
+	return key
 }
 
 func (c *cnsMap) find(key string) *ContractInfo {
-	value := c.getState(key)
-	if len(value) == 0 {
-		return nil
-	}
-
-	var result ContractInfo
-
-	err := rlp.DecodeBytes(value, &result)
-	if err != nil {
-		// todo: panic
-	}
-	return &result
-}
-
-func (c *cnsMap) get(index uint64) *ContractInfo {
-	value := c.getKeyByIndex(index)
-	if value == "" {
-		return nil
-	}
-
-	return c.find(value)
+	var cInfo *ContractInfo
+	c.getState(key, &cInfo)
+	return cInfo
 }
 
 func (c *cnsMap) total() uint64 {
-	value := c.getState(totalWrapper())
-	if len(value) == 0 {
-		return 0
+	var total uint64
+	// when there is no corresponding value to the <totalWrapper()> key,
+	// the total is 0
+	c.getState(totalWrapper(), &total)
+	return total
+}
+
+func (c *cnsMap) get(index uint64) *ContractInfo {
+	key := c.getKeyByIndex(index)
+	if key == "" {
+		return nil
 	}
 
-	var result uint64
-
-	err := rlp.DecodeBytes(value, &result)
-	if err != nil {
-		// todo: panic
-	}
-
-	return result
+	return c.find(key)
 }
 
 func (c *cnsMap) insert(key string, value *ContractInfo) {
@@ -126,6 +98,20 @@ func (c *cnsMap) insert(key string, value *ContractInfo) {
 
 func (c *cnsMap) update(key, value []byte) {
 	c.setState(key, value)
+}
+
+func (c *cnsMap) getCurrentVer(name string) string {
+	var curVersion = "0.0.0.0"
+	c.getState(currentVerWrapper(name), &curVersion)
+	return curVersion
+}
+
+func (c *cnsMap) setCurrentVer(name, ver string) {
+	c.setState(currentVerWrapper(name), []byte(ver))
+}
+
+func currentVerWrapper(name string) []byte {
+	return []byte(cnsName + cnsCurrent + name)
 }
 
 func indexWrapper(index uint64) string {
@@ -195,6 +181,8 @@ func (c *cnsMap) getLargestVersion(name string) string {
 	tempVersion := "0.0.0.0"
 
 	for ; index < c.total(); index++ {
+		// no possibility for the key to be null
+		// therefore, there is no param checking
 		key := c.getKeyByIndex(index)
 
 		ary := strings.Split(string(key), seperateChar)
@@ -209,28 +197,4 @@ func (c *cnsMap) getLargestVersion(name string) string {
 	}
 
 	return tempVersion
-}
-
-func currentVerWrapper(name string) []byte {
-	return []byte(cnsName + cnsCurrent + name)
-}
-
-func (c *cnsMap) getCurrentVer(name string) string {
-	value := c.getState(currentVerWrapper(name))
-	if len(value) == 0 {
-		return ""
-	}
-
-	var result string
-
-	err := rlp.DecodeBytes(value, &result)
-	if err != nil {
-		// todo: panic
-	}
-
-	return result
-}
-
-func (c *cnsMap) setCurrentVer(name, ver string) {
-	c.setState(currentVerWrapper(name), []byte(ver))
 }

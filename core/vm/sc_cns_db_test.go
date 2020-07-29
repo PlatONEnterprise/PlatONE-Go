@@ -14,8 +14,8 @@ func TestCnsManager_cMap(t *testing.T) {
 	assert.Equal(t, uint64(len(testCases)), cns.base.cMap.total(), "cns total() FAILED")
 }
 
-// cnsTestInital prepares the data for the unit test
-func cnsTestInital() {
+// cnsTestInitial prepares the data for the unit test
+func cnsTestInitial() {
 	db := newMockStateDB()
 	addr := common.HexToAddress("")
 
