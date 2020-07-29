@@ -1,18 +1,32 @@
 package vm
 
 import (
+	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"math/big"
 	"strings"
 )
 
 type CnsInvoke struct {
-	evm      *EVM
-	caller   common.Address
-	contract *Contract
+	evm         *EVM
+	caller      common.Address
+	contract    *Contract
+	blockNumber *big.Int
 }
+
+var (
+	InvokeString = "CnsInvoke"
+)
+
+const (
+	cnsInvokeSuccess  = 0
+	encodeFail        = 1
+	lengthInvalid     = 2
+	getCnsAddressFail = 3
+)
 
 func (c *CnsInvoke) RequiredGas(input []byte) uint64 {
 	if common.IsBytesEmpty(input) {
@@ -27,11 +41,13 @@ func (c *CnsInvoke) Run(input []byte) ([]byte, error) {
 
 	if err := rlp.DecodeBytes(cnsRawData, &cnsData); err != nil {
 		log.Warn("Decode cnsRawData failed", "err", err)
+		c.emitNotifyEventInCnsInvoke(InvokeString, encodeFail, fmt.Sprintf("cnsRawData encode fail."))
 		c.evm.StateDB.SetNonce(c.caller, c.evm.StateDB.GetNonce(c.caller)+1)
 		return nil, err
 	}
 
 	if len(cnsData) < 3 {
+		c.emitNotifyEventInCnsInvoke(InvokeString, lengthInvalid, fmt.Sprintf("param length invalid."))
 		c.evm.StateDB.SetNonce(c.caller, c.evm.StateDB.GetNonce(c.caller)+1)
 		return nil, nil
 	}
@@ -79,9 +95,13 @@ func (c *CnsInvoke) getCnsAddr(cnsName string) (*common.Address, error) {
 
 	ToAddr, err := getCnsAddress(c.evm.StateDB, contractName, contractVer)
 	if err != nil {
+		c.emitNotifyEventInCnsInvoke(InvokeString, getCnsAddressFail, fmt.Sprintf("getCnsAddress fail"))
 		return nil, err
 	}
-
+	c.emitNotifyEventInCnsInvoke(InvokeString, cnsInvokeSuccess, fmt.Sprintf("cnsinvoke successful."))
 	return &ToAddr, nil
 
+}
+func (c *CnsInvoke) emitNotifyEventInCnsInvoke(topic string, code CodeType, msg string) {
+	emitEvent(*c.contract.CodeAddr, c.evm.StateDB, c.blockNumber.Uint64(), topic, code, msg)
 }

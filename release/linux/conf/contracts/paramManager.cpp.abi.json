@@ -191,17 +191,61 @@
         "constant": "true",
         "type": "function"
     },
-    {
-        "name": "Notify",
-        "inputs": [
-            {
-                "type": "uint64"
-            },
-            {
-                "type": "string"
-            }
+    {   
+        "name":"GasContractName", 
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
         ],
-        "type": "event"
-    }
+        "type":"event"
+    },
+    {   
+        "name":"IsProduceEmptyBlock", 
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {   
+        "name":"TxGasLimit", 
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {   
+        "name":"BlockGasLimit", 
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {   
+        "name":"IsCheckContractDeployPermission", 
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {   
+        "name":"IsApproveDeployedContract", 
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {   
+        "name":"IsTxUseGas", 
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    } 
 ]
 

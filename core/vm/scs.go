@@ -93,9 +93,10 @@ func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Cont
 			return dp.Run(input)
 		case *CnsInvoke:
 			ci := &CnsInvoke{
-				evm:      evm,
-				caller:   evm.Context.Origin,
-				contract: contract,
+				evm:         evm,
+				caller:      evm.Context.Origin,
+				contract:    contract,
+				blockNumber: evm.BlockNumber,
 			}
 			return ci.Run(input)
 		default:

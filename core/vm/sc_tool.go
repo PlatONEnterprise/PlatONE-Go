@@ -24,6 +24,7 @@ var (
 	errNoPermission         = errors.New("No Permission ")
 	errAlreadySetSuperAdmin = errors.New("Already Set SuperAdmin ")
 	errParamInvalid         = errors.New("param is invalid")
+	errEncodeFailure        = errors.New("encode failure ")
 
 	errNameInvalid    = errors.New("[CNS] name format is invalid")
 	errVersionInvalid = errors.New("[CNS] version format is invalid")
