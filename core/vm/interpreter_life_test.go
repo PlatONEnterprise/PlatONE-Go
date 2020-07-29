@@ -428,10 +428,7 @@ func TestInt128(t *testing.T) {
 		I, _ := new(big.Int).SetString(integer, 10)
 		b, _ := common.BigToByte128(I)
 
-		//fmt.Println(b)
-
-		bytes := append(b[8:], b[:8]...)
-		input = append(input, bytes)
+		input = append(input, b)
 	}
 
 	ret, err := RunContractAndGetRes(codePath, abiPath, input)
