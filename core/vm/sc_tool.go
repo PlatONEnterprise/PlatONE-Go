@@ -139,3 +139,7 @@ func CheckPublicKeyFormat(pub string) error {
 func generateStateKey(key string) []byte {
 	return bcwasmutil.SerilizString(key)
 }
+
+func recoveryStateKey(key []byte) string {
+	return bcwasmutil.DeserilizeString(key)
+}
