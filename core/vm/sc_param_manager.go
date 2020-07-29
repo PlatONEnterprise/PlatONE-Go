@@ -122,15 +122,15 @@ func (u *ParamManager) setIsProduceEmptyBlock(isProduceEmptyBlock uint32) (int32
 	if err != nil {
 		switch err {
 		case errNoPermission:
-			u.emitNotifyEventInParam("isProduceEmptyBlock", callerHasNoPermission, fmt.Sprintf("%s has no permission to adjust param.", u.caller.String()))
+			u.emitNotifyEventInParam("IsProduceEmptyBlock", callerHasNoPermission, fmt.Sprintf("%s has no permission to adjust param.", u.caller.String()))
 			return failFlag, err
 
 		case errEncodeFailure:
-			u.emitNotifyEventInParam("isProduceEmptyBlock", encodeFailure, fmt.Sprintf("%v failed to encode.", isProduceEmptyBlockKey))
+			u.emitNotifyEventInParam("IsProduceEmptyBlock", encodeFailure, fmt.Sprintf("%v failed to encode.", isProduceEmptyBlockKey))
 			return failFlag, err
 		}
 	}
-	u.emitNotifyEventInParam("isProduceEmptyBlock", doParamSetSuccess, fmt.Sprintf("param set successful."))
+	u.emitNotifyEventInParam("IsProduceEmptyBlock", doParamSetSuccess, fmt.Sprintf("param set successful."))
 	return ret, err
 }
 
