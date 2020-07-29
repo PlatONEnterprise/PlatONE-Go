@@ -463,7 +463,7 @@ func parseInputFromAbi(vm *exec.VirtualMachine, input []byte, abi []byte) (txTyp
 			} else {
 				l = int64(0)
 			}
-			params = append(params, l, h)
+			params = append(params, h, l)
 		case "float32":
 			if len(bts) > 4 {
 				return -1, "", nil, returnType, fmt.Errorf("invalid parameter: want 4 bytes but got %d bytes", len(bts))

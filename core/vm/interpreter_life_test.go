@@ -397,7 +397,7 @@ func TestFloat128(t *testing.T) {
 		fmt.Println(F)
 		F128, _ := math2.NewFromBig(F)
 
-		bytes := append(common.Uint64ToBytes(F128.Low()), common.Uint64ToBytes(F128.High())...)
+		bytes := append(common.Uint64ToBytes(F128.High()), common.Uint64ToBytes(F128.Low())...)
 		input = append(input, bytes)
 	}
 
@@ -405,15 +405,15 @@ func TestFloat128(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	low := binary.LittleEndian.Uint64(ret[:8])
-	high := binary.LittleEndian.Uint64(ret[8:])
+	high := binary.BigEndian.Uint64(ret[len(ret)-16 : len(ret)-8])
+	low := binary.BigEndian.Uint64(ret[len(ret)-8:])
 
 	FR := math2.NewFromBits(high, low)
 	FB, _ := FR.Big()
 	fmt.Println(FB)
 }
 
-func TestBigInt(t *testing.T) {
+func TestInt128(t *testing.T) {
 	codePath := "../../life/contract/numberstest.wasm"
 	abiPath := "../../life/contract/numberstest.abi.json"
 
@@ -440,7 +440,7 @@ func TestBigInt(t *testing.T) {
 	}
 
 	r := common.CallResAsInt128(ret)
-
+	fmt.Println(r.String())
 	if r.String() != "306530824730957902469139748251264" {
 		t.Fatal("result is not correct")
 	}
