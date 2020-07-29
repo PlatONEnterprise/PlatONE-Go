@@ -55,7 +55,6 @@ func (c *CnsInvoke) Run(input []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	//msg := inputRevert(input)
 	res, _, err := c.evm.Call(AccountRef(c.caller), *addr, cnsRawData, c.contract.Gas, c.contract.value)
 	if err != nil {
 		return nil, err
@@ -63,7 +62,6 @@ func (c *CnsInvoke) Run(input []byte) ([]byte, error) {
 	return res, nil
 }
 func (c *CnsInvoke) getCnsAddr(cnsName string) (*common.Address, error) {
-	//addrProxy := syscontracts.CnsManagementAddress
 
 	var contractName, contractVer string
 	var ToAddr common.Address
@@ -79,24 +77,6 @@ func (c *CnsInvoke) getCnsAddr(cnsName string) (*common.Address, error) {
 		contractVer = cnsName[posOfColon+1:]
 	}
 
-	//if contractName == "" || contractVer == "" {
-	//	return nil, errors.New("cns name do not has the right format")
-	//}
-	//
-	//if contractName == "cnsManager" {
-	//	return &addrProxy, nil
-	//}
-
-	//var isSystemContract = false
-	//for _, v := range common.SystemContractList {
-	//	if v == contractName {
-	//		isSystemContract = true
-	//		break
-	//	}
-	//}
-	//if isSystemContract {
-	//	ToAddr = cnsSysContractsMap[contractName]
-	//} else {
 	ToAddr, err := getCnsAddress(c.evm.StateDB, contractName, contractVer)
 	if err != nil {
 		return nil, err

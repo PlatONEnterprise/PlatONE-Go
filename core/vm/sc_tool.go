@@ -36,7 +36,6 @@ var (
 	ZeroAddress = common.Address{}
 )
 
-
 var fwErrNotOwner = errors.New("FW : error, only contract owner can set firewall setting")
 
 func execSC(input []byte, fns SCExportFns) ([]byte, error) {
