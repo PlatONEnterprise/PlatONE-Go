@@ -272,8 +272,8 @@ func (n *SCNode) add(node *syscontracts.NodeInfo) error {
 	}
 	n.setState(genNodeName(node.Name), encodedBin)
 
-	n.emitNotifyEvent(addNodeSuccess, fmt.Sprintf("add node success. node:%s", string(encodedBin)))
-	log.Info("add node success.", "node", string(encodedBin))
+	n.emitNotifyEvent(addNodeSuccess, fmt.Sprintf("add node success. node:%#v", node))
+	log.Info("add node success.", "node", node)
 
 	return nil
 }
@@ -298,8 +298,8 @@ func (n *SCNode) update(name string, update *syscontracts.UpdateNode) error {
 	}
 	n.setState(genNodeName(node.Name), encodedBin)
 
-	n.emitNotifyEvent(updateNodeSuccess, fmt.Sprintf("update node success. info:%s", string(encodedBin)))
-	log.Info("update node success. ", "update info", string(encodedBin))
+	n.emitNotifyEvent(updateNodeSuccess, fmt.Sprintf("update node success. info:%#v", update))
+	log.Info("update node success. ", "update info", update)
 
 	return nil
 }
