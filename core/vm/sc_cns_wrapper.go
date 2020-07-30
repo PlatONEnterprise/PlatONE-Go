@@ -33,7 +33,7 @@ func (cns *CnsWrapper) RequiredGas(input []byte) uint64 {
 func (cns *CnsWrapper) Run(input []byte) ([]byte, error) {
 	defer func() {
 		if e := recover(); e != nil {
-			err := fmt.Errorf("[CNS] sc_cns_db.go rlp encode/decode error: %+v", e)
+			err := fmt.Errorf("[CNS] sc_cns_db.go rlp encode/decode error: %+v", e.(string))
 			log.Error("[CNS] sc_cns_db.go rlp encode/decode", "error", err)
 			fmt.Println(err)
 		}

@@ -267,7 +267,7 @@ func (n *SCNode) add(node *syscontracts.NodeInfo) error {
 	encodedBin, err := rlp.EncodeToBytes(node)
 	if err != nil {
 		n.emitNotifyEvent(addNodeBadParameter, fmt.Sprintf("Failed to add node. err:%s", err.Error()))
-		log.Error("Failed to add node.", "error", err.Error(), "node", node)
+		log.Error("Failed to add node.", "error", err.Error(), "node", node.String())
 		return err
 	}
 	n.setState(genNodeName(node.Name), encodedBin)
