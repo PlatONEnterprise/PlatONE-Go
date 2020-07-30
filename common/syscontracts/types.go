@@ -1,6 +1,9 @@
 package syscontracts
 
-import "github.com/PlatONEnetwork/PlatONE-Go/common"
+import (
+	"encoding/json"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+)
 
 // the system contract addr  table
 var (
@@ -32,6 +35,11 @@ func (un *UpdateNode) SetTyp(typ uint32) {
 	un.Typ = &typ
 }
 
+func (un *UpdateNode) String() string{
+	str,_ := json.Marshal(un)
+	return string(str)
+}
+
 type NodeInfo struct {
 	Name  string `json:"name,omitempty,required"` //全网唯一，不能重复。所有接口均以此为主键。 这个名称意义是？
 	Owner string `json:"owner,omitempty"`
@@ -46,6 +54,11 @@ type NodeInfo struct {
 	P2pPort    uint32 `json:"p2pPort,omitempty,required"`
 	// delay set validatorSet
 	DelayNum uint64 `json:"delayNum,omitempty"` //共识节点延迟设置的区块高度 (可选, 默认实时设置)
+}
+
+func (node *NodeInfo) String() string{
+	str,_ := json.Marshal(node)
+	return string(str)
 }
 
 type UserInfo struct {

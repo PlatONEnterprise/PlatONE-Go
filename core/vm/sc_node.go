@@ -272,8 +272,8 @@ func (n *SCNode) add(node *syscontracts.NodeInfo) error {
 	}
 	n.setState(genNodeName(node.Name), encodedBin)
 
-	n.emitNotifyEvent(addNodeSuccess, fmt.Sprintf("add node success. node:%#v", node))
-	log.Info("add node success.", "node", node)
+	n.emitNotifyEvent(addNodeSuccess, fmt.Sprintf("add node success. node:%s", node.String()))
+	log.Info("add node success.", "node", node.String())
 
 	return nil
 }
@@ -293,13 +293,13 @@ func (n *SCNode) update(name string, update *syscontracts.UpdateNode) error {
 	encodedBin, err := rlp.EncodeToBytes(node)
 	if err != nil {
 		n.emitNotifyEvent(updateNodeBadParameter, fmt.Sprintf("parameter is invalid"))
-		log.Error("Failed to update node.", "error", err.Error(), "update", update)
+		log.Error("Failed to update node.", "error", err.Error(), "update", update.String())
 		return err
 	}
 	n.setState(genNodeName(node.Name), encodedBin)
 
-	n.emitNotifyEvent(updateNodeSuccess, fmt.Sprintf("update node success. info:%#v", update))
-	log.Info("update node success. ", "update info", update)
+	n.emitNotifyEvent(updateNodeSuccess, fmt.Sprintf("update node success. info:%s", update.String()))
+	log.Info("update node success. ", "update info", update.String())
 
 	return nil
 }
