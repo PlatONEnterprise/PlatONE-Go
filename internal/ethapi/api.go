@@ -920,6 +920,7 @@ func newRPCTransaction(tx *types.Transaction, blockHash common.Hash, blockNumber
 		V:        (*hexutil.Big)(v),
 		R:        (*hexutil.Big)(r),
 		S:        (*hexutil.Big)(s),
+		TxType:	  hexutil.Uint64(tx.Type()),
 	}
 	if blockHash != (common.Hash{}) {
 		result.BlockHash = blockHash
@@ -1143,6 +1144,7 @@ type SendTxArgs struct {
 	// newer name and should be preferred by clients.
 	Data  *hexutil.Bytes `json:"data"`
 	Input *hexutil.Bytes `json:"input"`
+	TxType    uint64        `json:"txType"`
 }
 
 // setDefaults is a helper function that fills in default values for unspecified tx fields.
@@ -1198,7 +1200,7 @@ func (args *SendTxArgs) toTransaction() *types.Transaction {
 	if args.To == nil {
 		return types.NewContractCreation(uint64(*args.Nonce), (*big.Int)(args.Value), uint64(*args.Gas), (*big.Int)(args.GasPrice), input)
 	}
-	return types.NewTransaction(uint64(*args.Nonce), *args.To, (*big.Int)(args.Value), uint64(*args.Gas), (*big.Int)(args.GasPrice), input)
+	return types.NewTransaction(uint64(*args.Nonce), *args.To, (*big.Int)(args.Value), uint64(*args.Gas), (*big.Int)(args.GasPrice), input, args.TxType)
 }
 
 // submitTransaction is a helper function that submits tx to txPool and logs a message.

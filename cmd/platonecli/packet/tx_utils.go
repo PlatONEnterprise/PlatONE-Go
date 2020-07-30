@@ -192,7 +192,7 @@ func (tx *TxParams) GetSignedTx(keystore string) string {
 	if tx.To == nil {
 		txSign = types.NewContractCreation(nonce, value, gas, gasPrice, data)
 	} else {
-		txSign = types.NewTransaction(nonce, *tx.To, value, gas, gasPrice, data)
+		txSign = types.NewTransaction(nonce, *tx.To, value, gas, gasPrice, data, common.DefaultTxType)
 	}
 
 	// extract pk from keystore file and sign the transaction

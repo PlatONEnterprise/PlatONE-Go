@@ -42,6 +42,7 @@ const (
 
 // tx-type
 const (
+	DefaultTxType                = 2
 	CallContractFlag             = 9
 	TxTypeCallSollCompatibleWasm = 14
 )

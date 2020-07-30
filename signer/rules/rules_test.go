@@ -464,7 +464,7 @@ func dummySigned(value *big.Int) *types.Transaction {
 	gas := uint64(21000)
 	gasPrice := big.NewInt(2000000)
 	data := make([]byte, 0)
-	return types.NewTransaction(3, to, value, gas, gasPrice, data)
+	return types.NewTransaction(3, to, value, gas, gasPrice, data, common.DefaultTxType)
 
 }
 func TestLimitWindow(t *testing.T) {

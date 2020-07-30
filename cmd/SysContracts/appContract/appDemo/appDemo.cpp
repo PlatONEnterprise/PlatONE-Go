@@ -17,17 +17,17 @@ namespace demo {
             }
 
             /// 定义Event.
-            BCWASM_EVENT(Notify, uint64_t, const char *)
+            BCWASM_EVENT(Notify, uint64_t, uint64_t, const char *)
 
         public:
-            void invokeNotify(const char *msg)
+            void setName(const char *msg)
             {    
                 // 定义状态变量
                 bcwasm::setState("NAME_KEY", std::string(msg));
                 // 日志输出
                 bcwasm::println("into invokeNotify...");
                 // 事件返回
-                BCWASM_EMIT_EVENT(Notify, 0, "Insufficient value for the method.");
+                BCWASM_EMIT_EVENT(Notify, 0, 1,"Insufficient value for the method.");
             }
 
             const char* getName() const 
@@ -41,13 +41,13 @@ namespace demo {
 }
 
 // 此处定义的函数会生成ABI文件供外部调用
-BCWASM_ABI(demo::FirstDemo, invokeNotify)
+BCWASM_ABI(demo::FirstDemo, setName)
 BCWASM_ABI(demo::FirstDemo, getName)
 //bcwasm autogen begin
 extern "C" { 
-void invokeNotify(const char * msg) {
+void setName(const char * msg) {
 demo::FirstDemo FirstDemo_bcwasm;
-FirstDemo_bcwasm.invokeNotify(msg);
+FirstDemo_bcwasm.setName(msg);
 }
 const char * getName() {
 demo::FirstDemo FirstDemo_bcwasm;
