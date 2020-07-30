@@ -68,7 +68,11 @@ func (u *ParamManager) RequiredGas(input []byte) uint64 {
 }
 
 func (u *ParamManager) Run(input []byte) ([]byte, error) {
-	return execSC(input, u.AllExportFns())
+	ret, err := execSC(input, u.AllExportFns())
+	if err != nil {
+		u.emitNotifyEventInParam("Notify",operateFail, err.Error())
+	}
+	return ret, nil
 }
 
 func (u *ParamManager) setState(key, value []byte) {

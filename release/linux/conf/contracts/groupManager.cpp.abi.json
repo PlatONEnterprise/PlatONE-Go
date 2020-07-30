@@ -136,5 +136,17 @@
         ],
         "constant": "false",
         "type": "function"
+    },
+    {
+        "name": "Notify",
+        "inputs": [
+            {
+                "type": "uint64"
+            },
+            {
+                "type": "string"
+            }
+        ],
+        "type": "event"
     }
  ]

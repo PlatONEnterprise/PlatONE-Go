@@ -22,7 +22,11 @@ func (u *UserManagement) RequiredGas(input []byte) uint64 {
 
 // Run runs the precompiled contract
 func (u *UserManagement) Run(input []byte) ([]byte, error) {
-	return execSC(input, u.AllExportFns())
+	ret, err := execSC(input, u.AllExportFns());
+	if err != nil{
+		u.emitUserManagerEvent("Nofity", operateFail, err.Error())
+	}
+	return ret, nil
 }
 
 func (u *UserManagement) setState(key, value []byte) {

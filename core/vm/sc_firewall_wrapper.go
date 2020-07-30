@@ -25,7 +25,11 @@ func (u *FwWrapper) RequiredGas(input []byte) uint64 {
 
 // Run runs the precompiled contract
 func (u *FwWrapper) Run(input []byte) ([]byte, error) {
-	return execSC(input, u.AllExportFns())
+	ret, err := execSC(input, u.AllExportFns())
+	if err != nil {
+		u.base.emitNotifyEvent(operateFail, err.Error())
+	}
+	return ret, nil
 }
 
 // for access control

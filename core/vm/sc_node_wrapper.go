@@ -27,7 +27,11 @@ func (n *scNodeWrapper) RequiredGas(input []byte) uint64 {
 }
 
 func (n *scNodeWrapper) Run(input []byte) ([]byte, error) {
-	return execSC(input, n.allExportFns())
+	ret, err := execSC(input, n.allExportFns())
+	if err != nil {
+		n.base.emitNotifyEvent(operateFail, err.Error())
+	}
+	return ret, nil
 }
 
 func (n *scNodeWrapper) add(node *syscontracts.NodeInfo) (int, error) {
