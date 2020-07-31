@@ -20,7 +20,7 @@ var (
 )
 
 var (
-	errJsonUnmarshal = errors.New("[CNS] data from old cnsManager unmarshal error")
+	errDataAssertion = errors.New("[CNS] importOldCnsManagerData: data assert error")
 )
 
 type CnsWrapper struct {
@@ -38,8 +38,8 @@ func (cns *CnsWrapper) RequiredGas(input []byte) uint64 {
 func (cns *CnsWrapper) Run(input []byte) ([]byte, error) {
 	defer func() {
 		if e := recover(); e != nil {
-			err := fmt.Errorf("[CNS] sc_cns_db.go rlp encode/decode error: %+v", e.(string))
-			log.Error("[CNS] sc_cns_db.go rlp encode/decode", "error", err)
+			err := fmt.Errorf("[CNS] running error: %+v", e.(string))
+			log.Error("[CNS] running", "error", err)
 		}
 	}()
 
@@ -63,11 +63,6 @@ func (cns *CnsWrapper) AllExportFns() SCExportFns {
 	}
 }
 
-const (
-	cnsMigSuccess CodeType = 0
-	cnsMigFailed  CodeType = 1
-)
-
 // The input JSON format:
 // {"code":<value>,","msg":<string>,"data":{"total":<value>, \
 // "contract":[{"name":,"version":,"address":,"origin":},...,{<cns info>}]}}
@@ -83,15 +78,15 @@ func (cns *CnsWrapper) importOldCnsManagerData(jsonInput string) (int32, error) 
 
 	cnsInfoJson, ok := cnsInfoSer.Data.(map[string]interface{})["contract"]
 	if !ok {
-		cns.base.emitNotifyEvent(cnsMigFailed, err.Error())
-		return int32(cnsMigFailed), err
+		cns.base.emitNotifyEvent(cnsMigFailed, errDataAssertion.Error())
+		return int32(cnsMigFailed), errDataAssertion
 	}
 
 	cnsInfoBytes, _ := json.Marshal(cnsInfoJson)
 	err = json.Unmarshal(cnsInfoBytes, &cnsInfos)
 	if err != nil {
-		cns.base.emitNotifyEvent(cnsMigFailed, errJsonUnmarshal.Error())
-		return int32(cnsMigFailed), errJsonUnmarshal
+		cns.base.emitNotifyEvent(cnsMigFailed, err.Error())
+		return int32(cnsMigFailed), err
 	}
 
 	cns.base.importOldCnsManagerData(cnsInfos)

@@ -31,12 +31,12 @@ func (c *cnsMap) setState(key, value interface{}) {
 
 	keyBytes, err := rlp.EncodeToBytes(key)
 	if err != nil {
-		panic(fmt.Sprintf("setState encode key: %v error: %v", key, err))
+		panic(fmt.Sprintf("setState encode key error: %v, key: %v", err, key))
 	}
 
 	valueBytes, err := rlp.EncodeToBytes(value)
 	if err != nil {
-		panic(fmt.Sprintf("setState encode value: %v error: %v", value, err))
+		panic(fmt.Sprintf("setState encode value error: %v, value: %v", err, value))
 	}
 
 	c.SetState(c.contractAddr, keyBytes, valueBytes)
@@ -47,7 +47,7 @@ func (c *cnsMap) getState(key, value interface{}) {
 
 	keyBytes, err := rlp.EncodeToBytes(key)
 	if err != nil {
-		panic(fmt.Sprintf("getState encode key: %v error: %v", key, err))
+		panic(fmt.Sprintf("getState encode key error: %v, key: %v", err, key))
 	}
 
 	valueBytes := c.GetState(c.contractAddr, keyBytes)
@@ -57,7 +57,7 @@ func (c *cnsMap) getState(key, value interface{}) {
 
 	err = rlp.DecodeBytes(valueBytes, value)
 	if err != nil {
-		panic(fmt.Sprintf("getState dencode value: %v error: %v", valueBytes, err))
+		panic(fmt.Sprintf("getState dencode value error: %v, value: %v", err, valueBytes))
 	}
 }
 

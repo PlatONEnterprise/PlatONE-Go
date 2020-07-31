@@ -27,6 +27,11 @@ const (
 )
 
 const (
+	cnsMigSuccess CodeType = 0
+	cnsMigFailed  CodeType = 1
+)
+
+const (
 	namePattern    = `^[a-zA-Z]\w{2,15}$`  // alice
 	versionPattern = `^([\d]+\.){3}[\d]+$` // 0.0.0.1
 )
