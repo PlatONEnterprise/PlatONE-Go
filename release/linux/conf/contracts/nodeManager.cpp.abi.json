@@ -125,7 +125,7 @@
         "type": "function"
     },
     {
-        "name": "setAllNodes",
+        "name": "importOldNodesData",
         "inputs": [
             {
                 "name": "data",
