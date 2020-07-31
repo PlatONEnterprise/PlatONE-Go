@@ -75,6 +75,14 @@ func (n *scNodeWrapper) getAllNodes() (string, error) {
 	return newSuccessResult(nodes).String(), nil
 }
 
+func (n *scNodeWrapper) setAllNodes(data string) (int, error) {
+	err := n.base.setAllNodes(data)
+	if err != nil{
+		return -1, err
+	}
+	return 0, nil
+}
+
 func (n *scNodeWrapper) isPublicKeyExist(pub string) (int, error) {
 	err := n.base.checkPublicKeyExist(pub)
 	if err != nil {
@@ -150,5 +158,6 @@ func (n *scNodeWrapper) allExportFns() SCExportFns {
 		"getDeletedEnodeNodes": n.getENodesOfAllDeletedNodes,
 		"validJoinNode":        n.isPublicKeyExist,
 		"nodesNum":             n.nodesNum,
+		"setAllNodes":			n.setAllNodes,
 	}
 }

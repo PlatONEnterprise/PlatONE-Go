@@ -2,6 +2,7 @@ package vm
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
@@ -435,6 +436,31 @@ func (n *SCNode) nodesNum(query *syscontracts.NodeInfo) (int, error) {
 
 	return len(nodes), nil
 }
+
+func (n *SCNode) setAllNodes(data string) error {
+	str := []byte(data)
+	nodes := []syscontracts.NodeInfo{}
+	err := json.Unmarshal(str, &nodes)
+	for index, _ := range nodes{
+		//names, err := n.getNames()
+		//if err != nil {
+		//	if errNodeNotFound != err {
+		//		return err
+		//	}
+		//
+		//	names = []string{}
+		//}
+		//if n.isNameExist(names, nodes[index].Name) {
+		//	n.update(nodes[index].Name, &nodes[index])
+		//}
+		n.add(&nodes[index])
+	}
+	if err != nil {
+		return  err
+	}
+	return nil
+}
+
 
 func (n *SCNode) setState(key string, value []byte) {
 	n.stateDB.SetState(n.contractAddr, []byte(key), value)
