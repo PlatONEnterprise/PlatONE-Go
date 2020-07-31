@@ -12,7 +12,6 @@ import (
 
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/platoneclient"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/packet"
@@ -21,29 +20,6 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"gopkg.in/urfave/cli.v1"
 )
-
-var (
-	userManagementAddress        = syscontracts.UserManagementAddress.String()        // The PlatONE Precompiled contract addr for user management
-	nodeManagementAddress        = syscontracts.NodeManagementAddress.String()        // The PlatONE Precompiled contract addr for node management
-	cnsManagementAddress         = syscontracts.CnsManagementAddress.String()         // The PlatONE Precompiled contract addr for CNS
-	parameterManagementAddress   = syscontracts.ParameterManagementAddress.String()   // The PlatONE Precompiled contract addr for parameter management
-	firewallManagementAddress    = syscontracts.FirewallManagementAddress.String()    // The PlatONE Precompiled contract addr for fire wall management
-	groupManagementAddress       = syscontracts.GroupManagementAddress.String()       // The PlatONE Precompiled contract addr for group management
-	contractDataProcessorAddress = syscontracts.ContractDataProcessorAddress.String() // The PlatONE Precompiled contract addr for group management
-	cnsInvokeAddress             = syscontracts.CnsInvokeAddress.String()             // The PlatONE Precompiled contract addr for group management
-)
-
-// link the precompiled contract addresses with abi file bytes
-var precompiledList = map[string]string{
-	userManagementAddress:        "../../release/linux/conf/contracts/userManager.cpp.abi.json",
-	nodeManagementAddress:        "../../release/linux/conf/contracts/nodeManager.cpp.abi.json",
-	cnsManagementAddress:         "../../release/linux/conf/contracts/cnsManager.cpp.abi.json",
-	parameterManagementAddress:   "../../release/linux/conf/contracts/paramManager.cpp.abi.json",
-	firewallManagementAddress:    "../../release/linux/conf/contracts/fireWall.abi.json",
-	groupManagementAddress:       "../../release/linux/conf/contracts/groupManager.cpp.abi.json",
-	contractDataProcessorAddress: "",
-	cnsInvokeAddress:             "../../release/linux/conf/contracts/cnsinvoke.abi.json",
-}
 
 // temporary deprecated
 /*
@@ -180,7 +156,7 @@ func AbiParse(abiFilePath, str string) []byte {
 	var abiBytes []byte
 
 	if abiFilePath == "" {
-		if p := precompiledList[str]; p != "" { // todo: equalFold string?
+		if p := precompile.List[str]; p != "" { // todo: equalFold string?
 			precompiledAbi, _ := precompile.Asset(p)
 			return precompiledAbi
 		}
@@ -278,7 +254,7 @@ func CnsParse(contract string) *packet.Cns {
 	if isAddress {
 		return packet.NewCns(contract, "", types.NormalTxType)
 	} else {
-		return packet.NewCns(cnsInvokeAddress, contract, types.CnsTxType)
+		return packet.NewCns(precompile.CnsInvokeAddress, contract, types.CnsTxType)
 	}
 }
 

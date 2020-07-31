@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 
+	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/precompiled"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/utils"
 	"gopkg.in/urfave/cli.v1"
 )
@@ -80,7 +82,7 @@ func nodeAdd(c *cli.Context) {
 	var strJson = c.Args().First() // todo: add to the usage
 
 	funcParams := []string{strJson}
-	result := contractCall(c, funcParams, "add", nodeManagementAddress)
+	result := contractCall(c, funcParams, "add", precompile.NodeManagementAddress)
 	fmt.Printf("%s\n", result)
 }
 
@@ -92,7 +94,7 @@ func nodeDelete(c *cli.Context) {
 	paramValid(name, "name")
 
 	funcParams := CombineFuncParams(name, str)
-	result := contractCall(c, funcParams, "update", nodeManagementAddress)
+	result := contractCall(c, funcParams, "update", precompile.NodeManagementAddress)
 	fmt.Printf("%s\n", result)
 }
 
@@ -107,7 +109,7 @@ func nodeUpdate(c *cli.Context) {
 	paramValid(name, "name")
 
 	funcParams := CombineFuncParams(name, str)
-	result := contractCall(c, funcParams, "update", nodeManagementAddress)
+	result := contractCall(c, funcParams, "update", precompile.NodeManagementAddress)
 	fmt.Printf("%s\n", result)
 }
 
@@ -117,7 +119,7 @@ func nodeQuery(c *cli.Context) {
 
 	all := c.Bool(ShowAllFlags.Name)
 	if all {
-		result := contractCall(c, nil, "getAllNodes", nodeManagementAddress)
+		result := contractCall(c, nil, "getAllNodes", precompile.NodeManagementAddress)
 		strResult := utils.PrintJson([]byte(result.(string)))
 		fmt.Printf("result:\n%s\n", strResult)
 		return
@@ -126,7 +128,7 @@ func nodeQuery(c *cli.Context) {
 	str := combineJson(c, nil, []byte(strJson))
 	funcParams := CombineFuncParams(str)
 
-	result := contractCall(c, funcParams, "getNodes", nodeManagementAddress)
+	result := contractCall(c, funcParams, "getNodes", precompile.NodeManagementAddress)
 	strResult := utils.PrintJson([]byte(result.(string)))
 	fmt.Printf("result:\n%s\n", strResult)
 }
@@ -137,6 +139,6 @@ func nodeStat(c *cli.Context) {
 	str := combineJson(c, nil, []byte(strJson))
 	funcParams := CombineFuncParams(str)
 
-	result := contractCall(c, funcParams, "nodesNum", nodeManagementAddress)
+	result := contractCall(c, funcParams, "nodesNum", precompile.NodeManagementAddress)
 	fmt.Printf("result: %v\n", result)
 }

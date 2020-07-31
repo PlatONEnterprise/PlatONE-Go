@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/precompiled"
+
 	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 	"gopkg.in/urfave/cli.v1"
@@ -86,7 +88,7 @@ func cnsRegister(c *cli.Context) {
 	paramValid(address, "address")
 
 	funcParams := CombineFuncParams(name, ver, address)
-	result := contractCall(c, funcParams, "cnsRegister", cnsManagementAddress)
+	result := contractCall(c, funcParams, "cnsRegister", precompile.CnsManagementAddress)
 	fmt.Printf("%v\n", result)
 }
 
@@ -99,7 +101,7 @@ func cnsRedirect(c *cli.Context) {
 	paramValid(ver, "version")
 
 	funcParams := CombineFuncParams(name, ver)
-	result := contractCall(c, funcParams, "cnsRedirect", cnsManagementAddress)
+	result := contractCall(c, funcParams, "cnsRedirect", precompile.CnsManagementAddress)
 	fmt.Printf("%s\n", result)
 }
 
@@ -114,7 +116,7 @@ func cnsResolve(c *cli.Context) {
 	}
 
 	funcParams := CombineFuncParams(name, ver)
-	result := contractCall(c, funcParams, "getContractAddress", cnsManagementAddress)
+	result := contractCall(c, funcParams, "getContractAddress", precompile.CnsManagementAddress)
 	fmt.Printf("%s\n", result)
 
 }
@@ -140,7 +142,7 @@ func cnsQuery(c *cli.Context) {
 		paramValid(pageSize, "num")
 
 		funcParams := CombineFuncParams(pageNum, pageSize)
-		result = contractCall(c, funcParams, "getRegisteredContracts", cnsManagementAddress)
+		result = contractCall(c, funcParams, "getRegisteredContracts", precompile.CnsManagementAddress)
 
 	case contract != "":
 		isAddress := ParamParse(contract, "contract").(bool)
@@ -150,14 +152,14 @@ func cnsQuery(c *cli.Context) {
 			funcName = "getRegisteredContractsByName"
 		}
 
-		result = contractCall(c, []string{contract}, funcName, cnsManagementAddress)
+		result = contractCall(c, []string{contract}, funcName, precompile.CnsManagementAddress)
 
 	case user != "":
 		paramValid(user, "address")
 
 		funcName = "getRegisteredContractsByOrigin"
 		funcParams := CombineFuncParams(user)
-		result = contractCall(c, funcParams, funcName, cnsManagementAddress)
+		result = contractCall(c, funcParams, funcName, precompile.CnsManagementAddress)
 
 	default:
 		result = "no search key provided!"
@@ -179,7 +181,7 @@ func cnsState(c *cli.Context) {
 	}
 
 	funcParams := CombineFuncParams(contract)
-	result := contractCall(c, funcParams, funcName, cnsManagementAddress)
+	result := contractCall(c, funcParams, funcName, precompile.CnsManagementAddress)
 
 	if result.(int32) == 1 {
 		fmt.Printf("result: the contract is registered in CNS\n")

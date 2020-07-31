@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 
+	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/precompiled"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/packet"
 	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
@@ -102,7 +104,7 @@ func userAdd(c *cli.Context) {
 	var strJson = c.Args().First()
 
 	funcParams := []string{strJson}
-	result := contractCall(c, funcParams, "addUser", userManagementAddress)
+	result := contractCall(c, funcParams, "addUser", precompile.UserManagementAddress)
 	fmt.Printf("%s\n", result)
 }
 
@@ -115,7 +117,7 @@ func userUpdate(c *cli.Context) {
 
 	funcParams := CombineFuncParams(account, str)
 
-	result := contractCall(c, funcParams, "updateUserDescInfo", userManagementAddress)
+	result := contractCall(c, funcParams, "updateUserDescInfo", precompile.UserManagementAddress)
 	fmt.Printf("%v\n", result)
 }
 
@@ -147,7 +149,7 @@ func queryUser(c *cli.Context) {
 		utils.Fatalf("no search key provided\n")
 	}
 
-	result := contractCall(c, funcParams, funcName, userManagementAddress)
+	result := contractCall(c, funcParams, funcName, precompile.UserManagementAddress)
 	strResult := utl.PrintJson([]byte(result.(string)))
 	fmt.Printf("result:\n%s\n", strResult)
 }

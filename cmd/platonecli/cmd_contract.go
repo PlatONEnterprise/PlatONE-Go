@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/precompiled"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/platoneclient"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
@@ -173,7 +175,7 @@ func migrate(c *cli.Context) {
 	if targetAddr != "" {
 		paramValid(targetAddr, "address")
 		funcParams := CombineFuncParams(sourceAddr, targetAddr)
-		result := contractCall(c, funcParams, funcName, contractDataProcessorAddress)
+		result := contractCall(c, funcParams, funcName, precompile.ContractDataProcessorAddress)
 		fmt.Printf("%s\n", result)
 	} else {
 		// future feature

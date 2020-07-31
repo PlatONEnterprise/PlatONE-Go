@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 
+	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/precompiled"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"gopkg.in/urfave/cli.v1"
 )
@@ -327,6 +329,6 @@ func hasRole(c *cli.Context) {
 }
 
 func callUserManager(c *cli.Context, funcName string, funcParams []string) {
-	result := contractCall(c, funcParams, funcName, userManagementAddress)
+	result := contractCall(c, funcParams, funcName, precompile.UserManagementAddress)
 	fmt.Printf("%s\n", result)
 }

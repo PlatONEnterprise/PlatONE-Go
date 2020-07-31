@@ -5,6 +5,7 @@ package main
 import (
 	"strings"
 
+	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/precompiled"
 	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/utils"
 )
 
@@ -58,7 +59,7 @@ func getAbiFileFromLocal(str string) string {
 	var abiFilePath string
 
 	// (patch) convert CNS_PROXY_ADDRESS to cnsManager system contract
-	if str == cnsManagementAddress {
+	if str == precompile.CnsManagementAddress {
 		str = "__sys_CnsManager"
 	}
 

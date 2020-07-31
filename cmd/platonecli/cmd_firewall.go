@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 
+	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/precompiled"
+
 	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 	"gopkg.in/urfave/cli.v1"
@@ -133,7 +135,7 @@ func fwStart(c *cli.Context) {
 	addr := c.Args().First()
 	funcParams := []string{addr}
 
-	result := contractCall(c, funcParams, funcName, firewallManagementAddress)
+	result := contractCall(c, funcParams, funcName, precompile.FirewallManagementAddress)
 	fmt.Printf("result: %s\n", result)
 }
 
@@ -142,7 +144,7 @@ func fwStop(c *cli.Context) {
 	addr := c.Args().First()
 	funcParams := []string{addr}
 
-	result := contractCall(c, funcParams, funcName, firewallManagementAddress)
+	result := contractCall(c, funcParams, funcName, precompile.FirewallManagementAddress)
 	fmt.Printf("result: %s\n", result)
 }
 
@@ -151,7 +153,7 @@ func fwStatus(c *cli.Context) {
 	addr := c.Args().First()
 	funcParams := []string{addr}
 
-	result := contractCall(c, funcParams, funcName, firewallManagementAddress)
+	result := contractCall(c, funcParams, funcName, precompile.FirewallManagementAddress)
 	strResult := utl.PrintJson([]byte(result.(string)))
 	fmt.Printf("result:\n%s\n", strResult)
 }
@@ -162,7 +164,7 @@ func fwExport(c *cli.Context) {
 	addr := c.Args().First()
 
 	funcParams := []string{addr}
-	result := contractCall(c, funcParams, funcName, firewallManagementAddress)
+	result := contractCall(c, funcParams, funcName, precompile.FirewallManagementAddress)
 
 	_ = utl.WriteFile([]byte(result.(string)), filePath)
 }
@@ -178,7 +180,7 @@ func fwImport(c *cli.Context) {
 	}
 
 	funcParams := []string{addr, string(fileBytes)}
-	result := contractCall(c, funcParams, funcName, firewallManagementAddress)
+	result := contractCall(c, funcParams, funcName, precompile.FirewallManagementAddress)
 	fmt.Printf("result: %s\n", result)
 }
 
@@ -199,7 +201,7 @@ func fwCommon(c *cli.Context, funcName string) {
 	// string --addr addr1 --api func1
 
 	funcParams := CombineFuncParams(addr, action, rules)
-	result := contractCall(c, funcParams, funcName, firewallManagementAddress)
+	result := contractCall(c, funcParams, funcName, precompile.FirewallManagementAddress)
 	fmt.Printf("result: %s\n", result)
 }
 
@@ -218,7 +220,7 @@ func fwClearCommon(c *cli.Context, addr, action string) {
 	paramValid(action, "action")
 
 	funcParams := []string{addr, action}
-	result := contractCall(c, funcParams, funcName, firewallManagementAddress)
+	result := contractCall(c, funcParams, funcName, precompile.FirewallManagementAddress)
 	fmt.Printf("result: clear '%s' rule lists %s\n", action, result)
 }
 

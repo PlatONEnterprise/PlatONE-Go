@@ -8,6 +8,8 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+
 	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/precompiled"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
@@ -17,33 +19,39 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )
 
-const (
-	txReceiptSuccessCode = "0x1"
-	txReceiptFailureCode = "0x0"
+var (
+	txReceiptSuccessCode = hexutil.EncodeUint64(types.ReceiptStatusSuccessful)
+	txReceiptFailureCode = hexutil.EncodeUint64(types.ReceiptStatusFailed)
+)
 
+const (
 	txReceiptSuccessMsg = "Operation Succeeded"
 	txReceiptFailureMsg = "Operation Failed"
 )
 
 // Receipt, eth_getTransactionReceipt return data struct
 type Receipt struct {
-	BlockHash         string `json:"blockHash"`          // hash of the block
-	BlockNumber       string `json:"blockNumber"`        // height of the block
-	ContractAddress   string `json:"contractAddress"`    // contract address of the contract deployment. otherwise null
-	CumulativeGasUsed string `json:"cumulativeGas_used"` //
-	From              string `json:"from"`               // the account address used to send the transaction
-	GasUsed           string `json:"gasUsed"`            // gas used by executing the transaction
-	Root              string `json:"root"`
-	To                string `json:"to"`               // the address the transaction is sent to
-	TransactionHash   string `json:"transactionHash"`  // the hash of the transaction
-	TransactionIndex  string `json:"transactionIndex"` // the index of the transaction
-	Logs              []struct {
-		Address string   `json:"address"`
-		Topics  []string `json:"topics"`
-		Data    string   `json:"data"`
-	} `json:"logs"`
-	Status string `json:"status"` // the execution status of the transaction, "0x1" for success
+	BlockHash         string    `json:"blockHash"`          // hash of the block
+	BlockNumber       string    `json:"blockNumber"`        // height of the block
+	ContractAddress   string    `json:"contractAddress"`    // contract address of the contract deployment. otherwise null
+	CumulativeGasUsed string    `json:"cumulativeGas_used"` //
+	From              string    `json:"from"`               // the account address used to send the transaction
+	GasUsed           string    `json:"gasUsed"`            // gas used by executing the transaction
+	Root              string    `json:"root"`
+	To                string    `json:"to"`               // the address the transaction is sent to
+	TransactionHash   string    `json:"transactionHash"`  // the hash of the transaction
+	TransactionIndex  string    `json:"transactionIndex"` // the index of the transaction
+	Logs              RecptLogs `json:"logs"`
+	Status            string    `json:"status"` // the execution status of the transaction, "0x1" for success
 }
+
+type Log struct {
+	Address string   `json:"address"`
+	Topics  []string `json:"topics"`
+	Data    string   `json:"data"`
+}
+
+type RecptLogs []*Log
 
 // ParseSysContractResult parsed the rpc response to Receipt object
 func ParseTxReceipt(response interface{}) (*Receipt, error) {
@@ -60,38 +68,49 @@ func ParseTxReceipt(response interface{}) (*Receipt, error) {
 	return receipt, nil
 }
 
+// EventParsing parsing all the events recorded in receipt log.
+// The event should be written in the abiBytes provided.
+// Otherwise, the event will not be parsed
+func EventParsing(logs RecptLogs, abiBytes []byte) (result string) {
+	var rlpList []interface{}
+	var eventName string
+	var topicTypes []string
+	var cnsInvokeAddr = precompile.CnsInvokeAddress
+
+	for i, eLog := range logs {
+		// for cns invoking, to parse the events defined in sc_cns_invoke.go
+		// we add if condition to check the address in the receipt logs
+		if strings.EqualFold(eLog.Address, cnsInvokeAddr) {
+			p := precompile.List[cnsInvokeAddr]
+			cnsInvokeAbiBytes, _ := precompile.Asset(p)
+			eventName, topicTypes = findLogTopic(eLog.Topics[0], cnsInvokeAbiBytes)
+		} else {
+			eventName, topicTypes = findLogTopic(eLog.Topics[0], abiBytes)
+		}
+
+		if len(topicTypes) == 0 {
+			continue
+		}
+
+		dataBytes, _ := hexutil.Decode(eLog.Data)
+		err := rlp.DecodeBytes(dataBytes, &rlpList)
+		if err != nil {
+			// todo: error handle
+			fmt.Printf("the error is %v\n", err)
+		}
+		result += fmt.Sprintf("\nEvent[%d]: %s ", i, eventName)
+		result += parseReceiptLogData(rlpList, topicTypes)
+	}
+
+	return
+}
+
 func ReceiptParsing(receipt *Receipt, abiBytes []byte) string {
 	var result string
 
 	switch {
 	case len(receipt.Logs) != 0:
-		var rlpList []interface{}
-		var eventName string
-		var topicTypes []string
-
-		for i, eLog := range receipt.Logs {
-			// todo: reuse the cnsInvokeAddress in common.go
-			if strings.EqualFold(eLog.Address, common.HexToAddress("").String()) {
-				p := cnsInvokeAbi
-				cnsInvokeAbiBytes, _ := precompile.Asset(p)
-				eventName, topicTypes = findLogTopic(eLog.Topics[0], cnsInvokeAbiBytes)
-			} else {
-				eventName, topicTypes = findLogTopic(eLog.Topics[0], abiBytes)
-			}
-
-			// eventName, topicTypes = findLogTopic(eLog.Topics[0], abiBytes)
-			if len(topicTypes) == 0 {
-				continue
-			}
-
-			dataBytes, _ := hexutil.Decode(eLog.Data)
-			err := rlp.DecodeBytes(dataBytes, &rlpList)
-			if err != nil {
-				fmt.Printf("the error is %v\n", err)
-			}
-			result += fmt.Sprintf("\nEvent[%d]: %s ", i, eventName)
-			result += parseReceiptLogData(rlpList, topicTypes)
-		}
+		result = EventParsing(receipt.Logs, abiBytes)
 
 	case receipt.Status == txReceiptFailureCode:
 		result = txReceiptFailureMsg
@@ -105,8 +124,6 @@ func ReceiptParsing(receipt *Receipt, abiBytes []byte) string {
 
 	return result
 }
-
-const cnsInvokeAbi = "../../release/linux/conf/contracts/cnsinvoke.abi.json"
 
 func findLogTopic(topic string, abiBytes []byte) (string, []string) {
 	var types []string

@@ -5,6 +5,8 @@ import (
 	"reflect"
 	"strconv"
 
+	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/precompiled"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
@@ -98,7 +100,7 @@ func setConfig(c *cli.Context, param string, name string) {
 	funcName := "set" + name
 	funcParams := CombineFuncParams(newParam)
 
-	result := contractCall(c, funcParams, funcName, parameterManagementAddress)
+	result := contractCall(c, funcParams, funcName, precompile.ParameterManagementAddress)
 	fmt.Printf("%s\n", result)
 }
 
@@ -164,7 +166,7 @@ func getConfig(c *cli.Context, isGet bool, name string) {
 
 	if isGet {
 		funcName := "get" + name
-		result := contractCall(c, nil, funcName, parameterManagementAddress)
+		result := contractCall(c, nil, funcName, precompile.ParameterManagementAddress)
 
 		result = sysconfigToString(result)
 		str := sysConfigParsing(result, name)
