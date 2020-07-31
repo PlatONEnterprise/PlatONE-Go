@@ -67,6 +67,10 @@ func (dataGen *ContractDataGen) SetInterpreter(vm string) {
 	}
 }
 
+func (dataGen *ContractDataGen) ReceiptParsing(receipt *Receipt) string {
+	return dataGen.Interp.ReceiptParsing(receipt, dataGen.data.funcAbi)
+}
+
 // CombineData of Contractcall data struct is used for packeting the data of wasm or evm contracts execution
 // Implement the MessageCallDemo interface
 func (dataGen *ContractDataGen) CombineData() (string, []string, bool, error) {

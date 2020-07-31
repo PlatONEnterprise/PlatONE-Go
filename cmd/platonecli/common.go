@@ -42,6 +42,7 @@ var precompiledList = map[string]string{
 	firewallManagementAddress:    "../../release/linux/conf/contracts/fireWall.abi.json",
 	groupManagementAddress:       "../../release/linux/conf/contracts/groupManager.cpp.abi.json",
 	contractDataProcessorAddress: "",
+	cnsInvokeAddress:             "../../release/linux/conf/contracts/cnsinvoke.abi.json",
 }
 
 // temporary deprecated
@@ -111,7 +112,7 @@ func clientCommon(c *cli.Context, dataGen packet.MsgDataGen, to *common.Address)
 		receiptStr := utl.PrintJson(receiptBytes)
 		fmt.Printf("%s\n", receiptStr)
 
-		return platoneclient.ReceiptParsing(res, dataGen.GetAbiBytes())
+		return dataGen.ReceiptParsing(res)
 	}
 
 	return result

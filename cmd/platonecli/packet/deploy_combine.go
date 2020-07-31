@@ -52,6 +52,10 @@ func (dataGen *DeployDataGen) SetInterpreter(vm string) error {
 	return nil
 }
 
+func (dataGen *DeployDataGen) ReceiptParsing(receipt *Receipt) string {
+	return dataGen.Interpreter.ReceiptParsing(receipt, dataGen.abiBytes)
+}
+
 // CombineData of DeployCall data struct is used for packeting the data of wasm or evm contracts deployment
 // Implement the MessageCallDemo interface
 func (dataGen DeployDataGen) CombineData() (string, []string, bool, error) {

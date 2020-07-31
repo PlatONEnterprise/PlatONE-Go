@@ -18,11 +18,13 @@ import (
 // MessageCallDemo, the interface for different types of data package methods
 type MsgDataGen interface {
 	CombineData() (string, []string, bool, error)
+	ReceiptParsing(receipt *Receipt) string
 	GetAbiBytes() []byte
 }
 
 type deployInter interface {
 	combineData() (string, error)
+	ReceiptParsing(*Receipt, []byte) string
 }
 
 type contractInter interface {
@@ -30,6 +32,7 @@ type contractInter interface {
 	encodeFunction(*FuncDesc, []string, string) ([][]byte, error)
 	combineData([][]byte) (string, error)
 	setIsWrite(*FuncDesc) bool
+	ReceiptParsing(*Receipt, []byte) string
 }
 
 //============================Contract EVM============================
@@ -103,6 +106,10 @@ func (i EvmContractInterpreter) setIsWrite(abiFunc *FuncDesc) bool {
 	return abiFunc.StateMutability != "pure" && abiFunc.StateMutability != "view"
 }
 
+func (i EvmContractInterpreter) ReceiptParsing(receipt *Receipt, abiBytes []byte) string {
+	return ""
+}
+
 //============================Contract WASM===========================
 
 type WasmContractInterpreter struct {
@@ -161,6 +168,11 @@ func (i WasmContractInterpreter) setIsWrite(abiFunc *FuncDesc) bool {
 	return abiFunc.Constant != "true"
 }
 
+func (i WasmContractInterpreter) ReceiptParsing(receipt *Receipt, abiBytes []byte) string {
+	// todo
+	return ReceiptParsing(receipt, abiBytes)
+}
+
 //========================DEPLOY EVM=========================
 
 // EvmInterpreter, packet data in the way defined by the evm virtual machine
@@ -172,6 +184,10 @@ type EvmDeployInterpreter struct {
 // Implement the Interpreter interface
 func (i *EvmDeployInterpreter) combineDeployData() (string, error) {
 	return "0x" + string(i.codeBytes), nil
+}
+
+func (i EvmDeployInterpreter) ReceiptParsing(receipt *Receipt, abiBytes []byte) string {
+	return ""
 }
 
 //========================DEPLOY WASM=========================
@@ -194,6 +210,10 @@ func (i *WasmDeployInterpreter) combineDeployData() (string, error) {
 	dataParams = append(dataParams, i.abiBytes)
 
 	return rlpEncode(dataParams)
+}
+
+func (i WasmDeployInterpreter) ReceiptParsing(receipt *Receipt, abiBytes []byte) string {
+	return ReceiptParsing(receipt, abiBytes)
 }
 
 //=========================COMMON==============================

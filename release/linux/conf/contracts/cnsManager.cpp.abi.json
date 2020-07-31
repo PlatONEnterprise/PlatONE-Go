@@ -194,6 +194,17 @@
         "type": "function"
     },
     {
+        "name": "importOldCnsManagerData",
+        "inputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    },
+    {
         "name": "Notify",
         "inputs": [
             {
