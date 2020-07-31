@@ -75,8 +75,8 @@ func (n *scNodeWrapper) getAllNodes() (string, error) {
 	return newSuccessResult(nodes).String(), nil
 }
 
-func (n *scNodeWrapper) setAllNodes(data string) (int, error) {
-	err := n.base.setAllNodes(data)
+func (n *scNodeWrapper) importOldNodesData(data string) (int, error) {
+	err := n.base.importOldNodesData(data)
 	if err != nil{
 		return -1, err
 	}
@@ -158,6 +158,6 @@ func (n *scNodeWrapper) allExportFns() SCExportFns {
 		"getDeletedEnodeNodes": n.getENodesOfAllDeletedNodes,
 		"validJoinNode":        n.isPublicKeyExist,
 		"nodesNum":             n.nodesNum,
-		"setAllNodes":			n.setAllNodes,
+		"setAllNodes":			n.importOldNodesData,
 	}
 }

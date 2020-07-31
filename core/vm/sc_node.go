@@ -15,6 +15,10 @@ import (
 )
 
 const (
+	importOldDataSuccess CodeType = 0
+	dataUnmarshalFail CodeType = 1
+)
+const (
 	NodeStatusNormal  = uint32(1)
 	NodeStatusDeleted = uint32(2)
 )
@@ -437,10 +441,14 @@ func (n *SCNode) nodesNum(query *syscontracts.NodeInfo) (int, error) {
 	return len(nodes), nil
 }
 
-func (n *SCNode) setAllNodes(data string) error {
+func (n *SCNode) importOldNodesData(data string) error {
 	str := []byte(data)
-	nodes := []syscontracts.NodeInfo{}
+	nodes := make([]syscontracts.NodeInfo, 0)
 	err := json.Unmarshal(str, &nodes)
+	if err != nil {
+		n.emitNotifyEvent(dataUnmarshalFail, fmt.Sprintf("old nodes data unmarshal fail"))
+		return err
+	}
 	for index, _ := range nodes{
 		//names, err := n.getNames()
 		//if err != nil {
@@ -458,6 +466,7 @@ func (n *SCNode) setAllNodes(data string) error {
 	if err != nil {
 		return  err
 	}
+	n.emitNotifyEvent(importOldDataSuccess, fmt.Sprintf("import old nodes data success"))
 	return nil
 }
 

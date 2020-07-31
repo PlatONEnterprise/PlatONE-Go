@@ -558,11 +558,11 @@ func TestSCNode_isNameExist(t *testing.T) {
 	}
 }
 
-func Test_setAllNodes(t *testing.T) {
+func Test_importOldData(t *testing.T) {
 	db := newMockStateDB()
 	n := NewSCNode(db)
 	data := "[{\"name\":\"0\",\"owner\":\"0x32f70162c68d6657a3e19d464ebb60bdb2811e02\",\"type\":1,\"status\":1,\"externalIP\":\"127.0.0.1\",\"internalIP\":\"127.0.0.1\",\"publicKey\":\"2ecbd18ac4a4f6de7b18ad88eba68c28d8fc607a2c89e0f8c5563eaf8c2e6136710adefeb99ca11a632a62c1ef147635481c09ae3e92f2c64ca21914c6423462\",\"rpcPort\":6791,\"p2pPort\":16791},{\"name\":\"1\",\"owner\":\"0x\",\"type\":1,\"status\":1,\"externalIP\":\"127.0.0.1\",\"internalIP\":\"127.0.0.1\",\"publicKey\":\"dfe5b477e808d1cd89647af994dee7ead04c8adfe0abff758befe33614d947359428717385c641e57431fc3c2faaf882f9d7c0a49df5bdf29d575988cb544e33\",\"rpcPort\":6792,\"p2pPort\":16792},{\"name\":\"2\",\"owner\":\"0x\",\"type\":1,\"status\":1,\"externalIP\":\"127.0.0.1\",\"internalIP\":\"127.0.0.1\",\"publicKey\":\"8386c2039d3a9801a9e75b86929b93d44a967a98f67a0b06be1dbf591d1cce370d1bb2232a1dd2b10c576a7563ffb5ff48a50daad8c2e1120fdaab061c46b3f4\",\"rpcPort\":6793,\"p2pPort\":16793},{\"name\":\"3\",\"owner\":\"0x\",\"type\":1,\"status\":1,\"externalIP\":\"127.0.0.1\",\"internalIP\":\"127.0.0.1\",\"publicKey\":\"55ed407df04a880704945883724c7de9bd0992d6f5911f9e3a829b367800454418d029600b7e257d7c7e4ed4769dce4d7fa11af3c50db00542576cf4876b9b04\",\"rpcPort\":6794,\"p2pPort\":16794},{\"name\":\"万向区块链\",\"status\":1,\"internalIP\":\"127.0.0.1\",\"publicKey\":\"4b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc\",\"p2pPort\":8888}]"
-	n.setAllNodes(data)
+	n.importOldNodesData(data)
 	res, _ := n.GetAllNodes()
 	fmt.Printf("%+v", res)
 }
