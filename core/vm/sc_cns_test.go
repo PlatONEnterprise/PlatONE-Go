@@ -76,6 +76,20 @@ func TestSerializeCnsInfo(t *testing.T) {
 	t.Logf("%s\n", sBytes)
 }*/
 
+func TestCnsManager_importOldCnsManagerData(t *testing.T) {
+	testStr := "{\"code\":0,\"msg\":\"ok\",\"data\":{\"total\":3," +
+		"\"contract\":[{\"name\":\"tofu\",\"version\":\"0.0.0.1\",\"address\":\"0x662841db4684082637f1fe05ee314b08a87048e5\",\"origin\":\"0x1671f8ecc83232ef767ed4b2cdc0c6215b6001eb\",\"create_time\":1596101407,\"enabled\":true}," +
+		"{\"name\":\"tofu\",\"version\":\"0.0.0.3\",\"address\":\"0x662841db4684082637f1fe05ee314b08a87048e5\",\"origin\":\"0x1671f8ecc83232ef767ed4b2cdc0c6215b6001eb\",\"create_time\":1596101419,\"enabled\":true}," +
+		"{\"name\":\"alice\",\"version\":\"0.0.0.1\",\"address\":\"0x662841db4684082637f1fe05ee314b08a87048e5\",\"origin\":\"0x1671f8ecc83232ef767ed4b2cdc0c6215b6001eb\",\"create_time\":1596101434,\"enabled\":true}]}}"
+
+	code, err := cns.importOldCnsManagerData(testStr)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, int32(cnsMigSuccess), code, "cns data migration FAILED")
+}
+
 func TestCnsManager_cnsRegister(t *testing.T) {
 	result, err := cns.cnsRegister("alice", "0.0.0.1", testAddr1)
 	if err != nil {

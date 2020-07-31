@@ -1,6 +1,7 @@
 package vm
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -16,6 +17,10 @@ var (
 	errNameAndVerReg          = errors.New("[CNS] name and version is already registered and activated in CNS")
 	errNameReg                = errors.New("[CNS] Name is already registered")
 	errNameAndVerUnReg        = errors.New("[CNS] Name and version didn't register before")
+)
+
+var (
+	errJsonUnmarshal = errors.New("[CNS] data from old cnsManager unmarshal error")
 )
 
 type CnsWrapper struct {
@@ -35,7 +40,6 @@ func (cns *CnsWrapper) Run(input []byte) ([]byte, error) {
 		if e := recover(); e != nil {
 			err := fmt.Errorf("[CNS] sc_cns_db.go rlp encode/decode error: %+v", e.(string))
 			log.Error("[CNS] sc_cns_db.go rlp encode/decode", "error", err)
-			fmt.Println(err)
 		}
 	}()
 
@@ -55,7 +59,43 @@ func (cns *CnsWrapper) AllExportFns() SCExportFns {
 		"getRegisteredContractsByName":    cns.getRegisteredContractsByName, // getHistoryContractsByName -> getRegisteredContractsByName
 		"getRegisteredContractsByAddress": cns.getRegisteredContractsByAddress,
 		"getRegisteredContractsByOrigin":  cns.getRegisteredContractsByOrigin, // getContractInfoByAddress -> getRegisteredContractsByOrigin
+		"importOldCnsManagerData":         cns.importOldCnsManagerData,
 	}
+}
+
+const (
+	cnsMigSuccess CodeType = 0
+	cnsMigFailed  CodeType = 1
+)
+
+// The input JSON format:
+// {"code":<value>,","msg":<string>,"data":{"total":<value>, \
+// "contract":[{"name":,"version":,"address":,"origin":},...,{<cns info>}]}}
+func (cns *CnsWrapper) importOldCnsManagerData(jsonInput string) (int32, error) {
+	var cnsInfoSer = new(result)
+	var cnsInfos = make([]*ContractInfo, 0)
+
+	err := json.Unmarshal([]byte(jsonInput), &cnsInfoSer)
+	if err != nil {
+		cns.base.emitNotifyEvent(cnsMigFailed, err.Error())
+		return int32(cnsMigFailed), err
+	}
+
+	cnsInfoJson, ok := cnsInfoSer.Data.(map[string]interface{})["contract"]
+	if !ok {
+		cns.base.emitNotifyEvent(cnsMigFailed, err.Error())
+		return int32(cnsMigFailed), err
+	}
+
+	cnsInfoBytes, _ := json.Marshal(cnsInfoJson)
+	err = json.Unmarshal(cnsInfoBytes, &cnsInfos)
+	if err != nil {
+		cns.base.emitNotifyEvent(cnsMigFailed, errJsonUnmarshal.Error())
+		return int32(cnsMigFailed), errJsonUnmarshal
+	}
+
+	cns.base.importOldCnsManagerData(cnsInfos)
+	return int32(cnsMigSuccess), nil
 }
 
 func (cns *CnsWrapper) cnsRegisterFromInit(name, version string) (int32, error) {

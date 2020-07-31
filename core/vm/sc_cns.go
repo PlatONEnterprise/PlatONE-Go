@@ -60,7 +60,7 @@ type ContractInfo struct {
 	Version   string
 	Address   common.Address
 	Origin    common.Address
-	TimeStamp uint64
+	TimeStamp uint64 `json:"create_time"`
 }
 
 func newContractInfo(name, version string, address, origin common.Address) *ContractInfo {
@@ -108,6 +108,23 @@ func (cns *CnsManager) isFromInit() bool {
 	} else {
 		return false
 	}
+}
+
+func (cns *CnsManager) importOldCnsManagerData(cnsInfos []*ContractInfo) {
+	// todo: check validation of  import data?
+
+	for _, data := range cnsInfos {
+		key := getSearchKey(data.Name, data.Version)
+		cns.cMap.insert(key, data)
+
+		// set the largest version to CURRENT version
+		curVersion := cns.cMap.getCurrentVer(data.Name)
+		if verCompare(data.Version, curVersion) == 1 {
+			cns.cMap.setCurrentVer(data.Name, data.Version)
+		}
+	}
+
+	cns.emitNotifyEvent(cnsSuccess, "[CNS] cns data migration succeed")
 }
 
 func (cns *CnsManager) cnsRegisterFromInit(name, version string) error {

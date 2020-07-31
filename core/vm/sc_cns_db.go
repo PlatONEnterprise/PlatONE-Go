@@ -1,6 +1,7 @@
 package vm
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -30,12 +31,12 @@ func (c *cnsMap) setState(key, value interface{}) {
 
 	keyBytes, err := rlp.EncodeToBytes(key)
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("setState encode key: %v error: %v", key, err))
 	}
 
 	valueBytes, err := rlp.EncodeToBytes(value)
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("setState encode value: %v error: %v", value, err))
 	}
 
 	c.SetState(c.contractAddr, keyBytes, valueBytes)
@@ -46,7 +47,7 @@ func (c *cnsMap) getState(key, value interface{}) {
 
 	keyBytes, err := rlp.EncodeToBytes(key)
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("getState encode key: %v error: %v", key, err))
 	}
 
 	valueBytes := c.GetState(c.contractAddr, keyBytes)
@@ -56,7 +57,7 @@ func (c *cnsMap) getState(key, value interface{}) {
 
 	err = rlp.DecodeBytes(valueBytes, value)
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("getState dencode value: %v error: %v", valueBytes, err))
 	}
 }
 
