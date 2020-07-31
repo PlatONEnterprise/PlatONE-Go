@@ -77,7 +77,7 @@ func (n *scNodeWrapper) getAllNodes() (string, error) {
 
 func (n *scNodeWrapper) importOldNodesData(data string) (int, error) {
 	err := n.base.importOldNodesData(data)
-	if err != nil{
+	if err != nil {
 		return -1, err
 	}
 	return 0, nil
@@ -158,6 +158,6 @@ func (n *scNodeWrapper) allExportFns() SCExportFns {
 		"getDeletedEnodeNodes": n.getENodesOfAllDeletedNodes,
 		"validJoinNode":        n.isPublicKeyExist,
 		"nodesNum":             n.nodesNum,
-		"setAllNodes":			n.importOldNodesData,
+		"importOldNodesData":   n.importOldNodesData,
 	}
 }
