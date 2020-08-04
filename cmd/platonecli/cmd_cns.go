@@ -138,8 +138,10 @@ func cnsQuery(c *cli.Context) {
 
 	switch {
 	case all:
-		paramValid(pageNum, "num")
-		paramValid(pageSize, "num")
+		// paramValid(pageNum, "num")
+		// paramValid(pageSize, "num")
+		chainParamConvert(pageNum, "value")
+		paramValid(pageSize, "value")
 
 		funcParams := CombineFuncParams(pageNum, pageSize)
 		result = contractCall(c, funcParams, "getRegisteredContracts", precompile.CnsManagementAddress)
@@ -173,10 +175,15 @@ func cnsState(c *cli.Context) {
 	var funcName string
 	contract := c.Args().First()
 
-	isAddress := ParamParse(contract, "contract").(bool)
-	if isAddress {
+	if strings.HasPrefix(strings.ToLower(contract), "0x") {
+		if !utl.IsMatch(contract, "address") {
+			utils.Fatalf("contract address error")
+		}
 		funcName = "ifRegisteredByAddress"
 	} else {
+		if !utl.IsMatch(contract, "name") {
+			utils.Fatalf("contract name error")
+		}
 		funcName = "ifRegisteredByName"
 	}
 

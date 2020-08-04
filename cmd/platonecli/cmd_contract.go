@@ -151,7 +151,7 @@ func execute(c *cli.Context) {
 	funcParams := c.StringSlice(ContractParamFlag.Name)
 	isListMethods := c.Bool(ShowContractMethodsFlag.Name)
 
-	paramValid(contract, "contract")
+	// paramValid(contract, "contract")
 
 	if isListMethods {
 		contractMethods(c)
@@ -159,7 +159,7 @@ func execute(c *cli.Context) {
 	}
 
 	result := contractCall(c, funcParams, funcName, contract)
-	fmt.Printf(" %v\n", result)
+	fmt.Printf("result: %v\n", result)
 	//utl.PrintJson([]byte(result.(string))) //TODO
 }
 

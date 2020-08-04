@@ -315,11 +315,11 @@ func (cns *CnsManager) ifRegisteredByAddress(address common.Address) (bool, erro
 	for index = 0; index < cns.cMap.total(); index++ {
 		cnsInfo := cns.cMap.get(index)
 		if cnsInfo.Address == address {
-			return false, nil
+			return true, nil
 		}
 	}
 
-	return true, nil
+	return false, nil
 }
 
 // getRegisteredContractsByRange returns the cnsContractInfo within the ranges specified

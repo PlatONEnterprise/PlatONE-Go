@@ -148,19 +148,21 @@ func combineJson(c *cli.Context, arrayMust []string, bytes []byte) string {
 // AbiParse gets the abi bytes by the input parameters provided
 // The abi file can be obtained through following ways:
 // 1. user provide the abi file path
-// 2. get the abi files from default file locations (for example, the system contracts are
-// all stored in ./PlatONE/release/linux/conf/contracts)
-// 3. get the abi bytes on chain (wasm contract only).
+// 2. abiBytes of precompiled contracts (see precompiled/bindata.go)
+// (currently, the following features are not enabled)
+// a. get the abi files from default abi file locations
+// b. get the abi bytes on chain (wasm contract only).
 func AbiParse(abiFilePath, str string) []byte {
 	var err error
 	var abiBytes []byte
 
-	if abiFilePath == "" {
-		if p := precompile.List[str]; p != "" { // todo: equalFold string?
-			precompiledAbi, _ := precompile.Asset(p)
-			return precompiledAbi
-		}
+	// todo: equalFold string?
+	if p := precompile.List[str]; p != "" {
+		precompiledAbi, _ := precompile.Asset(p)
+		return precompiledAbi
+	}
 
+	if abiFilePath == "" {
 		/// abiFilePath = getAbiFileFromLocal(str)
 	}
 
