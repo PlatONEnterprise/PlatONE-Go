@@ -404,6 +404,11 @@ func getCnsAddress(stateDB StateDB, name, version string) (common.Address, error
 	return cns.getContractAddress(name, version)
 }
 
+func getRegisterStatusByName(stateDB StateDB, name string) (bool, error) {
+	cns := newCnsManager(stateDB)
+	return cns.ifRegisteredByName(name)
+}
+
 func (cns *CnsManager) emitNotifyEvent(code CodeType, msg string) {
 	topic := "Notify"
 	emitEvent(cns.cMap.contractAddr, cns.cMap, cns.blockNumber.Uint64(), topic, code, msg)

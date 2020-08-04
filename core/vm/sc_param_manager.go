@@ -47,6 +47,7 @@ const (
 	callerHasNoPermission CodeType = 1
 	encodeFailure         CodeType = 2
 	paramInvalid          CodeType = 3
+	contractNameNotExists CodeType = 4
 )
 
 type ParamManager struct {
@@ -70,7 +71,7 @@ func (u *ParamManager) RequiredGas(input []byte) uint64 {
 func (u *ParamManager) Run(input []byte) ([]byte, error) {
 	ret, err := execSC(input, u.AllExportFns())
 	if err != nil {
-		u.emitNotifyEventInParam("Notify",operateFail, err.Error())
+		u.emitNotifyEventInParam("Notify", operateFail, err.Error())
 	}
 	return ret, nil
 }
@@ -87,6 +88,11 @@ func (u *ParamManager) setGasContractName(contractName string) (int32, error) {
 	if len(contractName) == 0 {
 		u.emitNotifyEventInParam("GasContractName", paramInvalid, fmt.Sprintf("param is invalid."))
 		return failFlag, errParamInvalid
+	}
+	res, err := getRegisterStatusByName(u.stateDB, contractName)
+	if !res {
+		u.emitNotifyEventInParam("GasContractName", contractNameNotExists, fmt.Sprintf("contract does not exsits."))
+		return failFlag, errContactNameNotExist
 	}
 	ret, err := u.doParamSet(gasContractNameKey, contractName)
 
