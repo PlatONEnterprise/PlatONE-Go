@@ -42,7 +42,11 @@ func contractCall(c *cli.Context, funcParams []string, funcName, contract string
 	funcAbi := AbiParse(abiPath, contract)
 
 	// judge whether the input string is contract address or contract name
-	cns := CnsParse(contract)
+	cns, err := CnsParse(contract)
+	if err != nil {
+		utils.Fatalf(err.Error())
+	}
+
 	to := chainParamConvert(cns.To, "to").(common.Address)
 
 	dataGenerator := packet.NewContractDataGenWrap(funcName, funcParams, funcAbi, *cns, vm)
@@ -250,13 +254,18 @@ func (conv *convert) parse(param interface{}) string {
 // 2020.7.6 modified, moved from tx_utils.go
 // CnsParse judge whether the input string is contract address or contract name
 // and return the corresponding infos
-func CnsParse(contract string) *packet.Cns {
-	isAddress, _ := utl.IsNameOrAddress(contract)
+func CnsParse(contract string) (*packet.Cns, error) {
+	isAddress := utl.IsNameOrAddress(contract)
 
-	if isAddress {
-		return packet.NewCns(contract, "", types.NormalTxType)
-	} else {
-		return packet.NewCns(precompile.CnsInvokeAddress, contract, types.CnsTxType)
+	switch isAddress {
+	case utl.CnsIsAddress:
+		return packet.NewCns(contract, "", types.NormalTxType), nil
+	case utl.CnsIsName:
+		return packet.NewCns(precompile.CnsInvokeAddress, contract, types.CnsTxType), nil
+	case utl.CnsIsUndefined:
+		return nil, fmt.Errorf(utl.ErrParamInValidSyntax, "contract address")
+	default:
+		panic("common.go CnsParse: unexpected error")
 	}
 }
 
@@ -267,7 +276,10 @@ func ParamParse(param, paramName string) interface{} {
 
 	switch paramName {
 	case "contract", "user":
-		i, err = utl.IsNameOrAddress(param)
+		i = utl.IsNameOrAddress(param)
+		if i == utl.CnsIsUndefined {
+			err = fmt.Errorf(utl.ErrParamInValidSyntax, "contract address")
+		}
 	case "delayNum", "p2pPort", "rpcPort":
 		if utl.IsInRange(param, 65535) {
 			i, err = strconv.ParseInt(param, 10, 0)

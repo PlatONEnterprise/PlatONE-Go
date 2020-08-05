@@ -331,9 +331,9 @@ func (cns *CnsManager) getRegisteredContractsByRange(head, size int) ([]*Contrac
 	total := int(cns.cMap.total())
 
 	// check the head and size are valid numbers
-	invalidRange := head >= total || size < 0
+	invalidRange := head < 0 || size < 0
 	if invalidRange {
-		return nil, errors.New("invalid range")
+		return nil, errors.New("[CNS] invalid range")
 	}
 
 	// make sure the head + size does not exceed the total numbers of cnsContractInfo

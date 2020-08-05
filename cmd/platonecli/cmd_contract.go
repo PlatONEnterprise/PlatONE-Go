@@ -151,7 +151,7 @@ func execute(c *cli.Context) {
 	funcParams := c.StringSlice(ContractParamFlag.Name)
 	isListMethods := c.Bool(ShowContractMethodsFlag.Name)
 
-	// paramValid(contract, "contract")
+	paramValid(contract, "contract")
 
 	if isListMethods {
 		contractMethods(c)

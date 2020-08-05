@@ -195,13 +195,13 @@ var (
 	PageNumFlags = cli.StringFlag{
 		Name:  "pageNum",
 		Value: "0",
-		Usage: "Used with --pageSize, limit the output to the terminal",
+		Usage: "Can be used with --pageSize, limit the output to the terminal",
 	}
 
 	PageSizeFlags = cli.StringFlag{
 		Name:  "pageSize",
 		Value: "0",
-		Usage: "Used with --pageNum, limit the output to the terminal",
+		Usage: "Can be used with --pageNum, limit the output to the terminal",
 	}
 
 	// system configurations
