@@ -186,6 +186,7 @@ func (u *FireWall) emitEvent(topic string, code CodeType, msg string) {
 
 func convertToFwElem(l string) ([]state.FwElem, error) {
 	var list = make([]state.FwElem, 0)
+	var addr common.Address
 
 	elements := strings.Split(l, "|")
 	for _, e := range elements {
@@ -194,12 +195,14 @@ func convertToFwElem(l string) ([]state.FwElem, error) {
 			return nil, ErrFwRule
 		}
 
-		addr := ZeroAddress
 		addrStr := tmp[0]
 		api := tmp[1]
 		if addrStr == "*" {
 			addr = state.FwWildchardAddr
+		} else {
+			addr = common.HexToAddress(addrStr)
 		}
+
 		fwElem := state.FwElem{Addr: addr, FuncName: api}
 		list = append(list, fwElem)
 	}

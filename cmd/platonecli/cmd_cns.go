@@ -129,24 +129,28 @@ func cnsQuery(c *cli.Context) {
 	all := c.Bool(ShowAllFlags.Name)
 	contract := c.String(ContractIDFlag.Name)
 	user := c.String(AddressFlags.Name)
+
 	pageNum := c.String(PageNumFlags.Name)
 	pageSize := c.String(PageSizeFlags.Name)
 
-	if user != "" && contract != "" {
-		utils.Fatalf("please select one search key")
+	validFlagsCount := c.NumFlags()
+
+	if pageNum != "0" && pageSize != "0" {
+		validFlagsCount -= 1
+	}
+
+	if validFlagsCount != 1 {
+		utils.Fatalf("please select one and the only one search key")
 	}
 
 	switch {
 	case all:
-		paramValid(pageNum, "num")
-		paramValid(pageSize, "num")
-
-		funcParams := CombineFuncParams(pageNum, pageSize)
+		funcParams := CombineFuncParams("0", "0")
 		result = contractCall(c, funcParams, "getRegisteredContracts", precompile.CnsManagementAddress)
 
 	case contract != "":
-		isAddress := ParamParse(contract, "contract").(bool)
-		if isAddress {
+		isAddress := ParamParse(contract, "contract").(int32)
+		if isAddress == utl.CnsIsAddress {
 			funcName = "getRegisteredContractsByAddress"
 		} else {
 			funcName = "getRegisteredContractsByName"
@@ -162,7 +166,11 @@ func cnsQuery(c *cli.Context) {
 		result = contractCall(c, funcParams, funcName, precompile.CnsManagementAddress)
 
 	default:
-		result = "no search key provided!"
+		paramValid(pageNum, "num")
+		paramValid(pageSize, "num")
+
+		funcParams := CombineFuncParams(pageNum, pageSize)
+		result = contractCall(c, funcParams, "getRegisteredContracts", precompile.CnsManagementAddress)
 	}
 
 	strResult := utl.PrintJson([]byte(result.(string)))
@@ -173,8 +181,8 @@ func cnsState(c *cli.Context) {
 	var funcName string
 	contract := c.Args().First()
 
-	isAddress := ParamParse(contract, "contract").(bool)
-	if isAddress {
+	isAddress := ParamParse(contract, "contract").(int32)
+	if isAddress == utl.CnsIsAddress {
 		funcName = "ifRegisteredByAddress"
 	} else {
 		funcName = "ifRegisteredByName"

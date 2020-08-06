@@ -42,7 +42,11 @@ func contractCall(c *cli.Context, funcParams []string, funcName, contract string
 	funcAbi := AbiParse(abiPath, contract)
 
 	// judge whether the input string is contract address or contract name
-	cns := CnsParse(contract)
+	cns, err := CnsParse(contract)
+	if err != nil {
+		utils.Fatalf(err.Error())
+	}
+
 	to := chainParamConvert(cns.To, "to").(common.Address)
 
 	dataGenerator := packet.NewContractDataGenWrap(funcName, funcParams, funcAbi, *cns, vm)
@@ -148,19 +152,21 @@ func combineJson(c *cli.Context, arrayMust []string, bytes []byte) string {
 // AbiParse gets the abi bytes by the input parameters provided
 // The abi file can be obtained through following ways:
 // 1. user provide the abi file path
-// 2. get the abi files from default file locations (for example, the system contracts are
-// all stored in ./PlatONE/release/linux/conf/contracts)
-// 3. get the abi bytes on chain (wasm contract only).
+// 2. abiBytes of precompiled contracts (see precompiled/bindata.go)
+// (currently, the following features are not enabled)
+// a. get the abi files from default abi file locations
+// b. get the abi bytes on chain (wasm contract only).
 func AbiParse(abiFilePath, str string) []byte {
 	var err error
 	var abiBytes []byte
 
-	if abiFilePath == "" {
-		if p := precompile.List[str]; p != "" { // todo: equalFold string?
-			precompiledAbi, _ := precompile.Asset(p)
-			return precompiledAbi
-		}
+	// todo: equalFold string?
+	if p := precompile.List[str]; p != "" {
+		precompiledAbi, _ := precompile.Asset(p)
+		return precompiledAbi
+	}
 
+	if abiFilePath == "" {
 		/// abiFilePath = getAbiFileFromLocal(str)
 	}
 
@@ -248,13 +254,18 @@ func (conv *convert) parse(param interface{}) string {
 // 2020.7.6 modified, moved from tx_utils.go
 // CnsParse judge whether the input string is contract address or contract name
 // and return the corresponding infos
-func CnsParse(contract string) *packet.Cns {
-	isAddress, _ := utl.IsNameOrAddress(contract)
+func CnsParse(contract string) (*packet.Cns, error) {
+	isAddress := utl.IsNameOrAddress(contract)
 
-	if isAddress {
-		return packet.NewCns(contract, "", types.NormalTxType)
-	} else {
-		return packet.NewCns(precompile.CnsInvokeAddress, contract, types.CnsTxType)
+	switch isAddress {
+	case utl.CnsIsAddress:
+		return packet.NewCns(contract, "", types.NormalTxType), nil
+	case utl.CnsIsName:
+		return packet.NewCns(precompile.CnsInvokeAddress, contract, types.CnsTxType), nil
+	case utl.CnsIsUndefined:
+		return nil, fmt.Errorf(utl.ErrParamInValidSyntax, "contract address")
+	default:
+		panic("common.go CnsParse: unexpected error")
 	}
 }
 
@@ -265,7 +276,10 @@ func ParamParse(param, paramName string) interface{} {
 
 	switch paramName {
 	case "contract", "user":
-		i, err = utl.IsNameOrAddress(param)
+		i = utl.IsNameOrAddress(param)
+		if i == utl.CnsIsUndefined {
+			err = fmt.Errorf(utl.ErrParamInValidSyntax, "contract address")
+		}
 	case "delayNum", "p2pPort", "rpcPort":
 		if utl.IsInRange(param, 65535) {
 			i, err = strconv.ParseInt(param, 10, 0)

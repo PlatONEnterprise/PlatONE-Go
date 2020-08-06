@@ -21,6 +21,7 @@ var (
 
 var (
 	errDataAssertion = errors.New("[CNS] importOldCnsManagerData: data assert error")
+	errNoData        = errors.New("[CNS] the matching list is empty")
 )
 
 type CnsWrapper struct {
@@ -187,6 +188,10 @@ func (cns *CnsWrapper) getRegisteredContractsByRange(head, size int) (string, er
 		return newInternalErrorResult(err).String(), nil
 	}
 
+	if len(cnsInfoArray) == 0 {
+		return newInternalErrorResult(errNoData).String(), nil
+	}
+
 	return newSuccessResult(cnsInfoArray).String(), nil
 }
 
@@ -194,6 +199,10 @@ func (cns *CnsWrapper) getRegisteredContractsByName(name string) (string, error)
 	cnsInfoArray, err := cns.base.getRegisteredContractsByName(name)
 	if err != nil {
 		return newInternalErrorResult(err).String(), nil
+	}
+
+	if len(cnsInfoArray) == 0 {
+		return newInternalErrorResult(errNoData).String(), nil
 	}
 
 	return newSuccessResult(cnsInfoArray).String(), nil
@@ -205,6 +214,10 @@ func (cns *CnsWrapper) getRegisteredContractsByAddress(addr common.Address) (str
 		return newInternalErrorResult(err).String(), nil
 	}
 
+	if len(cnsInfoArray) == 0 {
+		return newInternalErrorResult(errNoData).String(), nil
+	}
+
 	return newSuccessResult(cnsInfoArray).String(), nil
 }
 
@@ -212,6 +225,10 @@ func (cns *CnsWrapper) getRegisteredContractsByOrigin(origin common.Address) (st
 	cnsInfoArray, err := cns.base.getRegisteredContractsByOrigin(origin)
 	if err != nil {
 		return newInternalErrorResult(err).String(), nil
+	}
+
+	if len(cnsInfoArray) == 0 {
+		return newInternalErrorResult(errNoData).String(), nil
 	}
 
 	return newSuccessResult(cnsInfoArray).String(), nil

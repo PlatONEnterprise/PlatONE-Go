@@ -20,6 +20,8 @@ var (
 
 	testOrigin = common.HexToAddress("0x0000000000000000000000000000000000000afb")
 	testCaller = common.HexToAddress("0x0000000000000000000000000000000000000afc")
+
+	testNoneExist = common.HexToAddress("0x0000000000000000000000000000000000000132")
 )
 
 var (
@@ -149,6 +151,25 @@ func TestCnsManager_ifRegisteredByName(t *testing.T) {
 
 	for _, data := range testCasesSub {
 		result, err := cns.ifRegisteredByName(data.name)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		assert.Equal(t, data.expected, result, "ifRegisteredByName FAILED")
+	}
+}
+
+func TestCnsManager_ifRegisteredByAddress(t *testing.T) {
+	testCasesSub := []struct {
+		address  common.Address
+		expected int32
+	}{
+		{testAddr1, int32(cnsRegistered)},
+		{testNoneExist, int32(cnsUnregistered)},
+	}
+
+	for _, data := range testCasesSub {
+		result, err := cns.ifRegisteredByAddress(data.address)
 		if err != nil {
 			t.Fatal(err)
 		}

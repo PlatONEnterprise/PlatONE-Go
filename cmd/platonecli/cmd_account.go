@@ -134,8 +134,8 @@ func queryUser(c *cli.Context) {
 
 	switch {
 	case user != "":
-		isAddress := ParamParse(user, "user").(bool)
-		if isAddress {
+		isAddress := ParamParse(user, "user").(int32)
+		if isAddress == utl.CnsIsAddress {
 			funcName = "getUserByAddress"
 		} else {
 			funcName = "getUserByName"

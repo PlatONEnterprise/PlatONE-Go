@@ -315,11 +315,11 @@ func (cns *CnsManager) ifRegisteredByAddress(address common.Address) (bool, erro
 	for index = 0; index < cns.cMap.total(); index++ {
 		cnsInfo := cns.cMap.get(index)
 		if cnsInfo.Address == address {
-			return false, nil
+			return true, nil
 		}
 	}
 
-	return true, nil
+	return false, nil
 }
 
 // getRegisteredContractsByRange returns the cnsContractInfo within the ranges specified
@@ -331,9 +331,9 @@ func (cns *CnsManager) getRegisteredContractsByRange(head, size int) ([]*Contrac
 	total := int(cns.cMap.total())
 
 	// check the head and size are valid numbers
-	invalidRange := head >= total || size < 0
+	invalidRange := head < 0 || size < 0
 	if invalidRange {
-		return nil, errors.New("invalid range")
+		return nil, errors.New("[CNS] invalid range")
 	}
 
 	// make sure the head + size does not exceed the total numbers of cnsContractInfo
@@ -402,6 +402,11 @@ func (cns *CnsManager) getRegisteredContractsByOrigin(origin common.Address) ([]
 func getCnsAddress(stateDB StateDB, name, version string) (common.Address, error) {
 	cns := newCnsManager(stateDB)
 	return cns.getContractAddress(name, version)
+}
+
+func getRegisterStatusByName(stateDB StateDB, name string) (bool, error) {
+	cns := newCnsManager(stateDB)
+	return cns.ifRegisteredByName(name)
 }
 
 func (cns *CnsManager) emitNotifyEvent(code CodeType, msg string) {

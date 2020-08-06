@@ -159,7 +159,7 @@ func execute(c *cli.Context) {
 	}
 
 	result := contractCall(c, funcParams, funcName, contract)
-	fmt.Printf(" %v\n", result)
+	fmt.Printf("result: %v\n", result)
 	//utl.PrintJson([]byte(result.(string))) //TODO
 }
 

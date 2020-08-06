@@ -113,22 +113,28 @@ func DeleteOldFile(fileDirt string) error {
 	})
 }
 
+const (
+	CnsIsName int32 = iota
+	CnsIsAddress
+	CnsIsUndefined
+)
+
 // TODO refactory
 // IsNameOrAddress Judge whether the input string is an address or a name
-func IsNameOrAddress(str string) (bool, error) {
-	var valid bool
-	var err error
+func IsNameOrAddress(str string) int32 {
+	var valid int32
 
 	switch {
 	case IsMatch(str, "address"):
-		valid = true
-	case IsMatch(str, "name"):
-		valid = false
+		valid = CnsIsAddress
+	case IsMatch(str, "name") &&
+		!strings.HasPrefix(strings.ToLower(str), "0x"):
+		valid = CnsIsName
 	default:
-		err = fmt.Errorf(ErrParamInValidSyntax, "contract address")
+		valid = CnsIsUndefined
 	}
 
-	return valid, err
+	return valid
 }
 
 // GetFileByKey search the file in the file directory by the search keywords provided
