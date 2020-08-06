@@ -46,7 +46,7 @@ func Test_execSC(t *testing.T) {
 	var age int64 = 3
 	var input = MakeInput(fnNameInput, name, age)
 
-	ret, err := execSC(input, (&fakeClass{}).allExportFns())
+	_, ret, err := execSC(input, (&fakeClass{}).allExportFns())
 	if nil != err {
 		t.Error(err)
 		return
@@ -57,7 +57,7 @@ func Test_execSC(t *testing.T) {
 	assert.Equal(t, toContractReturnValueStringType(E_INVOKE_CONTRACT, []byte(ret2)), ret)
 
 	input = MakeInput(fnNameInput, "bbb")
-	_, err = execSC(input, (&fakeClass{}).allExportFns())
+	_,_, err = execSC(input, (&fakeClass{}).allExportFns())
 	assert.Error(t, err, "The params number invalid")
 }
 

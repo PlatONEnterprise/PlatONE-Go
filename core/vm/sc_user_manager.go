@@ -22,9 +22,12 @@ func (u *UserManagement) RequiredGas(input []byte) uint64 {
 
 // Run runs the precompiled contract
 func (u *UserManagement) Run(input []byte) ([]byte, error) {
-	ret, err := execSC(input, u.AllExportFns());
+	fnName, ret, err := execSC(input, u.AllExportFns());
 	if err != nil{
-		u.emitUserManagerEvent("Nofity", operateFail, err.Error())
+		if fnName == "" {
+			fnName = "Notify"
+		}
+		u.emitEvent(fnName, operateFail, err.Error())
 	}
 	return ret, nil
 }
@@ -42,18 +45,18 @@ func (u *UserManagement) Caller() common.Address {
 }
 
 func (u *UserManagement) returnSuccess(topic string) (int32,error){
-	u.emitUserManagerEvent(topic, operateSuccess, "Success")
+	u.emitEvent(topic, operateSuccess, "Success")
 	return int32(operateSuccess), nil
 }
 
 func (u *UserManagement) returnFail(topic string, err error) (int32, error){
-	u.emitUserManagerEvent(topic, operateFail, err.Error())
+	u.emitEvent(topic, operateFail, err.Error())
 	returnErr := err
 	// todo: in some cases, returnErr = nil
 	return int32(operateFail), returnErr
 }
 
-func (u *UserManagement) emitUserManagerEvent(topic string,code CodeType, msg string) {
+func (u *UserManagement) emitEvent(topic string,code CodeType, msg string) {
 	emitEvent(u.contractAddr, u.stateDB, u.blockNumber.Uint64(), topic, code, msg)
 }
 

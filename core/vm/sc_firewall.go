@@ -177,6 +177,10 @@ func (u *FireWall) getFwStatus(contractAddr common.Address) (*state.FwStatus, er
 
 func (u *FireWall) emitNotifyEvent(code CodeType, msg string) {
 	topic := "Notify"
+	u.emitEvent(topic, code, msg)
+}
+
+func (u *FireWall) emitEvent(topic string, code CodeType, msg string) {
 	emitEvent(syscontracts.FirewallManagementAddress, u.stateDB, u.blockNumber.Uint64(), topic, code, msg)
 }
 

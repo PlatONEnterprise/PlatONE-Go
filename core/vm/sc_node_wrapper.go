@@ -27,9 +27,12 @@ func (n *scNodeWrapper) RequiredGas(input []byte) uint64 {
 }
 
 func (n *scNodeWrapper) Run(input []byte) ([]byte, error) {
-	ret, err := execSC(input, n.allExportFns())
+	fnName, ret, err := execSC(input, n.allExportFns())
 	if err != nil {
-		n.base.emitNotifyEvent(operateFail, err.Error())
+		if fnName == "" {
+			fnName = "Notify"
+		}
+		n.base.emitEvent(fnName, operateFail, err.Error())
 	}
 	return ret, nil
 }

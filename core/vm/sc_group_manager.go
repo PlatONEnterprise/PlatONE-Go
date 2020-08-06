@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
+	"math/big"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
@@ -19,9 +21,10 @@ const (
 )
 
 type GroupManagement struct {
-	state   StateDB
-	caller  common.Address
-	address common.Address
+	stateDB     StateDB
+	caller      common.Address // msg.From()	contract.caller
+	blockNumber *big.Int
+	contractAddr common.Address
 }
 
 type GroupInfo struct {
@@ -45,14 +48,21 @@ func (g *GroupManagement) RequiredGas(input []byte) uint64 {
 
 // Run runs the precompiled contract
 func (g *GroupManagement) Run(input []byte) ([]byte, error) {
-	return execSC(input, g.AllExportFns())
+	fnName, ret, err := execSC(input, g.AllExportFns());
+	if err != nil{
+		if fnName == "" {
+			fnName = "Notify"
+		}
+		g.emitEvent(fnName, operateFail, err.Error())
+	}
+	return ret, nil
 }
 
 func (g *GroupManagement) setState(key, value []byte) {
-	g.state.SetState(g.address, key, value)
+	g.stateDB.SetState(g.contractAddr, key, value)
 }
 func (g *GroupManagement) getState(key []byte) []byte {
-	value := g.state.GetState(g.address, key)
+	value := g.stateDB.GetState(g.contractAddr, key)
 	return value
 }
 
@@ -75,7 +85,7 @@ func (g *GroupManagement) AllExportFns() SCExportFns {
 
 // export functions
 func (g *GroupManagement) hasGroupOpPermission() (int32, error) {
-	if hasGroupCreatePermission(g.state, g.caller) {
+	if hasGroupCreatePermission(g.stateDB, g.caller) {
 		return 1, nil
 	}
 	return 0, nil
@@ -331,4 +341,8 @@ func (g *GroupManagement) getGroupList() ([]GroupInfo, error) {
 	}
 
 	return groups, nil
+}
+
+func (g *GroupManagement) emitEvent(topic string, code CodeType, msg string) {
+	emitEvent(syscontracts.GroupManagementAddress, g.stateDB, g.blockNumber.Uint64(), topic, code, msg)
 }

@@ -148,5 +148,53 @@
             }
         ],
         "type": "event"
+    },
+    {
+        "name": "createGroup",
+        "inputs": [
+            {
+                "type": "uint64"
+            },
+            {
+                "type": "string"
+            }
+        ],
+        "type": "event"
+    },
+    {
+        "name": "delBootNode",
+        "inputs": [
+            {
+                "type": "uint64"
+            },
+            {
+                "type": "string"
+            }
+        ],
+        "type": "event"
+    },
+    {
+        "name": "addBootNode",
+        "inputs": [
+            {
+                "type": "uint64"
+            },
+            {
+                "type": "string"
+            }
+        ],
+        "type": "event"
+    },
+    {
+        "name": "updateBootNodes",
+        "inputs": [
+            {
+                "type": "uint64"
+            },
+            {
+                "type": "string"
+            }
+        ],
+        "type": "event"
     }
  ]

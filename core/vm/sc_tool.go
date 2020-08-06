@@ -39,11 +39,11 @@ var (
 
 var fwErrNotOwner = errors.New("FW : error, only contract owner can set firewall setting")
 
-func execSC(input []byte, fns SCExportFns) ([]byte, error) {
+func execSC(input []byte, fns SCExportFns) (string,[]byte, error) {
 	txType, fnName, fn, params, err := retrieveFnAndParams(input, fns)
 	if nil != err {
 		log.Error("failed to retrieve func name and params.", "error", err, "function", fnName)
-		return nil, err
+		return fnName, nil, err
 	}
 
 	//execute system contract method
@@ -55,7 +55,7 @@ func execSC(input []byte, fns SCExportFns) ([]byte, error) {
 	}
 
 	//vm run successfully, so return nil
-	return toContractReturnValueType(txType, result[0]), nil
+	return fnName, toContractReturnValueType(txType, result[0]), nil
 }
 
 func toContractReturnValueType(txType int, val reflect.Value) []byte {
@@ -107,7 +107,7 @@ func retrieveFnAndParams(input []byte, fns SCExportFns) (txType int, fnName stri
 	paramNum := fnType.NumIn()
 	if paramNum != len(args)-2 {
 		log.Warn("params number invalid. ", "expected:", paramNum, "got:", len(args)-2)
-		return 0, "", nil, nil, errParamsNumInvalid
+		return 0, fnName, nil, nil, errParamsNumInvalid
 	}
 
 	fnParams = make([]reflect.Value, paramNum)

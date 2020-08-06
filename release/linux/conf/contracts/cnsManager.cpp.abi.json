@@ -239,5 +239,29 @@
             }
         ],
         "type": "event"
+    },
+    {
+        "name": "cnsRegister",
+        "inputs": [
+            {
+                "type": "uint64"
+            },
+            {
+                "type": "string"
+            }
+        ],
+        "type": "event"
+    },
+    {
+        "name": "cnsRedirect",
+        "inputs": [
+            {
+                "type": "uint64"
+            },
+            {
+                "type": "string"
+            }
+        ],
+        "type": "event"
     }
 ]

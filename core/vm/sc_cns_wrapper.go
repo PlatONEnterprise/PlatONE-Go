@@ -43,7 +43,15 @@ func (cns *CnsWrapper) Run(input []byte) ([]byte, error) {
 		}
 	}()
 
-	return execSC(input, cns.AllExportFns())
+	fnName, ret, err :=  execSC(input, cns.AllExportFns())
+	if err != nil{
+		if fnName == "" {
+			fnName = "Notify"
+		}
+		cns.base.emitEvent(fnName, operateFail, err.Error())
+	}
+
+	return ret, nil
 }
 
 // for access control

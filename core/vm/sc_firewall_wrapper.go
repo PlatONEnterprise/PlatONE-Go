@@ -25,10 +25,14 @@ func (u *FwWrapper) RequiredGas(input []byte) uint64 {
 
 // Run runs the precompiled contract
 func (u *FwWrapper) Run(input []byte) ([]byte, error) {
-	ret, err := execSC(input, u.AllExportFns())
-	if err != nil {
-		u.base.emitNotifyEvent(operateFail, err.Error())
+	fnName, ret, err :=  execSC(input, u.AllExportFns())
+	if err != nil{
+		if fnName == "" {
+			fnName = "Notify"
+		}
+		u.base.emitEvent(fnName, operateFail, err.Error())
 	}
+
 	return ret, nil
 }
 

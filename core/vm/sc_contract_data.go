@@ -27,10 +27,14 @@ func (d *ContractDataProcessor) RequiredGas(input []byte) uint64 {
 
 // Run runs the precompiled contract
 func (d *ContractDataProcessor) Run(input []byte) ([]byte, error) {
-	ret, err := execSC(input, d.AllExportFns())
-	if err != nil {
-		d.emitEvent("Notify", operateFail, err.Error())
+	fnName, ret, err :=  execSC(input, d.AllExportFns())
+	if err != nil{
+		if fnName == "" {
+			fnName = "Notify"
+		}
+		d.emitEvent(fnName, operateFail, err.Error())
 	}
+
 	return ret, nil
 }
 

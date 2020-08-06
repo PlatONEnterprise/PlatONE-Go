@@ -502,5 +502,9 @@ func (n *SCNode) isMatch(node, query *syscontracts.NodeInfo) bool {
 
 func (n *SCNode) emitNotifyEvent(code CodeType, msg string) {
 	topic := "Notify"
+	n.emitEvent(topic, code, msg)
+}
+
+func (n *SCNode) emitEvent(topic string, code CodeType, msg string) {
 	emitEvent(n.contractAddr, n.stateDB, n.blockNumber.Uint64(), topic, code, msg)
 }

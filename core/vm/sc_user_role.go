@@ -2,6 +2,7 @@ package vm
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
@@ -75,7 +76,7 @@ func init() {
 type UserRoles uint32
 
 func (ur UserRoles) Strings() []string {
-	var roles []string
+	roles := make([]string, 0)
 
 	for i := int32(0); i < rolesCnt; i++ {
 		if ur.hasRole(i) {
@@ -342,18 +343,21 @@ func (u *UserManagement) getAddrListOfRoleStr(targetRole string) (string, error)
 	if role, ok := rolesMap[targetRole]; ok {
 		return u.getAddrListOfRole(role)
 	}
-	return "", errUnsupportedRole
+	return fmt.Sprintf("Unsupported Role: %s", targetRole), errUnsupportedRole
 }
 func (u *UserManagement) getAddrListOfRole(targetRole int32) (string, error) {
 	var key []byte
 	var err error
-	var addrs []common.Address
+	addrs := make([]common.Address,0)
 
 	if key, err = generateAddressListKey(targetRole); err != nil {
 		return "", err
 	}
 	if addrs, err = u.getAddrList(key); err != nil {
 		return "", err
+	}
+	if len(addrs) == 0{
+		return "[]", nil
 	}
 	str, err := json.Marshal(addrs)
 	if err != nil {

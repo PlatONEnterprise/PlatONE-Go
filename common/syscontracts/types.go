@@ -62,8 +62,8 @@ func (node *NodeInfo) String() string{
 }
 
 type UserInfo struct {
-	Address    string `json:"address,omitempty,required"` // 地址，不可变更
-	Authorizer string `json:"authorizer,omitempty"`       // 授权者，不可变更
+	Address    common.Address `json:"address,string,omitempty,required"` // 地址，不可变更
+	Authorizer common.Address `json:"authorizer,string,omitempty"`       // 授权者，不可变更
 	Name       string `json:"name,omitempty"`             // 用户名，不可变更
 
 	DescInfo string `json:"descInfo,omitempty"` // 描述信息，可变更

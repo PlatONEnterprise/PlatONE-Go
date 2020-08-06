@@ -64,7 +64,8 @@ func (u *UserManagement) addUser(info *UserInfo) (int32, error) {
 		return u.returnFail(topic, errUserNameAlreadyExist)
 	}
 
-	addr := common.HexToAddress(info.Address)
+	// addr := common.HexToAddress(info.Address)
+	addr := info.Address
 	if u.getNameByAddr(addr) != "" {
 		return u.returnFail(topic,  errAlreadySetUserName)
 	}
@@ -77,7 +78,7 @@ func (u *UserManagement) addUser(info *UserInfo) (int32, error) {
 		}
 	}
 
-	info.Authorizer = u.Caller().String()
+	info.Authorizer = u.Caller()
 
 	if err := u.setUserInfo(info); err != nil {
 		return u.returnFail(topic,  err)
@@ -178,7 +179,8 @@ func (u *UserManagement) getAllUsers() ([]byte, error) {
 
 //internal function
 func (u *UserManagement) setUserInfo(info *UserInfo) error {
-	addr := common.HexToAddress(info.Address)
+	// addr := common.HexToAddress(info.Address)
+	addr := info.Address
 	key1 := append(addr[:], []byte(userInfoKey)...)
 	data, err := rlp.EncodeToBytes(info)
 	if err != nil {

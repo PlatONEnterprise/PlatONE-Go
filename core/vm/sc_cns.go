@@ -406,5 +406,9 @@ func getCnsAddress(stateDB StateDB, name, version string) (common.Address, error
 
 func (cns *CnsManager) emitNotifyEvent(code CodeType, msg string) {
 	topic := "Notify"
+	cns.emitEvent(topic, code, msg)
+}
+
+func (cns *CnsManager) emitEvent(topic string, code CodeType, msg string) {
 	emitEvent(cns.cMap.contractAddr, cns.cMap, cns.blockNumber.Uint64(), topic, code, msg)
 }
