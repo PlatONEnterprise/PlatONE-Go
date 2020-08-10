@@ -95,3 +95,136 @@ func MakeInput(fnName string, params ...interface{}) []byte {
 const (
 	E_INVOKE_CONTRACT = 1
 )
+
+func Test_checkNameFormat(t *testing.T) {
+	type args struct {
+		name string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		// TODO: Add test cases.
+		{
+			args:args{"wanxiang"},
+			want: true,
+		},
+		{
+			args:args{"wan-xiang"},
+			want: false,
+		},
+		{
+			args:args{"wan xiang"},
+			want: false,
+		},
+		{
+			args:args{"wan_xiang"},
+			want: true,
+		},
+		{
+			args:args{"wan_xiang_123"},
+			want: true,
+		},
+		{
+			args:args{"_万_xiang_123"},
+			want: true,
+		},
+		{
+			args:args{"12_wan_xiang_123"},
+			want: true,
+		},
+		{
+			args:args{"1"},
+			want: true,
+		},
+		{
+			args:args{"13"},
+			want: true,
+		},
+		{
+			args:args{"12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"},
+			want: true,
+		},
+		{
+			args:args{"234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"},
+			want: false,
+		},
+
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got, err := checkNameFormat(tt.args.name); err != nil||got != tt.want {
+				t.Errorf("name=%v ,checkNameFormat() = %v, want %v, err %v", tt.args.name,got, tt.want, err)
+			}
+		})
+	}
+}
+
+func Test_checkEmailFormat(t *testing.T) {
+	type args struct {
+		email string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    bool
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{
+			args:args{"gexin@wxblockchain.com"},
+			want: true,
+		},
+		{
+			args:args{"@wxblockchain.com"},
+			want: false,
+		},
+		{
+			args:args{"wxblockchain.com"},
+			want: false,
+		},
+		{
+			args:args{"gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg@wxblockchainmmmmm.commmmmmm"},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := checkEmailFormat(tt.args.email)
+			//if (err != nil) != tt.wantErr {
+			//	t.Errorf("checkEmailFormat() error = %v, wantErr %v", err, tt.wantErr)
+			//	return
+			//}
+			if got != tt.want {
+				t.Errorf("checkEmailFormat() got = %v, want %v, err %v", got, tt.want, err)
+			}
+		})
+	}
+}
+
+func Test_checkIpFormat(t *testing.T) {
+	type args struct {
+		ip string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    bool
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := checkIpFormat(tt.args.ip)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("checkIpFormat() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("checkIpFormat() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

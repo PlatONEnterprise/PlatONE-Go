@@ -22,12 +22,11 @@ const (
 	userListKey = "5af8141e0ecb4e3df3f35f6e6b0b387b"
 )
 
-const (
-	maxUserNameLen = 512
-)
-
 var (
 	errUsernameUnsupported  = errors.New("Unsupported Username ")
+	errOrgnizationUnsupported  = errors.New("Unsupported Orgnization ")
+	errEmailUnsupported  = errors.New("Unsupported email address ")
+	errPhoneUnsupported  = errors.New("Unsupported phone number ")
 	errUserNameAlreadyExist = errors.New(" UserName Already Exist ")
 	errAlreadySetUserName   = errors.New("Already Set UserName ")
 	errNoUserInfo           = errors.New("No User Info ")
@@ -35,6 +34,22 @@ var (
 
 type UserInfo = syscontracts.UserInfo
 type DescInfo = syscontracts.UserDescInfo
+
+func checkDescInfo(descInfo *DescInfo) (bool, error){
+	if b, err := checkNameFormat(descInfo.Organization); !b || err!=nil{
+		return b, errOrgnizationUnsupported
+	}
+
+	if b, err := checkEmailFormat(descInfo.Email); !b || err!=nil{
+		return b, errEmailUnsupported
+	}
+
+	if b, err := checkPhoneFormat(descInfo.Phone); !b || err!= nil{
+		return b, errPhoneUnsupported
+	}
+
+	return true, nil
+}
 
 func updateDescInfo(src *DescInfo, dest *DescInfo) {
 	if src.Email != dest.Email {
@@ -56,16 +71,17 @@ func (u *UserManagement) addUser(info *UserInfo) (int32, error) {
 		return u.returnFail(topic, errNoPermission)
 	}
 
-	if info.Name == "" || len(info.Name) > maxUserNameLen {
-		return u.returnFail(topic,  errUsernameUnsupported)
+	addr, err := u.getAddrByName(info.Name);
+	if err != nil{
+		return u.returnFail(topic,  err)
 	}
 
-	if u.getAddrByName(info.Name) != ZeroAddress {
+	if addr != ZeroAddress {
 		return u.returnFail(topic, errUserNameAlreadyExist)
 	}
 
 	// addr := common.HexToAddress(info.Address)
-	addr := info.Address
+	addr = info.Address
 	if u.getNameByAddr(addr) != "" {
 		return u.returnFail(topic,  errAlreadySetUserName)
 	}
@@ -74,6 +90,10 @@ func (u *UserManagement) addUser(info *UserInfo) (int32, error) {
 		descInfo := &DescInfo{}
 		if err := json.Unmarshal([]byte(info.DescInfo), descInfo); err != nil {
 			log.Error("json.Unmarshal([]byte(info.DescInfo), descInfo)")
+			return u.returnFail(topic,  err)
+		}
+
+		if b, err := checkDescInfo(descInfo); !b || err != nil{
 			return u.returnFail(topic,  err)
 		}
 	}
@@ -98,6 +118,10 @@ func (u *UserManagement) updateUserDescInfo(addr common.Address, info *DescInfo)
 	topic := "updateUserDescInfo"
 	if !u.callerPermissionCheck() {
 		return u.returnFail(topic, errNoPermission)
+	}
+
+	if b, err := checkDescInfo(info); !b || err != nil{
+		return u.returnFail(topic,  err)
 	}
 
 	userInfo, err := u.getUserInfo(addr)
@@ -136,22 +160,29 @@ func (u *UserManagement) getUserByAddress(addr common.Address) ([]byte, error) {
 	}
 	return data, nil
 }
-func (u *UserManagement) getUserByName(name string) ([]byte, error) {
-	addr := u.getAddrByName(name)
+func (u *UserManagement) getUserByName(name string) (string, error) {
+	if b, err := checkNameFormat(name); err!=nil || !b {
+		return errUsernameUnsupported.Error(), errUsernameUnsupported
+	}
+
+	addr, err := u.getAddrByName(name)
+	if err != nil{
+		return err.Error(), err
+	}
 	if addr == ZeroAddress {
-		return nil, errNoUserInfo
+		return errNoUserInfo.Error(), errNoUserInfo
 	}
 
 	user, err := u.getUserInfo(addr)
 	if err != nil {
-		return nil, err
+		return err.Error(), err
 	}
 
 	data, err := json.Marshal(user)
 	if err != nil {
-		return nil, err
+		return err.Error(), err
 	}
-	return data, nil
+	return string(data), nil
 }
 
 // 查询登记的所有用户，任意用户可查
@@ -217,14 +248,21 @@ func (u *UserManagement) addNameAddrMap(addr common.Address, name string) {
 	key := append([]byte(name), []byte(userAddressMapKey)...)
 	u.setState(key, addr[:])
 }
-func (u *UserManagement) getAddrByName(name string) common.Address {
+func (u *UserManagement) getAddrByName(name string) (common.Address, error) {
+	addr := common.Address{}
+	if b, err := checkNameFormat(name); err!=nil || !b {
+		return addr, errUsernameUnsupported
+	}
+
 	key := append([]byte(name), []byte(userAddressMapKey)...)
 	data := u.getState(key)
-	addr := common.Address{}
+	if len(data) == 0{
+		return addr,errNoUserInfo
+	}
 	if len(data) == 20 {
 		copy(addr[:], data)
 	}
-	return addr
+	return addr, nil
 }
 
 func (u *UserManagement) addUserList(addr common.Address) error {

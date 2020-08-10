@@ -108,6 +108,8 @@ func checkNodeDescLen(desc string) error {
 	return nil
 }
 
+// Deprecated
+// nodeName and userName use the same role: checkNameFormat()
 func checkNodeNameLen(name string) error {
 	if len(bytes.Runes([]byte(name))) > nodeNameMaxLenInCharacter {
 		return errors.New(fmt.Sprintf("The length of node name must be less than %d", nodeNameMaxLenInCharacter))
@@ -157,7 +159,7 @@ func (n *SCNode) checkParamsOfAddNode(node *syscontracts.NodeInfo) error {
 		return err
 	}
 
-	if err := checkNodeNameLen(node.Name); err != nil {
+	if b, err := checkNameFormat(node.Name); err!=nil || !b {
 		return err
 	}
 
@@ -185,6 +187,9 @@ func (n *SCNode) checkParamsOfAddNode(node *syscontracts.NodeInfo) error {
 }
 
 func (n *SCNode) checkParamsOfUpdateNodeAndReturnUpdatedNode(name string, update *syscontracts.UpdateNode) (*syscontracts.NodeInfo, error) {
+	if b, err := checkNameFormat(name); err!=nil || !b {
+		return nil,err
+	}
 	node, err := n.getNodeByName(name)
 	if err != nil {
 		return nil, err

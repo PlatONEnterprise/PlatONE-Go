@@ -323,7 +323,10 @@ func (u *UserManagement) delContractDeployerByName(name string) (int32, error) {
 }
 
 func (u *UserManagement) getRolesByName(name string) (string, error) {
-	addr := u.getAddrByName(name)
+	addr, err := u.getAddrByName(name)
+	if err != nil{
+		return err.Error(), err
+	}
 	return u.getRolesByAddress(addr)
 }
 
@@ -402,7 +405,10 @@ func (u *UserManagement) setRole(addr common.Address, roles UserRoles) error {
 	return nil
 }
 func (u *UserManagement) setRoleWithPermissionCheckByName(name string, targetRole int32, status uint8) error {
-	addr := u.getAddrByName(name)
+	addr, err := u.getAddrByName(name)
+	if err != nil{
+		return err
+	}
 	if addr == ZeroAddress {
 		return errNoUserInfo
 	}

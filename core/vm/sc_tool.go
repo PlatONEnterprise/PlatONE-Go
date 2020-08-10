@@ -6,12 +6,21 @@ import (
 	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/bcwasmutil"
 	"reflect"
+	"regexp"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/byteutil"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+)
+
+const (
+	nameRegPattarn = `^[a-zA-Z0-9_\p{Han}]{1,128}$`
+	emailRegPattarn = `\w[-\w.+]*@([A-Za-z0-9][-A-Za-z0-9]+\.)+[A-Za-z]{2,14}`
+	ipRegPattarn = `(25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)\.(25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)\.(25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)\.(25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)`
+	telePhonePattarn = "[0-9-()（）]{7,18}"
+	mobilePhonePattarn = "[0-9]{3,13}"
 )
 
 var (
@@ -135,6 +144,52 @@ func CheckPublicKeyFormat(pub string) error {
 
 	return nil
 }
+// Name Format
+// Length: 2~128
+// `^[a-zA-Z0-9_]\w{1,127}$`
+func checkNameFormat(name string) (bool, error) {
+	b, err := regexp.Match(nameRegPattarn, []byte(name))
+	if err != nil{
+		return false, err
+	}
+	return b, nil
+}
+
+func checkIpFormat(ip string) (bool, error){
+	b, err := regexp.Match(ipRegPattarn, []byte(ip))
+	if err != nil{
+		return false, err
+	}
+	return b, nil
+}
+// Email Format
+// xxx@xxx.xxx
+// total length <= 64
+func checkEmailFormat(email string) (bool, error){
+	b, err := regexp.Match(emailRegPattarn, []byte(email))
+	if err != nil{
+		return false, err
+	}
+
+	if len(email) > 64{
+		return false, nil
+	}
+	return b, nil
+}
+
+func checkPhoneFormat(phone string) (bool, error) {
+	b1, err1 := regexp.Match(telePhonePattarn, []byte(phone))
+	b2, err2 := regexp.Match(mobilePhonePattarn, []byte(phone))
+
+	if b1 || b2{
+		return true, nil
+	}
+
+	if !b1 {
+		return b1, err1
+	}
+	return b2, err2
+}
 
 // generate state key compatible with bcwasm state key
 func generateStateKey(key string) []byte {
@@ -144,3 +199,4 @@ func generateStateKey(key string) []byte {
 func recoveryStateKey(key []byte) string {
 	return bcwasmutil.DeserilizeString(key)
 }
+

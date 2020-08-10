@@ -51,9 +51,9 @@ const (
 	defaultGasPrice = params.GWei
 )
 
-//func init(){
-//	rand.Seed(time.Now().UnixNano())
-//}
+func init(){
+	rand.Seed(time.Now().UnixNano())
+}
 
 // PublicEthereumAPI provides an API to access Ethereum related information.
 // It offers only methods that operate on public data that is freely available to anyone.
@@ -1169,7 +1169,7 @@ func (args *SendTxArgs) setDefaults(ctx context.Context, b Backend) error {
 		//	return err
 		//}
 		//rand.Seed(time.Now().UnixNano())
-		nonce := rand.Uint64()
+		nonce := rand.Uint64() % (1<<50 -1)
 		args.Nonce = (*hexutil.Uint64)(&nonce)
 	}
 	if args.Data != nil && args.Input != nil && !bytes.Equal(*args.Data, *args.Input) {
