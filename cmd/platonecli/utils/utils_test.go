@@ -2,7 +2,9 @@ package utils
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
+	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -93,7 +95,25 @@ func TestGetFuncParam(t *testing.T) {
 
 		t.Logf("result: function name: %s, function params: %s\n", name, params)
 	}
+}
 
+func TestGetFuncParams(t *testing.T) {
+	testCase := "\"1\",'b' , 1.2, true"
+	result := GetFuncParams(testCase)
+
+	t.Log(result)
+}
+
+func TestStructType(t *testing.T) {
+	var testCase = make(map[string]interface{}, 0)
+	var S struct{}
+	var str = "{\"components\": [{\"internalType\": \"int32\",\"name\": \"x\",\"type\": \"int32\"},{\"internalType\": \"int32\",\"name\": \"y\",\"type\": \"int32\"}],\"internalType\": \"struct TupleTest.Point\",\"name\": \"num\",\"type\": \"tuple\"}"
+
+	testCase["test"] = 2
+	_ = json.Unmarshal([]byte(str), &S)
+
+	t.Log(reflect.ValueOf(testCase).Kind())
+	t.Log(S)
 }
 
 func TestPrintJson(t *testing.T) {

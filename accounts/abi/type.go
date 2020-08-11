@@ -21,14 +21,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"math/big"
 	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )
 
 // Type enumerator
@@ -39,12 +40,16 @@ const (
 	StringTy
 	SliceTy
 	ArrayTy
+	// TupleTy
 	AddressTy
 	FixedBytesTy
 	BytesTy
 	HashTy
 	FixedPointTy
 	FunctionTy
+
+	// newly Added [2020-08-06]
+	TupleTy
 )
 
 // Type is the reflection of the supported argument type
@@ -57,6 +62,13 @@ type Type struct {
 	T    byte // Our own type checking
 
 	stringKind string // holds the unparsed string for deriving signatures
+
+	// newly Added [2020-08-06]
+	// Tuple relative fields
+	TupleRawName  string       // Raw struct name defined in source code, may be empty.
+	TupleElems    []*Type      // Type information of all tuple fields
+	TupleRawNames []string     // Raw field name of all tuple fields
+	TupleType     reflect.Type // Underlying struct of the tuple
 }
 
 var (

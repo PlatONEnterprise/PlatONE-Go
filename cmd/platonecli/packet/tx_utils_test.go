@@ -52,7 +52,7 @@ func TestParseFuncFromAbi(t *testing.T) {
 		case err != nil:
 			t.Logf("case %d: %s\n", i+1, err.Error())
 		case funcDesc != nil && funcDesc.Name == data.funcName:
-			t.Logf("case %d: %s %s %s %s\n", i+1, funcDesc.Name, funcDesc.Inputs, funcDesc.Outputs, funcDesc.Constant)
+			t.Logf("case %d: %s %v %v %s\n", i+1, funcDesc.Name, funcDesc.Inputs, funcDesc.Outputs, funcDesc.Constant)
 		default:
 			t.Fail()
 		}

@@ -3,6 +3,8 @@ package packet
 import (
 	"fmt"
 
+	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/utils"
 )
 
@@ -73,7 +75,7 @@ func (dataGen *ContractDataGen) ReceiptParsing(receipt *Receipt) string {
 
 // CombineData of Contractcall data struct is used for packeting the data of wasm or evm contracts execution
 // Implement the MessageCallDemo interface
-func (dataGen *ContractDataGen) CombineData() (string, []string, bool, error) {
+func (dataGen *ContractDataGen) CombineData() (string, []abi.ArgumentMarshaling, bool, error) {
 
 	// packet contract method and input parameters
 	outputType, isWrite, funcBytes, err := dataGen.combineFunc()
@@ -87,7 +89,7 @@ func (dataGen *ContractDataGen) CombineData() (string, []string, bool, error) {
 }
 
 // combineFunc of Contractcall data struct is used for combining the
-func (dataGen *ContractDataGen) combineFunc() ([]string, bool, [][]byte, error) {
+func (dataGen *ContractDataGen) combineFunc() ([]abi.ArgumentMarshaling, bool, [][]byte, error) {
 
 	// Judging whether this method exists or not by abi file
 	abiFunc, err := ParseFuncFromAbi(dataGen.data.funcAbi, dataGen.data.funcName) //修改
@@ -110,7 +112,8 @@ func (dataGen *ContractDataGen) combineFunc() ([]string, bool, [][]byte, error) 
 	isWrite := dataGen.Interp.setIsWrite(abiFunc)
 
 	// Get the function output type for further use
-	outputType := getOutputTypes(abiFunc)
+	/// outputType := getOutputTypes(abiFunc)
+	outputType := abiFunc.Outputs
 
 	return outputType, isWrite, funcByte, nil
 }
@@ -124,7 +127,7 @@ func getOutputTypes(abiFunc *FuncDesc) []string {
 		}*/
 
 	for _, output := range abiFunc.Outputs {
-		outputTypes = append(outputTypes, output.Type)
+		outputTypes = append(outputTypes, GenFuncSig(output))
 	}
 
 	return outputTypes
@@ -137,4 +140,8 @@ func (dataGen *ContractDataGen) combineContractData(funcBytes [][]byte) (string,
 
 func (dataGen *ContractDataGen) GetAbiBytes() []byte {
 	return dataGen.data.funcAbi
+}
+
+func (dataGen *ContractDataGen) ParseNonConstantResponse(respStr string, outputType []abi.ArgumentMarshaling) []interface{} {
+	return dataGen.Interp.ParseNonConstantResponse(respStr, outputType)
 }
