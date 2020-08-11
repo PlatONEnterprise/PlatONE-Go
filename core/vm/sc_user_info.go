@@ -72,7 +72,7 @@ func (u *UserManagement) addUser(info *UserInfo) (int32, error) {
 	}
 
 	addr, err := u.getAddrByName(info.Name);
-	if err != nil{
+	if err != nil && err != errNoUserInfo{
 		return u.returnFail(topic,  err)
 	}
 
@@ -195,6 +195,10 @@ func (u *UserManagement) getAllUsers() ([]byte, error) {
 	addrs, err = u.getUserList()
 	if err != nil {
 		return nil, err
+	}
+
+	if len(addrs) == 0{
+		return []byte("[]"), nil
 	}
 
 	for _, v := range addrs {

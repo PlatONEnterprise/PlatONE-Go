@@ -147,6 +147,9 @@ func (u *UserManagement) setSuperAdmin() (int32, error) {
 
 func (u *UserManagement) transferSuperAdminByAddress(addr common.Address) (int32, error) {
 	var topic = "transferSuperAdminByAddress"
+	if addr == u.Caller() {
+		return u.returnSuccess(topic)
+	}
 	if err := u.setRoleWithPermissionCheckByAddress(addr, superAdmin, roleActive); err != nil {
 		return u.returnFail(topic, err)
 	}
