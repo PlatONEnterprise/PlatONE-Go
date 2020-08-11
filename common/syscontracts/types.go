@@ -42,16 +42,16 @@ func (un *UpdateNode) String() string{
 
 type NodeInfo struct {
 	Name  string `json:"name,omitempty,required"` //全网唯一，不能重复。所有接口均以此为主键。 这个名称意义是？
-	Owner string `json:"owner,omitempty"`
-	Desc  string `json:"desc,omitempty"`
-	Typ   uint32 `json:"type,omitempty"` // 0:观察者节点；1:共识节点
+	Owner string `json:"owner"`
+	Desc  string `json:"desc"`
+	Typ   uint32 `json:"type"` // 0:观察者节点；1:共识节点
 	// status 1为正常节点, 2为删除节点
-	Status     uint32 `json:"status,omitempty,required"`
-	ExternalIP string `json:"externalIP,omitempty"`
+	Status     uint32 `json:"status,required"`
+	ExternalIP string `json:"externalIP"`
 	InternalIP string `json:"internalIP,omitempty,required"`
-	PublicKey  string `json:"publicKey,omitempty,required"` //节点公钥，全网唯一，不能重复
-	RpcPort    uint32 `json:"rpcPort,omitempty"`
-	P2pPort    uint32 `json:"p2pPort,omitempty,required"`
+	PublicKey  string `json:"publicKey,required"` //节点公钥，全网唯一，不能重复
+	RpcPort    uint32 `json:"rpcPort"`
+	P2pPort    uint32 `json:"p2pPort,required"`
 	// delay set validatorSet
 	DelayNum uint64 `json:"delayNum,omitempty"` //共识节点延迟设置的区块高度 (可选, 默认实时设置)
 }
