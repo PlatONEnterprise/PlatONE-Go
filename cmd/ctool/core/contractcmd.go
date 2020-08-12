@@ -3,6 +3,7 @@ package core
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"io/ioutil"
 	"strings"
 	"time"
@@ -148,7 +149,11 @@ func DeployContract(abiFilePath string, codeFilePath string) error {
 
 	select {
 	case address := <-ch:
-		fmt.Printf("contract address: %s\n", address)
+		if common.IsHexAddress(address){
+			fmt.Printf("contract address: %s\n", address)
+		}else {
+			fmt.Printf("contract deploy failed\n")
+		}
 	case <-time.After(time.Second * 200):
 		fmt.Printf("get contract receipt timeout...more than 200 second.\n")
 	}
@@ -646,7 +651,7 @@ func GetTransactionReceipt(txHash string, ch chan string) {
 			panic(fmt.Sprintf("parse get receipt result error ! \n %s", e.Error()))
 		}
 		contractAddr = receipt.Result.ContractAddress
-		if contractAddr != "" {
+		if receipt.Result.BlockNumber != "" {
 			ch <- contractAddr
 			break
 		}
