@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
 	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
@@ -55,22 +56,23 @@ func NewCns(to, name string, txType uint64) *Cns {
 }
 
 //================================ABI================================
-
+// todo: change FuncDesc to Method in abi/method.go
 // FuncDesc, the object of the contract abi files
 type FuncDesc struct {
-	Name   string `json:"name"`
-	Inputs []struct {
-		Name         string `json:"name"`
-		Type         string `json:"type"`
-		InternalType string `json:"internalType,omitempty"`
-	} `json:"inputs"`
-	Outputs []struct {
-		Name string `json:"name"`
-		Type string `json:"type"`
-	} `json:"outputs"`
-	Constant        interface{} `json:"constant"` // ???
-	Type            string      `json:"type"`
-	StateMutability string      `json:"stateMutability,omitempty"` // tag for solidity ver > 0.6.0
+	Name            string                   `json:"name"`
+	Inputs          []abi.ArgumentMarshaling `json:"inputs"`
+	Outputs         []abi.ArgumentMarshaling `json:"outputs"`
+	Constant        interface{}              `json:"constant"` // ???
+	Type            string                   `json:"type"`
+	StateMutability string                   `json:"stateMutability,omitempty"` // tag for solidity ver > 0.6.0
+}
+
+type FuncIO struct {
+	Name         string   `json:"name"`
+	Type         string   `json:"type"`
+	Indexed      bool     `json:"indexed,omitempty"`
+	InternalType string   `json:"internalType,omitempty"`
+	Components   []FuncIO `json:"components,omitempty"`
 }
 
 // ParseFuncFromAbi searches the function (or event) names in the []FuncDesc object array

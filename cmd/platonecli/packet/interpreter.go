@@ -12,13 +12,14 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 
-	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/utils"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/utils"
 )
 
 // MessageCallDemo, the interface for different types of data package methods
 type MsgDataGen interface {
-	CombineData() (string, []string, bool, error)
+	CombineData() (string, []abi.ArgumentMarshaling, bool, error)
 	ReceiptParsing(receipt *Receipt) string
+	ParseNonConstantResponse(respStr string, outputType []abi.ArgumentMarshaling) []interface{}
 	GetAbiBytes() []byte
 }
 
@@ -33,12 +34,27 @@ type contractInter interface {
 	combineData([][]byte) (string, error)
 	setIsWrite(*FuncDesc) bool
 	ReceiptParsing(*Receipt, []byte) string
+	ParseNonConstantResponse(respStr string, outputType []abi.ArgumentMarshaling) []interface{}
 }
 
 //============================Contract EVM============================
 
 type EvmContractInterpreter struct {
 	typeName []string // contract parameter types
+}
+
+// deprecated
+func tempStructConvert(input FuncIO) abi.ArgumentMarshaling {
+	var output abi.ArgumentMarshaling
+	output.Type = input.Type
+	output.InternalType = input.InternalType
+	output.Name = input.Name
+
+	for _, v := range input.Components {
+		output.Components = append(output.Components, tempStructConvert(v))
+	}
+
+	return output
 }
 
 // encodeFunction converts the function params to bytes and combine them by specific encoding rules
@@ -53,22 +69,25 @@ func (i *EvmContractInterpreter) encodeFunction(abiFunc *FuncDesc, funcParams []
 	// converts the function params to bytes
 	for i, v := range funcParams {
 		input := abiFunc.Inputs[i]
-		if argument.Type, err = abi.NewType(input.Type); err != nil {
+		// newInput := tempStructConvert(input)
+		if argument.Type, err = abi.NewTypeV2(input.Type, "", input.Components); err != nil {
 			return nil, err
 		}
 		arguments = append(arguments, argument)
 
-		arg, err := abi.SolInputTypeConversion(input.Type, v)
+		/// arg, err := abi.SolInputTypeConversion(input.Type, v)
+		arg, err := argument.Type.StringConvert(v)
 		if err != nil {
 			return nil, err
 		}
 
 		args = append(args, arg)
-		paramTypes = append(paramTypes, input.Type)
+		/// paramTypes = append(paramTypes, input.Type)
+		paramTypes = append(paramTypes, GenFuncSig(input))
 	}
 
 	i.typeName = paramTypes
-	paramsBytes, err := arguments.Pack(args...)
+	paramsBytes, err := arguments.PackV2(args...)
 	if err != nil {
 		/// common.ErrPrintln("pack args error: ", err)
 		return nil, err
@@ -80,6 +99,21 @@ func (i *EvmContractInterpreter) encodeFunction(abiFunc *FuncDesc, funcParams []
 
 	/// utl.Logger.Printf("the function byte is %v, the write operation is %v\n", funcByte, isWrite)
 	return funcByte, nil
+}
+
+func GenFuncSig(input abi.ArgumentMarshaling) string {
+
+	switch input.Type {
+	case "tuple":
+		var paramTypes []string
+
+		for _, data := range input.Components {
+			paramTypes = append(paramTypes, GenFuncSig(data))
+		}
+		return fmt.Sprintf("(%v)", strings.Join(paramTypes, ","))
+	default:
+		return input.Type
+	}
 }
 
 // encodeFuncName encodes the contract method in the way defined by the evm virtual mechine
@@ -107,7 +141,32 @@ func (i EvmContractInterpreter) setIsWrite(abiFunc *FuncDesc) bool {
 }
 
 func (i EvmContractInterpreter) ReceiptParsing(receipt *Receipt, abiBytes []byte) string {
-	return ""
+	var result string
+
+	switch {
+	case len(receipt.Logs) != 0:
+		result = EventParsingV2(receipt.Logs, abiBytes)
+	case receipt.Status == txReceiptFailureCode:
+		result = txReceiptFailureMsg
+	case receipt.Status == txReceiptSuccessCode:
+		result = txReceiptSuccessMsg
+	}
+
+	return result
+}
+
+func (i EvmContractInterpreter) ParseNonConstantResponse(respStr string, outputType []abi.ArgumentMarshaling) []interface{} {
+	var result = make([]interface{}, 1)
+
+	if len(outputType) != 0 {
+		/// b, _ := hexutil.Decode(respStr)
+		arguments := GenUnpackArgs(outputType)
+		result = arguments.ReturnBytesUnpack(respStr)
+	} else {
+		result[0] = fmt.Sprintf("message call has no return value\n")
+	}
+
+	return result
 }
 
 //============================Contract WASM===========================
@@ -169,8 +228,21 @@ func (i WasmContractInterpreter) setIsWrite(abiFunc *FuncDesc) bool {
 }
 
 func (i WasmContractInterpreter) ReceiptParsing(receipt *Receipt, abiBytes []byte) string {
-	// todo
+	// todo: refactor the ReceiptParsing method
 	return ReceiptParsing(receipt, abiBytes)
+}
+
+func (i WasmContractInterpreter) ParseNonConstantResponse(respStr string, outputType []abi.ArgumentMarshaling) []interface{} {
+	var result = make([]interface{}, 1)
+
+	if len(outputType) != 0 {
+		b, _ := hexutil.Decode(respStr)
+		result[0] = utils.BytesConverter(b, outputType[0].Type)
+	} else {
+		result[0] = fmt.Sprintf("message call has no return value\n")
+	}
+
+	return result
 }
 
 //========================DEPLOY EVM=========================
@@ -187,7 +259,7 @@ func (i *EvmDeployInterpreter) combineDeployData() (string, error) {
 }
 
 func (i EvmDeployInterpreter) ReceiptParsing(receipt *Receipt, abiBytes []byte) string {
-	return ""
+	return ReceiptParsing(receipt, abiBytes)
 }
 
 //========================DEPLOY WASM=========================
@@ -231,7 +303,7 @@ func rlpEncode(val interface{}) (string, error) {
 
 	dataRlp, err := rlp.EncodeToBytes(val)
 	if err != nil {
-		return "", fmt.Errorf(utl.ErrRlpEncodeFormat, err.Error())
+		return "", fmt.Errorf(utils.ErrRlpEncodeFormat, err.Error())
 	}
 
 	return hexutil.Encode(dataRlp), nil

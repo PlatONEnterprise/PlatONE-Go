@@ -133,7 +133,7 @@ func deploy(c *cli.Context) {
 	paramValid(vm, "vm")
 
 	dataGenerator := packet.NewDeployDataGen(codeBytes, abiBytes, vm, types.CreateTxType)
-	result := clientCommon(c, dataGenerator, nil)
+	result := clientCommon(c, dataGenerator, nil)[0]
 
 	if utl.IsMatch(result.(string), "address") {
 		/// storeAbiFile(result.(string), abiBytes)
@@ -158,8 +158,10 @@ func execute(c *cli.Context) {
 		return
 	}
 
-	result := contractCall(c, funcParams, funcName, contract)
-	fmt.Printf("result: %v\n", result)
+	result := contractCallWrap(c, funcParams, funcName, contract)
+	for i, data := range result {
+		fmt.Printf("result%d: %+v\n", i, data)
+	}
 	//utl.PrintJson([]byte(result.(string))) //TODO
 }
 

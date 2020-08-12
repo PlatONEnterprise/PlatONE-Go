@@ -34,6 +34,11 @@ func innerCall(c *cli.Context, funcName string, funcParams []string, txType uint
 
 // contractCall extract the common parts of the actions of contract execution
 func contractCall(c *cli.Context, funcParams []string, funcName, contract string) interface{} {
+	result := contractCallWrap(c, funcParams, funcName, contract)
+	return result[0]
+}
+
+func contractCallWrap(c *cli.Context, funcParams []string, funcName, contract string) []interface{} {
 	vm := c.String(ContractVmFlags.Name)
 	paramValid(vm, "vm")
 
@@ -55,7 +60,7 @@ func contractCall(c *cli.Context, funcParams []string, funcName, contract string
 }
 
 // todo: rename genTxAndCall?
-func clientCommon(c *cli.Context, dataGen packet.MsgDataGen, to *common.Address) interface{} {
+func clientCommon(c *cli.Context, dataGen packet.MsgDataGen, to *common.Address) []interface{} {
 
 	// get the client global parameters
 	account, isSync, isDefault, url := getClientConfig(c)
@@ -83,7 +88,7 @@ func clientCommon(c *cli.Context, dataGen packet.MsgDataGen, to *common.Address)
 
 	// todo: move isSync from [pc.MessageCall] to here???
 	if isSync && isTxHash {
-		res, err := pc.GetReceiptByPolling(result.(string))
+		res, err := pc.GetReceiptByPolling(result[0].(string))
 		if err != nil {
 			return result
 		}
@@ -92,7 +97,7 @@ func clientCommon(c *cli.Context, dataGen packet.MsgDataGen, to *common.Address)
 		receiptStr := utl.PrintJson(receiptBytes)
 		fmt.Printf("%s\n", receiptStr)
 
-		return dataGen.ReceiptParsing(res)
+		result[0] = dataGen.ReceiptParsing(res)
 	}
 
 	return result

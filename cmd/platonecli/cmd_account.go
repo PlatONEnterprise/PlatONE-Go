@@ -95,7 +95,7 @@ func transfer(c *cli.Context) {
 
 	call := packet.NewContractDataGen(nil, "", 0)
 	result := clientCommon(c, call, &toNew)
-	fmt.Printf("result: %v\n", result)
+	fmt.Printf("result: %v\n", result[0])
 }
 
 func userAdd(c *cli.Context) {

@@ -239,15 +239,21 @@ func GetFuncNameAndParams(funcAndParams string) (string, []string) {
 	}
 
 	funcName := f[0:strings.Index(f, "(")]
+
 	paramString := f[strings.Index(f, "(")+1 : strings.LastIndex(f, ")")]
+	params := GetFuncParams(paramString)
+
+	return funcName, params
+}
+
+func GetFuncParams(paramString string) []string {
 	if paramString == "" {
-		return funcName, nil
+		return nil
 	}
 
 	splitPos := recordFuncParamSplitPos(paramString)
-	params := splitFuncParamByPos(paramString, splitPos)
+	return splitFuncParamByPos(paramString, splitPos)
 
-	return funcName, params
 }
 
 // splitFuncParamByPos splits the function params which is in string format

@@ -2,11 +2,8 @@ package platoneclient
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-
-	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/utils"
 
@@ -55,7 +52,8 @@ func (p *pClient) GetTransactionReceipt(txHash string) (*packet.Receipt, error) 
 
 // messageCall extract the common parts of the transaction based calls
 // including eth_call, eth_sendTransaction, and eth_sendRawTransaction
-func (client *pClient) MessageCall(dataGen packet.MsgDataGen, keyfile string, tx *packet.TxParams) (interface{}, bool, error) {
+func (client *pClient) MessageCall(dataGen packet.MsgDataGen, keyfile string, tx *packet.TxParams) ([]interface{}, bool, error) {
+	var result = make([]interface{}, 1)
 
 	// combine the data based on the types of the calls (contract call, inner call or deploy call)
 	data, outputType, isWrite, err := dataGen.CombineData()
@@ -69,7 +67,7 @@ func (client *pClient) MessageCall(dataGen packet.MsgDataGen, keyfile string, tx
 	params, action := tx.SendMode(isWrite, keyfile)
 
 	// print the RPC JSON param to the terminal
-	/// utl.PrintRequest(params)
+	/// utils.PrintRequest(params)
 
 	// send the RPC calls
 	var resp interface{}
@@ -81,67 +79,14 @@ func (client *pClient) MessageCall(dataGen packet.MsgDataGen, keyfile string, tx
 
 	// parse transaction response
 	respStr := fmt.Sprint(resp)
+
 	if !isWrite {
-		return ParseNonConstantResponse(respStr, outputType), false, nil
-	}
-
-	return respStr, true, nil
-}
-
-func (client *pClient) MessageCallOld(dataGenerator packet.MsgDataGen, keyfile string, tx *packet.TxParams, isSync bool) (interface{}, error) {
-
-	// combine the data based on the types of the calls (contract call, inner call or deploy call)
-	data, outputType, isWrite, err := dataGenerator.CombineData()
-	if err != nil {
-		errStr := fmt.Sprintf(utils.ErrPackDataFormat, err.Error())
-		return nil, errors.New(errStr)
-	}
-
-	// packet the transaction and select the transaction based calls
-	tx.Data = data
-	params, action := tx.SendMode(isWrite, keyfile)
-
-	// print the RPC JSON param to the terminal
-	/// utl.PrintRequest(params)
-
-	// send the RPC calls
-	var resp interface{}
-	err = client.c.Call(&resp, action, params...)
-	if err != nil {
-		errStr := fmt.Sprintf(utils.ErrSendTransacionFormat, err.Error())
-		return nil, errors.New(errStr)
-	}
-
-	// parse transaction response
-	respStr := fmt.Sprint(resp)
-
-	switch {
-	case !isWrite:
-		return ParseNonConstantResponse(respStr, outputType), nil
-	case isSync:
-		result, err := client.GetReceiptByPolling(respStr)
-		if err != nil {
-			return respStr, nil
-		}
-
-		receiptBytes, _ := json.Marshal(result)
-		return string(receiptBytes), nil
-	default:
-		/// return fmt.Sprintf("trasaction hash: %s\n", respStr), nil
-		return respStr, nil
-	}
-}
-
-// ParseNonConstantRespose wraps the utl.BytesConverter,
-// it converts the hex string response based the output type provided
-func ParseNonConstantResponse(respStr string, outputType []string) interface{} {
-	if len(outputType) != 0 {
-		b, _ := hexutil.Decode(respStr)
-		// utl.Logger.Printf("result: %v\n", utl.BytesConverter(bytesTrim, outputType))
-		return utils.BytesConverter(b, outputType[0])
+		result = dataGen.ParseNonConstantResponse(respStr, outputType)
 	} else {
-		return fmt.Sprintf("message call has no return value\n")
+		result[0] = respStr
 	}
+
+	return result, isWrite, nil
 }
 
 func (client *pClient) GetReceiptByPolling(txHash string) (*packet.Receipt, error) {

@@ -3,6 +3,7 @@ package packet
 import (
 	"errors"
 
+	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 )
 
@@ -58,7 +59,7 @@ func (dataGen *DeployDataGen) ReceiptParsing(receipt *Receipt) string {
 
 // CombineData of DeployCall data struct is used for packeting the data of wasm or evm contracts deployment
 // Implement the MessageCallDemo interface
-func (dataGen DeployDataGen) CombineData() (string, []string, bool, error) {
+func (dataGen DeployDataGen) CombineData() (string, []abi.ArgumentMarshaling, bool, error) {
 	if dataGen.Interpreter == nil {
 		return "", nil, false, errors.New("interpreter is not provided")
 	}
@@ -69,6 +70,10 @@ func (dataGen DeployDataGen) CombineData() (string, []string, bool, error) {
 
 func (dataGen *DeployDataGen) GetAbiBytes() []byte {
 	return dataGen.abiBytes
+}
+
+func (dataGen *DeployDataGen) ParseNonConstantResponse(respStr string, outputType []abi.ArgumentMarshaling) []interface{} {
+	return nil
 }
 
 // combineDeployData packet the data in the way defined by the evm virtual mechine
