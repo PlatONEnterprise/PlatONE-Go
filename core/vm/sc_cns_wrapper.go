@@ -16,7 +16,7 @@ var (
 	errLowRegVersion          = errors.New("[CNS] Version must be larger than previous version")
 	errNameAndVerReg          = errors.New("[CNS] name and version is already registered and activated in CNS")
 	errNameReg                = errors.New("[CNS] Name is already registered")
-	errNameAndVerUnReg        = errors.New("[CNS] Name and version didn't register before")
+	errNameAndVerUnReg        = errors.New("[CNS] Name or version didn't register before")
 )
 
 var (
@@ -44,8 +44,8 @@ func (cns *CnsWrapper) Run(input []byte) ([]byte, error) {
 		}
 	}()
 
-	fnName, ret, err :=  execSC(input, cns.AllExportFns())
-	if err != nil{
+	fnName, ret, err := execSC(input, cns.AllExportFns())
+	if err != nil {
 		if fnName == "" {
 			fnName = "Notify"
 		}

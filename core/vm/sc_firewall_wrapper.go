@@ -11,6 +11,8 @@ import (
 )
 
 var ErrFwRule = errors.New("FW : error, incorrect firewall rule format")
+var ErrFwRuleAddr = errors.New("FW : error, incorrect firewall rule address format")
+var ErrFwRuleName = errors.New("FW : error, incorrect firewall rule api name format")
 
 type FwWrapper struct {
 	base *FireWall
@@ -25,8 +27,8 @@ func (u *FwWrapper) RequiredGas(input []byte) uint64 {
 
 // Run runs the precompiled contract
 func (u *FwWrapper) Run(input []byte) ([]byte, error) {
-	fnName, ret, err :=  execSC(input, u.AllExportFns())
-	if err != nil{
+	fnName, ret, err := execSC(input, u.AllExportFns())
+	if err != nil {
 		if fnName == "" {
 			fnName = "Notify"
 		}
@@ -92,7 +94,7 @@ func (u *FwWrapper) fwAdd(contractAddr common.Address, action, lst string) (int3
 	switch err {
 	case fwErrNotOwner:
 		return int32(fwNoPermission), err
-	case state.ErrInvalidFwAction, ErrFwRule:
+	case state.ErrInvalidFwAction, ErrFwRule, ErrFwRuleName, ErrFwRuleAddr:
 		return int32(fwInvalidArgument), nil
 	}
 
@@ -105,7 +107,7 @@ func (u *FwWrapper) fwDel(contractAddr common.Address, action, lst string) (int3
 	switch err {
 	case fwErrNotOwner:
 		return int32(fwNoPermission), err
-	case state.ErrInvalidFwAction, ErrFwRule:
+	case state.ErrInvalidFwAction, ErrFwRule, ErrFwRuleName, ErrFwRuleAddr:
 		return int32(fwInvalidArgument), nil
 	}
 
@@ -118,7 +120,7 @@ func (u *FwWrapper) fwSet(contractAddr common.Address, act, lst string) (int32, 
 	switch err {
 	case fwErrNotOwner:
 		return int32(fwNoPermission), err
-	case state.ErrInvalidFwAction, ErrFwRule:
+	case state.ErrInvalidFwAction, ErrFwRule, ErrFwRuleName, ErrFwRuleAddr:
 		return int32(fwInvalidArgument), nil
 	}
 

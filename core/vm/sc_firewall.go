@@ -197,9 +197,20 @@ func convertToFwElem(l string) ([]state.FwElem, error) {
 
 		addrStr := tmp[0]
 		api := tmp[1]
+
+		// check api name
+		if ok, _ := checkNameFormat(api); !ok {
+			return nil, ErrFwRuleName
+		}
+
+		// check address
 		if addrStr == "*" {
 			addr = state.FwWildchardAddr
 		} else {
+			if !common.IsHexAddress(addrStr) {
+				return nil, ErrFwRuleAddr
+			}
+
 			addr = common.HexToAddress(addrStr)
 		}
 

@@ -32,13 +32,13 @@ const (
 )
 
 const (
-	namePattern    = `^[a-zA-Z]\w{2,15}$`  // alice
-	versionPattern = `^([\d]+\.){3}[\d]+$` // 0.0.0.1
+	/// namePattern    = `^[a-zA-Z]\w{2,15}$`  // alice
+	versionRegPattern = `^([\d]{1,3}\.){3}[\d]{1,3}$` // 0.0.0.1
 )
 
 var (
-	regName = regexp.MustCompile(namePattern)
-	regVer  = regexp.MustCompile(versionPattern)
+	/// regName = regexp.MustCompile(namePattern)
+	regVer = regexp.MustCompile(versionRegPattern)
 )
 
 var (
@@ -160,7 +160,7 @@ func (cns *CnsManager) cnsRegister(name, version string, contractAddr common.Add
 
 func (cns *CnsManager) doCnsRegister(name, version string, address common.Address) error {
 
-	if !regName.MatchString(name) {
+	if ok, _ := checkNameFormat(name); !ok {
 		cns.emitNotifyEvent(cnsInvalidArgument, errNameInvalid.Error())
 		return errNameInvalid
 	}
@@ -230,7 +230,7 @@ func verCompare(ver1, ver2 string) int {
 // cnsRedirect selects a specific version of a cns name and set it to current version
 func (cns *CnsManager) cnsRedirect(name, version string) error {
 
-	if !regName.MatchString(name) {
+	if ok, _ := checkNameFormat(name); !ok {
 		cns.emitNotifyEvent(cnsInvalidArgument, errNameInvalid.Error())
 		return errNameInvalid
 	}
@@ -272,7 +272,7 @@ func (cns *CnsManager) getContractAddress(name, version string) (common.Address,
 		version = cns.cMap.getCurrentVer(name)
 	}
 
-	if !regName.MatchString(name) {
+	if ok, _ := checkNameFormat(name); !ok {
 		return common.Address{}, errNameInvalid
 	}
 
@@ -294,7 +294,7 @@ func (cns *CnsManager) getContractAddress(name, version string) (common.Address,
 func (cns *CnsManager) ifRegisteredByName(name string) (bool, error) {
 	var index uint64
 
-	if !regName.MatchString(name) {
+	if ok, _ := checkNameFormat(name); !ok {
 		cns.emitNotifyEvent(cnsInvalidArgument, errNameInvalid.Error())
 		return false, errNameInvalid
 	}
@@ -356,7 +356,7 @@ func (cns *CnsManager) getRegisteredContractsByName(name string) ([]*ContractInf
 	var cnsInfoArray = make([]*ContractInfo, 0)
 	var index uint64
 
-	if !regName.MatchString(name) {
+	if ok, _ := checkNameFormat(name); !ok {
 		return nil, errNameInvalid
 	}
 
