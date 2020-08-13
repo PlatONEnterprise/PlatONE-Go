@@ -36,29 +36,34 @@ type UserInfo = syscontracts.UserInfo
 type DescInfo = syscontracts.UserDescInfo
 
 func checkDescInfo(descInfo *DescInfo) (bool, error){
-	if b, err := checkNameFormat(descInfo.Organization); !b || err!=nil{
-		return b, errOrgnizationUnsupported
+	if descInfo.Organization != ""{
+		if b, err := checkNameFormat(descInfo.Organization); !b || err!=nil{
+			return b, errOrgnizationUnsupported
+		}
+	}
+	if descInfo.Email != ""{
+		if b, err := checkEmailFormat(descInfo.Email); !b || err!=nil{
+			return b, errEmailUnsupported
+		}
 	}
 
-	if b, err := checkEmailFormat(descInfo.Email); !b || err!=nil{
-		return b, errEmailUnsupported
-	}
 
-	if b, err := checkPhoneFormat(descInfo.Phone); !b || err!= nil{
-		return b, errPhoneUnsupported
+	if descInfo.Phone != ""{
+		if b, err := checkPhoneFormat(descInfo.Phone); !b || err!= nil{
+			return b, errPhoneUnsupported
+		}
 	}
-
 	return true, nil
 }
 
 func updateDescInfo(src *DescInfo, dest *DescInfo) {
-	if src.Email != dest.Email {
+	if dest.Email != "" && src.Email != dest.Email {
 		src.Email = dest.Email
 	}
-	if src.Organization != dest.Organization {
+	if dest.Organization != "" && src.Organization != dest.Organization {
 		src.Organization = dest.Organization
 	}
-	if src.Phone != dest.Phone {
+	if dest.Phone != "" && src.Phone != dest.Phone {
 		src.Phone = dest.Phone
 	}
 }

@@ -17,10 +17,10 @@ import (
 
 const (
 	nameRegPattarn = `^[a-zA-Z0-9_\p{Han}]{1,128}$`
-	emailRegPattarn = `\w[-\w.+]*@([A-Za-z0-9][-A-Za-z0-9]+\.)+[A-Za-z]{2,14}`
+	emailRegPattarn = `^[a-zA-Z0-9]+@([A-Za-z0-9][-A-Za-z0-9]+\.)+[A-Za-z]{2,14}`
 	ipRegPattarn = `(25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)\.(25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)\.(25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)\.(25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)`
-	telePhonePattarn = "[0-9-()（）]{7,18}"
-	mobilePhonePattarn = "[0-9]{3,13}"
+	telePhonePattarn = "^[0-9]{3,13}$" //"^[0-9-()（）]{7,18}"
+	mobilePhonePattarn = "^[0-9]{3,13}$"
 )
 
 var (
