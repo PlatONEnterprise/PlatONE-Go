@@ -163,6 +163,18 @@ func (n *SCNode) checkParamsOfAddNode(node *syscontracts.NodeInfo) error {
 		return err
 	}
 
+	if node.ExternalIP != ""{
+		if b,err := checkIpFormat(node.ExternalIP);  err!=nil || !b {
+			return err
+		}
+	}
+
+	if node.InternalIP != ""{
+		if b,err := checkIpFormat(node.InternalIP);  err!=nil || !b {
+			return err
+		}
+	}
+
 	names, err := n.getNames()
 	if err != nil {
 		if errNodeNotFound != err {

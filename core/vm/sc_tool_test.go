@@ -228,3 +228,37 @@ func Test_checkIpFormat(t *testing.T) {
 		})
 	}
 }
+
+func Test_checkIpFormat1(t *testing.T) {
+	type args struct {
+		ip string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    bool
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+		{
+			args:args{ip:"111"},
+			want:false,
+		},
+		{
+			args:args{ip:"111.11.11.1"},
+			want:true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := checkIpFormat(tt.args.ip)
+			//if (err != nil) != tt.wantErr {
+			//	t.Errorf("checkIpFormat() error = %v, wantErr %v", err, tt.wantErr)
+			//	return
+			//}
+			if got != tt.want {
+				t.Errorf("checkIpFormat() got = %v, want %v, err %v", got, tt.want, err)
+			}
+		})
+	}
+}
