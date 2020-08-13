@@ -1,0 +1,14 @@
+[
+    {
+        "name": "CnsInvoke",
+        "inputs": [
+            {
+                "type": "uint64"
+            },
+            {
+                "type": "string"
+            }
+        ],
+        "type": "event"
+    }
+]

@@ -95,7 +95,7 @@ func clientCommon(c *cli.Context, dataGen packet.MsgDataGen, to *common.Address)
 
 		receiptBytes, _ := json.Marshal(res)
 		receiptStr := utl.PrintJson(receiptBytes)
-		fmt.Printf("%s\n", receiptStr)
+		fmt.Println(receiptStr)
 
 		result[0] = dataGen.ReceiptParsing(res)
 	}

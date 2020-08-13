@@ -2,12 +2,13 @@ package vm
 
 import (
 	"fmt"
+	"math/big"
+	"strings"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
-	"math/big"
-	"strings"
 )
 
 type CnsInvoke struct {
