@@ -1,7 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 
 	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/precompiled"
 
@@ -158,6 +161,13 @@ func fwStatus(c *cli.Context) {
 	fmt.Printf("result:\n%s\n", strResult)
 }
 
+type ExportFwStatus struct {
+	// ContractAddr common.Address
+	// Active       bool
+	AcceptedList []state.FwElem
+	RejectedList []state.FwElem
+}
+
 func fwExport(c *cli.Context) {
 	funcName := "__sys_FwExport"
 	filePath := c.String(FilePathFlags.Name)
@@ -166,7 +176,12 @@ func fwExport(c *cli.Context) {
 	funcParams := []string{addr}
 	result := contractCall(c, funcParams, funcName, precompile.FirewallManagementAddress)
 
-	_ = utl.WriteFile([]byte(result.(string)), filePath)
+	// trim the firewall "ContractAddr" and "Active" tag
+	var r = new(ExportFwStatus)
+	_ = json.Unmarshal([]byte(result.(string)), r)
+	rBytes, _ := json.Marshal(r)
+
+	_ = utl.WriteFile(rBytes, filePath)
 }
 
 func fwImport(c *cli.Context) {
@@ -175,6 +190,7 @@ func fwImport(c *cli.Context) {
 	addr := c.Args().First()
 
 	fileBytes, err := utl.ParseFileToBytes(filePath)
+	fmt.Println(fileBytes)
 	if err != nil {
 		utils.Fatalf(utl.ErrParseFileFormat, "fire wall", err.Error())
 	}

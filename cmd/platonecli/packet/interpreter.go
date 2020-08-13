@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/precompiled"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
@@ -141,18 +143,15 @@ func (i EvmContractInterpreter) setIsWrite(abiFunc *FuncDesc) bool {
 }
 
 func (i EvmContractInterpreter) ReceiptParsing(receipt *Receipt, abiBytes []byte) string {
-	var result string
 
-	switch {
-	case len(receipt.Logs) != 0:
-		result = EventParsingV2(receipt.Logs, abiBytes)
-	case receipt.Status == txReceiptFailureCode:
-		result = txReceiptFailureMsg
-	case receipt.Status == txReceiptSuccessCode:
-		result = txReceiptSuccessMsg
+	if len(receipt.Logs) != 0 {
+		result := EventParsingV2(receipt.Logs, abiBytes)
+		if result != "" {
+			return result
+		}
 	}
 
-	return result
+	return receiptStatusReturn(receipt.Status)
 }
 
 func (i EvmContractInterpreter) ParseNonConstantResponse(respStr string, outputType []abi.ArgumentMarshaling) []interface{} {
@@ -228,8 +227,16 @@ func (i WasmContractInterpreter) setIsWrite(abiFunc *FuncDesc) bool {
 }
 
 func (i WasmContractInterpreter) ReceiptParsing(receipt *Receipt, abiBytes []byte) string {
-	// todo: refactor the ReceiptParsing method
-	return ReceiptParsing(receipt, abiBytes)
+
+	if len(receipt.Logs) != 0 {
+		result := SysEventParsing(receipt.Logs, []string{precompile.CnsInvokeEvent})
+		result += EventParsing(receipt.Logs, abiBytes)
+		if result != "" {
+			return result
+		}
+	}
+
+	return receiptStatusReturn(receipt.Status)
 }
 
 func (i WasmContractInterpreter) ParseNonConstantResponse(respStr string, outputType []abi.ArgumentMarshaling) []interface{} {
@@ -259,7 +266,24 @@ func (i *EvmDeployInterpreter) combineDeployData() (string, error) {
 }
 
 func (i EvmDeployInterpreter) ReceiptParsing(receipt *Receipt, abiBytes []byte) string {
-	return ReceiptParsing(receipt, abiBytes)
+	// todo: optimize the code
+	if len(receipt.Logs) != 0 {
+		result := SysEventParsing(receipt.Logs, []string{precompile.PermDeniedEvent})
+		if result != "" {
+			return result
+		}
+
+		result = EventParsingV2(receipt.Logs, abiBytes)
+		if result != "" {
+			return result
+		}
+	}
+
+	if receipt.ContractAddress != "" {
+		return receipt.ContractAddress
+	}
+
+	return receiptStatusReturn(receipt.Status)
 }
 
 //========================DEPLOY WASM=========================
@@ -285,7 +309,24 @@ func (i *WasmDeployInterpreter) combineDeployData() (string, error) {
 }
 
 func (i WasmDeployInterpreter) ReceiptParsing(receipt *Receipt, abiBytes []byte) string {
-	return ReceiptParsing(receipt, abiBytes)
+
+	if len(receipt.Logs) != 0 {
+		result := SysEventParsing(receipt.Logs, []string{precompile.PermDeniedEvent})
+		if result != "" {
+			return result
+		}
+
+		result = EventParsing(receipt.Logs, abiBytes)
+		if result != "" {
+			return result
+		}
+	}
+
+	if receipt.ContractAddress != "" {
+		return receipt.ContractAddress
+	}
+
+	return receiptStatusReturn(receipt.Status)
 }
 
 //=========================COMMON==============================

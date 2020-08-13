@@ -15,7 +15,7 @@ const (
 	arg2 bool   = true
 )
 
-var types = []string{"string", "uint64", "bool"}
+var testTypes = []string{"string", "uint64", "bool"}
 var expResult = fmt.Sprintf("%s %d %v ", arg0, arg1, arg2)
 
 func rlpEncodeTest(params ...interface{}) []byte {
@@ -37,7 +37,7 @@ func TestParseReceiptLogData(t *testing.T) {
 
 	bin := rlpEncodeTest(arg0, arg1, arg2)
 	result := rlpDecode(bin)
-	strResult := parseReceiptLogData(result.([]interface{}), types)
+	strResult := parseReceiptLogData(result.([]interface{}), testTypes)
 	assert.Equal(t, expResult, strResult, "FAILED")
 	t.Logf("the result is %v type: %v\n", result, reflect.TypeOf(result))
 	t.Logf("the strResult is %v\n", strResult)

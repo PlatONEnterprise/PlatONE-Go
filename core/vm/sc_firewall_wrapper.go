@@ -127,8 +127,8 @@ func (u *FwWrapper) fwSet(contractAddr common.Address, act, lst string) (int32, 
 	return int32(fwOpSuccess), nil
 }
 
-func (u *FwWrapper) fwImport(contractAddr common.Address, data []byte) (int32, error) {
-	err := u.base.fwImport(contractAddr, data)
+func (u *FwWrapper) fwImport(contractAddr common.Address, data string) (int32, error) {
+	err := u.base.fwImport(contractAddr, []byte(data))
 
 	switch err {
 	case fwErrNotOwner:

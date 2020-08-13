@@ -1,0 +1,11 @@
+[
+    {
+        "name": "contract permission",
+        "inputs": [
+            {
+                "type": "string"
+            }
+        ],
+        "type": "event"
+    }
+]

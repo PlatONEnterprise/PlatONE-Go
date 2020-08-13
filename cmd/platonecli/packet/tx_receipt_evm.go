@@ -18,6 +18,9 @@ func EventParsingV2(logs RecptLogs, abiBytes []byte) (result string) {
 
 	for i, eLog := range logs {
 		eventName, arguments := findLogTopicV2(eLog.Topics[0], abiBytes)
+		if arguments == nil {
+			continue
+		}
 
 		result += fmt.Sprintf("\nEvent[%d]: %s ", i, eventName)
 		rlpList := arguments.ReturnBytesUnpack(eLog.Data)
@@ -35,13 +38,9 @@ func EventParsingV2(logs RecptLogs, abiBytes []byte) (result string) {
 }
 
 func findLogTopicV2(topic string, abiBytes []byte) (string, abi.Arguments) {
-	var arguments abi.Arguments
-	var name string
-
 	abiFunc, err := ParseAbiFromJson(abiBytes)
 	if err != nil {
-		// todo: error handle
-		fmt.Println(err)
+		return "", nil
 	}
 
 	for _, data := range abiFunc {
@@ -50,13 +49,13 @@ func findLogTopicV2(topic string, abiBytes []byte) (string, abi.Arguments) {
 		}
 
 		if strings.EqualFold(logTopicEncodeV2(data), topic) {
-			name = data.Name
-			arguments = GenUnpackArgs(data.Inputs)
-			break
+			name := data.Name
+			arguments := GenUnpackArgs(data.Inputs)
+			return name, arguments
 		}
 	}
 
-	return name, arguments
+	return "", nil
 }
 
 func GenUnpackArgs(data []abi.ArgumentMarshaling) (arguments abi.Arguments) {
