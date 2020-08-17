@@ -35,7 +35,7 @@ var (
 type UserInfo = syscontracts.UserInfo
 type DescInfo = syscontracts.UserDescInfo
 
-func checkDescInfo(descInfo *DescInfo) (bool, error){
+func checkDescInfo(descInfo DescInfo) (bool, error){
 	if descInfo.Organization != ""{
 		if b, err := checkNameFormat(descInfo.Organization); !b || err!=nil{
 			return b, errOrgnizationUnsupported
@@ -54,6 +54,10 @@ func checkDescInfo(descInfo *DescInfo) (bool, error){
 		}
 	}
 	return true, nil
+}
+
+func isZeroDescInfo(descInfo DescInfo) bool{
+	return descInfo.Organization == "" && descInfo.Email == "" && descInfo.Phone == ""
 }
 
 func updateDescInfo(src *DescInfo, dest *DescInfo) {
@@ -98,8 +102,12 @@ func (u *UserManagement) addUser(info *UserInfo) (int32, error) {
 			return u.returnFail(topic,  err)
 		}
 
-		if b, err := checkDescInfo(descInfo); !b || err != nil{
+		if b, err := checkDescInfo(*descInfo); !b || err != nil{
 			return u.returnFail(topic,  err)
+		}
+
+		if isZeroDescInfo(*descInfo) {
+			info.DescInfo = ""
 		}
 	}
 
