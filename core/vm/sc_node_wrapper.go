@@ -4,6 +4,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
+	"strings"
 )
 
 const (
@@ -33,6 +34,10 @@ func (n *scNodeWrapper) Run(input []byte) ([]byte, error) {
 			fnName = "Notify"
 		}
 		n.base.emitEvent(fnName, operateFail, err.Error())
+
+		if strings.ContainsAny(fnName, "get") {
+			return []byte(newInternalErrorResult(err).String()), err
+		}
 	}
 	return ret, nil
 }
@@ -116,7 +121,7 @@ func (n *scNodeWrapper) getENodesOfAllDeletedNodes() (string, error) {
 	enodes, err := n.base.getENodesOfAllDeletedNodes()
 	if err != nil {
 		if errNodeNotFound == err {
-			return "", err
+			return newInternalErrorResult(err).String(), err
 		}
 
 		return "", err

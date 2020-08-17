@@ -88,7 +88,7 @@ func (u *ParamManager) getState(key []byte) []byte {
 }
 
 func (u *ParamManager) setGasContractName(contractName string) (int32, error) {
-	if len(contractName) == 0 {
+	if b, _ := checkNameFormat(contractName); !b{
 		u.emitNotifyEventInParam("GasContractName", paramInvalid, fmt.Sprintf("param is invalid."))
 		return failFlag, errParamInvalid
 	}

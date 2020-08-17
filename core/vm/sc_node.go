@@ -175,6 +175,10 @@ func (n *SCNode) checkParamsOfAddNode(node *syscontracts.NodeInfo) error {
 		}
 	}
 
+	if err := checkNodeDescLen(node.Desc); err != nil {
+		return err
+	}
+
 	names, err := n.getNames()
 	if err != nil {
 		if errNodeNotFound != err {
@@ -239,6 +243,9 @@ func (n *SCNode) checkParamsOfUpdateNodeAndReturnUpdatedNode(name string, update
 }
 
 func (n *SCNode) checkPublicKeyExist(pub string) error {
+	if err := CheckPublicKeyFormat(pub); err != nil{
+		return err
+	}
 	query := &syscontracts.NodeInfo{}
 	query.PublicKey = pub
 	num, err := n.nodesNum(query)
@@ -503,8 +510,10 @@ func (n *SCNode) isMatch(node, query *syscontracts.NodeInfo) bool {
 
 	vquery := reflect.ValueOf(query).Elem()
 	vnode := reflect.ValueOf(node).Elem()
+	zeroElm := 0
 	for i := 0; i < vquery.Type().NumField(); i++ {
 		if !vquery.Field(i).IsZero() {
+			zeroElm++
 			if !(vnode.Field(i).CanInterface() &&
 				vquery.Field(i).CanInterface() &&
 				reflect.DeepEqual(vquery.Field(i).Interface(), vnode.Field(i).Interface())) {
@@ -512,6 +521,10 @@ func (n *SCNode) isMatch(node, query *syscontracts.NodeInfo) bool {
 				return false
 			}
 		}
+	}
+
+	if zeroElm == 0{
+		return false
 	}
 
 	return true
