@@ -926,7 +926,9 @@ func (s *StateDB) FwImport(addr common.Address, data []byte) error {
 	if err != nil {
 		return errors.New("Firewall import failed")
 	}
-	s.SetFwStatus(addr, status)
+	s.FwAdd(addr, reject, status.RejectedList)
+	s.FwAdd(addr, accept, status.AcceptedList)
+	//s.SetFwStatus(addr, status)
 	return nil
 }
 
