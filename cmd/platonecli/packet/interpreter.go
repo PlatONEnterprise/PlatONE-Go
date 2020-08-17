@@ -22,7 +22,6 @@ type MsgDataGen interface {
 	CombineData() (string, []abi.ArgumentMarshaling, bool, error)
 	ReceiptParsing(receipt *Receipt) string
 	ParseNonConstantResponse(respStr string, outputType []abi.ArgumentMarshaling) []interface{}
-	GetAbiBytes() []byte
 }
 
 type deployInter interface {
@@ -43,20 +42,6 @@ type contractInter interface {
 
 type EvmContractInterpreter struct {
 	typeName []string // contract parameter types
-}
-
-// deprecated
-func tempStructConvert(input FuncIO) abi.ArgumentMarshaling {
-	var output abi.ArgumentMarshaling
-	output.Type = input.Type
-	output.InternalType = input.InternalType
-	output.Name = input.Name
-
-	for _, v := range input.Components {
-		output.Components = append(output.Components, tempStructConvert(v))
-	}
-
-	return output
 }
 
 // encodeFunction converts the function params to bytes and combine them by specific encoding rules
@@ -267,13 +252,10 @@ func (i *EvmDeployInterpreter) combineDeployData() (string, error) {
 
 func (i EvmDeployInterpreter) ReceiptParsing(receipt *Receipt, abiBytes []byte) string {
 	// todo: optimize the code
+	// todo: code efficiency, receipt log parsing: multiple loops -> one loop
 	if len(receipt.Logs) != 0 {
-		result := SysEventParsing(receipt.Logs, []string{precompile.PermDeniedEvent})
-		if result != "" {
-			return result
-		}
-
-		result = EventParsingV2(receipt.Logs, abiBytes)
+		result := SysEventParsing(receipt.Logs, []string{precompile.PermDeniedEvent, precompile.CnsInitRegEvent})
+		result += EventParsingV2(receipt.Logs, abiBytes)
 		if result != "" {
 			return result
 		}
@@ -311,12 +293,8 @@ func (i *WasmDeployInterpreter) combineDeployData() (string, error) {
 func (i WasmDeployInterpreter) ReceiptParsing(receipt *Receipt, abiBytes []byte) string {
 
 	if len(receipt.Logs) != 0 {
-		result := SysEventParsing(receipt.Logs, []string{precompile.PermDeniedEvent})
-		if result != "" {
-			return result
-		}
-
-		result = EventParsing(receipt.Logs, abiBytes)
+		result := SysEventParsing(receipt.Logs, []string{precompile.PermDeniedEvent, precompile.CnsInitRegEvent})
+		result += EventParsing(receipt.Logs, abiBytes)
 		if result != "" {
 			return result
 		}

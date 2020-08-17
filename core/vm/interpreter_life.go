@@ -223,7 +223,7 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 		log.Error("RunWithGasLimit error", "err", err.Error())
 		return nil, err
 	}
-	if contract.Gas > context.GasUsed {
+	if contract.Gas >= context.GasUsed {
 		contract.Gas = contract.Gas - context.GasUsed
 	} else {
 		return nil, fmt.Errorf("out of gas.")

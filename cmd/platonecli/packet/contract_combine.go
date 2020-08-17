@@ -138,10 +138,6 @@ func (dataGen *ContractDataGen) combineContractData(funcBytes [][]byte) (string,
 	return dataGen.Interp.combineData(funcBytes)
 }
 
-func (dataGen *ContractDataGen) GetAbiBytes() []byte {
-	return dataGen.data.funcAbi
-}
-
 func (dataGen *ContractDataGen) ParseNonConstantResponse(respStr string, outputType []abi.ArgumentMarshaling) []interface{} {
 	return dataGen.Interp.ParseNonConstantResponse(respStr, outputType)
 }

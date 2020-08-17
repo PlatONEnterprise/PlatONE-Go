@@ -65,9 +65,10 @@ var (
 
 func setSysConfig(c *cli.Context) {
 
-	if c.NumFlags() > 1 {
-		utils.Fatalf("please set one system configuration at a time")
-	}
+	/*
+		if c.NumFlags() > 1 {
+			utils.Fatalf("please set one system configuration at a time")
+		}*/
 
 	txGasLimit := c.String(TxGasLimitFlags.Name)
 	blockGasLimit := c.String(BlockGasLimitFlags.Name)
@@ -76,6 +77,12 @@ func setSysConfig(c *cli.Context) {
 	isCheckContractDeployPermission := c.String(IsCheckContractDeployPermissionFlags.Name)
 	isProduceEmptyBlock := c.String(IsProduceEmptyBlockFlags.Name)
 	gasContractName := c.String(GasContractNameFlags.Name)
+
+	// temp solution
+	if len(txGasLimit)+len(blockGasLimit)+len(isTxUseGas)+len(isApproveDeployedContract)+
+		len(isCheckContractDeployPermission)+len(isProduceEmptyBlock)+len(gasContractName) > 15 {
+		utils.Fatalf("please set one system configuration at a time")
+	}
 
 	setConfig(c, txGasLimit, txGasLim)
 	setConfig(c, blockGasLimit, blockGasLim)
@@ -88,6 +95,7 @@ func setSysConfig(c *cli.Context) {
 }
 
 func setConfig(c *cli.Context, param string, name string) {
+	// todo: optimize the code, param check, param convert
 	if !checkConfigParam(param, name) {
 		return
 	}
@@ -115,7 +123,7 @@ func checkConfigParam(param string, key string) bool {
 		}
 
 		// param check
-		isInRange := vm.TxGasLimitMinValue < num && vm.TxGasLimitMaxValue > num
+		isInRange := vm.TxGasLimitMinValue <= num && vm.TxGasLimitMaxValue >= num
 		if !isInRange {
 			fmt.Printf("the transaction gas limit should be within (%d, %d)\n",
 				vm.TxGasLimitMinValue, vm.TxGasLimitMaxValue)
@@ -127,7 +135,7 @@ func checkConfigParam(param string, key string) bool {
 			return false
 		}
 
-		isInRange := vm.BlockGasLimitMinValue < num && vm.BlockGasLimitMaxValue > num
+		isInRange := vm.BlockGasLimitMinValue <= num && vm.BlockGasLimitMaxValue >= num
 		if !isInRange {
 			fmt.Printf("the block gas limit should be within (%d, %d)\n",
 				vm.BlockGasLimitMinValue, vm.BlockGasLimitMaxValue)
@@ -191,11 +199,19 @@ func sysconfigToString(param interface{}) interface{} {
 }
 
 func sysConfigParsing(param interface{}, paramName string) string {
+	if paramName == txGasLim || paramName == blockGasLim {
+		return param.(string)
+	}
+
 	conv := genConfigConverter(paramName)
 	return conv.parse(param)
 }
 
 func sysConfigConvert(param, paramName string) (string, error) {
+
+	if paramName == txGasLim || paramName == blockGasLim {
+		return param, nil
+	}
 
 	conv := genConfigConverter(paramName)
 	result, err := conv.convert(param)

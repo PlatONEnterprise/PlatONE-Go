@@ -1,0 +1,14 @@
+[
+    {
+        "name": "[CNS] Notify",
+        "inputs": [
+            {
+                "type": "uint64"
+            },
+            {
+                "type": "string"
+            }
+        ],
+        "type": "event"
+    }
+]

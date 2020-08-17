@@ -205,55 +205,7 @@
         "type": "function"
     },
     {
-        "name": "Notify",
-        "inputs": [
-            {
-                "type": "uint64"
-            },
-            {
-                "type": "string"
-            }
-        ],
-        "type": "event"
-    },
-    {
-        "name": "init",
-        "inputs": [
-            {
-                "type": "string"
-            },
-            {
-                "type": "string"
-            }
-        ],
-        "type": "event"
-    },
-    {
-        "name": "Notify",
-        "inputs": [
-            {
-                "type": "uint64"
-            },
-            {
-                "type": "string"
-            }
-        ],
-        "type": "event"
-    },
-    {
-        "name": "cnsRegister",
-        "inputs": [
-            {
-                "type": "uint64"
-            },
-            {
-                "type": "string"
-            }
-        ],
-        "type": "event"
-    },
-    {
-        "name": "cnsRedirect",
+        "name": "[CNS] Notify",
         "inputs": [
             {
                 "type": "uint64"

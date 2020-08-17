@@ -68,10 +68,6 @@ func (dataGen DeployDataGen) CombineData() (string, []abi.ArgumentMarshaling, bo
 	return data, nil, true, err
 }
 
-func (dataGen *DeployDataGen) GetAbiBytes() []byte {
-	return dataGen.abiBytes
-}
-
 func (dataGen *DeployDataGen) ParseNonConstantResponse(respStr string, outputType []abi.ArgumentMarshaling) []interface{} {
 	return nil
 }

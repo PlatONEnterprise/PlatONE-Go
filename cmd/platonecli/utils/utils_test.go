@@ -40,7 +40,7 @@ func TestParseFileToBytes(t *testing.T) {
 
 		switch {
 		case err != nil && errCorrect:
-			t.Logf("case %d: test file path %s: the error is %v\n", i, data.path, err.Error())
+			t.Logf("case %d: test file path %s: fileBytes: %v, the error is %v\n", i, data.path, fileBytes, err.Error())
 		case fileBytesCorrect:
 			t.Logf("case %d: test file path %s: no error\n", i, data.path)
 		default:

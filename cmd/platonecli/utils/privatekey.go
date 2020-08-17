@@ -2,12 +2,9 @@ package utils
 
 import (
 	"crypto/ecdsa"
-	"encoding/json"
-	"strings"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/accounts/keystore"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/console"
 )
 
@@ -15,26 +12,11 @@ const defaultAddress = "0x0000000000000000000000000000000000000000"
 
 type KeystoreJson struct {
 	Address string `json:"address"`
-	Crypto  string `json:"crypto"`
+	Json    []byte
 }
 
 // GetPrivateKey gets the private key by decrypting the keystore file
-func GetPrivateKey(account common.Address, keyfilepath string) *ecdsa.PrivateKey {
-
-	// Load the keyfile.
-	keyJson, err := ParseFileToBytes(keyfilepath)
-	if err != nil {
-		utils.Fatalf("Failed to read the keyfile at '%s': %v", keyfilepath, err)
-	}
-
-	keyfile := KeystoreJson{}
-	_ = json.Unmarshal(keyJson, &keyfile)
-
-	// check if the account address is matched
-	addr := account.String()
-	if addr != defaultAddress && !strings.EqualFold(keyfile.Address, addr[2:]) {
-		utils.Fatalf("the keystore file mismatches the account address")
-	}
+func GetPrivateKey(keyJson []byte) *ecdsa.PrivateKey {
 
 	// Decrypt key with passphrase.
 	passphrase := promptPassphrase(true)

@@ -167,9 +167,10 @@ func (u *FireWall) fwImport(contractAddr common.Address, data []byte) error {
 }
 
 func (u *FireWall) getFwStatus(contractAddr common.Address) (*state.FwStatus, error) {
-	if !u.isOwner(contractAddr) {
-		return nil, fwErrNotOwner
-	}
+	// todo: the access control below is needed or not
+	/*if !u.isOwner(contractAddr) {
+		return &state.FwStatus{}, fwErrNotOwner
+	}*/
 
 	fwStatus := u.stateDB.GetFwStatus(contractAddr)
 	return &fwStatus, nil
@@ -199,7 +200,7 @@ func convertToFwElem(l string) ([]state.FwElem, error) {
 		api := tmp[1]
 
 		// check api name
-		if ok, _ := checkNameFormat(api); !ok {
+		if ok, _ := checkNameFormat(api); api != "*" && !ok {
 			return nil, ErrFwRuleName
 		}
 

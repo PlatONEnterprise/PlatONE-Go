@@ -410,7 +410,7 @@ func getRegisterStatusByName(stateDB StateDB, name string) (bool, error) {
 }
 
 func (cns *CnsManager) emitNotifyEvent(code CodeType, msg string) {
-	topic := "Notify"
+	topic := "[CNS] Notify"
 	cns.emitEvent(topic, code, msg)
 }
 

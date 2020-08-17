@@ -21,6 +21,7 @@ func TestConvertToFwElem(t *testing.T) {
 		{fwTestAddr1 + ":func1|" + fwTestAddr2 + ":func2", nil},
 		{fwTestAddr1 + "func1", ErrFwRule},
 		{fwTestErr + ":func1", ErrFwRuleAddr},
+		{fwTestAddr1 + ":*", nil},
 	}
 
 	for _, data := range testCases {

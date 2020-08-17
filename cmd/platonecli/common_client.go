@@ -1,7 +1,12 @@
 package main
 
 import (
+	"encoding/json"
+	"errors"
+	"fmt"
 	"strings"
+
+	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/utils"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/packet"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
@@ -20,16 +25,54 @@ func newContract() *contract {
 	return &contract{}
 }*/
 
+var ErrAccountNotMatch = errors.New("the keystore file mismatches the account address")
+
 type TxAccount struct {
 	address common.Address
-	keyfile string
+	keyfile []byte
 }
 
-func NewTxAccount(address, keyfile string) *TxAccount {
-	return &TxAccount{
-		address: common.HexToAddress(address),
-		keyfile: keyfile,
+func keyfileParsing(keyfilePath string) (utl.KeystoreJson, error) {
+
+	var keyfile utl.KeystoreJson
+	// Load the keyfile.
+	if keyfilePath != "" {
+		keyJson, err := utl.ParseFileToBytes(keyfilePath)
+		if err != nil {
+			return utl.KeystoreJson{}, err
+		}
+
+		err = json.Unmarshal(keyJson, &keyfile)
+		if err != nil {
+			return utl.KeystoreJson{}, fmt.Errorf(utl.ErrUnmarshalBytesFormat, keyJson, err.Error())
+		}
+
+		keyfile.Json = keyJson
 	}
+
+	return keyfile, nil
+}
+
+func NewTxAccount(address string, keyfile utl.KeystoreJson) (*TxAccount, error) {
+	var err error
+	var addr string
+
+	// check if the account address is matched
+	if keyfile.Address != "" && address != "" &&
+		!strings.EqualFold(keyfile.Address, address[2:]) {
+		err = ErrAccountNotMatch
+	}
+
+	if keyfile.Address != "" {
+		addr = keyfile.Address
+	} else {
+		addr = address
+	}
+
+	return &TxAccount{
+		address: common.HexToAddress(addr),
+		keyfile: keyfile.Json,
+	}, err
 }
 
 func getClientConfig(c *cli.Context) (*TxAccount, bool, bool, string) {
@@ -45,7 +88,16 @@ func getClientConfig(c *cli.Context) (*TxAccount, bool, bool, string) {
 		keyfile = config.Keystore
 	}
 
-	account := NewTxAccount(address, keyfile)
+	keyfileJson, err := keyfileParsing(keyfile)
+	if err != nil {
+		utils.Fatalf(err.Error())
+	}
+
+	account, err := NewTxAccount(address, keyfileJson)
+	if err == ErrAccountNotMatch {
+		fmt.Printf("there is conflict in --account and --keyfile, " +
+			"the result is subject to --keyfile")
+	}
 
 	if isDefault {
 		config.Account = address

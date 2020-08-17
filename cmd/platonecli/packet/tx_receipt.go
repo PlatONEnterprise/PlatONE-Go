@@ -41,12 +41,12 @@ func receiptStatusReturn(status string) (result string) {
 
 // Receipt, eth_getTransactionReceipt return data struct
 type Receipt struct {
-	BlockHash         string    `json:"blockHash"`          // hash of the block
-	BlockNumber       string    `json:"blockNumber"`        // height of the block
-	ContractAddress   string    `json:"contractAddress"`    // contract address of the contract deployment. otherwise null
-	CumulativeGasUsed string    `json:"cumulativeGas_used"` //
-	From              string    `json:"from"`               // the account address used to send the transaction
-	GasUsed           string    `json:"gasUsed"`            // gas used by executing the transaction
+	BlockHash         string    `json:"blockHash"`         // hash of the block
+	BlockNumber       string    `json:"blockNumber"`       // height of the block
+	ContractAddress   string    `json:"contractAddress"`   // contract address of the contract deployment. otherwise null
+	CumulativeGasUsed string    `json:"cumulativeGasUsed"` //
+	From              string    `json:"from"`              // the account address used to send the transaction
+	GasUsed           string    `json:"gasUsed"`           // gas used by executing the transaction
 	Root              string    `json:"root"`
 	To                string    `json:"to"`               // the address the transaction is sent to
 	TransactionHash   string    `json:"transactionHash"`  // the hash of the transaction
