@@ -3,6 +3,7 @@ package abi
 import (
 	"errors"
 	"fmt"
+	"math/big"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -337,19 +338,29 @@ func getTypeSize(t Type) int {
 }
 
 // newly added
+func integerParsing(value string, size int, unsigned bool) (interface{}, error) {
+	if size <= 64 {
+		return SolInputStringTOInt(value, size, !unsigned)
+	} else {
+		intValue, ok := big.NewInt(0).SetString(value, 10)
+		if !ok || !common.IsSafeNumber(value, size, unsigned) {
+			return nil, fmt.Errorf("paring big int string error")
+		}
+		return intValue, nil
+	}
+}
+
+// newly added
 func (t Type) StringConvert(value string) (interface{}, error) {
 	size := t.Size
 
 	switch t.T {
 	case AddressTy:
 		return common.HexToAddress(value), nil
-	case IntTy, UintTy:
-		if size <= 64 {
-			return SolInputStringTOInt(value, size, true)
-		} else {
-			// todo
-			return "", nil
-		}
+	case IntTy:
+		return integerParsing(value, size, false)
+	case UintTy:
+		return integerParsing(value, size, true)
 	case BoolTy:
 		if value == "false" {
 			return false, nil
@@ -377,6 +388,7 @@ func (t Type) StringConvert(value string) (interface{}, error) {
 		}
 		return vSet.Interface(), nil
 	default:
+		// todo: SliceTy, ArrayTy, FixedBytesTy, BytesTy, HashTy, FixedPointTy, FunctionTy
 		panic("todo")
 	}
 }
