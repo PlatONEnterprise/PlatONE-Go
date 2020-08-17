@@ -2,11 +2,12 @@ package vm
 
 import (
 	"fmt"
+	"reflect"
+	"testing"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common/byteutil"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"github.com/stretchr/testify/assert"
-	"reflect"
-	"testing"
 )
 
 type fakeClass struct{}
@@ -57,7 +58,7 @@ func Test_execSC(t *testing.T) {
 	assert.Equal(t, toContractReturnValueStringType(E_INVOKE_CONTRACT, []byte(ret2)), ret)
 
 	input = MakeInput(fnNameInput, "bbb")
-	_,_, err = execSC(input, (&fakeClass{}).allExportFns())
+	_, _, err = execSC(input, (&fakeClass{}).allExportFns())
 	assert.Error(t, err, "The params number invalid")
 }
 
@@ -107,55 +108,54 @@ func Test_checkNameFormat(t *testing.T) {
 	}{
 		// TODO: Add test cases.
 		{
-			args:args{"wanxiang"},
+			args: args{"wanxiang"},
 			want: true,
 		},
 		{
-			args:args{"wan-xiang"},
+			args: args{"wan-xiang"},
 			want: false,
 		},
 		{
-			args:args{"wan xiang"},
+			args: args{"wan xiang"},
 			want: false,
 		},
 		{
-			args:args{"wan_xiang"},
+			args: args{"wan_xiang"},
 			want: true,
 		},
 		{
-			args:args{"wan_xiang_123"},
+			args: args{"wan_xiang_123"},
 			want: true,
 		},
 		{
-			args:args{"_万_xiang_123"},
+			args: args{"_万_xiang_123"},
 			want: true,
 		},
 		{
-			args:args{"12_wan_xiang_123"},
+			args: args{"12_wan_xiang_123"},
 			want: true,
 		},
 		{
-			args:args{"1"},
+			args: args{"1"},
 			want: true,
 		},
 		{
-			args:args{"13"},
+			args: args{"13"},
 			want: true,
 		},
 		{
-			args:args{"12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"},
+			args: args{"12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"},
 			want: true,
 		},
 		{
-			args:args{"234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"},
+			args: args{"234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"},
 			want: false,
 		},
-
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got, err := checkNameFormat(tt.args.name); err != nil||got != tt.want {
-				t.Errorf("name=%v ,checkNameFormat() = %v, want %v, err %v", tt.args.name,got, tt.want, err)
+			if got, err := checkNameFormat(tt.args.name); err != nil || got != tt.want {
+				t.Errorf("name=%v ,checkNameFormat() = %v, want %v, err %v", tt.args.name, got, tt.want, err)
 			}
 		})
 	}
@@ -173,19 +173,19 @@ func Test_checkEmailFormat(t *testing.T) {
 	}{
 		// TODO: Add test cases.
 		{
-			args:args{"gexin@wxblockchain.com"},
+			args: args{"gexin@wxblockchain.com"},
 			want: true,
 		},
 		{
-			args:args{"@wxblockchain.com"},
+			args: args{"@wxblockchain.com"},
 			want: false,
 		},
 		{
-			args:args{"wxblockchain.com"},
+			args: args{"wxblockchain.com"},
 			want: false,
 		},
 		{
-			args:args{"gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg@wxblockchainmmmmm.commmmmmm"},
+			args: args{"gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg@wxblockchainmmmmm.commmmmmm"},
 			want: false,
 		},
 	}
@@ -241,12 +241,12 @@ func Test_checkIpFormat1(t *testing.T) {
 	}{
 		// TODO: Add test cases.
 		{
-			args:args{ip:"111"},
-			want:false,
+			args: args{ip: "111"},
+			want: false,
 		},
 		{
-			args:args{ip:"111.11.11.1"},
-			want:true,
+			args: args{ip: "111.11.11.1"},
+			want: true,
 		},
 	}
 	for _, tt := range tests {

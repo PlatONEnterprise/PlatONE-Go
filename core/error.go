@@ -33,5 +33,5 @@ var (
 	// next one expected based on the local chain.
 	ErrNonceTooHigh = errors.New("nonce too high")
 
-	ErrParamaManagerContractAddressNotFound  = errors.New("paramManager contract address not found")
+	ErrParamaManagerContractAddressNotFound = errors.New("paramManager contract address not found")
 )

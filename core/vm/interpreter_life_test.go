@@ -4,6 +4,12 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"io/ioutil"
+	"math"
+	"math/big"
+	"math/rand"
+	"testing"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	math2 "github.com/PlatONEnetwork/PlatONE-Go/common/math"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
@@ -11,11 +17,6 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
-	"io/ioutil"
-	"math"
-	"math/big"
-	"math/rand"
-	"testing"
 )
 
 var abi_ = `{

@@ -34,7 +34,7 @@ import (
 )
 
 var (
-	EmptyRootHash  = DeriveSha(Transactions{})
+	EmptyRootHash = DeriveSha(Transactions{})
 )
 
 // A BlockNonce is a 64-bit hash which proves (combined with the
@@ -315,7 +315,7 @@ func (b *Block) ReceiptHash() common.Hash { return b.header.ReceiptHash }
 func (b *Block) Extra() []byte            { return common.CopyBytes(b.header.Extra) }
 
 func (b *Block) Header() *Header { return CopyHeader(b.header) }
-func (b *Block) String() string {return fmt.Sprintf("{BlockHeader: %v", b.header)}
+func (b *Block) String() string  { return fmt.Sprintf("{BlockHeader: %v", b.header) }
 
 // Body returns the non-header content of the block.
 func (b *Block) Body() *Body { return &Body{b.transactions} }
@@ -363,7 +363,7 @@ func (b *Block) WithBody(transactions []*Transaction) *Block {
 // Hash returns the keccak256 hash of b's header.
 // The hash is computed on the first call and cached thereafter.
 func (b *Block) Hash() common.Hash {
-	if b == nil{
+	if b == nil {
 		return common.Hash{}
 	}
 

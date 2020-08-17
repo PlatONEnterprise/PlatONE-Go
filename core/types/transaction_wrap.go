@@ -1,22 +1,23 @@
 package types
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"io"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )
 
 type TransactionWrap struct {
 	*Transaction
-	Bn 			uint64
-	FuncName 	string
-	TaskId		string
+	Bn       uint64
+	FuncName string
+	TaskId   string
 }
 
 type extwrapper struct {
 	Transaction *Transaction
-	Bn 			uint64
-	FuncName 	string
-	TaskId		string
+	Bn          uint64
+	FuncName    string
+	TaskId      string
 }
 
 func (t *TransactionWrap) GetBlockNumber() uint64 {
@@ -35,9 +36,9 @@ func (t *TransactionWrap) DecodeRLP(s *rlp.Stream) error {
 func (b *TransactionWrap) EncodeRLP(w io.Writer) error {
 	return rlp.Encode(w, extwrapper{
 		Transaction: b.Transaction,
-		Bn: b.Bn,
-		FuncName: b.FuncName,
-		TaskId: b.TaskId,
+		Bn:          b.Bn,
+		FuncName:    b.FuncName,
+		TaskId:      b.TaskId,
 	})
 }
 

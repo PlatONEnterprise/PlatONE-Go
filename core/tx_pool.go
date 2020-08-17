@@ -19,11 +19,12 @@ package core
 import (
 	"errors"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
 	"math"
 	"math/big"
 	"sync"
 	"time"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/prque"
@@ -201,31 +202,31 @@ func (config *TxPoolConfig) sanitize() TxPoolConfig {
 type TxPool struct {
 	config      TxPoolConfig
 	chainconfig *params.ChainConfig
-	extDb ethdb.Database
-	chain    txPoolBlockChain
-	gasPrice *big.Int
-	txFeed   event.Feed
-	scope    event.SubscriptionScope
+	extDb       ethdb.Database
+	chain       txPoolBlockChain
+	gasPrice    *big.Int
+	txFeed      event.Feed
+	scope       event.SubscriptionScope
 	// modified by PlatONE
-	chainHeadCh chan *types.Block
-	chainHeadEventCh  chan ChainHeadEvent
-	chainHeadSub event.Subscription
-	exitCh chan struct{}
-	signer types.Signer
-	mu     sync.RWMutex
+	chainHeadCh      chan *types.Block
+	chainHeadEventCh chan ChainHeadEvent
+	chainHeadSub     event.Subscription
+	exitCh           chan struct{}
+	signer           types.Signer
+	mu               sync.RWMutex
 
 	currentState  *state.StateDB      // Current state in the blockchain head
 	pendingState  *state.ManagedState // Pending state tracking virtual nonces
-	db ethdb.Database
-	currentMaxGas uint64              // Current gas limit for transaction caps
+	db            ethdb.Database
+	currentMaxGas uint64 // Current gas limit for transaction caps
 
 	locals  *accountSet // Set of local transaction to exempt from eviction rules
 	journal *txJournal  // Journal of local transaction to back up to disk
 
-	pending map[common.Address]*txQueuedMap   // All currently processable transactions
+	pending map[common.Address]*txQueuedMap // All currently processable transactions
 	//queue   map[common.Address]*txQueuedMap    // Queued but non-processable transactions
-	beats   map[common.Address]time.Time // Last heartbeat from each known account
-	all     *txLookup                    // All transactions to allow lookups
+	beats map[common.Address]time.Time // Last heartbeat from each known account
+	all   *txLookup                    // All transactions to allow lookups
 	//priced  *txPricedList                // All transactions sorted by price
 
 	wg sync.WaitGroup // for shutdown sync
@@ -257,15 +258,15 @@ func NewTxPool(config TxPoolConfig, chainconfig *params.ChainConfig, chain txPoo
 		signer:      types.NewEIP155Signer(chainconfig.ChainID),
 		pending:     make(map[common.Address]*txQueuedMap),
 		//queue:       make(map[common.Address]*txQueuedMap),
-		beats:       make(map[common.Address]time.Time),
-		all:         newTxLookup(),
-		db: db,
+		beats: make(map[common.Address]time.Time),
+		all:   newTxLookup(),
+		db:    db,
 		// modified by PlatONE
 		chainHeadEventCh: make(chan ChainHeadEvent, chainHeadChanSize),
-		chainHeadCh: make(chan *types.Block, chainHeadChanSize),
-		exitCh:      make(chan struct{}),
-		gasPrice:    new(big.Int).SetUint64(config.PriceLimit),
-		txExtBuffer: make(chan *txExt, txExtBufferSize),
+		chainHeadCh:      make(chan *types.Block, chainHeadChanSize),
+		exitCh:           make(chan struct{}),
+		gasPrice:         new(big.Int).SetUint64(config.PriceLimit),
+		txExtBuffer:      make(chan *txExt, txExtBufferSize),
 	}
 	pool.locals = newAccountSet(pool.signer)
 	for _, addr := range config.Locals {
@@ -290,7 +291,7 @@ func NewTxPool(config TxPoolConfig, chainconfig *params.ChainConfig, chain txPoo
 	}
 	// Subscribe events from blockchain
 	// modified by PlatONE
-	if pool.chainconfig.Istanbul != nil{
+	if pool.chainconfig.Istanbul != nil {
 		pool.chainHeadSub = pool.chain.SubscribeChainHeadEvent(pool.chainHeadEventCh)
 	}
 
@@ -305,8 +306,8 @@ func (pool *TxPool) txExtBufferReadLoop() {
 	for {
 		select {
 		case ext := <-pool.txExtBuffer:
-				err := pool.addTxExt(ext)
-				ext.txErr <- err
+			err := pool.addTxExt(ext)
+			ext.txErr <- err
 
 		case <-pool.exitCh:
 			return
@@ -374,9 +375,9 @@ func (pool *TxPool) loop() {
 			//stales := pool.priced.stales
 			pool.mu.RUnlock()
 
-			if pending != prevPending  {
+			if pending != prevPending {
 				log.Debug("Transaction pool status report", "executable", pending)
-				prevPending  = pending
+				prevPending = pending
 			}
 
 		// Handle inactive account transaction eviction
@@ -389,8 +390,8 @@ func (pool *TxPool) loop() {
 				}
 				// Any non-locals old enough should be removed
 				if time.Since(pool.beats[addr]) > pool.config.Lifetime {
-					if pool.pending[addr] != nil{
-						for _, tx := range pool.pending[addr].Get(){
+					if pool.pending[addr] != nil {
+						for _, tx := range pool.pending[addr].Get() {
 							pool.removeTx(tx.Hash(), true)
 						}
 					}
@@ -492,7 +493,7 @@ func (pool *TxPool) reset(oldHead, newHead *types.Header) {
 		return
 	}
 
-	if newHead != nil{
+	if newHead != nil {
 		log.Debug("reset txpool", "RoutineID", common.CurrentGoRoutineID(), "oldHash", oldHash, "oldNumber", oldNumber, "newHash", newHead.Hash(), "newNumber", newHead.Number.Uint64())
 	}
 	// If we're reorging an old state, reinject all dropped transactions
@@ -646,7 +647,7 @@ func (pool *TxPool) Stats() (int, int) {
 func (pool *TxPool) stats() (int, int) {
 	pending := 0
 	for _, list := range pool.pending {
-		if list != nil{
+		if list != nil {
 			pending += list.Len()
 		}
 
@@ -700,12 +701,12 @@ func (pool *TxPool) PendingLimited() (map[common.Address]types.Transactions, err
 	pool.mu.Lock()
 	defer pool.mu.Unlock()
 
-	log.Info("Pending txs before get", "len(pending)",len(pool.pending))
+	log.Info("Pending txs before get", "len(pending)", len(pool.pending))
 	txCount := 0
 	pending := make(map[common.Address]types.Transactions)
 	for addr, list := range pool.pending {
-		if list != nil{
-			if list.Len() > 0{
+		if list != nil {
+			if list.Len() > 0 {
 				pending[addr] = list.Get()
 				txCount += len(pending[addr])
 				if txCount >= int(pool.config.GlobalTxCount) {
@@ -746,7 +747,7 @@ func (pool *TxPool) local() map[common.Address]types.Transactions {
 // rules and adheres to some heuristic limits of the local node (price and size).
 func (pool *TxPool) validateTx(tx *types.Transaction, local bool) error {
 	if r, _, _, _ := rawdb.ReadReceipt(pool.db, tx.Hash()); r != nil {
-		log.Error("Transaction Repeat","old", r.TxHash.String(), "new", tx.Hash().String())
+		log.Error("Transaction Repeat", "old", r.TxHash.String(), "new", tx.Hash().String())
 		return ErrTransactionRepeat
 	}
 
@@ -777,10 +778,10 @@ func (pool *TxPool) validateTx(tx *types.Transaction, local bool) error {
 		contractCreation := tx.To() == nil
 		gas, err := IntrinsicGas(tx.Data(), contractCreation)
 		log.Debug("IntrinsicGas amount", "IntrinsicGas:", gas)
-		if err != nil{
+		if err != nil {
 			return err
 		}
-		if tx.Gas() < gas{
+		if tx.Gas() < gas {
 			log.Error("GasLimitTooLow", "err:", ErrIntrinsicGas)
 			return ErrIntrinsicGas
 		}
@@ -825,7 +826,7 @@ func (pool *TxPool) add(tx *types.Transaction, local bool) (bool, error) {
 	//	return false, err
 	//}
 
-	pool.promoteTx(from,hash,tx)
+	pool.promoteTx(from, hash, tx)
 	go pool.txFeed.Send(NewTxsEvent{types.Transactions{tx}})
 
 	// Mark local addresses and journal local transactions
@@ -882,13 +883,13 @@ func (pool *TxPool) journalTx(from common.Address, tx *types.Transaction) {
 // Note, this method assumes the pool lock is held!
 func (pool *TxPool) promoteTx(addr common.Address, hash common.Hash, tx *types.Transaction) bool {
 	// Try to insert the transaction into the pending queue
-	pending,ok := pool.pending[addr]
-	if !ok{
-		pool.pending[addr] =  newTxQueuedMap()
+	pending, ok := pool.pending[addr]
+	if !ok {
+		pool.pending[addr] = newTxQueuedMap()
 		pending = pool.pending[addr]
 	}
 
-	pending.Put(hash,tx)
+	pending.Put(hash, tx)
 
 	if pool.all.Get(hash) == nil {
 		pool.all.Add(tx)
@@ -1136,7 +1137,7 @@ func (pool *TxPool) removeTx(hash common.Hash, outofbound bool) {
 		pending.Remove(hash)
 		if pending.Len() == 0 {
 			delete(pool.beats, addr)
-			delete(pool.pending,addr)
+			delete(pool.pending, addr)
 		}
 	}
 }
@@ -1175,8 +1176,8 @@ func (pool *TxPool) promoteExecutables(accounts []common.Address) {
 				// Iteratively reduce all offenders until below limit or threshold reached
 				for pending > pool.config.GlobalSlots && pool.pending[offenders[len(offenders)-2]].Len() > threshold {
 					for i := 0; i < len(offenders)-1; i++ {
-						if list,ok := pool.pending[offenders[i]];ok{
-							if list.Len() == 0{
+						if list, ok := pool.pending[offenders[i]]; ok {
+							if list.Len() == 0 {
 								delete(pool.pending, offenders[i])
 								continue
 							}
@@ -1198,8 +1199,8 @@ func (pool *TxPool) promoteExecutables(accounts []common.Address) {
 		if pending > pool.config.GlobalSlots && len(offenders) > 0 {
 			for pending > pool.config.GlobalSlots && uint64(pool.pending[offenders[len(offenders)-1]].Len()) > pool.config.AccountSlots {
 				for _, addr := range offenders {
-					if list,ok := pool.pending[addr];ok{
-						if list.Len() == 0{
+					if list, ok := pool.pending[addr]; ok {
+						if list.Len() == 0 {
 							delete(pool.pending, addr)
 							continue
 						}
@@ -1225,7 +1226,7 @@ func (pool *TxPool) demoteUnexecutables(txs types.Transactions) {
 	// Iterate over all accounts and demote any non-executable transactions
 	for addr, list := range pool.pending {
 		// Drop all transactions that are deemed too old (low nonce)
-		if list == nil || list.Len() == 0{
+		if list == nil || list.Len() == 0 {
 			continue
 		}
 		for _, tx := range txs {
@@ -1236,9 +1237,9 @@ func (pool *TxPool) demoteUnexecutables(txs types.Transactions) {
 		}
 
 		// drop all transactions that do not have enough balance
-		for _, tx := range list.Get(){
+		for _, tx := range list.Get() {
 			bal := pool.currentState.GetBalance(addr)
-			if tx.Value().Cmp(bal) < 0{
+			if tx.Value().Cmp(bal) < 0 {
 				hash := tx.Hash()
 				log.Trace("Removed unpayable queued transaction", "hash", hash)
 				list.Remove(hash)
@@ -1247,7 +1248,7 @@ func (pool *TxPool) demoteUnexecutables(txs types.Transactions) {
 			}
 		}
 
-		if list.Len() == 0{
+		if list.Len() == 0 {
 			delete(pool.pending, addr)
 		}
 	}

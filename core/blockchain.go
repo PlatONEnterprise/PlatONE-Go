@@ -20,6 +20,13 @@ package core
 import (
 	"errors"
 	"fmt"
+	"io"
+	"math/big"
+	mrand "math/rand"
+	"sync"
+	"sync/atomic"
+	"time"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/mclock"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/prque"
@@ -37,13 +44,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"github.com/PlatONEnetwork/PlatONE-Go/trie"
-	"github.com/hashicorp/golang-lru"
-	"io"
-	"math/big"
-	mrand "math/rand"
-	"sync"
-	"sync/atomic"
-	"time"
+	lru "github.com/hashicorp/golang-lru"
 )
 
 var (
@@ -181,9 +182,9 @@ func NewBlockChain(db ethdb.Database, extdb ethdb.Database, cacheConfig *CacheCo
 	if bc.genesisBlock == nil {
 		return nil, nil, ErrNoGenesis
 	}
-	err ,missingStateBlocks := bc.loadLastState()
+	err, missingStateBlocks := bc.loadLastState()
 
-	if  err != nil {
+	if err != nil {
 		return nil, nil, err
 	}
 	// Check the current state of the block hashes and make sure that we do not have any of the bad blocks in our chain
@@ -201,7 +202,7 @@ func NewBlockChain(db ethdb.Database, extdb ethdb.Database, cacheConfig *CacheCo
 	}
 	// Take ownership of this particular state
 	go bc.update()
-	return bc, missingStateBlocks,nil
+	return bc, missingStateBlocks, nil
 }
 
 func (bc *BlockChain) getProcInterrupt() bool {

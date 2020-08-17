@@ -21,6 +21,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/big"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/math"
@@ -28,7 +30,6 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto/bn256"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"golang.org/x/crypto/ripemd160"
-	"math/big"
 )
 
 // PrecompiledContract is the basic interface for native Go contracts. The implementation

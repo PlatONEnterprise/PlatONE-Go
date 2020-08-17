@@ -22,6 +22,8 @@ import (
 	"math/big"
 	"strings"
 
+	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 	"github.com/PlatONEnetwork/PlatONE-Go/life/utils"
@@ -294,9 +296,9 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, gasPrice 
 		msg    = st.msg
 		sender = vm.AccountRef(msg.From())
 	)
-
+	isCallSysParam := isCallParamManager(*msg.To())
 	feeContractAddr, isUseContractToken := st.ifUseContractTokenAsFee()
-	isUseContractToken = isUseContractToken && msg.Nonce() != 0
+	isUseContractToken = isUseContractToken && msg.Nonce() != 0 && !isCallSysParam
 	if isUseContractToken {
 		if err = st.preContractGasCheck(feeContractAddr); err != nil {
 			log.Error("PreContractGasCheck", "err:", err)
@@ -430,4 +432,8 @@ func checkContractDeployPermission(sender common.Address, evm *vm.EVM) bool {
 	}
 
 	return false
+}
+
+func isCallParamManager(to common.Address) bool {
+	return to == syscontracts.ParameterManagementAddress
 }

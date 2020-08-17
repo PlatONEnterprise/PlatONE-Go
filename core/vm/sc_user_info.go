@@ -23,40 +23,39 @@ const (
 )
 
 var (
-	errUsernameUnsupported  = errors.New("Unsupported Username ")
-	errOrgnizationUnsupported  = errors.New("Unsupported Orgnization ")
-	errEmailUnsupported  = errors.New("Unsupported email address ")
-	errPhoneUnsupported  = errors.New("Unsupported phone number ")
-	errUserNameAlreadyExist = errors.New(" UserName Already Exist ")
-	errAlreadySetUserName   = errors.New("Already Set UserName ")
-	errNoUserInfo           = errors.New("No User Info ")
+	errUsernameUnsupported    = errors.New("Unsupported Username ")
+	errOrgnizationUnsupported = errors.New("Unsupported Orgnization ")
+	errEmailUnsupported       = errors.New("Unsupported email address ")
+	errPhoneUnsupported       = errors.New("Unsupported phone number ")
+	errUserNameAlreadyExist   = errors.New(" UserName Already Exist ")
+	errAlreadySetUserName     = errors.New("Already Set UserName ")
+	errNoUserInfo             = errors.New("No User Info ")
 )
 
 type UserInfo = syscontracts.UserInfo
 type DescInfo = syscontracts.UserDescInfo
 
-func checkDescInfo(descInfo DescInfo) (bool, error){
-	if descInfo.Organization != ""{
-		if b, err := checkNameFormat(descInfo.Organization); !b || err!=nil{
+func checkDescInfo(descInfo DescInfo) (bool, error) {
+	if descInfo.Organization != "" {
+		if b, err := checkNameFormat(descInfo.Organization); !b || err != nil {
 			return b, errOrgnizationUnsupported
 		}
 	}
-	if descInfo.Email != ""{
-		if b, err := checkEmailFormat(descInfo.Email); !b || err!=nil{
+	if descInfo.Email != "" {
+		if b, err := checkEmailFormat(descInfo.Email); !b || err != nil {
 			return b, errEmailUnsupported
 		}
 	}
 
-
-	if descInfo.Phone != ""{
-		if b, err := checkPhoneFormat(descInfo.Phone); !b || err!= nil{
+	if descInfo.Phone != "" {
+		if b, err := checkPhoneFormat(descInfo.Phone); !b || err != nil {
 			return b, errPhoneUnsupported
 		}
 	}
 	return true, nil
 }
 
-func isZeroDescInfo(descInfo DescInfo) bool{
+func isZeroDescInfo(descInfo DescInfo) bool {
 	return descInfo.Organization == "" && descInfo.Email == "" && descInfo.Phone == ""
 }
 
@@ -80,9 +79,9 @@ func (u *UserManagement) addUser(info *UserInfo) (int32, error) {
 		return u.returnFail(topic, errNoPermission)
 	}
 
-	addr, err := u.getAddrByName(info.Name);
-	if err != nil && err != errNoUserInfo{
-		return u.returnFail(topic,  err)
+	addr, err := u.getAddrByName(info.Name)
+	if err != nil && err != errNoUserInfo {
+		return u.returnFail(topic, err)
 	}
 
 	if addr != ZeroAddress {
@@ -92,18 +91,18 @@ func (u *UserManagement) addUser(info *UserInfo) (int32, error) {
 	// addr := common.HexToAddress(info.Address)
 	addr = info.Address
 	if u.getNameByAddr(addr) != "" {
-		return u.returnFail(topic,  errAlreadySetUserName)
+		return u.returnFail(topic, errAlreadySetUserName)
 	}
 
 	if info.DescInfo != "" {
 		descInfo := &DescInfo{}
 		if err := json.Unmarshal([]byte(info.DescInfo), descInfo); err != nil {
 			log.Error("json.Unmarshal([]byte(info.DescInfo), descInfo)")
-			return u.returnFail(topic,  err)
+			return u.returnFail(topic, err)
 		}
 
-		if b, err := checkDescInfo(*descInfo); !b || err != nil{
-			return u.returnFail(topic,  err)
+		if b, err := checkDescInfo(*descInfo); !b || err != nil {
+			return u.returnFail(topic, err)
 		}
 
 		if isZeroDescInfo(*descInfo) {
@@ -114,13 +113,13 @@ func (u *UserManagement) addUser(info *UserInfo) (int32, error) {
 	info.Authorizer = u.Caller()
 
 	if err := u.setUserInfo(info); err != nil {
-		return u.returnFail(topic,  err)
+		return u.returnFail(topic, err)
 	}
 	u.addAddrNameMap(addr, info.Name)
 	u.addNameAddrMap(addr, info.Name)
 
 	if err := u.addUserList(addr); err != nil {
-		return u.returnFail(topic,  err)
+		return u.returnFail(topic, err)
 	}
 
 	return u.returnSuccess(topic)
@@ -133,8 +132,8 @@ func (u *UserManagement) updateUserDescInfo(addr common.Address, info *DescInfo)
 		return u.returnFail(topic, errNoPermission)
 	}
 
-	if b, err := checkDescInfo(info); !b || err != nil{
-		return u.returnFail(topic,  err)
+	if b, err := checkDescInfo(*info); !b || err != nil {
+		return u.returnFail(topic, err)
 	}
 
 	userInfo, err := u.getUserInfo(addr)
@@ -174,12 +173,12 @@ func (u *UserManagement) getUserByAddress(addr common.Address) ([]byte, error) {
 	return data, nil
 }
 func (u *UserManagement) getUserByName(name string) (string, error) {
-	if b, err := checkNameFormat(name); err!=nil || !b {
+	if b, err := checkNameFormat(name); err != nil || !b {
 		return errUsernameUnsupported.Error(), errUsernameUnsupported
 	}
 
 	addr, err := u.getAddrByName(name)
-	if err != nil{
+	if err != nil {
 		return err.Error(), err
 	}
 	if addr == ZeroAddress {
@@ -210,7 +209,7 @@ func (u *UserManagement) getAllUsers() ([]byte, error) {
 		return nil, err
 	}
 
-	if len(addrs) == 0{
+	if len(addrs) == 0 {
 		return []byte("[]"), nil
 	}
 
@@ -267,14 +266,14 @@ func (u *UserManagement) addNameAddrMap(addr common.Address, name string) {
 }
 func (u *UserManagement) getAddrByName(name string) (common.Address, error) {
 	addr := common.Address{}
-	if b, err := checkNameFormat(name); err!=nil || !b {
+	if b, err := checkNameFormat(name); err != nil || !b {
 		return addr, errUsernameUnsupported
 	}
 
 	key := append([]byte(name), []byte(userAddressMapKey)...)
 	data := u.getState(key)
-	if len(data) == 0{
-		return addr,errNoUserInfo
+	if len(data) == 0 {
+		return addr, errNoUserInfo
 	}
 	if len(data) == 20 {
 		copy(addr[:], data)

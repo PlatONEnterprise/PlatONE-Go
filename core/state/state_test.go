@@ -17,11 +17,12 @@
 package state
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/trie"
 	"bytes"
 	"fmt"
 	"math/big"
 	"testing"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/trie"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"

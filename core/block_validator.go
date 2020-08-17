@@ -18,6 +18,7 @@ package core
 
 import (
 	"fmt"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
@@ -101,9 +102,9 @@ func (v *BlockValidator) ValidateState(block, parent *types.Block, statedb *stat
 // the gas allowance.
 func CalcGasLimit(parent *types.Block, gasFloor, gasCeil uint64) uint64 {
 
-	if common.SysCfg != nil{
+	if common.SysCfg != nil {
 		return uint64(common.SysCfg.GetBlockGasLimit())
-	}else{
+	} else {
 		return parent.GasLimit()
 	}
 

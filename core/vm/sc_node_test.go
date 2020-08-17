@@ -3,26 +3,28 @@ package vm
 import (
 	"encoding/hex"
 	"fmt"
+	"math/rand"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
-	"math/rand"
-	"strings"
 
-	"github.com/stretchr/testify/assert"
 	"math/big"
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSCNode_isMatch(t *testing.T) {
 	scNode := NewSCNode(nil)
 	node := &syscontracts.NodeInfo{}
 	query := &syscontracts.NodeInfo{}
-	assert.Equal(t, true, scNode.isMatch(node, query))
+	// query cannot be empty
+	assert.Equal(t, false, scNode.isMatch(node, query))
 	node.Name = "elvin"
-	assert.Equal(t, true, scNode.isMatch(node, query))
+	assert.Equal(t, false, scNode.isMatch(node, query))
 	query.PublicKey = "aaaaaa"
 	assert.Equal(t, false, scNode.isMatch(node, query))
 
@@ -174,7 +176,7 @@ func genPublicKeyInHex() string {
 	pub := crypto.FromECDSAPub(&prk.PublicKey)
 	//fmt.Println(hex.EncodeToString(pub))
 
-	return strings.TrimLeft(hex.EncodeToString(pub), "04")
+	return hex.EncodeToString(pub[1:])
 }
 
 func TestSCNode_TxReceipt(t *testing.T) {
@@ -371,7 +373,7 @@ func TestSCNode_CheckPublicKeyExist(t *testing.T) {
 	db := newMockStateDB()
 	n := NewSCNode(db)
 
-	err := n.checkPublicKeyExist("044b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc")
+	err := n.checkPublicKeyExist("4b5378266d543212f1ebbea753ab98c26826d0f0fae86b2a5dabce563488a6569226228840ba02a606a003b9c708562906360478803dd6f3d446c54c79987fcc")
 	assert.NoError(t, err)
 
 	ni := &syscontracts.NodeInfo{}

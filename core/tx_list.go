@@ -19,13 +19,14 @@ package core
 import (
 	"container/heap"
 	"container/list"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"math"
 	"math/big"
 	"sort"
 	"sync"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
 )
 
 // nonceHeap is a heap.Interface implementation over 64bit unsigned integers for
@@ -50,53 +51,53 @@ func (h *nonceHeap) Pop() interface{} {
 
 // txQueueMap is a txHash -> transaction hash map
 type txQueuedMap struct {
-	mu *sync.RWMutex
+	mu    *sync.RWMutex
 	items map[common.Hash]*types.Transaction // Hash map storing the transaction data
-	index *list.List                    // Heap of nonces of all the stored transactions (non-strict mode)
+	index *list.List                         // Heap of nonces of all the stored transactions (non-strict mode)
 	size  int
 }
 
-func newTxQueuedMap() *txQueuedMap{
+func newTxQueuedMap() *txQueuedMap {
 	return &txQueuedMap{
-		mu:&sync.RWMutex{},
-		items:make(map[common.Hash]*types.Transaction),
-		index : list.New(),
+		mu:    &sync.RWMutex{},
+		items: make(map[common.Hash]*types.Transaction),
+		index: list.New(),
 	}
 }
 
-func(m *txQueuedMap)Get()types.Transactions{
+func (m *txQueuedMap) Get() types.Transactions {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
-	txs := make(types.Transactions,0,m.size+1)
+	txs := make(types.Transactions, 0, m.size+1)
 	//for _,tx := range m.items{
 	//	txs = append(txs, tx)
 	//}
 	for e := m.index.Front(); e != nil; e = e.Next() {
-		if eh,ok :=  e.Value.(common.Hash); ok{
-			if tx,ok := m.items[eh];ok{
+		if eh, ok := e.Value.(common.Hash); ok {
+			if tx, ok := m.items[eh]; ok {
 				txs = append(txs, tx)
 			}
 		}
 	}
-	if txs.Len() == 0{
+	if txs.Len() == 0 {
 		return nil
 	}
 	return txs
 }
 
-func(m *txQueuedMap)Len() int{
+func (m *txQueuedMap) Len() int {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	return m.size
 }
 
-func(m *txQueuedMap)Put(h common.Hash,tx *types.Transaction){
+func (m *txQueuedMap) Put(h common.Hash, tx *types.Transaction) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
 	_, ok := m.items[h]
-	if ok{
+	if ok {
 		return
 	}
 
@@ -105,25 +106,25 @@ func(m *txQueuedMap)Put(h common.Hash,tx *types.Transaction){
 	m.size++
 }
 
-func(m *txQueuedMap)Remove(h common.Hash){
+func (m *txQueuedMap) Remove(h common.Hash) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	if _,ok := m.items[h]; ok{
-		delete(m.items,h)
+	if _, ok := m.items[h]; ok {
+		delete(m.items, h)
 		m.size--
 
 		var elem *list.Element
 		for e := m.index.Front(); e != nil; e = e.Next() {
 			// do something with e.Value
-			if eh,ok :=  e.Value.(common.Hash); ok{
-				if h == eh{
+			if eh, ok := e.Value.(common.Hash); ok {
+				if h == eh {
 					elem = e
 					break
 				}
 			}
 		}
-		if elem != nil{
+		if elem != nil {
 			m.index.Remove(elem)
 		}
 	}

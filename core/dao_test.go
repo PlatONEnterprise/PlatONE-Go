@@ -23,6 +23,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
+	"github.com/ethereum/go-ethereum/consensus/ethash"
 )
 
 // Tests that DAO-fork enabled clients can properly filter out fork-commencing

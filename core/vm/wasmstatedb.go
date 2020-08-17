@@ -2,10 +2,11 @@ package vm
 
 import (
 	"encoding/hex"
+	"math/big"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
-	"math/big"
 )
 
 type WasmStateDB struct {
@@ -129,6 +130,6 @@ func (self *WasmStateDB) DelegateCall(addr, param []byte) ([]byte, error) {
 	return ret, err
 }
 
-func (self*WasmStateDB) GetCode (addr common.Address) []byte {
+func (self *WasmStateDB) GetCode(addr common.Address) []byte {
 	return self.evm.StateDB.GetCode(addr)
 }

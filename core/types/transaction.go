@@ -41,7 +41,7 @@ const (
 	CreateTxType uint64 = 1
 	NormalTxType uint64 = 2
 
-	CnsTxType uint64 = 0x11	// Used for sending transactions without address
+	CnsTxType uint64 = 0x11 // Used for sending transactions without address
 	FwTxType  uint64 = 0x12 // Used fot sending transactions about firewall
 	MigTxType uint64 = 0x13 //Used for update system contract.
 	MigDpType uint64 = 0x14 //Used for update system contract.
@@ -82,7 +82,7 @@ type txdataMarshaling struct {
 	Amount       *hexutil.Big
 	Payload      hexutil.Bytes
 	//CnsData	     hexutil.Bytes
-	TxType  hexutil.Uint64
+	TxType hexutil.Uint64
 	V      *hexutil.Big
 	R      *hexutil.Big
 	S      *hexutil.Big
@@ -353,7 +353,7 @@ func NewTransactionsByPriceAndNonce(signer Signer, txs map[common.Address]Transa
 	// Initialize a price based heap with the head transactions
 	heads := make(TxByPrice, 0, len(txs))
 	for from, accTxs := range txs {
-		if accTxs == nil || accTxs.Len() == 0{
+		if accTxs == nil || accTxs.Len() == 0 {
 			continue
 		}
 		heads = append(heads, accTxs[0])
@@ -442,7 +442,7 @@ func (m *Message) Data() []byte         { return m.data }
 func (m *Message) CheckNonce() bool     { return m.checkNonce }
 func (m *Message) TxType() uint64       { return m.txType }
 
-func (m *Message) SetTo(to common.Address) { m.to=&to }
+func (m *Message) SetTo(to common.Address) { m.to = &to }
 func (m *Message) SetData(b []byte)        { m.data = b }
 func (m *Message) SetTxType(src uint64)    { m.txType = src }
 func (m *Message) SetNonce(n uint64)       { m.nonce = n }

@@ -12,9 +12,9 @@ const (
 
 type CodeType uint8
 
-const(
+const (
 	operateSuccess CodeType = 0
-	operateFail CodeType = 1
+	operateFail    CodeType = 1
 )
 
 type result struct {

@@ -17,11 +17,12 @@
 package vm
 
 import (
+	"math/big"
+	"strings"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/math"
-	"math/big"
-	"strings"
 )
 
 // calculates the memory size required for a step
@@ -94,7 +95,7 @@ func parseSolCallWasmInput(evm *EVM, address common.Address, input []byte) ([]by
 	// deal sol call wasm
 	var (
 		wasmInput []byte
-		err error
+		err       error
 	)
 	if wasmInput, err = abi.GenerateInputData(&abi.WasmInput{}, input); err != nil {
 		return input, err

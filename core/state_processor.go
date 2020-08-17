@@ -18,6 +18,7 @@ package core
 
 import (
 	"fmt"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus/misc"
@@ -30,7 +31,6 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
 )
-
 
 // StateProcessor is a basic Processor, which takes care of transitioning
 // state from one point to another.
@@ -113,9 +113,9 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	if err != nil {
 		switch err {
 		case PermissionErr:
-			data :=[][]byte{}
+			data := [][]byte{}
 			data = append(data, []byte(err.Error()))
-			encodeData,_:= rlp.EncodeToBytes(data)
+			encodeData, _ := rlp.EncodeToBytes(data)
 			topics := []common.Hash{common.BytesToHash(crypto.Keccak256([]byte("contract permission")))}
 			log := &types.Log{
 				Address:     msg.From(),
@@ -129,9 +129,9 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 		}
 	}
 	if common.SysCfg.GetIsTxUseGas() {
-		data :=[][]byte{}
+		data := [][]byte{}
 		data = append(data, []byte(common.Int64ToBytes(gasPrice)))
-		encodeData,_:= rlp.EncodeToBytes(data)
+		encodeData, _ := rlp.EncodeToBytes(data)
 		topics := []common.Hash{common.BytesToHash(crypto.Keccak256([]byte("GasPrice")))}
 		log := &types.Log{
 			Address:     msg.From(),
@@ -156,8 +156,8 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	receipt.TxHash = tx.Hash()
 	receipt.GasUsed = gas
 	// if the transaction created a contract, store the creation address in the receipt.
-	if msg.To() == nil && err == nil{
-		receipt.ContractAddress = crypto.CreateAddress(vmenv.Context.Origin, statedb.GetNonce(msg.From()) - 1)
+	if msg.To() == nil && err == nil {
+		receipt.ContractAddress = crypto.CreateAddress(vmenv.Context.Origin, statedb.GetNonce(msg.From())-1)
 	}
 	// Set the receipt logs and create a bloom for filtering
 

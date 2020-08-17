@@ -5,7 +5,8 @@ package core
 import (
 	"encoding/json"
 	"errors"
-		"github.com/PlatONEnetwork/PlatONE-Go/common"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/math"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"

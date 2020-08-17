@@ -1,10 +1,11 @@
 package vm
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 	"math/big"
 	"testing"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 )
 
 //func TestParamManager_get(t *testing.T) {
@@ -118,11 +119,11 @@ func TestParamManager_getTxLimit(t *testing.T) {
 	addr := syscontracts.ParameterManagementAddress
 	addr1 := syscontracts.UserManagementAddress
 	caller := common.HexToAddress("0x62fb664c49cfa4fa35931760c704f9b3ab664666")
-	um := UserManagement{stateDB: db, caller: caller, contractAddr: addr1,  blockNumber:big.NewInt(100)}
+	um := UserManagement{stateDB: db, caller: caller, contractAddr: addr1, blockNumber: big.NewInt(100)}
 	um.setSuperAdmin()
 	um.addChainAdminByAddress(caller)
 	p := ParamManager{contractAddr: &addr, stateDB: db, caller: caller, blockNumber: big.NewInt(100)}
-	p.setIsApproveDeployedContract(1 )
+	p.setIsApproveDeployedContract(1)
 	ret, err := p.getIsApproveDeployedContract()
 	if nil != err {
 		t.Error(err)
@@ -135,11 +136,11 @@ func TestParamManager_gasName(t *testing.T) {
 	addr := syscontracts.ParameterManagementAddress
 	addr1 := syscontracts.UserManagementAddress
 	caller := common.HexToAddress("0x62fb664c49cfa4fa35931760c704f9b3ab664666")
-	um := UserManagement{stateDB: db, caller: caller, contractAddr: addr1,  blockNumber:big.NewInt(100)}
+	um := UserManagement{stateDB: db, caller: caller, contractAddr: addr1, blockNumber: big.NewInt(100)}
 	um.setSuperAdmin()
 	um.addChainAdminByAddress(caller)
-	p := ParamManager{contractAddr: &addr, stateDB: db, caller: caller, blockNumber:big.NewInt(100)}
-	p.setGasContractName("abc" )
+	p := ParamManager{contractAddr: &addr, stateDB: db, caller: caller, blockNumber: big.NewInt(100)}
+	p.setGasContractName("abc")
 	ret, err := p.getGasContractName()
 	if nil != err {
 		t.Error(err)
@@ -152,11 +153,11 @@ func TestParamManager_emptyBlock(t *testing.T) {
 	addr := syscontracts.ParameterManagementAddress
 	addr1 := syscontracts.UserManagementAddress
 	caller := common.HexToAddress("0x62fb664c49cfa4fa35931760c704f9b3ab664666")
-	um := UserManagement{stateDB: db, caller: caller, contractAddr: addr1,  blockNumber:big.NewInt(100)}
+	um := UserManagement{stateDB: db, caller: caller, contractAddr: addr1, blockNumber: big.NewInt(100)}
 	um.setSuperAdmin()
 	um.addChainAdminByAddress(caller)
-	p := ParamManager{contractAddr: &addr, stateDB: db, caller: caller,blockNumber:big.NewInt(100)}
-	p.setIsProduceEmptyBlock(1 )
+	p := ParamManager{contractAddr: &addr, stateDB: db, caller: caller, blockNumber: big.NewInt(100)}
+	p.setIsProduceEmptyBlock(1)
 	ret, err := p.getIsProduceEmptyBlock()
 	if nil != err {
 		t.Error(err)
@@ -169,11 +170,11 @@ func TestParamManager_contractPer(t *testing.T) {
 	addr := syscontracts.ParameterManagementAddress
 	addr1 := syscontracts.UserManagementAddress
 	caller := common.HexToAddress("0x62fb664c49cfa4fa35931760c704f9b3ab664666")
-	um := UserManagement{stateDB: db, caller: caller, contractAddr: addr1,  blockNumber:big.NewInt(100)}
+	um := UserManagement{stateDB: db, caller: caller, contractAddr: addr1, blockNumber: big.NewInt(100)}
 	um.setSuperAdmin()
 	um.addChainAdminByAddress(caller)
-	p := ParamManager{contractAddr: &addr, stateDB: db, caller: caller,blockNumber:big.NewInt(100)}
-	p.setCheckContractDeployPermission(1 )
+	p := ParamManager{contractAddr: &addr, stateDB: db, caller: caller, blockNumber: big.NewInt(100)}
+	p.setCheckContractDeployPermission(1)
 	ret, err := p.getCheckContractDeployPermission()
 	if nil != err {
 		t.Error(err)
@@ -181,6 +182,7 @@ func TestParamManager_contractPer(t *testing.T) {
 	}
 	t.Logf("%d", ret)
 }
+
 //func TestParamManager_getFn(t *testing.T) {
 //	db := newMockDB()
 //	addr := syscontracts.ParameterManagementAddress

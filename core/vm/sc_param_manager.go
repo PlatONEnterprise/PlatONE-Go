@@ -71,10 +71,10 @@ func (u *ParamManager) RequiredGas(input []byte) uint64 {
 func (u *ParamManager) Run(input []byte) ([]byte, error) {
 	fnName, ret, err := execSC(input, u.AllExportFns())
 	if err != nil {
-		if fnName == ""{
+		if fnName == "" {
 			fnName = "Notify"
 		}
-		u.emitNotifyEventInParam(fnName,operateFail, err.Error())
+		u.emitNotifyEventInParam(fnName, operateFail, err.Error())
 	}
 	return ret, nil
 }
@@ -88,7 +88,7 @@ func (u *ParamManager) getState(key []byte) []byte {
 }
 
 func (u *ParamManager) setGasContractName(contractName string) (int32, error) {
-	if b, _ := checkNameFormat(contractName); !b{
+	if b, _ := checkNameFormat(contractName); !b {
 		u.emitNotifyEventInParam("GasContractName", paramInvalid, fmt.Sprintf("param is invalid."))
 		return failFlag, errParamInvalid
 	}

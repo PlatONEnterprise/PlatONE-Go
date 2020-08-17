@@ -4,9 +4,10 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/bcwasmutil"
 	"reflect"
 	"regexp"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/common/bcwasmutil"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/byteutil"
@@ -16,10 +17,10 @@ import (
 )
 
 const (
-	nameRegPattarn = `^[a-zA-Z0-9_\p{Han}]{1,128}$`
-	emailRegPattarn = `^[a-zA-Z0-9]+@([A-Za-z0-9][-A-Za-z0-9]+\.)+[A-Za-z]{2,14}`
-	ipRegPattarn = `(25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)\.(25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)\.(25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)\.(25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)`
-	telePhonePattarn = "^[0-9]{3,13}$" //"^[0-9-()（）]{7,18}"
+	nameRegPattarn     = `^[a-zA-Z0-9_\p{Han}]{1,128}$`
+	emailRegPattarn    = `^[a-zA-Z0-9]+@([A-Za-z0-9][-A-Za-z0-9]+\.)+[A-Za-z]{2,14}`
+	ipRegPattarn       = `(25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)\.(25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)\.(25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)\.(25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)`
+	telePhonePattarn   = "^[0-9]{3,13}$" //"^[0-9-()（）]{7,18}"
 	mobilePhonePattarn = "^[0-9]{3,13}$"
 )
 
@@ -49,7 +50,7 @@ var (
 
 var fwErrNotOwner = errors.New("FW : error, only contract owner can set firewall setting")
 
-func execSC(input []byte, fns SCExportFns) (string,[]byte, error) {
+func execSC(input []byte, fns SCExportFns) (string, []byte, error) {
 	txType, fnName, fn, params, err := retrieveFnAndParams(input, fns)
 	if nil != err {
 		log.Error("failed to retrieve func name and params.", "error", err, "function", fnName)
@@ -144,34 +145,36 @@ func CheckPublicKeyFormat(pub string) error {
 
 	return nil
 }
+
 // Name Format
 // Length: 2~128
 // `^[a-zA-Z0-9_]\w{1,127}$`
 func checkNameFormat(name string) (bool, error) {
 	b, err := regexp.Match(nameRegPattarn, []byte(name))
-	if err != nil{
+	if err != nil {
 		return false, err
 	}
 	return b, nil
 }
 
-func checkIpFormat(ip string) (bool, error){
+func checkIpFormat(ip string) (bool, error) {
 	b, err := regexp.Match(ipRegPattarn, []byte(ip))
-	if err != nil{
+	if err != nil {
 		return false, err
 	}
 	return b, nil
 }
+
 // Email Format
 // xxx@xxx.xxx
 // total length <= 64
-func checkEmailFormat(email string) (bool, error){
+func checkEmailFormat(email string) (bool, error) {
 	b, err := regexp.Match(emailRegPattarn, []byte(email))
-	if err != nil{
+	if err != nil {
 		return false, err
 	}
 
-	if len(email) > 64{
+	if len(email) > 64 {
 		return false, nil
 	}
 	return b, nil
@@ -181,7 +184,7 @@ func checkPhoneFormat(phone string) (bool, error) {
 	b1, err1 := regexp.Match(telePhonePattarn, []byte(phone))
 	b2, err2 := regexp.Match(mobilePhonePattarn, []byte(phone))
 
-	if b1 || b2{
+	if b1 || b2 {
 		return true, nil
 	}
 
@@ -199,4 +202,3 @@ func generateStateKey(key string) []byte {
 func recoveryStateKey(key []byte) string {
 	return bcwasmutil.DeserilizeString(key)
 }
-

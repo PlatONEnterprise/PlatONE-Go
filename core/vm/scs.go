@@ -79,18 +79,18 @@ func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Cont
 			return fw.Run(input)
 		case *GroupManagement:
 			gm := &GroupManagement{
-				stateDB:   evm.StateDB,
+				stateDB:      evm.StateDB,
 				contractAddr: contract.self.Address(),
-				caller:  contract.caller.Address(),
+				caller:       contract.caller.Address(),
 				blockNumber:  evm.BlockNumber,
 			}
 			return gm.Run(input)
 		case *ContractDataProcessor:
 			dp := &ContractDataProcessor{
-				stateDB:   evm.StateDB,
+				stateDB:      evm.StateDB,
 				contractAddr: contract.self.Address(),
-				caller:  contract.caller.Address(),
-				blockNumber: evm.BlockNumber,
+				caller:       contract.caller.Address(),
+				blockNumber:  evm.BlockNumber,
 			}
 			return dp.Run(input)
 		case *CnsInvoke:

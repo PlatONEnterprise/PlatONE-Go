@@ -50,11 +50,11 @@ const (
 )
 
 var (
-	superAdminAddrListKey = generateStateKey(addressListKey + "superAdminAddrListKey")
-	chainAdminAddrListKey = generateStateKey(addressListKey + "chainAdminAddrListKey")
-	groupAdminAddrListKey = generateStateKey(addressListKey + "groupAdminAddrListKey")
-	nodeAdminAddrListKey = generateStateKey(addressListKey + "nodeAdminAddrListKey")
-	contractAdminAddrListKey = generateStateKey(addressListKey + "contractAdminAddrListKey")
+	superAdminAddrListKey       = generateStateKey(addressListKey + "superAdminAddrListKey")
+	chainAdminAddrListKey       = generateStateKey(addressListKey + "chainAdminAddrListKey")
+	groupAdminAddrListKey       = generateStateKey(addressListKey + "groupAdminAddrListKey")
+	nodeAdminAddrListKey        = generateStateKey(addressListKey + "nodeAdminAddrListKey")
+	contractAdminAddrListKey    = generateStateKey(addressListKey + "contractAdminAddrListKey")
 	contractDeployerAddrListKey = generateStateKey(addressListKey + "contractDeployerAddrListKey")
 )
 
@@ -329,7 +329,7 @@ func (u *UserManagement) delContractDeployerByName(name string) (int32, error) {
 
 func (u *UserManagement) getRolesByName(name string) (string, error) {
 	addr, err := u.getAddrByName(name)
-	if err != nil{
+	if err != nil {
 		return err.Error(), err
 	}
 	return u.getRolesByAddress(addr)
@@ -356,7 +356,7 @@ func (u *UserManagement) getAddrListOfRoleStr(targetRole string) (string, error)
 func (u *UserManagement) getAddrListOfRole(targetRole int32) (string, error) {
 	var key []byte
 	var err error
-	addrs := make([]common.Address,0)
+	addrs := make([]common.Address, 0)
 
 	if key, err = generateAddressListKey(targetRole); err != nil {
 		return "", err
@@ -364,7 +364,7 @@ func (u *UserManagement) getAddrListOfRole(targetRole int32) (string, error) {
 	if addrs, err = u.getAddrList(key); err != nil {
 		return "", err
 	}
-	if len(addrs) == 0{
+	if len(addrs) == 0 {
 		return "[]", nil
 	}
 	str, err := json.Marshal(addrs)
@@ -376,7 +376,7 @@ func (u *UserManagement) getAddrListOfRole(targetRole int32) (string, error) {
 
 func (u *UserManagement) hasRole(addr common.Address, roleName string) (int32, error) {
 	ur, err := u.getRole(addr)
-	if err != nil{
+	if err != nil {
 		return roleDeactive, err
 	}
 	if role, ok := rolesMap[roleName]; ok && ur.hasRole(role) {
@@ -411,7 +411,7 @@ func (u *UserManagement) setRole(addr common.Address, roles UserRoles) error {
 }
 func (u *UserManagement) setRoleWithPermissionCheckByName(name string, targetRole int32, status uint8) error {
 	addr, err := u.getAddrByName(name)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	if addr == ZeroAddress {
@@ -547,7 +547,7 @@ func (u *UserManagement) setAddrList(key []byte, addrs []common.Address) error {
 	return nil
 }
 
-func generateRoleKey(addr common.Address) []byte{
+func generateRoleKey(addr common.Address) []byte {
 	return generateStateKey(addr.String() + userRolesKey)
 }
 

@@ -5,18 +5,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/big"
+	"reflect"
+	"sort"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
-	"math/big"
-	"reflect"
-	"sort"
 )
 
 const (
 	importOldDataSuccess CodeType = 0
-	dataUnmarshalFail CodeType = 1
+	dataUnmarshalFail    CodeType = 1
 )
 const (
 	NodeStatusNormal  = uint32(1)
@@ -159,18 +160,18 @@ func (n *SCNode) checkParamsOfAddNode(node *syscontracts.NodeInfo) error {
 		return err
 	}
 
-	if b, err := checkNameFormat(node.Name); err!=nil || !b {
+	if b, err := checkNameFormat(node.Name); err != nil || !b {
 		return err
 	}
 
-	if node.ExternalIP != ""{
-		if b,err := checkIpFormat(node.ExternalIP);  err!=nil || !b {
+	if node.ExternalIP != "" {
+		if b, err := checkIpFormat(node.ExternalIP); err != nil || !b {
 			return err
 		}
 	}
 
-	if node.InternalIP != ""{
-		if b,err := checkIpFormat(node.InternalIP);  err!=nil || !b {
+	if node.InternalIP != "" {
+		if b, err := checkIpFormat(node.InternalIP); err != nil || !b {
 			return err
 		}
 	}
@@ -203,8 +204,8 @@ func (n *SCNode) checkParamsOfAddNode(node *syscontracts.NodeInfo) error {
 }
 
 func (n *SCNode) checkParamsOfUpdateNodeAndReturnUpdatedNode(name string, update *syscontracts.UpdateNode) (*syscontracts.NodeInfo, error) {
-	if b, err := checkNameFormat(name); err!=nil || !b {
-		return nil,err
+	if b, err := checkNameFormat(name); err != nil || !b {
+		return nil, err
 	}
 	node, err := n.getNodeByName(name)
 	if err != nil {
@@ -243,7 +244,7 @@ func (n *SCNode) checkParamsOfUpdateNodeAndReturnUpdatedNode(name string, update
 }
 
 func (n *SCNode) checkPublicKeyExist(pub string) error {
-	if err := CheckPublicKeyFormat(pub); err != nil{
+	if err := CheckPublicKeyFormat(pub); err != nil {
 		return err
 	}
 	query := &syscontracts.NodeInfo{}
@@ -473,7 +474,7 @@ func (n *SCNode) importOldNodesData(data string) error {
 		n.emitNotifyEvent(dataUnmarshalFail, fmt.Sprintf("old nodes data unmarshal fail"))
 		return err
 	}
-	for index, _ := range nodes{
+	for index, _ := range nodes {
 		//names, err := n.getNames()
 		//if err != nil {
 		//	if errNodeNotFound != err {
@@ -488,12 +489,11 @@ func (n *SCNode) importOldNodesData(data string) error {
 		n.add(&nodes[index])
 	}
 	if err != nil {
-		return  err
+		return err
 	}
 	n.emitNotifyEvent(importOldDataSuccess, fmt.Sprintf("import old nodes data success"))
 	return nil
 }
-
 
 func (n *SCNode) setState(key string, value []byte) {
 	n.stateDB.SetState(n.contractAddr, []byte(key), value)
@@ -523,7 +523,7 @@ func (n *SCNode) isMatch(node, query *syscontracts.NodeInfo) bool {
 		}
 	}
 
-	if zeroElm == 0{
+	if zeroElm == 0 {
 		return false
 	}
 

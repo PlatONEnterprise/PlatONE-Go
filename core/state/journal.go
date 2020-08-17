@@ -138,16 +138,16 @@ type (
 		prev      bool
 		prevDirty bool
 	}
-	creatorChange struct{
-		account  *common.Address
+	creatorChange struct {
+		account     *common.Address
 		prevCreator common.Address
 	}
 	fwDataChange struct {
-		account *common.Address
+		account    *common.Address
 		prevFwData FwData
 	}
 	fwActiveChange struct {
-		account *common.Address
+		account    *common.Address
 		prevActive uint64
 	}
 )

@@ -1,10 +1,11 @@
 package vm
 
 import (
+	"strings"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
-	"strings"
 )
 
 const (

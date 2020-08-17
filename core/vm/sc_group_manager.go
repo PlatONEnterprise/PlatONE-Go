@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 	"math/big"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
@@ -21,9 +22,9 @@ const (
 )
 
 type GroupManagement struct {
-	stateDB     StateDB
-	caller      common.Address // msg.From()	contract.caller
-	blockNumber *big.Int
+	stateDB      StateDB
+	caller       common.Address // msg.From()	contract.caller
+	blockNumber  *big.Int
 	contractAddr common.Address
 }
 
@@ -48,8 +49,8 @@ func (g *GroupManagement) RequiredGas(input []byte) uint64 {
 
 // Run runs the precompiled contract
 func (g *GroupManagement) Run(input []byte) ([]byte, error) {
-	fnName, ret, err := execSC(input, g.AllExportFns());
-	if err != nil{
+	fnName, ret, err := execSC(input, g.AllExportFns())
+	if err != nil {
 		if fnName == "" {
 			fnName = "Notify"
 		}
