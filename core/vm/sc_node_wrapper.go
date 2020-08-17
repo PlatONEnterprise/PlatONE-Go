@@ -37,7 +37,7 @@ func (n *scNodeWrapper) Run(input []byte) ([]byte, error) {
 		n.base.emitEvent(fnName, operateFail, err.Error())
 
 		if strings.ContainsAny(fnName, "get") {
-			return []byte(newInternalErrorResult(err).String()), err
+			return MakeReturnBytes([]byte(newInternalErrorResult(err).String())), err
 		}
 	}
 	return ret, nil

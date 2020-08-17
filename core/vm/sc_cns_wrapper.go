@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
@@ -50,6 +51,10 @@ func (cns *CnsWrapper) Run(input []byte) ([]byte, error) {
 			fnName = "Notify"
 		}
 		cns.base.emitEvent(fnName, operateFail, err.Error())
+
+		if strings.ContainsAny(fnName, "getRegisteredContracts") {
+			return MakeReturnBytes([]byte(newInternalErrorResult(err).String())), err
+		}
 	}
 
 	return ret, nil
