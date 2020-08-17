@@ -296,7 +296,7 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, gasPrice 
 		msg    = st.msg
 		sender = vm.AccountRef(msg.From())
 	)
-	isCallSysParam := isCallParamManager(*msg.To())
+	isCallSysParam := isCallParamManager(msg.To())
 	feeContractAddr, isUseContractToken := st.ifUseContractTokenAsFee()
 	isUseContractToken = isUseContractToken && msg.Nonce() != 0 && !isCallSysParam
 	if isUseContractToken {
@@ -434,6 +434,10 @@ func checkContractDeployPermission(sender common.Address, evm *vm.EVM) bool {
 	return false
 }
 
-func isCallParamManager(to common.Address) bool {
-	return to == syscontracts.ParameterManagementAddress
+func isCallParamManager(to *common.Address) bool {
+	if to == nil {
+		return false
+	}
+
+	return *to == syscontracts.ParameterManagementAddress
 }
