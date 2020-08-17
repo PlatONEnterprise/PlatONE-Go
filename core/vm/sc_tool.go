@@ -19,7 +19,7 @@ import (
 const (
 	nameRegPattarn     = `^[a-zA-Z0-9_\p{Han}]{1,128}$`
 	emailRegPattarn    = `^[a-zA-Z0-9]+@([A-Za-z0-9][-A-Za-z0-9]+\.)+[A-Za-z]{2,14}`
-	ipRegPattarn       = `(25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)\.(25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)\.(25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)\.(25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)`
+	ipRegPattarn       = `^(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)){3}$`//`(2(5[0-5]{1}|[0-4]\d{1})|[0-1]?\d{1,2})(\.(2(5[0-5]{1}|[0-4]\d{1})|[0-1]?\d{1,2})){3}`//`((25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))\.){3}(25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))`//`(25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)\.(25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)\.(25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)\.(25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d)`
 	telePhonePattarn   = "^[0-9]{3,13}$" //"^[0-9-()（）]{7,18}"
 	mobilePhonePattarn = "^[0-9]{3,13}$"
 )
@@ -42,6 +42,13 @@ var (
 	errAddressInvalid = errors.New("[CNS] address format is invalid")
 	errNotOwner       = errors.New("[CNS] not owner of registered contract")
 	errEmptyValue     = errors.New("Empty value")
+
+	errIPUnsupported       = errors.New("Unsupported IP address ")
+	errUsernameUnsupported    = errors.New("Unsupported Username ")
+	errNameUnsupported    = errors.New("Unsupported name ")
+	errOrgnizationUnsupported = errors.New("Unsupported Orgnization ")
+	errEmailUnsupported       = errors.New("Unsupported email address ")
+	errPhoneUnsupported       = errors.New("Unsupported phone number ")
 )
 
 var (
@@ -154,7 +161,11 @@ func checkNameFormat(name string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return b, nil
+
+	if !b {
+		err = errNameUnsupported
+	}
+	return b, err
 }
 
 func checkIpFormat(ip string) (bool, error) {
@@ -162,7 +173,10 @@ func checkIpFormat(ip string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return b, nil
+	if !b {
+		err = errIPUnsupported
+	}
+	return b, err
 }
 
 // Email Format
@@ -176,6 +190,10 @@ func checkEmailFormat(email string) (bool, error) {
 
 	if len(email) > 64 {
 		return false, nil
+	}
+
+	if !b {
+		err = errEmailUnsupported
 	}
 	return b, nil
 }

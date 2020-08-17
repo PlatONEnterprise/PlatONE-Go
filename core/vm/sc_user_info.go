@@ -23,10 +23,6 @@ const (
 )
 
 var (
-	errUsernameUnsupported    = errors.New("Unsupported Username ")
-	errOrgnizationUnsupported = errors.New("Unsupported Orgnization ")
-	errEmailUnsupported       = errors.New("Unsupported email address ")
-	errPhoneUnsupported       = errors.New("Unsupported phone number ")
 	errUserNameAlreadyExist   = errors.New(" UserName Already Exist ")
 	errAlreadySetUserName     = errors.New("Already Set UserName ")
 	errNoUserInfo             = errors.New("No User Info ")
