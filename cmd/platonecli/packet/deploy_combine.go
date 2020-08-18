@@ -26,7 +26,10 @@ func NewDeployDataGen(codeBytes, abiBytes []byte, consParams []string, vm string
 	}
 
 	// set the virtual machine interpreter
-	dataGen.SetInterpreter(vm)
+	err := dataGen.SetInterpreter(vm)
+	if err != nil {
+		// todo: handle error
+	}
 
 	return dataGen
 }

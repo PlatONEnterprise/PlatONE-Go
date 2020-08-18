@@ -350,7 +350,7 @@ func integerParsing(value string, size int, unsigned bool) (interface{}, error) 
 			intValue, isValid = big.NewInt(0).SetString(value[2:], 16)
 		} else {
 			intValue, isValid = big.NewInt(0).SetString(value, 10)
-			isValid = !isValid || !common.IsSafeNumber(value, size, unsigned)
+			isValid = isValid && common.IsSafeNumber(value, size, unsigned)
 		}
 
 		if !isValid {
