@@ -154,7 +154,7 @@ func Test_checkNameFormat(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got, err := checkNameFormat(tt.args.name); err != nil || got != tt.want {
+			if got, err := checkNameFormat(tt.args.name); got != tt.want {
 				t.Errorf("name=%v ,checkNameFormat() = %v, want %v, err %v", tt.args.name, got, tt.want, err)
 			}
 		})
@@ -248,6 +248,10 @@ func Test_checkIpFormat1(t *testing.T) {
 			args: args{ip: "111.11.11.1"},
 			want: true,
 		},
+		{
+			args: args{ip: "31.155.244.256"},
+			want: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -257,7 +261,7 @@ func Test_checkIpFormat1(t *testing.T) {
 			//	return
 			//}
 			if got != tt.want {
-				t.Errorf("checkIpFormat() got = %v, want %v, err %v", got, tt.want, err)
+				t.Errorf("checkIpFormat(%s) got = %v, want %v, err %v", tt.args.ip,got, tt.want, err)
 			}
 		})
 	}
