@@ -135,12 +135,14 @@ func deploy(c *cli.Context) {
 	dataGenerator := packet.NewDeployDataGen(codeBytes, abiBytes, vm, types.CreateTxType)
 	result := clientCommon(c, dataGenerator, nil)[0]
 
-	if utl.IsMatch(result.(string), "address") {
-		/// storeAbiFile(result.(string), abiBytes)
-		fmt.Printf("result: contract address is %s\n", result)
-	} else {
-		fmt.Printf("result: %s\n", result)
-	}
+	/*
+		if strings.Contains(result.(string), "address") {
+			/// storeAbiFile(result.(string), abiBytes)
+			fmt.Printf("result: contract address is %s\n", result)
+		} else {
+			fmt.Printf("result: %s\n", result)
+		}*/
+	fmt.Printf("result: %s\n", utl.PrintJson([]byte(result.(string))))
 }
 
 // execute a method in the contract(evm or wasm).
