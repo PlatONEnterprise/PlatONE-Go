@@ -101,8 +101,10 @@ func (u *UserManagement) addUser(info *UserInfo) (int32, error) {
 			return u.returnFail(topic, err)
 		}
 
-		if isZeroDescInfo(*descInfo) {
-			info.DescInfo = ""
+		if data, err := json.Marshal(descInfo); err != nil{
+			return u.returnFail(topic, err)
+		}else {
+			info.DescInfo = string(data)
 		}
 	}
 

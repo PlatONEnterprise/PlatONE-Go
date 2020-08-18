@@ -774,7 +774,7 @@ func (pool *TxPool) validateTx(tx *types.Transaction, local bool) error {
 	if pool.currentState.GetBalance(from).Cmp(tx.Value()) < 0 {
 		return ErrInsufficientFunds
 	}
-	if common.SysCfg.GetIsTxUseGas() && common.SysCfg.GetGasContractName() != "" {
+	if !isCallParamManager(tx.To()) && common.SysCfg.GetIsTxUseGas() && common.SysCfg.GetGasContractName() != "" {
 		contractCreation := tx.To() == nil
 		gas, err := IntrinsicGas(tx.Data(), contractCreation)
 		log.Debug("IntrinsicGas amount", "IntrinsicGas:", gas)
