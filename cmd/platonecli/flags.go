@@ -341,7 +341,7 @@ var (
 		NameFlags)
 
 	// contract
-	contractDeployCmdFlags  = append(globalCmdFlags, ContractAbiFilePathFlag, ContractVmFlags)
+	contractDeployCmdFlags  = append(globalCmdFlags, ContractAbiFilePathFlag, ContractVmFlags, ContractParamFlag)
 	contractExecuteCmdFlags = append(
 		globalCmdFlags,
 		ContractAbiFilePathFlag,
