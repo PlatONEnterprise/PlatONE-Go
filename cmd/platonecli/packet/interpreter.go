@@ -2,6 +2,7 @@ package packet
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -129,14 +130,14 @@ func (i EvmContractInterpreter) setIsWrite(abiFunc *FuncDesc) bool {
 
 func (i EvmContractInterpreter) ReceiptParsing(receipt *Receipt, abiBytes []byte) string {
 
+	var recpParsing = new(ReceiptParsingReturn)
+	var fn = EvmEventParsingPerLog
+
 	if len(receipt.Logs) != 0 {
-		result := EventParsingV2(receipt.Logs, abiBytes)
-		if result != "" {
-			return result
-		}
+		recpParsing.Logs = EventParsing(receipt.Logs, [][]byte{abiBytes}, fn)
 	}
 
-	return receiptStatusReturn(receipt.Status)
+	return recpParsing.String()
 }
 
 func (i EvmContractInterpreter) ParseNonConstantResponse(respStr string, outputType []abi.ArgumentMarshaling) []interface{} {
@@ -213,15 +214,18 @@ func (i WasmContractInterpreter) setIsWrite(abiFunc *FuncDesc) bool {
 
 func (i WasmContractInterpreter) ReceiptParsing(receipt *Receipt, abiBytes []byte) string {
 
+	var recpParsing = new(ReceiptParsingReturn)
+	var fn = WasmEventParsingPerLog
+	sysEvents := []string{precompile.CnsInvokeEvent} // precompile.CnsInitRegEvent
+
 	if len(receipt.Logs) != 0 {
-		result := SysEventParsing(receipt.Logs, []string{precompile.CnsInvokeEvent})
-		result += EventParsing(receipt.Logs, abiBytes)
-		if result != "" {
-			return result
-		}
+		abiBytesArr := getSysEventAbis(sysEvents)
+		abiBytesArr = append(abiBytesArr, abiBytes)
+
+		recpParsing.Logs = EventParsing(receipt.Logs, abiBytesArr, fn)
 	}
 
-	return receiptStatusReturn(receipt.Status)
+	return recpParsing.String()
 }
 
 func (i WasmContractInterpreter) ParseNonConstantResponse(respStr string, outputType []abi.ArgumentMarshaling) []interface{} {
@@ -253,19 +257,21 @@ func (i *EvmDeployInterpreter) combineDeployData() (string, error) {
 func (i EvmDeployInterpreter) ReceiptParsing(receipt *Receipt, abiBytes []byte) string {
 	// todo: optimize the code
 	// todo: code efficiency, receipt log parsing: multiple loops -> one loop
+	var recpParsing = new(ReceiptParsingReturn)
+	sysEvents := []string{precompile.PermDeniedEvent} // precompile.CnsInitRegEvent
+
 	if len(receipt.Logs) != 0 {
-		result := SysEventParsing(receipt.Logs, []string{precompile.PermDeniedEvent, precompile.CnsInitRegEvent})
-		result += EventParsingV2(receipt.Logs, abiBytes)
-		if result != "" {
-			return result
-		}
+		abiBytesArr := getSysEventAbis(sysEvents)
+		recpParsing.Logs = EventParsing(receipt.Logs, abiBytesArr, WasmEventParsingPerLog)
+		recpParsing.Logs = append(recpParsing.Logs,
+			EventParsing(receipt.Logs, [][]byte{abiBytes}, EvmEventParsingPerLog)...)
 	}
 
 	if receipt.ContractAddress != "" {
-		return receipt.ContractAddress
+		recpParsing.ContractAddress = receipt.ContractAddress
 	}
 
-	return receiptStatusReturn(receipt.Status)
+	return recpParsing.String()
 }
 
 //========================DEPLOY WASM=========================
@@ -290,21 +296,34 @@ func (i *WasmDeployInterpreter) combineDeployData() (string, error) {
 	return rlpEncode(dataParams)
 }
 
+type ReceiptParsingReturn struct {
+	ContractAddress string   `json:"contractAddress,omitempty"`
+	Logs            []string `json:"logs"`
+}
+
+func (r *ReceiptParsingReturn) String() string {
+	rBytes, _ := json.Marshal(r)
+	return string(rBytes)
+}
+
 func (i WasmDeployInterpreter) ReceiptParsing(receipt *Receipt, abiBytes []byte) string {
 
+	var recpParsing = new(ReceiptParsingReturn)
+	var fn = WasmEventParsingPerLog
+	sysEvents := []string{precompile.PermDeniedEvent, precompile.CnsInitRegEvent}
+
 	if len(receipt.Logs) != 0 {
-		result := SysEventParsing(receipt.Logs, []string{precompile.PermDeniedEvent, precompile.CnsInitRegEvent})
-		result += EventParsing(receipt.Logs, abiBytes)
-		if result != "" {
-			return result
-		}
+		abiBytesArr := getSysEventAbis(sysEvents)
+		abiBytesArr = append(abiBytesArr, abiBytes)
+
+		recpParsing.Logs = EventParsing(receipt.Logs, abiBytesArr, fn)
 	}
 
 	if receipt.ContractAddress != "" {
-		return receipt.ContractAddress
+		recpParsing.ContractAddress = receipt.ContractAddress
 	}
 
-	return receiptStatusReturn(receipt.Status)
+	return recpParsing.String()
 }
 
 //=========================COMMON==============================

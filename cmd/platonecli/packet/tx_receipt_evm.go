@@ -11,33 +11,25 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 )
 
-// EventParsing parsing all the events recorded in receipt log.
-// The event should be written in the abiBytes provided.
-// Otherwise, the event will not be parsed
-func EventParsingV2(logs RecptLogs, abiBytes []byte) (result string) {
-
-	for i, eLog := range logs {
-		eventName, arguments := findLogTopicV2(eLog.Topics[0], abiBytes)
-		if arguments == nil {
-			continue
-		}
-
-		result += fmt.Sprintf("\nEvent[%d]: %s ", i, eventName)
-		rlpList := arguments.ReturnBytesUnpack(eLog.Data)
-
-		for _, data := range rlpList {
-			if data != nil && !reflect.ValueOf(data).IsZero() {
-				result += fmt.Sprintf("%v ", data)
-			}
-		}
-
-		result += "\n"
+func EvmEventParsingPerLog(eLog *Log, abiBytes []byte) string {
+	eventName, arguments := findEvmLogTopic(eLog.Topics[0], abiBytes)
+	if arguments == nil {
+		return ""
 	}
 
-	return
+	result := fmt.Sprintf("Event %s: ", eventName)
+	rlpList := arguments.ReturnBytesUnpack(eLog.Data)
+
+	for _, data := range rlpList {
+		if data != nil && !reflect.ValueOf(data).IsZero() {
+			result += fmt.Sprintf("%v ", data)
+		}
+	}
+
+	return result
 }
 
-func findLogTopicV2(topic string, abiBytes []byte) (string, abi.Arguments) {
+func findEvmLogTopic(topic string, abiBytes []byte) (string, abi.Arguments) {
 	abiFunc, err := ParseAbiFromJson(abiBytes)
 	if err != nil {
 		return "", nil
@@ -48,7 +40,7 @@ func findLogTopicV2(topic string, abiBytes []byte) (string, abi.Arguments) {
 			continue
 		}
 
-		if strings.EqualFold(logTopicEncodeV2(data), topic) {
+		if strings.EqualFold(evmLogTopicEncode(data), topic) {
 			name := data.Name
 			arguments := GenUnpackArgs(data.Inputs)
 			return name, arguments
@@ -74,7 +66,7 @@ func GenUnpackArgs(data []abi.ArgumentMarshaling) (arguments abi.Arguments) {
 
 // todo: similar to function selector???
 // todo: optimization
-func logTopicEncodeV2(data FuncDesc) string {
+func evmLogTopicEncode(data FuncDesc) string {
 	var strArray = make([]string, 0)
 
 	for _, event := range data.Inputs {
