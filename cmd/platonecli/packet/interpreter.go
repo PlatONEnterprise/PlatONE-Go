@@ -58,7 +58,7 @@ func EvmStringToEncodeByte(abiFunc *FuncDesc, funcParams []string) ([]byte, erro
 
 	for i, v := range funcParams {
 		input := abiFunc.Inputs[i]
-		if argument.Type, err = abi.NewTypeV2(input.Type, "", input.Components); err != nil {
+		if argument.Type, err = abi.NewTypeV2(input.Type, input.InternalType, input.Components); err != nil {
 			return nil, err
 		}
 		arguments = append(arguments, argument)
