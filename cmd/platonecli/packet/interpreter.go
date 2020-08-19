@@ -146,10 +146,12 @@ func (i EvmContractInterpreter) setIsWrite(abiFunc *FuncDesc) bool {
 func (i EvmContractInterpreter) ReceiptParsing(receipt *Receipt, abiBytes []byte) string {
 
 	var recpParsing = new(ReceiptParsingReturn)
-	var fn = EvmEventParsingPerLog
+	sysEvents := []string{precompile.PermDeniedEvent} // precompile.CnsInitRegEvent
 
 	if len(receipt.Logs) != 0 {
-		recpParsing.Logs = EventParsing(receipt.Logs, [][]byte{abiBytes}, fn)
+		recpParsing.Logs = EventParsing(receipt.Logs, getSysEventAbis(sysEvents), WasmEventParsingPerLog)
+		recpParsing.Logs = append(recpParsing.Logs,
+			EventParsing(receipt.Logs, [][]byte{abiBytes}, EvmEventParsingPerLog)...)
 	}
 
 	recpParsing.Status = receiptStatusReturn(receipt.Status)
@@ -233,7 +235,7 @@ func (i WasmContractInterpreter) ReceiptParsing(receipt *Receipt, abiBytes []byt
 
 	var recpParsing = new(ReceiptParsingReturn)
 	var fn = WasmEventParsingPerLog
-	sysEvents := []string{precompile.CnsInvokeEvent} // precompile.CnsInitRegEvent
+	sysEvents := []string{precompile.CnsInvokeEvent, precompile.PermDeniedEvent} // precompile.CnsInitRegEvent
 
 	if len(receipt.Logs) != 0 {
 		abiBytesArr := getSysEventAbis(sysEvents)

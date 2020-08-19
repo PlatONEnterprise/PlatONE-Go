@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"unsafe"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
@@ -381,14 +382,24 @@ func (t Type) StringConvert(value string) (interface{}, error) {
 		}
 	case StringTy:
 		return value, nil
-	case FixedBytesTy:
-		// todo: the fiexed size is 32
+	case BytesTy:
 		vBytes, err := hexutil.Decode(value)
 		if err != nil {
 			return nil, err
 		}
 
-		return setBytes(t, vBytes)
+		return vBytes, nil
+	case FixedBytesTy:
+		vBytes, err := hexutil.Decode(value)
+		if err != nil {
+			return nil, err
+		}
+
+		p := unsafe.Pointer(&vBytes[0])
+		v := reflect.NewAt(t.GetType(), p)
+
+		return v.Elem().Interface(), nil
+		/// return setBytes(t, vBytes)
 	case TupleTy:
 		v := reflect.New(t.TupleType)
 		vSet := v.Elem()
@@ -408,11 +419,12 @@ func (t Type) StringConvert(value string) (interface{}, error) {
 		}
 		return vSet.Interface(), nil
 	default:
-		// todo: SliceTy, ArrayTy, BytesTy, HashTy, FixedPointTy, FunctionTy
+		// todo: SliceTy, ArrayTy, HashTy, FixedPointTy, FunctionTy
 		panic("todo")
 	}
 }
 
+// deprecated, realized by reflect.NewAt()
 func setBytes(t Type, b []byte) (interface{}, error) {
 	v := reflect.New(t.GetType())
 	vSet := v.Elem()
