@@ -295,7 +295,6 @@ func (cns *CnsManager) ifRegisteredByName(name string) (bool, error) {
 	var index uint64
 
 	if ok, _ := checkNameFormat(name); !ok {
-		cns.emitNotifyEvent(cnsInvalidArgument, errNameInvalid.Error())
 		return false, errNameInvalid
 	}
 
