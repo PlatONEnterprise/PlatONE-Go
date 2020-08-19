@@ -1,6 +1,7 @@
 package packet
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
@@ -20,4 +21,10 @@ func TestEvmStringToEncodeByte(t *testing.T) {
 	}
 
 	t.Logf("the nil string is null: %v\n", string(nil) == "")
+}
+
+func TestMarshalIndent(t *testing.T) {
+	var r = new(ReceiptParsingReturn)
+	rBytes, _ := json.MarshalIndent(r, "", "\t")
+	t.Log(string(rBytes))
 }

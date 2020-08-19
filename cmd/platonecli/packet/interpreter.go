@@ -47,7 +47,7 @@ type EvmContractInterpreter struct {
 
 // EvmStringToEncodeByte
 // if the funcParams is nil, the return byte is nil
-func EvmStringToEncodeByte(abiFunc *FuncDesc, funcParams []string) ([]byte, error) {
+func EvmStringToEncodeByte(abiFunc *FuncDesc, funcParams []string) ([]byte, []string, error) {
 	var arguments abi.Arguments
 	var argument abi.Argument
 
@@ -59,14 +59,14 @@ func EvmStringToEncodeByte(abiFunc *FuncDesc, funcParams []string) ([]byte, erro
 	for i, v := range funcParams {
 		input := abiFunc.Inputs[i]
 		if argument.Type, err = abi.NewTypeV2(input.Type, input.InternalType, input.Components); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		arguments = append(arguments, argument)
 
 		/// arg, err := abi.SolInputTypeConversion(input.Type, v)
 		arg, err := argument.Type.StringConvert(v)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		args = append(args, arg)
@@ -77,52 +77,22 @@ func EvmStringToEncodeByte(abiFunc *FuncDesc, funcParams []string) ([]byte, erro
 	paramsBytes, err := arguments.PackV2(args...)
 	if err != nil {
 		/// common.ErrPrintln("pack args error: ", err)
-		return nil, err
+		return nil, nil, err
 	}
 
-	return paramsBytes, nil
+	return paramsBytes, paramTypes, nil
 }
 
 // encodeFunction converts the function params to bytes and combine them by specific encoding rules
 func (i *EvmContractInterpreter) encodeFunction(abiFunc *FuncDesc, funcParams []string, funcName string) ([][]byte, error) {
-	// var arguments abi.Arguments
 	var funcByte = make([][]byte, 1)
 	var paramTypes = make([]string, 0)
-	// var args = make([]interface{}, 0)
-	// var argument abi.Argument
-	// var err error
 
 	// converts the function params to bytes
-	paramsBytes, err := EvmStringToEncodeByte(abiFunc, funcParams)
+	paramsBytes, paramTypes, err := EvmStringToEncodeByte(abiFunc, funcParams)
 	if err != nil {
 		return nil, err
 	}
-
-	/*
-		for i, v := range funcParams {
-			input := abiFunc.Inputs[i]
-			// newInput := tempStructConvert(input)
-			if argument.Type, err = abi.NewTypeV2(input.Type, "", input.Components); err != nil {
-				return nil, err
-			}
-			arguments = append(arguments, argument)
-
-			/// arg, err := abi.SolInputTypeConversion(input.Type, v)
-			arg, err := argument.Type.StringConvert(v)
-			if err != nil {
-				return nil, err
-			}
-
-			args = append(args, arg)
-			/// paramTypes = append(paramTypes, input.Type)
-			paramTypes = append(paramTypes, GenFuncSig(input))
-		}
-
-		paramsBytes, err := arguments.PackV2(args...)
-		if err != nil {
-			/// common.ErrPrintln("pack args error: ", err)
-			return nil, err
-		}*/
 
 	i.typeName = paramTypes
 
@@ -181,6 +151,8 @@ func (i EvmContractInterpreter) ReceiptParsing(receipt *Receipt, abiBytes []byte
 	if len(receipt.Logs) != 0 {
 		recpParsing.Logs = EventParsing(receipt.Logs, [][]byte{abiBytes}, fn)
 	}
+
+	recpParsing.Status = receiptStatusReturn(receipt.Status)
 
 	return recpParsing.String()
 }
@@ -270,6 +242,8 @@ func (i WasmContractInterpreter) ReceiptParsing(receipt *Receipt, abiBytes []byt
 		recpParsing.Logs = EventParsing(receipt.Logs, abiBytesArr, fn)
 	}
 
+	recpParsing.Status = receiptStatusReturn(receipt.Status)
+
 	return recpParsing.String()
 }
 
@@ -321,6 +295,8 @@ func (i EvmDeployInterpreter) ReceiptParsing(receipt *Receipt, abiBytes []byte) 
 		recpParsing.ContractAddress = receipt.ContractAddress
 	}
 
+	recpParsing.Status = receiptStatusReturn(receipt.Status)
+
 	return recpParsing.String()
 }
 
@@ -347,12 +323,18 @@ func (i *WasmDeployInterpreter) combineData() (string, error) {
 }
 
 type ReceiptParsingReturn struct {
+	Status          string   `json:"status"`
 	ContractAddress string   `json:"contractAddress,omitempty"`
-	Logs            []string `json:"logs"`
+	Logs            []string `json:"logs,omitempty"`
 }
 
 func (r *ReceiptParsingReturn) String() string {
-	rBytes, _ := json.Marshal(r)
+	/// rBytes, _ := json.Marshal(r)
+	rBytes, _ := json.MarshalIndent(r, "", "\t")
+	if rBytes == nil {
+		return ""
+	}
+
 	return string(rBytes)
 }
 
@@ -372,6 +354,8 @@ func (i WasmDeployInterpreter) ReceiptParsing(receipt *Receipt, abiBytes []byte)
 	if receipt.ContractAddress != "" {
 		recpParsing.ContractAddress = receipt.ContractAddress
 	}
+
+	recpParsing.Status = receiptStatusReturn(receipt.Status)
 
 	return recpParsing.String()
 }

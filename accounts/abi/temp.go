@@ -8,11 +8,11 @@ func GetFuncParams(paramString string) []string {
 		return nil
 	}
 
-	hasBracket := strings.Contains(paramString, "{") && strings.Contains(paramString, "}")
+	hasBracket := strings.Contains(paramString, "[") && strings.Contains(paramString, "]")
 	if !hasBracket {
 		return nil
 	} else {
-		paramString = paramString[strings.Index(paramString, "{")+1 : strings.Index(paramString, "}")]
+		paramString = paramString[strings.Index(paramString, "[")+1 : strings.Index(paramString, "]")]
 	}
 
 	splitPos := recordFuncParamSplitPos(paramString)

@@ -53,7 +53,8 @@ func parseAbiConstructor(abiBytes []byte, funcParams []string) ([]byte, error) {
 		return nil, nil
 	}
 
-	return EvmStringToEncodeByte(abiFunc, funcParams)
+	conBytes, _, err := EvmStringToEncodeByte(abiFunc, funcParams)
+	return conBytes, err
 }
 
 // SetInterpreter set the interpreter of DeployCall object

@@ -30,10 +30,14 @@ const (
 )
 
 func receiptStatusReturn(status string) (result string) {
-	if status == txReceiptSuccessCode {
+
+	switch status {
+	case txReceiptSuccessCode:
 		result = txReceiptSuccessMsg
-	} else {
+	case txReceiptFailureCode:
 		result = txReceiptFailureMsg
+	default:
+		result = "undefined status. Something wrong"
 	}
 
 	return

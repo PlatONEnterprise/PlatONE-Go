@@ -383,12 +383,12 @@ func (t Type) StringConvert(value string) (interface{}, error) {
 		return value, nil
 	case FixedBytesTy:
 		// todo: the fiexed size is 32
-		var res [32]byte
-
 		vBytes, err := hexutil.Decode(value)
-		copy(res[t.Size-len(vBytes):], vBytes)
+		if err != nil {
+			return nil, err
+		}
 
-		return res, err
+		return setBytes(t, vBytes)
 	case TupleTy:
 		v := reflect.New(t.TupleType)
 		vSet := v.Elem()
@@ -403,16 +403,40 @@ func (t Type) StringConvert(value string) (interface{}, error) {
 				return nil, err
 			}
 
-			if vSet.Field(i).CanSet() {
-				temp := vSet.Field(i)
-				temp2 := reflect.ValueOf(argTup)
-				fmt.Println(temp, temp2)
-				vSet.Field(i).Set(reflect.ValueOf(argTup))
-			}
+			vSet.Field(i).Set(reflect.ValueOf(argTup))
+
 		}
 		return vSet.Interface(), nil
 	default:
 		// todo: SliceTy, ArrayTy, BytesTy, HashTy, FixedPointTy, FunctionTy
 		panic("todo")
 	}
+}
+
+func setBytes(t Type, b []byte) (interface{}, error) {
+	v := reflect.New(t.GetType())
+	vSet := v.Elem()
+
+	if t.Size < len(b) {
+		return nil, errors.New(fmt.Sprintf("invalid input type: expected %s(len:%d), actual: %v", t.stringKind, t.Size, b))
+	}
+
+	switch t.Size {
+	case 1:
+		var a [1]byte
+		copy(a[:], b)
+		vSet.Set(reflect.ValueOf(a))
+	case 3:
+		var a [3]byte
+		copy(a[:], b)
+		vSet.Set(reflect.ValueOf(a))
+	case 32:
+		var a [32]byte
+		copy(a[:], b)
+		vSet.Set(reflect.ValueOf(a))
+	default:
+		panic("unsupported byte array")
+	}
+
+	return vSet.Interface(), nil
 }
