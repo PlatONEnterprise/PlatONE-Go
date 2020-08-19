@@ -4,30 +4,56 @@ import (
 	"errors"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
 )
 
 // DeployCall, used for combining the data of contract deployment
 type DeployDataGen struct {
-	codeBytes   []byte
-	abiBytes    []byte
-	TxType      uint64
-	Interpreter deployInter
+	codeBytes         []byte
+	abiBytes          []byte
+	TxType            uint64
+	ConstructorParams []string
+	Interpreter       deployInter
 }
 
 // NewDeployCall new a DeployCall object
-func NewDeployDataGen(codeBytes, abiBytes []byte, vm string, txType uint64) *DeployDataGen {
+func NewDeployDataGen(codeBytes, abiBytes []byte, consParams []string, vm string, txType uint64) *DeployDataGen {
 
 	dataGen := &DeployDataGen{
-		codeBytes: codeBytes,
-		abiBytes:  abiBytes,
-		TxType:    txType,
+		codeBytes:         codeBytes,
+		abiBytes:          abiBytes,
+		TxType:            txType,
+		ConstructorParams: consParams,
 	}
 
 	// set the virtual machine interpreter
-	dataGen.SetInterpreter(vm)
+	err := dataGen.SetInterpreter(vm)
+	if err != nil {
+		// todo: handle error
+	}
 
 	return dataGen
+}
+
+func parseAbiConstructor(abiBytes []byte, funcParams []string) ([]byte, error) {
+	var abiFunc = new(FuncDesc)
+
+	funcs, err := ParseAbiFromJson(abiBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, value := range funcs {
+		if value.Type == "constructor" {
+			abiFunc = &value
+		}
+	}
+
+	// todo: better solution?
+	if abiFunc == nil {
+		return nil, nil
+	}
+
+	return EvmStringToEncodeByte(abiFunc, funcParams)
 }
 
 // SetInterpreter set the interpreter of DeployCall object
@@ -36,13 +62,24 @@ func (dataGen *DeployDataGen) SetInterpreter(vm string) error {
 	case "evm":
 		if IsWasmContract(dataGen.codeBytes) {
 			// utils.Fatalf("the input  is not evm byte code")
-			return errors.New("the input  is not evm byte code")
+			return errors.New("the input is not evm byte code")
 		}
-		dataGen.Interpreter = &EvmDeployInterpreter{codeBytes: dataGen.codeBytes}
+
+		// todo: code refactory
+		consInput, err := parseAbiConstructor(dataGen.abiBytes, dataGen.ConstructorParams)
+		if err != nil {
+			return err
+		}
+
+		dataGen.Interpreter = &EvmDeployInterpreter{
+			codeBytes:        dataGen.codeBytes,
+			constructorInput: consInput,
+		}
+
 	default:
 		if !IsWasmContract(dataGen.codeBytes) {
 			// utils.Fatalf("the input  is not wasm byte code")
-			return errors.New("the input  is not wasm byte code")
+			return errors.New("the input is not wasm byte code")
 		}
 		dataGen.Interpreter = &WasmDeployInterpreter{
 			codeBytes: dataGen.codeBytes,
@@ -70,23 +107,4 @@ func (dataGen DeployDataGen) CombineData() (string, []abi.ArgumentMarshaling, bo
 
 func (dataGen *DeployDataGen) ParseNonConstantResponse(respStr string, outputType []abi.ArgumentMarshaling) []interface{} {
 	return nil
-}
-
-// combineDeployData packet the data in the way defined by the evm virtual mechine
-// Implement the Interpreter interface
-func (i *EvmDeployInterpreter) combineData() (string, error) {
-	return "0x" + string(i.codeBytes), nil
-}
-
-// combineDeployData packet the data in the way defined by the wasm virtual mechine
-// Implement the Interpreter interface
-func (i *WasmDeployInterpreter) combineData() (string, error) {
-	/// utl.Logger.Printf("int wasm combineDeployData()")
-
-	dataParams := make([][]byte, 0)
-	dataParams = append(dataParams, common.Int64ToBytes(int64(i.txType)))
-	dataParams = append(dataParams, i.codeBytes)
-	dataParams = append(dataParams, i.abiBytes)
-
-	return rlpEncode(dataParams)
 }

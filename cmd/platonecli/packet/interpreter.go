@@ -45,20 +45,20 @@ type EvmContractInterpreter struct {
 	typeName []string // contract parameter types
 }
 
-// encodeFunction converts the function params to bytes and combine them by specific encoding rules
-func (i *EvmContractInterpreter) encodeFunction(abiFunc *FuncDesc, funcParams []string, funcName string) ([][]byte, error) {
+// EvmStringToEncodeByte
+// if the funcParams is nil, the return byte is nil
+func EvmStringToEncodeByte(abiFunc *FuncDesc, funcParams []string) ([]byte, error) {
 	var arguments abi.Arguments
-	var funcByte = make([][]byte, 1)
-	var paramTypes = make([]string, 0)
-	var args = make([]interface{}, 0)
 	var argument abi.Argument
+
+	var args = make([]interface{}, 0)
+	var paramTypes = make([]string, 0)
+
 	var err error
 
-	// converts the function params to bytes
 	for i, v := range funcParams {
 		input := abiFunc.Inputs[i]
-		// newInput := tempStructConvert(input)
-		if argument.Type, err = abi.NewTypeV2(input.Type, "", input.Components); err != nil {
+		if argument.Type, err = abi.NewTypeV2(input.Type, input.InternalType, input.Components); err != nil {
 			return nil, err
 		}
 		arguments = append(arguments, argument)
@@ -74,12 +74,57 @@ func (i *EvmContractInterpreter) encodeFunction(abiFunc *FuncDesc, funcParams []
 		paramTypes = append(paramTypes, GenFuncSig(input))
 	}
 
-	i.typeName = paramTypes
 	paramsBytes, err := arguments.PackV2(args...)
 	if err != nil {
 		/// common.ErrPrintln("pack args error: ", err)
 		return nil, err
 	}
+
+	return paramsBytes, nil
+}
+
+// encodeFunction converts the function params to bytes and combine them by specific encoding rules
+func (i *EvmContractInterpreter) encodeFunction(abiFunc *FuncDesc, funcParams []string, funcName string) ([][]byte, error) {
+	// var arguments abi.Arguments
+	var funcByte = make([][]byte, 1)
+	var paramTypes = make([]string, 0)
+	// var args = make([]interface{}, 0)
+	// var argument abi.Argument
+	// var err error
+
+	// converts the function params to bytes
+	paramsBytes, err := EvmStringToEncodeByte(abiFunc, funcParams)
+	if err != nil {
+		return nil, err
+	}
+
+	/*
+		for i, v := range funcParams {
+			input := abiFunc.Inputs[i]
+			// newInput := tempStructConvert(input)
+			if argument.Type, err = abi.NewTypeV2(input.Type, "", input.Components); err != nil {
+				return nil, err
+			}
+			arguments = append(arguments, argument)
+
+			/// arg, err := abi.SolInputTypeConversion(input.Type, v)
+			arg, err := argument.Type.StringConvert(v)
+			if err != nil {
+				return nil, err
+			}
+
+			args = append(args, arg)
+			/// paramTypes = append(paramTypes, input.Type)
+			paramTypes = append(paramTypes, GenFuncSig(input))
+		}
+
+		paramsBytes, err := arguments.PackV2(args...)
+		if err != nil {
+			/// common.ErrPrintln("pack args error: ", err)
+			return nil, err
+		}*/
+
+	i.typeName = paramTypes
 
 	// encode the contract method
 	funcByte[0] = i.encodeFuncName(funcName)
@@ -245,12 +290,17 @@ func (i WasmContractInterpreter) ParseNonConstantResponse(respStr string, output
 
 // EvmInterpreter, packet data in the way defined by the evm virtual machine
 type EvmDeployInterpreter struct {
-	codeBytes []byte // code bytes for evm contract deployment
+	codeBytes        []byte // code bytes for evm contract deployment
+	constructorInput []byte // input args for constructor
 }
 
 // combineDeployData packet the data in the way defined by the evm virtual mechine
 // Implement the Interpreter interface
-func (i *EvmDeployInterpreter) combineDeployData() (string, error) {
+func (i *EvmDeployInterpreter) combineData() (string, error) {
+	if i.constructorInput != nil {
+		return "0x" + string(i.codeBytes) + common.Bytes2Hex(i.constructorInput), nil
+	}
+
 	return "0x" + string(i.codeBytes), nil
 }
 
@@ -285,7 +335,7 @@ type WasmDeployInterpreter struct {
 
 // combineDeployData packet the data in the way defined by the wasm virtual mechine
 // Implement the Interpreter interface
-func (i *WasmDeployInterpreter) combineDeployData() (string, error) {
+func (i *WasmDeployInterpreter) combineData() (string, error) {
 	/// utl.Logger.Printf("int wasm combineDeployData()")
 
 	dataParams := make([][]byte, 0)

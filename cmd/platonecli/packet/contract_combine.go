@@ -121,11 +121,6 @@ func (dataGen *ContractDataGen) combineFunc() ([]abi.ArgumentMarshaling, bool, [
 func getOutputTypes(abiFunc *FuncDesc) []string {
 	var outputTypes = make([]string, 0)
 
-	/*
-		if len(abiFunc.Outputs) != 0 {
-			outputType = abiFunc.Outputs[0].Type
-		}*/
-
 	for _, output := range abiFunc.Outputs {
 		outputTypes = append(outputTypes, GenFuncSig(output))
 	}

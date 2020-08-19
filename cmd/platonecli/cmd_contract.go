@@ -125,6 +125,7 @@ func deploy(c *cli.Context) {
 	codePath := c.Args().First()                      // 必选参数
 	abiPath := c.String(ContractAbiFilePathFlag.Name) // 可选参数
 	vm := c.String(ContractVmFlags.Name)
+	consParams := c.StringSlice(ContractParamFlag.Name)
 
 	codeBytes := ParamParse(codePath, "code").([]byte)
 	if abiPath != "" {
@@ -132,7 +133,7 @@ func deploy(c *cli.Context) {
 	}
 	paramValid(vm, "vm")
 
-	dataGenerator := packet.NewDeployDataGen(codeBytes, abiBytes, vm, types.CreateTxType)
+	dataGenerator := packet.NewDeployDataGen(codeBytes, abiBytes, consParams, vm, types.CreateTxType)
 	result := clientCommon(c, dataGenerator, nil)[0]
 
 	/*

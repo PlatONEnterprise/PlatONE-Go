@@ -55,6 +55,10 @@ func (cns *CnsWrapper) Run(input []byte) ([]byte, error) {
 		if strings.Contains(fnName, "getRegisteredContracts") {
 			return MakeReturnBytes([]byte(newInternalErrorResult(err).String())), err
 		}
+
+		if strings.ContainsAny(fnName, "ifRegistered") {
+			return common.Int32ToBytes(int32(cnsInvalidArgument)), err
+		}
 	}
 
 	return ret, nil

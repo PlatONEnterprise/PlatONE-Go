@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
 )
 
 // NewType creates a new reflection type of abi type given in t.
@@ -342,8 +343,17 @@ func integerParsing(value string, size int, unsigned bool) (interface{}, error) 
 	if size <= 64 {
 		return SolInputStringTOInt(value, size, !unsigned)
 	} else {
-		intValue, ok := big.NewInt(0).SetString(value, 10)
-		if !ok || !common.IsSafeNumber(value, size, unsigned) {
+		var isValid bool
+		var intValue = new(big.Int)
+
+		if strings.HasPrefix(strings.ToLower(value), "0x") {
+			intValue, isValid = big.NewInt(0).SetString(value[2:], 16)
+		} else {
+			intValue, isValid = big.NewInt(0).SetString(value, 10)
+			isValid = isValid && common.IsSafeNumber(value, size, unsigned)
+		}
+
+		if !isValid {
 			return nil, fmt.Errorf("paring big int string error")
 		}
 		return intValue, nil
@@ -371,6 +381,14 @@ func (t Type) StringConvert(value string) (interface{}, error) {
 		}
 	case StringTy:
 		return value, nil
+	case FixedBytesTy:
+		// todo: the fiexed size is 32
+		var res [32]byte
+
+		vBytes, err := hexutil.Decode(value)
+		copy(res[t.Size-len(vBytes):], vBytes)
+
+		return res, err
 	case TupleTy:
 		v := reflect.New(t.TupleType)
 		vSet := v.Elem()
@@ -378,17 +396,23 @@ func (t Type) StringConvert(value string) (interface{}, error) {
 		// todo: package dependency
 		tupleArray := GetFuncParams(value)
 		for i, vTup := range tupleArray {
-			paramType, _ := NewTypeV2(t.TupleType.Field(i).Type.Name(), "", nil)
+			paramType := t.TupleElems[i]
+			/// paramType, _ := NewTypeV2(t.TupleType.Field(i).Type.Name(), "", nil)
 			argTup, err := paramType.StringConvert(vTup)
 			if err != nil {
 				return nil, err
 			}
 
-			vSet.Field(i).Set(reflect.ValueOf(argTup))
+			if vSet.Field(i).CanSet() {
+				temp := vSet.Field(i)
+				temp2 := reflect.ValueOf(argTup)
+				fmt.Println(temp, temp2)
+				vSet.Field(i).Set(reflect.ValueOf(argTup))
+			}
 		}
 		return vSet.Interface(), nil
 	default:
-		// todo: SliceTy, ArrayTy, FixedBytesTy, BytesTy, HashTy, FixedPointTy, FunctionTy
+		// todo: SliceTy, ArrayTy, BytesTy, HashTy, FixedPointTy, FunctionTy
 		panic("todo")
 	}
 }
