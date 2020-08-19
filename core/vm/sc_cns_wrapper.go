@@ -52,7 +52,7 @@ func (cns *CnsWrapper) Run(input []byte) ([]byte, error) {
 		}
 		cns.base.emitEvent(fnName, operateFail, err.Error())
 
-		if strings.ContainsAny(fnName, "getRegisteredContracts") {
+		if strings.Contains(fnName, "getRegisteredContracts") {
 			return MakeReturnBytes([]byte(newInternalErrorResult(err).String())), err
 		}
 	}

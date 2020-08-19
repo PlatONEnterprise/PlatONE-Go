@@ -233,7 +233,11 @@ func (n *SCNode) checkParamsOfUpdateNodeAndReturnUpdatedNode(name string, update
 		if err := checkNodeDescLen(desc); err != nil {
 			return nil, err
 		}
-		node.Desc = desc
+		if desc != ""{
+			node.Desc = desc
+		} else{
+			return nil, errors.New("desc cannot be a empty string!")
+		}
 	}
 
 	if nil != update.DelayNum {
@@ -316,7 +320,7 @@ func (n *SCNode) update(name string, update *syscontracts.UpdateNode) error {
 
 	node, err := n.checkParamsOfUpdateNodeAndReturnUpdatedNode(name, update)
 	if err != nil {
-		n.emitNotifyEvent(updateNodeBadParameter, fmt.Sprintf("parameter is invalid"))
+		n.emitNotifyEvent(updateNodeBadParameter, fmt.Sprintf("parameter is invalid, error: %s", err.Error()))
 		return err
 	}
 

@@ -71,6 +71,10 @@ func updateDescInfo(src *DescInfo, dest *DescInfo) {
 // 管理员操作
 func (u *UserManagement) addUser(info *UserInfo) (int32, error) {
 	topic := "addUser"
+	if info.Address == ZeroAddress{
+		return u.returnFail(topic, errors.New("User's Address must be a nonzero address!"))
+	}
+
 	if !u.callerPermissionCheck() {
 		return u.returnFail(topic, errNoPermission)
 	}
