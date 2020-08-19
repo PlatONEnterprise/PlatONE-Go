@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 
 	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/precompiled"
 
@@ -11,7 +12,6 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/packet"
-	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 	"gopkg.in/urfave/cli.v1"
 )
@@ -112,9 +112,8 @@ func contractReceipt(c *cli.Context) {
 	if err != nil {
 		utils.Fatalf("get receipt failed: %s\n", err.Error())
 	} else {
-		resultBytes, _ := json.Marshal(result)
-		strResult := utl.PrintJson(resultBytes)
-		fmt.Printf("result:\n%s\n", strResult)
+		resultBytes, _ := json.MarshalIndent(result, "", "\t")
+		fmt.Printf("result:\n%s\n", resultBytes)
 	}
 }
 
@@ -136,14 +135,7 @@ func deploy(c *cli.Context) {
 	dataGenerator := packet.NewDeployDataGen(codeBytes, abiBytes, consParams, vm, types.CreateTxType)
 	result := clientCommon(c, dataGenerator, nil)[0]
 
-	/*
-		if strings.Contains(result.(string), "address") {
-			/// storeAbiFile(result.(string), abiBytes)
-			fmt.Printf("result: contract address is %s\n", result)
-		} else {
-			fmt.Printf("result: %s\n", result)
-		}*/
-	fmt.Printf("result: %s\n", utl.PrintJson([]byte(result.(string))))
+	fmt.Printf("result:\n%s\n", result.(string))
 }
 
 // execute a method in the contract(evm or wasm).
@@ -163,9 +155,12 @@ func execute(c *cli.Context) {
 
 	result := contractCallWrap(c, funcParams, funcName, contract)
 	for i, data := range result {
-		fmt.Printf("result%d: %+v\n", i, data)
+		if reflect.ValueOf(data).Len() > 20 {
+			fmt.Printf("result%d:\n%+v\n", i, data)
+		} else {
+			fmt.Printf("result%d:%+v\n", i, data)
+		}
 	}
-	//utl.PrintJson([]byte(result.(string))) //TODO
 }
 
 //TODO test
