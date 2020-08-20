@@ -7,7 +7,7 @@ func GetFuncParamWrap(str string) []string {
 	if !hasBracket {
 		return nil
 	} else {
-		str = str[strings.Index(str, "[")+1 : strings.Index(str, "]")]
+		str = str[strings.Index(str, "[")+1 : strings.LastIndex(str, "]")]
 	}
 
 	return GetFuncParams(str)

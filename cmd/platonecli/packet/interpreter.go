@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"reflect"
 	"strings"
 
 	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/precompiled"
@@ -70,8 +69,6 @@ func EvmStringToEncodeByte(abiFunc *FuncDesc, funcParams []string) ([]byte, []st
 			return nil, nil, err
 		}
 
-		fmt.Println(arg, reflect.TypeOf(arg))
-
 		args = append(args, arg)
 		/// paramTypes = append(paramTypes, input.Type)
 		paramTypes = append(paramTypes, GenFuncSig(input))
@@ -110,27 +107,29 @@ func (i *EvmContractInterpreter) encodeFunction(abiFunc *FuncDesc, funcParams []
 func GenFuncSig(input abi.ArgumentMarshaling) string {
 
 	switch input.Type {
+	case "tuple[]":
+		return genTupleSig(input) + "[]"
 	case "tuple":
-		var paramTypes []string
-
-		for _, data := range input.Components {
-			paramTypes = append(paramTypes, GenFuncSig(data))
-		}
-		return fmt.Sprintf("(%v)", strings.Join(paramTypes, ","))
+		return genTupleSig(input)
 	default:
 		return input.Type
 	}
 }
 
+func genTupleSig(input abi.ArgumentMarshaling) string {
+	var paramTypes []string
+
+	for _, data := range input.Components {
+		paramTypes = append(paramTypes, GenFuncSig(data))
+	}
+	return fmt.Sprintf("(%v)", strings.Join(paramTypes, ","))
+}
+
 // encodeFuncName encodes the contract method in the way defined by the evm virtual mechine
 // Implement the Interpreter interface
 func (i *EvmContractInterpreter) encodeFuncName(funcName string) []byte {
-
 	funcNameStr := fmt.Sprintf("%v(%v)", funcName, strings.Join(i.typeName, ","))
-	funcNameHash := crypto.Keccak256([]byte(funcNameStr))[:4]
-	funcByte := funcNameHash
-
-	return funcByte
+	return crypto.Keccak256([]byte(funcNameStr))[:4]
 }
 
 // combineData packet the data in the way defined by the evm virtual mechine
@@ -165,8 +164,7 @@ func (i EvmContractInterpreter) ReceiptParsing(receipt *Receipt, abiBytes []byte
 func (i EvmContractInterpreter) ParseNonConstantResponse(respStr string, outputType []abi.ArgumentMarshaling) []interface{} {
 	var result = make([]interface{}, 1)
 
-	if len(outputType) != 0 {
-		/// b, _ := hexutil.Decode(respStr)
+	if len(outputType) != 0 && !strings.EqualFold(respStr, "0x") {
 		arguments := GenUnpackArgs(outputType)
 		result = arguments.ReturnBytesUnpack(respStr)
 	} else {

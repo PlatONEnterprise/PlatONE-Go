@@ -54,7 +54,7 @@ func GenUnpackArgs(data []abi.ArgumentMarshaling) (arguments abi.Arguments) {
 	var argument abi.Argument
 
 	for _, v := range data {
-		argument.Type, _ = abi.NewTypeV2(v.Type, "", v.Components)
+		argument.Type, _ = abi.NewTypeV2(v.Type, v.InternalType, v.Components)
 		argument.Name = v.Name
 		argument.Indexed = v.Indexed
 
