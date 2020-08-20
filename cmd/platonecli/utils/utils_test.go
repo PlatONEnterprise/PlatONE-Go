@@ -7,6 +7,8 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -99,7 +101,7 @@ func TestGetFuncParam(t *testing.T) {
 
 func TestGetFuncParams(t *testing.T) {
 	testCase := "\"1\",'b' , 1.2, true"
-	result := GetFuncParams(testCase)
+	result := abi.GetFuncParams(testCase)
 
 	t.Log(result)
 }

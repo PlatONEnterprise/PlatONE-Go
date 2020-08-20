@@ -2,17 +2,28 @@ package abi
 
 import "strings"
 
-// todo: code reuse and relocate the temp.go file
-func GetFuncParams(paramString string) []string {
-	if paramString == "" {
-		return nil
-	}
-
-	hasBracket := strings.Contains(paramString, "[") && strings.Contains(paramString, "]")
+func GetFuncParamWrap(str string) []string {
+	hasBracket := strings.Contains(str, "[") && strings.Contains(str, "]")
 	if !hasBracket {
 		return nil
 	} else {
-		paramString = paramString[strings.Index(paramString, "[")+1 : strings.Index(paramString, "]")]
+		str = str[strings.Index(str, "[")+1 : strings.Index(str, "]")]
+	}
+
+	return GetFuncParams(str)
+}
+
+// ==================== move to common ??? ===================================
+
+// TrimSpace trims all the space in the string
+func TrimSpace(str string) string {
+	strNoSpace := strings.Split(str, " ")
+	return strings.Join(strNoSpace, "")
+}
+
+func GetFuncParams(paramString string) []string {
+	if paramString == "" {
+		return nil
 	}
 
 	splitPos := recordFuncParamSplitPos(paramString)

@@ -365,6 +365,9 @@ func integerParsing(value string, size int, unsigned bool) (interface{}, error) 
 // newly added
 // StringConvert converts the input string to the actual type defined in golang
 func (t Type) StringConvert(value string) (interface{}, error) {
+	// eliminate space
+	value = TrimSpace(value)
+
 	switch t.T {
 	case IntTy:
 		return integerParsing(value, t.Size, false)
@@ -381,7 +384,7 @@ func (t Type) StringConvert(value string) (interface{}, error) {
 	case StringTy:
 		return value, nil
 	case SliceTy:
-		paramArray := GetFuncParams(value)
+		paramArray := GetFuncParamWrap(value)
 		size := len(paramArray)
 		v := reflect.MakeSlice(t.GetType(), size, size*2)
 
@@ -396,7 +399,7 @@ func (t Type) StringConvert(value string) (interface{}, error) {
 		}
 		return v.Interface(), nil
 	case ArrayTy:
-		paramArray := GetFuncParams(value)
+		paramArray := GetFuncParamWrap(value)
 		v := reflect.New(t.GetType())
 		vSet := v.Elem()
 
@@ -415,7 +418,7 @@ func (t Type) StringConvert(value string) (interface{}, error) {
 		}
 		return vSet.Interface(), nil
 	case TupleTy:
-		tupleArray := GetFuncParams(value)
+		tupleArray := GetFuncParamWrap(value)
 		v := reflect.New(t.GetType())
 		vSet := v.Elem()
 

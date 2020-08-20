@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 )
 
@@ -241,11 +243,12 @@ func GetFuncNameAndParams(funcAndParams string) (string, []string) {
 	funcName := f[0:strings.Index(f, "(")]
 
 	paramString := f[strings.Index(f, "(")+1 : strings.LastIndex(f, ")")]
-	params := GetFuncParams(paramString)
+	params := abi.GetFuncParams(paramString)
 
 	return funcName, params
 }
 
+// deprecated, see abi/temp.go
 func GetFuncParams(paramString string) []string {
 	if paramString == "" {
 		return nil
