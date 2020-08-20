@@ -238,7 +238,7 @@ func (t Type) packV2(v reflect.Value) ([]byte, error) {
 		}
 		var tail []byte
 		for i := 0; i < v.Len(); i++ {
-			val, err := t.Elem.pack(v.Index(i))
+			val, err := t.Elem.packV2(v.Index(i))
 			if err != nil {
 				return nil, err
 			}
@@ -340,6 +340,7 @@ func getTypeSize(t Type) int {
 }
 
 // newly added
+// integerParsing parses the string input to integer/big.Int type
 func integerParsing(value string, size int, unsigned bool) (interface{}, error) {
 	if size <= 64 {
 		return SolInputStringTOInt(value, size, !unsigned)
@@ -362,16 +363,13 @@ func integerParsing(value string, size int, unsigned bool) (interface{}, error) 
 }
 
 // newly added
+// StringConvert converts the input string to the actual type defined in golang
 func (t Type) StringConvert(value string) (interface{}, error) {
-	size := t.Size
-
 	switch t.T {
-	case AddressTy:
-		return common.HexToAddress(value), nil
 	case IntTy:
-		return integerParsing(value, size, false)
+		return integerParsing(value, t.Size, false)
 	case UintTy:
-		return integerParsing(value, size, true)
+		return integerParsing(value, t.Size, true)
 	case BoolTy:
 		if value == "false" {
 			return false, nil
@@ -382,13 +380,57 @@ func (t Type) StringConvert(value string) (interface{}, error) {
 		}
 	case StringTy:
 		return value, nil
-	case BytesTy:
-		vBytes, err := hexutil.Decode(value)
-		if err != nil {
-			return nil, err
+	case SliceTy:
+		paramArray := GetFuncParams(value)
+		size := len(paramArray)
+		v := reflect.MakeSlice(t.GetType(), size, size*2)
+
+		for i, vTup := range paramArray {
+			paramType := t.Elem
+			argTup, err := paramType.StringConvert(vTup)
+			if err != nil {
+				return nil, err
+			}
+
+			v.Index(i).Set(reflect.ValueOf(argTup))
+		}
+		return v.Interface(), nil
+	case ArrayTy:
+		paramArray := GetFuncParams(value)
+		v := reflect.New(t.GetType())
+		vSet := v.Elem()
+
+		if t.Size != len(paramArray) {
+			return nil, errors.New(fmt.Sprintf("array has %d args, received %d", t.Size, len(paramArray)))
 		}
 
-		return vBytes, nil
+		for i, vTup := range paramArray {
+			paramType := t.Elem
+			argTup, err := paramType.StringConvert(vTup)
+			if err != nil {
+				return nil, err
+			}
+
+			vSet.Index(i).Set(reflect.ValueOf(argTup))
+		}
+		return vSet.Interface(), nil
+	case TupleTy:
+		tupleArray := GetFuncParams(value)
+		v := reflect.New(t.GetType())
+		vSet := v.Elem()
+
+		for i, vTup := range tupleArray {
+			paramType := t.TupleElems[i]
+			argTup, err := paramType.StringConvert(vTup)
+			if err != nil {
+				return nil, err
+			}
+
+			vSet.Field(i).Set(reflect.ValueOf(argTup))
+		}
+		return vSet.Interface(), nil
+	case AddressTy:
+		return common.HexToAddress(value), nil
 	case FixedBytesTy:
 		vBytes, err := hexutil.Decode(value)
 		if err != nil {
@@ -400,26 +442,18 @@ func (t Type) StringConvert(value string) (interface{}, error) {
 
 		return v.Elem().Interface(), nil
 		/// return setBytes(t, vBytes)
-	case TupleTy:
-		v := reflect.New(t.TupleType)
-		vSet := v.Elem()
-
-		// todo: package dependency
-		tupleArray := GetFuncParams(value)
-		for i, vTup := range tupleArray {
-			paramType := t.TupleElems[i]
-			/// paramType, _ := NewTypeV2(t.TupleType.Field(i).Type.Name(), "", nil)
-			argTup, err := paramType.StringConvert(vTup)
-			if err != nil {
-				return nil, err
-			}
-
-			vSet.Field(i).Set(reflect.ValueOf(argTup))
-
+	case BytesTy:
+		// todo: untested
+		vBytes, err := hexutil.Decode(value)
+		if err != nil {
+			return nil, err
 		}
-		return vSet.Interface(), nil
+
+		return vBytes, nil
 	default:
-		// todo: SliceTy, ArrayTy, HashTy, FixedPointTy, FunctionTy
+		// see more details in GetType
+		// hashtype currently not used
+		// FixedPointTy currently not used
 		panic("todo")
 	}
 }

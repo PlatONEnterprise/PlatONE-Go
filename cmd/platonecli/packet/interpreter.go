@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strings"
 
 	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/precompiled"
@@ -68,6 +69,8 @@ func EvmStringToEncodeByte(abiFunc *FuncDesc, funcParams []string) ([]byte, []st
 		if err != nil {
 			return nil, nil, err
 		}
+
+		fmt.Println(arg, reflect.TypeOf(arg))
 
 		args = append(args, arg)
 		/// paramTypes = append(paramTypes, input.Type)
