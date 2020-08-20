@@ -138,6 +138,11 @@ func deploy(c *cli.Context) {
 	fmt.Printf("result:\n%s\n", result.(string))
 }
 
+const (
+	threshold         = 20
+	thresholdNotReach = 10
+)
+
 // execute a method in the contract(evm or wasm).
 func execute(c *cli.Context) {
 
@@ -155,11 +160,21 @@ func execute(c *cli.Context) {
 
 	result := contractCallWrap(c, funcParams, funcName, contract)
 	for i, data := range result {
-		if reflect.ValueOf(data).Len() > 20 {
+		if isTypeLenLong(reflect.ValueOf(data)) {
 			fmt.Printf("result%d:\n%+v\n", i, data)
 		} else {
 			fmt.Printf("result%d:%+v\n", i, data)
 		}
+	}
+}
+
+func isTypeLenLong(v reflect.Value) bool {
+	k := v.Kind()
+	switch k {
+	case reflect.Array, reflect.String, reflect.Slice, reflect.Map, reflect.Chan:
+		return v.Len() > 20
+	default:
+		return false
 	}
 }
 
