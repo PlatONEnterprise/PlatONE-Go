@@ -199,7 +199,10 @@ func (tx *TxParams) GetSignedTx(keyfileJson []byte) string {
 
 	// extract pk from keystore file and sign the transaction
 	priv := utl.GetPrivateKey(keyfileJson)
+
+	// todo: choose the correct signer
 	txSign, _ = types.SignTx(txSign, types.HomesteadSigner{}, priv)
+	/// txSign, _ = types.SignTx(txSign, types.NewEIP155Signer(big.NewInt(300)), priv)
 	/// utl.Logger.Printf("the signed transaction is %v\n", txSign)
 
 	str, err := rlpEncode(txSign)
@@ -217,3 +220,12 @@ func getNonceRand() uint64 {
 	rand.Seed(time.Now().Unix())
 	return rand.Uint64()
 }
+
+/*
+func getSigner() {
+	readChainConfig()
+
+	if config := s.b.ChainConfig(); config.IsEIP155(s.b.CurrentBlock().Number()) {
+		chainID = config.ChainID
+	}
+}*/
