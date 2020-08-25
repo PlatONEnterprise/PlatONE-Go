@@ -105,6 +105,12 @@ function create_genesis() {
     ${BIN_PATH}/repstr ${CONF_PATH}/genesis.json "CNS-CODE" -f ${CONF_PATH}/cns-code.hex
     rm -rf ${CONF_PATH}/cns-code.hex
 
+    now=`date +%s`
+    now_hex=`echo "obase=16; $now"|bc`
+    now_hex="0x${now_hex}"
+
+    ${BIN_PATH}/repstr ${CONF_PATH}/genesis.json "TIMESTAMP" $now_hex
+
     echo "[INFO]: Create genesis succ. File: ${CONF_PATH}/genesis.json"
 }
 
