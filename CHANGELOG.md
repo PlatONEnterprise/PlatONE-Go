@@ -1,5 +1,13 @@
 # Changelog
 
+## ## [0.9.12] 2020-08-25
+### Breaking Changes
+### Improvements
+* [chain] genesis时间戳自动设置为当前系统时间 --葛鑫
+
+### Features
+### Bug Fixes
+
 ## [0.9.11] 2020-06-04
 ### Breaking Changes
 ### Improvements
