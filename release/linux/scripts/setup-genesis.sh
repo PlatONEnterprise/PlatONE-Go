@@ -106,10 +106,8 @@ function create_genesis() {
     rm -rf ${CONF_PATH}/cns-code.hex
 
     now=`date +%s`
-    now_hex=`echo "obase=16; $now"|bc`
-    now_hex="0x${now_hex}"
 
-    ${BIN_PATH}/repstr ${CONF_PATH}/genesis.json "TIMESTAMP" $now_hex
+    ${BIN_PATH}/repstr ${CONF_PATH}/genesis.json "TIMESTAMP" $now
 
     echo "[INFO]: Create genesis succ. File: ${CONF_PATH}/genesis.json"
 }
