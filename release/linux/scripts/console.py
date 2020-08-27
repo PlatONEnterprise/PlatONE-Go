@@ -68,10 +68,13 @@ class Cli(Cmd):
             self.startNode(GROUPS[groupid])
 
             if not isFirst:
-                return 0
+                if isDirect:
+                    return 0,"success"
+                else:
+                    return
 
             #add admin permision
-            time.sleep(3)     
+            time.sleep(10)     
             self.unlockAccount({"addr":CONFIG["from"],"password":password,"url":url})
             time.sleep(1)
             self.setSuperAdmin({})
@@ -79,10 +82,11 @@ class Cli(Cmd):
             self.addChainAdmin({"addr":CONFIG["from"]})
             time.sleep(2)
             self.addNodeCMD({"name":nodeAddress,"type":1,"publicKey":nodePubKey,"desc":"","externalIP":ip,"internalIP":ip,"rpcPort":rpcPort,"p2pPort":p2pPort,"owner":nodeAddress,"status":1})
-            return 0
+            if isDirect:
+                return 0,"success"
         except Exception as err:
             print("[ERROR]: " + str(err))
-            return 1,err
+            return 1,str(err)
 
     def do_four(self,line):
         """start four node completely in group 0,node_1 and node_2 in  group 1
@@ -144,10 +148,11 @@ class Cli(Cmd):
                 self.unlockAccount({"addr":CONFIG["from"],"password":password,"url":"http://{0}:{1}".format(ip,str(DEFAULT_RPC_PORT + groupId))})
                 self.addNodeCMD({"name":nodeName,"type":1,"publicKey":pubkeyT,"desc":"","externalIP":ip,"internalIP":ip,"rpcPort": rpcPortT,"p2pPort":p2pPortT,"owner":nodeName,"status":1})
                 switch('0')
-            return 0
+            if isDirect:
+                return 0,"success"
         except Exception as err:
             print("[ERROR]: " + str(err))
-            return 1,err
+            return 1,str(err)
 
     def do_group(self,line):
         """Create,Join,Leave groups
@@ -179,7 +184,10 @@ class Cli(Cmd):
             line = self.parse(line) 
             if len(line) == 0:
                 self.do_help("group")
-                return
+                if isDirect:
+                    return 0,"success"
+                else:
+                    return
 
             if line[0] == "create":
                 self.createGroup(line[1:])
@@ -191,10 +199,11 @@ class Cli(Cmd):
                 self.leaveGroup(line[1:])
             else:
                 self.do_help("group")
-            return 0
+            if isDirect:
+                return 0,"success"
         except Exception as err:
             print("[ERROR]:" + str(err))
-            return 1,err
+            return 1,str(err)
 
     def do_start(self,line):
         """start nodes
@@ -210,10 +219,11 @@ class Cli(Cmd):
                     self.startNode(GROUPS[id])
             else:
                 self.startNode(GROUPS[groupid])
-            return 0
+            if isDirect:
+                return 0,"success"
         except Exception as err:
             print("[ERROR]:" + str(err))
-            return 1,err
+            return 1,str(err)
     def do_stop(self,line):
         """stop nodes
         Usage:
@@ -228,10 +238,11 @@ class Cli(Cmd):
                     self.stopNode(GROUPS[id])
             else:
                 self.stopNode(GROUPS[groupid])
-            return 0
+            if isDirect:
+                return 0,"success"
         except Exception as err:
             print("[ERROR]:" + str(err))
-            return 1,err
+            return 1,str(err)
         
     
     def do_status(self,line):
@@ -259,7 +270,7 @@ class Cli(Cmd):
         try:
             cmd = "{0}/ctool {1}".format(BIN_DIR,line)
             subprocess.check_output(cmd,shell=True)
-            return 0
+            return 0,"success"
         except Exception:
             return 1,err
 
@@ -271,7 +282,7 @@ class Cli(Cmd):
         try:
             url = GROUPS[str(GROUP_ID)]["url"]
             cmd = "{0}/platone attach {1}".format(BIN_DIR,url)
-            subprocess.check_output(cmd,shell=True)
+            subprocess.call(cmd,shell=True)
             return 0
         except Exception:
             return 1,err
@@ -320,10 +331,11 @@ class Cli(Cmd):
             groupid = self.parse(line)[0]
             switch(groupid)
             self.prompt = '[group:' + groupid +']>'
-            return 0
+            if isDirect:
+                return 0,"success"
         except Exception as err:
             print("[ERROR]: " + str(err))
-            return 1,err
+            return 1,str(err)
 
     def do_unlock(self,line):
         """unlock account
@@ -341,10 +353,11 @@ class Cli(Cmd):
             cmd = "curl -H \"Content-Type: application/json\" --data '{0}'  {1}".format(json.dumps(jsonParam),GROUPS[str(GROUP_ID)]["url"])
             print(cmd)
             subprocess.check_output(cmd,shell=True)
-            return 0
+            if isDirect:
+                return 0,"success"
         except Exception as err:
             print("[ERROR]: " + str(err))
-            return 1,err
+            return 1,str(err)
 
     def do_createacc(self,line):
         """create account
@@ -358,9 +371,11 @@ class Cli(Cmd):
             password = findFlag(line,'--password',"0")
             rootDir =  CONFIG["datadir"]
             self.createAccount({"rootDir":rootDir,"password":password})
+            if isDirect:
+                return 0,"success"
         except Exception as err:
             print("[ERROR]: " + str(err))
-            return 1,err
+            return 1,str(err)
 
     def parse(self,args):
         return args.split()
@@ -523,7 +538,7 @@ class Cli(Cmd):
         if not isFirst:
             return
         #add admin permision
-        time.sleep(3)
+        time.sleep(10)
         switch(groupid)
         password = findFlag(args,"--password","0")
         self.unlockAccount({"addr":CONFIG["from"],"password":password,"url":url})
@@ -871,13 +886,14 @@ if __name__ == '__main__':
                 "status":cli.do_status,
                 "createacc":cli.do_createacc
             }
-            savestdout = sys.stdout
-            sys.stdout = open(os.devnull,'w')
+            # savestdout = sys.stdout
+            # sys.stdout = open(os.devnull,'w')
             func = dictFunc.get(sys.argv[1],None)
 
             if not func is None:
                 code,msg = func(" ".join(sys.argv[2:]))
-                sys.stdout = savestdout
+                # sys.stdout = savestdout
+                print(msg)
                 if code != 0:
                     raise Exception(msg)
     except Exception as err:
