@@ -327,7 +327,7 @@ func getTypeSize(t Type) int {
 		// Recursively calculate type size if it is a nested array
 		if t.Elem.T == ArrayTy {
 			return t.Size * getTypeSize(*t.Elem)
-		} else if t.T == TupleTy {
+		} else if t.Elem.T == TupleTy {
 			return t.Size * getTypeSize(*t.Elem)
 		}
 		return t.Size * 32
