@@ -1,0 +1,25 @@
+[http]
+ip = "127.0.0.1"
+port = "9999"
+debug = true
+
+[log]
+# trace < debug < info < warn < error < fatal < panic
+level = "debug"
+# std | file
+output = "std"
+filepath = "./data-manager.log"
+
+[db]
+ip = "127.0.0.1"
+port = "27017"
+username = "username"
+pssword = "password"
+dbname = "data-manager"
+
+[sync]
+interval = 5 #sec
+urls = [
+    "http:://localhost:6789",
+    "http:://localhost:6789"
+]
