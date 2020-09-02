@@ -17,10 +17,15 @@ const (
 )
 
 type config struct {
-	HttpConf *httpConf `toml:"http"`
-	DBConf   *dbConf   `toml:"db"`
-	LogConf  *logConf  `toml:"log"`
-	SyncConf *syncConf `toml:"sync"`
+	HttpConf  *httpConf  `toml:"http"`
+	DBConf    *dbConf    `toml:"db"`
+	LogConf   *logConf   `toml:"log"`
+	SyncConf  *syncConf  `toml:"sync"`
+	ChainConf *chainConf `toml:"chain"`
+}
+
+type chainConf struct {
+	ID uint64 `toml:"id"`
 }
 
 type logConf struct {

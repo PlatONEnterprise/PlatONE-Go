@@ -1,6 +1,11 @@
 package syncer
 
-import "github.com/sirupsen/logrus"
+import (
+	"fmt"
+	"github.com/sirupsen/logrus"
+	"net"
+	"time"
+)
 
 type nodeInfo struct {
 	Name   string `json:"name"`
@@ -31,6 +36,23 @@ func GetNodes() ([]*nodeInfo, error) {
 }
 
 func IsNodeAlive(info *nodeInfo) bool {
-	//TODO
-	return false
+	address := fmt.Sprintf("%s:%d", info.InternalIP, info.P2PPort)
+	conn, err := net.Dial("tcp", address)
+	if nil != err {
+		return false
+	}
+	defer conn.Close()
+
+	timeout := time.Second * 5
+	err = conn.SetWriteDeadline(time.Now().Add(timeout))
+	if nil != err {
+		return false
+	}
+
+	_, err = conn.Write([]byte("ping"))
+	if nil != err {
+		return false
+	}
+
+	return true
 }

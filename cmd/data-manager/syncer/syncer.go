@@ -1,12 +1,13 @@
 package syncer
 
 import (
+	"encoding/hex"
+	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/data-manager/config"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/data-manager/db"
 	dbCtx "github.com/PlatONEnetwork/PlatONE-Go/cmd/data-manager/db/context"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/data-manager/model"
-	"encoding/hex"
-	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/data-manager/util"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/sirupsen/logrus"
 	"time"
@@ -108,7 +109,7 @@ func (this *syncer) doSyncTxs(block *types.Block) error {
 		dbTx.GasLimit = tx.Gas()
 		receipt, err := defaultNode.TransactionReceipt(tx.Hash())
 		if nil != err {
-			logrus.Errorln(err)
+			logrus.Errorln("fail to get transaction receipt.err:", err)
 			return err
 		}
 		var recpt model.Receipt
@@ -118,9 +119,9 @@ func (this *syncer) doSyncTxs(block *types.Block) error {
 		recpt.Status = receipt.Status
 
 		dbTx.Receipt = &recpt
-		from, err := types.FrontierSigner{}.Sender(tx)
+		from, err := util.Sender(tx)
 		if nil != err {
-			logrus.Errorln(err)
+			logrus.Errorln("fail to get sender of tx.err:", err)
 
 			return err
 		}
