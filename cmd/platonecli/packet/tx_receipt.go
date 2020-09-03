@@ -25,17 +25,17 @@ var (
 )
 
 const (
-	txReceiptSuccessMsg = "Operation Succeeded"
-	txReceiptFailureMsg = "Operation Failed"
+	TxReceiptSuccessMsg = "Operation Succeeded"
+	TxReceiptFailureMsg = "Operation Failed"
 )
 
 func receiptStatusReturn(status string) (result string) {
 
 	switch status {
 	case txReceiptSuccessCode:
-		result = txReceiptSuccessMsg
+		result = TxReceiptSuccessMsg
 	case txReceiptFailureCode:
-		result = txReceiptFailureMsg
+		result = TxReceiptFailureMsg
 	default:
 		result = "undefined status. Something wrong"
 	}

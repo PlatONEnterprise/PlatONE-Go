@@ -21,13 +21,13 @@ import (
 // MessageCallDemo, the interface for different types of data package methods
 type MsgDataGen interface {
 	CombineData() (string, []abi.ArgumentMarshaling, bool, error)
-	ReceiptParsing(receipt *Receipt) string
+	ReceiptParsing(receipt *Receipt) *ReceiptParsingReturn
 	ParseNonConstantResponse(respStr string, outputType []abi.ArgumentMarshaling) []interface{}
 }
 
 type deployInter interface {
 	combineData() (string, error)
-	ReceiptParsing(*Receipt, []byte) string
+	ReceiptParsing(*Receipt, []byte) *ReceiptParsingReturn
 }
 
 type contractInter interface {
@@ -35,7 +35,7 @@ type contractInter interface {
 	encodeFunction(*FuncDesc, []string, string) ([][]byte, error)
 	combineData([][]byte) (string, error)
 	setIsWrite(*FuncDesc) bool
-	ReceiptParsing(*Receipt, []byte) string
+	ReceiptParsing(*Receipt, []byte) *ReceiptParsingReturn
 	ParseNonConstantResponse(respStr string, outputType []abi.ArgumentMarshaling) []interface{}
 }
 
@@ -145,7 +145,7 @@ func (i EvmContractInterpreter) setIsWrite(abiFunc *FuncDesc) bool {
 	return abiFunc.StateMutability != "pure" && abiFunc.StateMutability != "view"
 }
 
-func (i EvmContractInterpreter) ReceiptParsing(receipt *Receipt, abiBytes []byte) string {
+func (i EvmContractInterpreter) ReceiptParsing(receipt *Receipt, abiBytes []byte) *ReceiptParsingReturn {
 
 	var recpParsing = new(ReceiptParsingReturn)
 	sysEvents := []string{precompile.PermDeniedEvent} // precompile.CnsInitRegEvent
@@ -157,8 +157,9 @@ func (i EvmContractInterpreter) ReceiptParsing(receipt *Receipt, abiBytes []byte
 	}
 
 	recpParsing.Status = receiptStatusReturn(receipt.Status)
+	recpParsing.BlockNumber, _ = hexutil.DecodeUint64(receipt.BlockNumber)
 
-	return recpParsing.String()
+	return recpParsing
 }
 
 func (i EvmContractInterpreter) ParseNonConstantResponse(respStr string, outputType []abi.ArgumentMarshaling) []interface{} {
@@ -232,7 +233,7 @@ func (i WasmContractInterpreter) setIsWrite(abiFunc *FuncDesc) bool {
 	return abiFunc.Constant != "true"
 }
 
-func (i WasmContractInterpreter) ReceiptParsing(receipt *Receipt, abiBytes []byte) string {
+func (i WasmContractInterpreter) ReceiptParsing(receipt *Receipt, abiBytes []byte) *ReceiptParsingReturn {
 
 	var recpParsing = new(ReceiptParsingReturn)
 	var fn = WasmEventParsingPerLog
@@ -246,8 +247,9 @@ func (i WasmContractInterpreter) ReceiptParsing(receipt *Receipt, abiBytes []byt
 	}
 
 	recpParsing.Status = receiptStatusReturn(receipt.Status)
+	recpParsing.BlockNumber, _ = hexutil.DecodeUint64(receipt.BlockNumber)
 
-	return recpParsing.String()
+	return recpParsing
 }
 
 func (i WasmContractInterpreter) ParseNonConstantResponse(respStr string, outputType []abi.ArgumentMarshaling) []interface{} {
@@ -281,7 +283,7 @@ func (i *EvmDeployInterpreter) combineData() (string, error) {
 	return "0x" + string(i.codeBytes), nil
 }
 
-func (i EvmDeployInterpreter) ReceiptParsing(receipt *Receipt, abiBytes []byte) string {
+func (i EvmDeployInterpreter) ReceiptParsing(receipt *Receipt, abiBytes []byte) *ReceiptParsingReturn {
 	// todo: optimize the code
 	// todo: code efficiency, receipt log parsing: multiple loops -> one loop
 	var recpParsing = new(ReceiptParsingReturn)
@@ -300,7 +302,7 @@ func (i EvmDeployInterpreter) ReceiptParsing(receipt *Receipt, abiBytes []byte) 
 
 	recpParsing.Status = receiptStatusReturn(receipt.Status)
 
-	return recpParsing.String()
+	return recpParsing
 }
 
 //========================DEPLOY WASM=========================
@@ -329,6 +331,8 @@ type ReceiptParsingReturn struct {
 	Status          string   `json:"status"`
 	ContractAddress string   `json:"contractAddress,omitempty"`
 	Logs            []string `json:"logs,omitempty"`
+	BlockNumber     uint64   `json:"blockNumber"`
+	Err             string   `json:"err,omitempty"`
 }
 
 func (r *ReceiptParsingReturn) String() string {
@@ -341,7 +345,7 @@ func (r *ReceiptParsingReturn) String() string {
 	return string(rBytes)
 }
 
-func (i WasmDeployInterpreter) ReceiptParsing(receipt *Receipt, abiBytes []byte) string {
+func (i WasmDeployInterpreter) ReceiptParsing(receipt *Receipt, abiBytes []byte) *ReceiptParsingReturn {
 
 	var recpParsing = new(ReceiptParsingReturn)
 	var fn = WasmEventParsingPerLog
@@ -360,7 +364,7 @@ func (i WasmDeployInterpreter) ReceiptParsing(receipt *Receipt, abiBytes []byte)
 
 	recpParsing.Status = receiptStatusReturn(receipt.Status)
 
-	return recpParsing.String()
+	return recpParsing
 }
 
 //=========================COMMON==============================

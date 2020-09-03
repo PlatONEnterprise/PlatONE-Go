@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/utils"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
 
 	"time"
 
@@ -128,4 +129,15 @@ func (client *pClient) getReceiptByPolling(txHash string, ch chan interface{}) {
 
 		ch <- receipt
 	}
+}
+
+func (p *pClient) GetRevertMsg(msg *packet.TxParams, blockNum uint64) ([]byte, error) {
+
+	var hex = new(hexutil.Bytes)
+	err := p.c.Call(hex, "eth_call", msg, hexutil.EncodeUint64(0))
+	if err != nil {
+		return nil, err
+	}
+
+	return *hex, nil
 }

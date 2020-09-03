@@ -69,7 +69,7 @@ func (dataGen *ContractDataGen) SetInterpreter(vm string) {
 	}
 }
 
-func (dataGen *ContractDataGen) ReceiptParsing(receipt *Receipt) string {
+func (dataGen *ContractDataGen) ReceiptParsing(receipt *Receipt) *ReceiptParsingReturn {
 	return dataGen.Interp.ReceiptParsing(receipt, dataGen.data.funcAbi)
 }
 

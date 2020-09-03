@@ -67,10 +67,7 @@ func (dataGen *DeployDataGen) SetInterpreter(vm string) error {
 		}
 
 		// todo: code refactory
-		consInput, err := parseAbiConstructor(dataGen.abiBytes, dataGen.ConstructorParams)
-		if err != nil {
-			return err
-		}
+		consInput, _ := parseAbiConstructor(dataGen.abiBytes, dataGen.ConstructorParams)
 
 		dataGen.Interpreter = &EvmDeployInterpreter{
 			codeBytes:        dataGen.codeBytes,
@@ -91,7 +88,7 @@ func (dataGen *DeployDataGen) SetInterpreter(vm string) error {
 	return nil
 }
 
-func (dataGen *DeployDataGen) ReceiptParsing(receipt *Receipt) string {
+func (dataGen *DeployDataGen) ReceiptParsing(receipt *Receipt) *ReceiptParsingReturn {
 	return dataGen.Interpreter.ReceiptParsing(receipt, dataGen.abiBytes)
 }
 

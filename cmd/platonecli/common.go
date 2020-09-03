@@ -1,12 +1,17 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
 
 	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/precompiled"
 
@@ -20,6 +25,8 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"gopkg.in/urfave/cli.v1"
 )
+
+var errorSig = crypto.Keccak256([]byte("Error(string)"))[:4]
 
 // temporary deprecated
 /*
@@ -96,10 +103,34 @@ func clientCommon(c *cli.Context, dataGen packet.MsgDataGen, to *common.Address)
 		receiptBytes, _ := json.MarshalIndent(res, "", "\t")
 		fmt.Println(string(receiptBytes))
 
-		result[0] = dataGen.ReceiptParsing(res)
+		recpt := dataGen.ReceiptParsing(res)
+		if recpt.Status != packet.TxReceiptSuccessMsg {
+			result, _ := pc.GetRevertMsg(tx, recpt.BlockNumber)
+			if len(result) >= 4 {
+				recpt.Err, _ = unpackError(result)
+			}
+		}
+
+		result[0] = recpt.String()
 	}
 
 	return result
+}
+
+func unpackError(res []byte) (string, error) {
+	var revStr string
+
+	if !bytes.Equal(res[:4], errorSig) {
+		return "<not revert string>", errors.New("not a revert string")
+	}
+
+	typ, _ := abi.NewTypeV2("string", "", nil)
+	err := abi.Arguments{{Type: typ}}.UnpackV2(&revStr, res[4:])
+	if err != nil {
+		return "<invalid revert string>", err
+	}
+
+	return revStr, nil
 }
 
 // CombineRule combines firewall rules
