@@ -35,7 +35,7 @@ func NewDeployDataGen(codeBytes, abiBytes []byte, consParams []string, vm string
 }
 
 func parseAbiConstructor(abiBytes []byte, funcParams []string) ([]byte, error) {
-	var abiFunc = new(FuncDesc)
+	var abiFunc *FuncDesc
 
 	funcs, err := ParseAbiFromJson(abiBytes)
 	if err != nil {
@@ -45,6 +45,7 @@ func parseAbiConstructor(abiBytes []byte, funcParams []string) ([]byte, error) {
 	for _, value := range funcs {
 		if value.Type == "constructor" {
 			abiFunc = &value
+			break
 		}
 	}
 
