@@ -53,7 +53,7 @@ func (p *pClient) GetTransactionReceipt(txHash string) (*packet.Receipt, error) 
 
 // messageCall extract the common parts of the transaction based calls
 // including eth_call, eth_sendTransaction, and eth_sendRawTransaction
-func (client *pClient) MessageCall(dataGen packet.MsgDataGen, keyfile []byte, tx *packet.TxParams) ([]interface{}, bool, error) {
+func (client *pClient) MessageCall(dataGen packet.MsgDataGen, keyfile *utils.Keyfile, tx *packet.TxParams) ([]interface{}, bool, error) {
 	var result = make([]interface{}, 1)
 
 	// combine the data based on the types of the calls (contract call, inner call or deploy call)

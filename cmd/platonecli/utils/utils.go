@@ -150,7 +150,7 @@ func GetFileByKey(fileDirt, key string) string {
 		switch {
 		case file.IsDir():
 			continue
-		case strings.Contains(file.Name(), key):
+		case strings.Contains(strings.ToLower(file.Name()), strings.ToLower(key)):
 			return file.Name()
 		}
 	}

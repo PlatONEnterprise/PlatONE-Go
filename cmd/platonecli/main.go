@@ -5,6 +5,8 @@ import (
 	"os"
 	"sort"
 
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/rest"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 	"gopkg.in/urfave/cli.v1"
 )
@@ -25,6 +27,8 @@ func init() {
 		RoleCmd,      // see cmd_role.go
 		NodeCmd,      // see cmd_node.go
 		SysConfigCmd, // see cmd_sysconfig.go
+
+		StartRest, // see rest
 	}
 	sort.Sort(cli.CommandsByName(app.Commands))
 
@@ -33,6 +37,19 @@ func init() {
 	}
 
 }
+
+var (
+	// rest
+	StartRest = cli.Command{
+		Name:  "rest",
+		Usage: "start a restful api server",
+		Action: func(ctx *cli.Context) {
+			rest.StartServer("127.0.0.1:8000")
+			return
+		},
+		Category: "rest",
+	}
+)
 
 //go:generate go-bindata -pkg precompile -o precompiled/bindata.go ../../release/linux/conf/contracts/...
 func main() {

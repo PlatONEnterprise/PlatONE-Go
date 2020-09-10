@@ -158,7 +158,7 @@ func NewTxParams(from common.Address, to *common.Address, value, gas, gasPrice, 
 }
 
 // SendMode selects the rpc calls (eth_call, eth_sendTransaction, and eth_sendRawTransaction)
-func (tx *TxParams) SendMode(isWrite bool, keyfileJson []byte) ([]interface{}, string) {
+func (tx *TxParams) SendMode(isWrite bool, keyfile *utl.Keyfile) ([]interface{}, string) {
 	var action string
 	var params = make([]interface{}, 0)
 
@@ -167,8 +167,8 @@ func (tx *TxParams) SendMode(isWrite bool, keyfileJson []byte) ([]interface{}, s
 		params = append(params, tx)
 		params = append(params, "latest")
 		action = "eth_call"
-	case len(keyfileJson) != 0:
-		signedTx := tx.GetSignedTx(keyfileJson)
+	case keyfile.Json != nil:
+		signedTx := tx.GetSignedTx(keyfile)
 		params = append(params, signedTx)
 		action = "eth_sendRawTransaction"
 	default:
@@ -180,7 +180,7 @@ func (tx *TxParams) SendMode(isWrite bool, keyfileJson []byte) ([]interface{}, s
 }
 
 // GetSignedTx gets the signed transaction
-func (tx *TxParams) GetSignedTx(keyfileJson []byte) string {
+func (tx *TxParams) GetSignedTx(keyfile *utl.Keyfile) string {
 
 	var txSign *types.Transaction
 
@@ -198,7 +198,7 @@ func (tx *TxParams) GetSignedTx(keyfileJson []byte) string {
 	}
 
 	// extract pk from keystore file and sign the transaction
-	priv := utl.GetPrivateKey(keyfileJson)
+	priv := keyfile.GetPrivateKey()
 
 	// todo: choose the correct signer
 	txSign, _ = types.SignTx(txSign, types.HomesteadSigner{}, priv)

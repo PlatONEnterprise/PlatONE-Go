@@ -1,10 +1,11 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
+
+	cmd_common "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/common"
 
 	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/utils"
 
@@ -32,6 +33,7 @@ type TxAccount struct {
 	keyfile []byte
 }
 
+/*
 func keyfileParsing(keyfilePath string) (utl.KeystoreJson, error) {
 
 	var keyfile utl.KeystoreJson
@@ -51,31 +53,24 @@ func keyfileParsing(keyfilePath string) (utl.KeystoreJson, error) {
 	}
 
 	return keyfile, nil
-}
+}*/
 
-func NewTxAccount(address string, keyfile utl.KeystoreJson) (*TxAccount, error) {
-	var err error
-	var addr string
+func isTxAccountMatch(address string, keyfile *utl.Keyfile) bool {
 
 	// check if the account address is matched
 	if keyfile.Address != "" && address != "" &&
 		!strings.EqualFold(keyfile.Address, address[2:]) {
-		err = ErrAccountNotMatch
+		return false
 	}
 
-	if keyfile.Address != "" {
-		addr = keyfile.Address
-	} else {
-		addr = address
+	if keyfile.Address == "" {
+		keyfile.Address = address
 	}
 
-	return &TxAccount{
-		address: common.HexToAddress(addr),
-		keyfile: keyfile.Json,
-	}, err
+	return true
 }
 
-func getClientConfig(c *cli.Context) (*TxAccount, bool, bool, string) {
+func getClientConfig(c *cli.Context) (*utl.Keyfile, bool, bool, string) {
 	address := c.String(AccountFlags.Name)
 	keyfile := c.String(KeyfileFlags.Name)
 	isDefault := c.Bool(DefaultFlags.Name)
@@ -88,13 +83,12 @@ func getClientConfig(c *cli.Context) (*TxAccount, bool, bool, string) {
 		keyfile = config.Keystore
 	}
 
-	keyfileJson, err := keyfileParsing(keyfile)
+	account, err := cmd_common.KeyfileParsing(keyfile)
 	if err != nil {
 		utils.Fatalf(err.Error())
 	}
 
-	account, err := NewTxAccount(address, keyfileJson)
-	if err == ErrAccountNotMatch {
+	if !isTxAccountMatch(address, account) {
 		fmt.Printf("there is conflict in --account and --keyfile, " +
 			"the result is subject to --keyfile")
 	}

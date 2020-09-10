@@ -10,17 +10,21 @@ import (
 
 const defaultAddress = "0x0000000000000000000000000000000000000000"
 
-type KeystoreJson struct {
-	Address string `json:"address"`
-	Json    []byte
+type Keyfile struct {
+	Address    string `json:"address"`
+	Json       []byte
+	Passphrase string
 }
 
 // GetPrivateKey gets the private key by decrypting the keystore file
-func GetPrivateKey(keyJson []byte) *ecdsa.PrivateKey {
+func (k *Keyfile) GetPrivateKey() *ecdsa.PrivateKey {
 
 	// Decrypt key with passphrase.
-	passphrase := promptPassphrase(true)
-	key, err := keystore.DecryptKey(keyJson, passphrase)
+	if k.Passphrase == "" {
+		k.Passphrase = promptPassphrase(true)
+	}
+
+	key, err := keystore.DecryptKey(k.Json, k.Passphrase)
 	if err != nil {
 		utils.Fatalf("Error decrypting key: %v", err)
 	}

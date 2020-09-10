@@ -70,7 +70,7 @@ func contractCallWrap(c *cli.Context, funcParams []string, funcName, contract st
 func clientCommon(c *cli.Context, dataGen packet.MsgDataGen, to *common.Address) []interface{} {
 
 	// get the client global parameters
-	account, isSync, isDefault, url := getClientConfig(c)
+	keyfile, isSync, isDefault, url := getClientConfig(c)
 	pc, err := platoneclient.SetupClient(url)
 	if err != nil {
 		utils.Fatalf("set up client failed: %s\n", err.Error())
@@ -78,11 +78,11 @@ func clientCommon(c *cli.Context, dataGen packet.MsgDataGen, to *common.Address)
 
 	// form transaction
 	tx := getTxParams(c)
-	tx.From = account.address
+	tx.From = common.HexToAddress(keyfile.Address)
 	tx.To = to
 
 	// do message call
-	result, isTxHash, err := pc.MessageCall(dataGen, account.keyfile, tx)
+	result, isTxHash, err := pc.MessageCall(dataGen, keyfile, tx)
 	if err != nil {
 		utils.Fatalf(err.Error())
 	}

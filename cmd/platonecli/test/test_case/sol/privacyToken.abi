@@ -1,0 +1,279 @@
+[
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "totalSupply",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"components": [
+					{
+						"name": "x",
+						"type": "bytes32"
+					},
+					{
+						"name": "y",
+						"type": "bytes32"
+					}
+				],
+				"name": "y",
+				"type": "tuple"
+			},
+			{
+				"name": "bTransfer",
+				"type": "uint256"
+			},
+			{
+				"components": [
+					{
+						"name": "x",
+						"type": "bytes32"
+					},
+					{
+						"name": "y",
+						"type": "bytes32"
+					}
+				],
+				"name": "u",
+				"type": "tuple"
+			},
+			{
+				"name": "proof",
+				"type": "bytes"
+			}
+		],
+		"name": "burn",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "epochLength",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"components": [
+					{
+						"name": "x",
+						"type": "bytes32"
+					},
+					{
+						"name": "y",
+						"type": "bytes32"
+					}
+				],
+				"name": "y",
+				"type": "tuple"
+			},
+			{
+				"name": "bTransfer",
+				"type": "uint256"
+			}
+		],
+		"name": "fund",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"components": [
+					{
+						"name": "x",
+						"type": "bytes32"
+					},
+					{
+						"name": "y",
+						"type": "bytes32"
+					}
+				],
+				"name": "y",
+				"type": "tuple[]"
+			},
+			{
+				"name": "epoch",
+				"type": "uint256"
+			}
+		],
+		"name": "simulateAccounts",
+		"outputs": [
+			{
+				"components": [
+					{
+						"name": "x",
+						"type": "bytes32"
+					},
+					{
+						"name": "y",
+						"type": "bytes32"
+					}
+				],
+				"name": "accounts",
+				"type": "tuple[2][]"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"components": [
+					{
+						"name": "x",
+						"type": "bytes32"
+					},
+					{
+						"name": "y",
+						"type": "bytes32"
+					}
+				],
+				"name": "y",
+				"type": "tuple"
+			},
+			{
+				"name": "c",
+				"type": "uint256"
+			},
+			{
+				"name": "s",
+				"type": "uint256"
+			}
+		],
+		"name": "register",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"components": [
+					{
+						"name": "x",
+						"type": "bytes32"
+					},
+					{
+						"name": "y",
+						"type": "bytes32"
+					}
+				],
+				"name": "C",
+				"type": "tuple[]"
+			},
+			{
+				"components": [
+					{
+						"name": "x",
+						"type": "bytes32"
+					},
+					{
+						"name": "y",
+						"type": "bytes32"
+					}
+				],
+				"name": "D",
+				"type": "tuple"
+			},
+			{
+				"components": [
+					{
+						"name": "x",
+						"type": "bytes32"
+					},
+					{
+						"name": "y",
+						"type": "bytes32"
+					}
+				],
+				"name": "y",
+				"type": "tuple[]"
+			},
+			{
+				"components": [
+					{
+						"name": "x",
+						"type": "bytes32"
+					},
+					{
+						"name": "y",
+						"type": "bytes32"
+					}
+				],
+				"name": "u",
+				"type": "tuple"
+			},
+			{
+				"name": "proof",
+				"type": "bytes"
+			}
+		],
+		"name": "transfer",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "token",
+		"outputs": [
+			{
+				"name": "",
+				"type": "address"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"name": "_epochLength",
+				"type": "uint256"
+			},
+			{
+				"name": "_token",
+				"type": "address"
+			}
+		],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	}
+]
+	
