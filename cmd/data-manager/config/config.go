@@ -6,6 +6,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"math/rand"
 	"path/filepath"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -17,11 +19,12 @@ const (
 )
 
 type config struct {
-	HttpConf  *httpConf  `toml:"http"`
-	DBConf    *dbConf    `toml:"db"`
-	LogConf   *logConf   `toml:"log"`
-	SyncConf  *syncConf  `toml:"sync"`
-	ChainConf *chainConf `toml:"chain"`
+	HttpConf        *httpConf        `toml:"http"`
+	DBConf          *dbConf          `toml:"db"`
+	LogConf         *logConf         `toml:"log"`
+	SyncConf        *syncConf        `toml:"sync"`
+	ChainConf       *chainConf       `toml:"chain"`
+	SyncTxCountConf *syncTxCountConf `toml:"sync-tx-count"`
 }
 
 type chainConf struct {
@@ -80,6 +83,40 @@ func (this *syncConf) RandomURL() string {
 	randIndex := rand.Intn(len(this.Urls))
 
 	return this.Urls[randIndex]
+}
+
+type syncTxCountConf struct {
+	When     string `toml:"when"`
+	TryTimes int    `toml:"try_times"`
+}
+
+func (this *syncTxCountConf) GetWhen() time.Time {
+	reg, err := regexp.Compile(`([0-9]+):([0-9]+):([0-9]+)`)
+	if nil != err {
+		logrus.Panic(err)
+	}
+
+	hms := reg.FindAllStringSubmatch(this.When, -1)[0]
+
+	h, err := strconv.Atoi(hms[1])
+	if nil != err {
+		logrus.Panic(err)
+	}
+
+	m, err := strconv.Atoi(hms[2])
+	if nil != err {
+		logrus.Panic(err)
+	}
+
+	s, err := strconv.Atoi(hms[3])
+	if nil != err {
+		logrus.Panic(err)
+	}
+
+	now := time.Now()
+	when := time.Date(now.Year(), now.Month(), now.Day(), h, m, s, 0, now.Location())
+
+	return when
 }
 
 var Config config

@@ -15,3 +15,11 @@ type pageInfo struct {
 func newPageInfo(pageIndex, pageSize, total int64, items interface{}) *pageInfo {
 	return &pageInfo{PageIndex: pageIndex, PageSize: pageSize, Total: total, Items: items}
 }
+
+type contract struct {
+	Address   string `json:"address"`
+	CNSName   string `json:"name"`
+	Creator   string `json:"creator"`
+	TxHash    string `json:"tx_hash"`
+	Timestamp int64  `json:"timestamp"`
+}

@@ -2,6 +2,7 @@ package syncer
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/data-manager/config"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/data-manager/db"
@@ -32,6 +33,40 @@ func (this *syncer) Run() {
 	logrus.Info("start to sync.")
 }
 
+func (this *syncer) loop() {
+	tick := time.NewTicker(config.Config.SyncConf.SyncInterval())
+	target := time.Until(config.Config.SyncTxCountConf.GetWhen())
+	syncTxCountTick := time.NewTimer(target)
+
+	for {
+		select {
+		case <-tick.C:
+			this.exec()
+
+		case <-syncTxCountTick.C:
+			for i := 0; i < config.Config.SyncTxCountConf.TryTimes; i++ {
+
+				err := this.syncTxStats()
+				if nil != err {
+					logrus.Errorln(err)
+					continue
+				}
+
+				break
+			}
+
+			syncTxCountTick.Reset(time.Until(config.Config.SyncTxCountConf.GetWhen().AddDate(0, 0, 1)))
+
+		case <-this.stop:
+			logrus.Info("sync stop")
+			syncTxCountTick.Stop()
+			tick.Stop()
+
+			return
+		}
+	}
+}
+
 func (this *syncer) exec() {
 	err := this.syncNodes()
 	if nil != err {
@@ -46,6 +81,7 @@ func (this *syncer) exec() {
 	}
 
 	this.syncStats()
+	this.syncCNS()
 }
 
 func (this *syncer) syncBlocks() error {
@@ -86,9 +122,10 @@ func (this *syncer) doSyncBlocks(heightTarget, heightCur uint64) error {
 		dbBlock.GasUsed = block.GasUsed()
 		dbBlock.Hash = block.Hash().Hex()
 		dbBlock.ParentHash = block.ParentHash().Hex()
-		dbBlock.Proposer = block.Coinbase().Hex() //TODO
+		dbBlock.Proposer = block.Coinbase().Hex()
 		dbBlock.Timestamp = block.Time().Int64()
 		dbBlock.TxAmount = uint64(block.Transactions().Len())
+		dbBlock.Size = block.Size().String()
 
 		err = model.DefaultBlock.InsertBlock(this.dbCtx, &dbBlock)
 		if nil != err {
@@ -115,7 +152,13 @@ func (this *syncer) doSyncTxs(block *types.Block) error {
 		var recpt model.Receipt
 		recpt.GasUsed = receipt.GasUsed
 		recpt.ContractAddress = receipt.ContractAddress.Hex()
-		//recpt.Event = receipt.Logs[0].Address //TODO
+
+		bin, err := json.Marshal(receipt.Logs)
+		if nil != err {
+			logrus.Errorln(err)
+			return err
+		}
+		recpt.Event = string(bin) //todo parse event
 		recpt.Status = receipt.Status
 
 		dbTx.Receipt = &recpt
@@ -147,6 +190,25 @@ func (this *syncer) doSyncTxs(block *types.Block) error {
 	return nil
 }
 
+func (this *syncer) syncTxStats() error {
+	now := time.Now().AddDate(0, 0, -1)
+	y, m, d := now.Date()
+
+	start := time.Date(y, m, d, 0, 0, 0, 0, time.Local)
+	end := time.Date(y, m, d, 23, 59, 59, 0, time.Local)
+	amount, err := model.DefaultTx.TxAmountByTime(this.dbCtx, start.Unix(), end.Unix())
+	if nil != err {
+		return err
+	}
+
+	err = model.DefaultTxStats.UpsertTxAmountOneDay(this.dbCtx, fmt.Sprintf("%d:%d:%d", y, m, d), amount)
+	if nil != err {
+		return err
+	}
+
+	return nil
+}
+
 func (this *syncer) syncStats() error {
 	var stats model.Stats
 	var err error
@@ -168,7 +230,7 @@ func (this *syncer) syncStats() error {
 		return err
 	}
 
-	totalNode, err := GetAmountOfNodes()
+	totalNode, err := util.GetAmountOfNodes()
 	if nil != err {
 		logrus.Errorln(err)
 		return err
@@ -185,14 +247,7 @@ func (this *syncer) syncStats() error {
 }
 
 func (this *syncer) syncNodes() error {
-	//TODO better idea
-	err := model.DefaultNode.DeleteAllNodes(this.dbCtx)
-	if nil != err {
-		logrus.Errorln(err)
-		return err
-	}
-
-	nodeInfos, err := GetNodes()
+	nodeInfos, err := util.GetNodes()
 	if nil != err {
 		logrus.Errorln(err)
 		return err
@@ -200,27 +255,75 @@ func (this *syncer) syncNodes() error {
 
 	nodes := make([]*model.Node, 0, len(nodeInfos))
 	for _, info := range nodeInfos {
-		//TODO
 		var node model.Node
 		node.Typ = info.Typ
+		node.Name = info.Name
+		node.P2PPort = info.P2PPort
+		node.InternalIP = info.InternalIP
+		node.Desc = info.Desc
+		node.ExternalIP = info.ExternalIP
+		node.PubKey = info.PubKey
+		node.RPCPort = info.RPCPort
+		node.Typ = info.Typ
 
-		node.IsAlive = IsNodeAlive(info)
+		node.IsAlive = util.IsNodeAlive(info)
+	}
+
+	//TODO better idea
+	err = model.DefaultNode.DeleteAllNodes(this.dbCtx)
+	if nil != err {
+		logrus.Errorln(err)
+		return err
 	}
 
 	return model.DefaultNode.InsertNodes(this.dbCtx, nodes)
 }
 
-func (this *syncer) loop() {
-	tick := time.NewTicker(config.Config.SyncConf.SyncInterval())
+func (this *syncer) syncCNS() error {
+	cnses, err := util.GetAllCNS()
+	if nil != err {
+		logrus.Errorln(err)
+		return err
+	}
 
-	for {
-		select {
-		case <-tick.C:
-			this.exec()
+	mapCns := map[string]*model.CNS{}
+	for _, info := range cnses {
+		latest, err := util.GetLatestCNS(info.Name)
+		if nil != err {
+			logrus.Errorln(err)
+			return err
+		}
 
-		case <-this.stop:
-			logrus.Info("sync stop")
-			return
+		cns, ok := mapCns[info.Name]
+		if !ok {
+			cns = &model.CNS{}
+			mapCns[info.Name] = cns
+		}
+
+		if info.Name == latest.Name && info.Version == latest.Version {
+			cns.Address = info.Address
+			cns.Name = info.Name
+			cns.Version = info.Version
+		} else {
+			var ci model.CNSInfo
+			ci.Version = info.Version
+			ci.Address = info.Address
+
+			cns.Infos = append(cns.Infos, &ci)
 		}
 	}
+
+	var modelCnses []*model.CNS
+	for _, v := range mapCns {
+		modelCnses = append(modelCnses, v)
+	}
+
+	//TODO better idea
+	err = model.DefaultCNS.DeleteAllCNS(this.dbCtx)
+	if nil != err {
+		logrus.Errorln(err)
+		return err
+	}
+
+	return model.DefaultCNS.InsertCNS(this.dbCtx, modelCnses)
 }

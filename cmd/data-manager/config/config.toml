@@ -23,3 +23,7 @@ urls = [
     "http:://localhost:6789",
     "http:://localhost:6789"
 ]
+
+[sync-tx-count]
+when="00:00:30"
+try_times=1

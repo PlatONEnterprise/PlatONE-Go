@@ -1,4 +1,4 @@
-package syncer
+package util
 
 import (
 	"fmt"
@@ -55,4 +55,31 @@ func IsNodeAlive(info *nodeInfo) bool {
 	}
 
 	return true
+}
+
+type cnsInfo struct {
+	Name       string `json:"name"`
+	Version    string `json:"version"`
+	Address    string `json:"address"`
+	Owner      string `json:"origin"`
+	CreateTime int64  `json:"create_time"`
+}
+
+func GetAllCNS() ([]*cnsInfo, error) {
+	//todo
+
+	var cnses []*cnsInfo
+	return cnses, nil
+}
+
+func GetLatestCNS(name string) (*cnsInfo, error) {
+	//todo
+
+	var cns cnsInfo
+	return &cns, nil
+}
+
+func GetCNSByAddress(addr string) (*cnsInfo, error) {
+	var cns cnsInfo
+	return &cns, nil
 }

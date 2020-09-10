@@ -8,12 +8,13 @@ require (
 	bazil.org/fuse v0.0.0-20160811212531-371fbbdaa898
 	github.com/Azure/azure-pipeline-go v0.0.0-20180607212504-7571e8eb0876
 	github.com/Azure/azure-storage-blob-go v0.0.0-20180712005634-eaae161d9d5e
+	github.com/BurntSushi/toml v0.3.1
 	github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6
 	github.com/aristanetworks/goarista v0.0.0-20170210015632-ea17b1a17847
 	github.com/btcsuite/btcd v0.0.0-20171128150713-2e60448ffcc6
 	github.com/cespare/cp v0.1.0
 	github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd
-	github.com/davecgh/go-spew v1.1.0
+	github.com/davecgh/go-spew v1.1.1
 	github.com/deckarep/golang-set v0.0.0-20180603214616-504e848d77ea
 	github.com/dgrijalva/jwt-go v3.0.1-0.20170201225849-2268707a8f08+incompatible
 	github.com/docker/docker v1.4.2-0.20180625184442-8e610b2b55bf
@@ -22,12 +23,13 @@ require (
 	github.com/fatih/color v1.3.0
 	github.com/fjl/memsize v0.0.0-20180418122429-ca190fb6ffbc
 	github.com/garyburd/redigo v1.6.1-0.20180404160726-569eae59ada9
+	github.com/gin-gonic/gin v1.6.3
 	github.com/gizak/termui v2.2.1-0.20170117222342-991cd3d38091+incompatible
 	github.com/go-interpreter/wagon v0.0.0
 	github.com/go-ole/go-ole v1.2.1
-	github.com/go-stack/stack v1.5.4
-	github.com/golang/protobuf v0.0.0-20170726212829-748d386b5c1e
-	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db
+	github.com/go-stack/stack v1.8.0
+	github.com/golang/protobuf v1.3.3
+	github.com/golang/snappy v0.0.1
 	github.com/hashicorp/golang-lru v0.0.0-20160813221303-0a025b7e63ad
 	github.com/huin/goupnp v0.0.0-20161224104101-679507af18f3
 	github.com/influxdata/influxdb v1.2.3-0.20180221223340-01288bdb0883
@@ -36,7 +38,7 @@ require (
 	github.com/karalabe/hid v0.0.0-20170821103837-f00545f9f374
 	github.com/maruel/panicparse v0.0.0-20160720141634-ad661195ed0e
 	github.com/mattn/go-colorable v0.0.8-0.20170210172801-5411d3eea597
-	github.com/mattn/go-isatty v0.0.0-20170209175615-281032e84ae0
+	github.com/mattn/go-isatty v0.0.12
 	github.com/mattn/go-runewidth v0.0.3-0.20170201023540-14207d285c6c
 	github.com/mitchellh/go-wordwrap v0.0.0-20150314170334-ad45545899c7
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
@@ -47,23 +49,24 @@ require (
 	github.com/opentracing/opentracing-go v1.0.3-0.20180606204148-bd9c31933947
 	github.com/pborman/uuid v0.0.0-20170112150404-1b00554d8222
 	github.com/peterh/liner v1.0.1-0.20170902204657-a37ad3984311
-	github.com/pkg/errors v0.8.1-0.20171216070316-e881fd58d78e
+	github.com/pkg/errors v0.9.1
 	github.com/pmezard/go-difflib v1.0.0
 	github.com/prometheus/prometheus v1.7.2-0.20170814170113-3101606756c5
 	github.com/rjeczalik/notify v0.9.1
 	github.com/robertkrimen/otto v0.0.0-20170205013659-6a77b7cbc37d
 	github.com/rs/cors v0.0.0-20160617231935-a62a804a8a00
 	github.com/rs/xhandler v0.0.0-20160618193221-ed27b6fd6521
-	github.com/stretchr/testify v1.1.5-0.20170809224252-890a5c3458b4
+	github.com/sirupsen/logrus v1.6.0
+	github.com/stretchr/testify v1.4.0
 	github.com/syndtr/goleveldb v0.0.0-20181105012736-f9080354173f
 	github.com/uber/jaeger-client-go v2.14.1-0.20180607151842-f7e0d4744fa6+incompatible
 	github.com/uber/jaeger-lib v1.5.1-0.20180615202729-a51202d6f4a7
+	go.mongodb.org/mongo-driver v1.4.1
 	golang.org/x/crypto v0.0.0-20200210222208-86ce3cb69678
 	golang.org/x/net v0.0.0-20200202094626-16171245cfb2
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
-	golang.org/x/sys v0.0.0-20190412213103-97732733099d
-	golang.org/x/tools v0.0.0-20180917221912-90fa682c2a6e // indirect
-	gopkg.in/check.v1 v1.0.0-20161208181325-20d25e280405
+	golang.org/x/sys v0.0.0-20200116001909-b77594299b42
+	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127
 	gopkg.in/karalabe/cookiejar.v2 v2.0.0-20150724131613-8dcd6a7f4951
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce
 	gopkg.in/olebedev/go-duktape.v3 v3.0.0-20180302121509-abf0ba0be5d5

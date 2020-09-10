@@ -70,12 +70,44 @@ func (this *tx) TxsInHeight(c *dbCtx.Context, pageIndex, pageSize int64, blockHe
 	return this.txs(c, filter, findOps)
 }
 
+func (this *tx) Contracts(c *dbCtx.Context, pageIndex, pageSize int64) ([]*Tx, error) {
+	filter := bson.M{}
+	filter["receipt.contract_address"] = bson.M{"$ne": ""}
+	findOps := buildOptionsByQuery(pageIndex, pageSize)
+	findOps.SetSort(bsonx.Doc{{"timestamp", bsonx.Int32(-1)}})
+
+	return this.txs(c, filter, findOps)
+}
+
+func (this *tx) TxsFromAddress(c *dbCtx.Context, pageIndex, pageSize int64, addres string) ([]*Tx, error) {
+	filter := bson.M{"from": addres}
+	findOps := buildOptionsByQuery(pageIndex, pageSize)
+	findOps.SetSort(bsonx.Doc{{"timestamp", bsonx.Int32(-1)}})
+
+	return this.txs(c, filter, findOps)
+}
+
 func (this *tx) Txs(c *dbCtx.Context, pageIndex, pageSize int64) ([]*Tx, error) {
 	filter := bson.D{{}}
 	findOps := buildOptionsByQuery(pageIndex, pageSize)
 	findOps.SetSort(bson.D{{"timestamp", -1}})
 
 	return this.txs(c, filter, findOps)
+}
+
+func (this *tx) TxAmountByTime(c *dbCtx.Context, start, end int64) (int64, error) {
+	collection := c.Collection(collectionNameTxs)
+	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
+
+	filter := bson.M{}
+	filter["timestamp"] = bson.M{"$gte": start, "$lte": end}
+	amount, err := collection.CountDocuments(ctx, filter)
+	if err != nil {
+		logrus.Errorln(err)
+		return 0, err
+	}
+
+	return amount, nil
 }
 
 func (this *tx) txs(c *dbCtx.Context, filter interface{}, findOps *options.FindOptions) ([]*Tx, error) {

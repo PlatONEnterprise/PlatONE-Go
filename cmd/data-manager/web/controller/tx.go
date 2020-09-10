@@ -12,6 +12,7 @@ func init() {
 	webEngine.Default.GET("/txs", webEngine.NewHandler(defaultTxController.Txs))
 	webEngine.Default.GET("/tx/:hash", webEngine.NewHandler(defaultTxController.Tx))
 	webEngine.Default.GET("/block/:block_height/txs", webEngine.NewHandler(defaultTxController.TxsInHeight))
+	webEngine.Default.GET("/address/from/:from_address/txs", webEngine.NewHandler(defaultTxController.TxsFromAddress))
 }
 
 type txController struct{}
@@ -23,7 +24,7 @@ func (this *txController) Tx(ctx *webCtx.Context) {
 
 	ret, err := model.DefaultTx.Tx(ctx.DBCtx, hash)
 	if nil != err {
-		ctx.AbortWithError(http.StatusInternalServerError, err)
+		ctx.IndentedJSON(http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -77,4 +78,27 @@ func (this *txController) TxsInHeight(ctx *webCtx.Context) {
 	}
 
 	ctx.IndentedJSON(200, newPageInfo(p.PageIndex, p.PageSize, int64(block.TxAmount), result))
+}
+
+func (this *txController) TxsFromAddress(ctx *webCtx.Context) {
+	var p page
+	if err := ctx.ShouldBindQuery(&p); err != nil {
+		ctx.IndentedJSON(http.StatusBadRequest, err.Error())
+		return
+	}
+	fromAddr := ctx.Param("from_address")
+
+	result, err := model.DefaultTx.TxsFromAddress(ctx.DBCtx, p.PageIndex, p.PageSize, fromAddr)
+	if nil != err {
+		ctx.IndentedJSON(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	stats, err := model.DefaultStats.Stats(ctx.DBCtx)
+	if nil != err {
+		ctx.IndentedJSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	ctx.IndentedJSON(200, newPageInfo(p.PageIndex, p.PageSize, stats.TotalTx, result))
 }

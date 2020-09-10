@@ -167,7 +167,7 @@ func TestConfigFileOverrides(t *testing.T) {
 		t.Fatalf("Error creating TOML file in TestFileOverride: %v", err)
 	}
 	//create file
-	f, err := ioutil.TempFile("", "testconfig.toml")
+	f, err := ioutil.TempFile("", "config.toml")
 	if err != nil {
 		t.Fatalf("Error writing TOML file in TestFileOverride: %v", err)
 	}
@@ -378,7 +378,7 @@ func TestConfigCmdLineOverridesFile(t *testing.T) {
 		t.Fatalf("Error creating TOML file in TestFileOverride: %v", err)
 	}
 	//write file
-	fname := "testconfig.toml"
+	fname := "config.toml"
 	f, err := ioutil.TempFile("", fname)
 	if err != nil {
 		t.Fatalf("Error writing TOML file in TestFileOverride: %v", err)
