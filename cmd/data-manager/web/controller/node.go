@@ -18,7 +18,7 @@ var defaultNodeController = &nodeController{}
 func (this *nodeController) Nodes(ctx *webCtx.Context) {
 	ret, err := model.DefaultNode.AllNodes(ctx.DBCtx)
 	if nil != err {
-		ctx.AbortWithError(http.StatusInternalServerError, err)
+		ctx.IndentedJSON(http.StatusInternalServerError, err.Error())
 		return
 	}
 

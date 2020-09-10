@@ -26,19 +26,19 @@ type blockRequest struct {
 func (this *blockController) Block(ctx *webCtx.Context) {
 	var br blockRequest
 	if err := ctx.BindQuery(&br); nil != err {
-		ctx.AbortWithError(http.StatusBadRequest, err)
+		ctx.IndentedJSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
 	if strings.TrimSpace(br.BlockHash) == "" && br.BlockHeight == 0 {
-		ctx.AbortWithError(http.StatusBadRequest, exterror.ErrParameterInvalid)
+		ctx.IndentedJSON(http.StatusBadRequest, exterror.ErrParameterInvalid)
 		return
 	}
 
 	if 0 != br.BlockHeight {
 		ret, err := model.DefaultBlock.BlockByHeight(ctx.DBCtx, br.BlockHeight)
 		if nil != err {
-			ctx.AbortWithError(http.StatusInternalServerError, err)
+			ctx.IndentedJSON(http.StatusInternalServerError, err.Error())
 			return
 		}
 
@@ -48,7 +48,7 @@ func (this *blockController) Block(ctx *webCtx.Context) {
 
 	ret, err := model.DefaultBlock.BlockByHash(ctx.DBCtx, strings.TrimSpace(br.BlockHash))
 	if nil != err {
-		ctx.AbortWithError(http.StatusInternalServerError, err)
+		ctx.IndentedJSON(http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -58,7 +58,7 @@ func (this *blockController) Block(ctx *webCtx.Context) {
 func (this *blockController) Blocks(ctx *webCtx.Context) {
 	var p page
 	if err := ctx.ShouldBindQuery(&p); err != nil {
-		ctx.IndentedJSON(http.StatusBadRequest, err)
+		ctx.IndentedJSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -70,7 +70,7 @@ func (this *blockController) Blocks(ctx *webCtx.Context) {
 
 	stats, err := model.DefaultStats.Stats(ctx.DBCtx)
 	if nil != err {
-		ctx.IndentedJSON(http.StatusBadRequest, err)
+		ctx.IndentedJSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
