@@ -44,9 +44,11 @@ var (
 		Name:  "rest",
 		Usage: "start a restful api server",
 		Action: func(ctx *cli.Context) {
-			rest.StartServer("127.0.0.1:8000")
+			port := ctx.String(RestPortFlags.Name)
+			rest.StartServer(port)
 			return
 		},
+		Flags:    []cli.Flag{RestPortFlags},
 		Category: "rest",
 	}
 )

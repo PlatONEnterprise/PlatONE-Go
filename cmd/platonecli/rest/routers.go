@@ -37,6 +37,7 @@ const separation = "-"
 var (
 	errExceedQueryKeyLimit = errors.New("please provide at most ONE query key")
 	errInvalidParam        = errors.New("invalid params")
+	errPollingReceipt      = errors.New("polling transaction receipt error")
 )
 
 func StartServer(endPoint string) {
@@ -247,13 +248,20 @@ func deployHandler(ctx *gin.Context) {
 
 	res, err := deploy(jsonInfo)
 	if err != nil {
+		if err == errPollingReceipt {
+			ctx.JSON(200, gin.H{
+				"txHash": res[0],
+			})
+			return
+		}
+
 		// todo: error code
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	ctx.JSON(200, gin.H{
-		"result": res,
+		"result": res[0],
 	})
 }
 
@@ -268,7 +276,10 @@ func deploy(jsonInfo *temp) ([]interface{}, error) {
 	from := common.HexToAddress(jsonInfo.Tx.From)
 	tx := packet.NewTxParams(from, nil, "", "", "", "")
 
-	return A(jsonInfo.Rpc.EndPoint, dataGenerator, tx, &utl.Keyfile{})
+	keyfile := parseKeyfile(jsonInfo.Tx.From)
+	keyfile.Passphrase = jsonInfo.Rpc.Passphrase
+
+	return A(jsonInfo.Rpc.EndPoint, dataGenerator, tx, keyfile)
 }
 
 //=======================
@@ -306,8 +317,21 @@ func executeHandler(ctx *gin.Context) {
 
 	res, err := handlerCallCommon(jsonInfo)
 	if err != nil {
+		if err == errPollingReceipt {
+			ctx.JSON(200, gin.H{
+				"txHash": res[0],
+			})
+			return
+		}
 		// todo: error code
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if len(res) == 1 {
+		ctx.JSON(200, gin.H{
+			"result": res[0],
+		})
 		return
 	}
 
@@ -474,7 +498,11 @@ const defaultKeyfile = "./keystore"
 
 func newAccountHandler(ctx *gin.Context) {
 	// password
-	passphrase := ctx.PostForm("password")
+	passphrase := ctx.PostForm("passphrase")
+	if passphrase == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "the passphrase can not be empty"})
+		return
+	}
 
 	runPath := utl.GetRunningTimePath()
 	keyfileDirt := runPath + defaultKeyfile
@@ -573,14 +601,6 @@ type GetS struct {
 
 func newGetS(funcParams []string) *GetS {
 	return &GetS{funcParams: funcParams}
-}
-
-func (c *GetS) getDataParams() []string {
-	return c.funcParams
-}
-
-func (c *GetS) paramsCheck() bool {
-	return true
 }
 
 func cnsQueryStateHandler(ctx *gin.Context) {
@@ -773,15 +793,15 @@ func cnsMappingGetHandler(ctx *gin.Context) {
 func cnsMappingPostHandler(ctx *gin.Context) {
 	var contractAddr = precompile.CnsManagementAddress
 
-	ctx.Param("name")
+	name := ctx.Param("name")
 
 	// todo: paramCheck same as in sc_cns.go
 
 	funcName := "cnsRedirect"
 	funcParams := &struct {
-		Name    string
+		name    string
 		Version string
-	}{}
+	}{name: name}
 
 	data := newContractParams(contractAddr, funcName, "wasm", nil, funcParams)
 
@@ -1102,8 +1122,8 @@ func nodeUpateHandler(ctx *gin.Context) {
 		name: name,
 		Info: &struct {
 			Desc     string
-			Type     string
-			DelayNum string
+			Type     uint32
+			DelayNum uint64
 		}{},
 	}
 
@@ -1268,7 +1288,7 @@ func queryHandlerCommon(ctx *gin.Context, endPoint string, data *contractParams)
 	}
 
 	ctx.JSON(200, gin.H{
-		"result": res,
+		"result": res[0],
 	})
 }
 
@@ -1289,13 +1309,20 @@ func posthandlerCommon(ctx *gin.Context, data *contractParams) {
 
 	res, err := handlerCallCommon(jsonInfo)
 	if err != nil {
+		if err == errPollingReceipt {
+			ctx.JSON(200, gin.H{
+				"txHash": res[0],
+			})
+			return
+		}
+
 		// todo: error code
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	ctx.JSON(200, gin.H{
-		"result": res,
+		"result": res[0],
 	})
 }
 
@@ -1349,7 +1376,7 @@ func A(url string, dataGen packet.MsgDataGen, tx *packet.TxParams, keyfile *utl.
 	if true && isTxHash {
 		res, err := pc.GetReceiptByPolling(result[0].(string))
 		if err != nil {
-			return result, nil
+			return result, errPollingReceipt
 		}
 
 		receiptBytes, _ := json.MarshalIndent(res, "", "\t")

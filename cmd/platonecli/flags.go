@@ -283,6 +283,13 @@ var (
 		Usage: "register the gas contract by contract name",
 	}
 
+	// rest
+	RestPortFlags = cli.StringFlag{
+		Name:  "port",
+		Value: ":8000",
+		Usage: "Specify the rest server listening port number, e.g. :8000",
+	}
+
 	//=============================================================================
 	globalCmdFlags = []cli.Flag{
 		UrlFlags,
