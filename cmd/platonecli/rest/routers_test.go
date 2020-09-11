@@ -18,8 +18,8 @@ import (
 )
 
 const (
-	txSender         = "0x474b4b175f23ebe06bf3d6b3a4ab795f6b37a5e4"
-	testContractAddr = "0x0726f6b602176e2e9ea6ada74b30c7861ebbd916"
+	txSender         = "0x41f964b81c60a6384b97686eafa618ab7a401d1b"
+	testContractAddr = "0xc52e02fb821334cd8a8145cafd7dd6ebafa634f8"
 )
 
 // ================== ACCOUNT ===========================
@@ -44,7 +44,7 @@ func TestAccountHandlers(t *testing.T) {
 		w := httptest.NewRecorder()
 
 		param := make(url.Values)
-		param.Set("password", "123456")
+		param.Set("passphrase", "123456")
 		param.Set("privatekey", "")
 
 		body := bytes.NewBufferString(param.Encode())

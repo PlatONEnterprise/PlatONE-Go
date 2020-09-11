@@ -136,11 +136,6 @@ func registerFwRouters(r *gin.Engine) {
 func registerRoleRouters(r *gin.Engine) {
 	role := r.Group("/role")
 	{
-		/// role.POST("/super-admin", setSupAdminHandler)
-		/// role.PUT("/super-admin", transferSupAdminHandler)
-		/// role.POST("/roles-of-user/:addressOrName", roleAddHandler)
-		/// role.DELETE("/roles-of-user/:addressOrName", roleDelHandler)
-
 		roleOpt := role.Group("/role-lists")
 		{
 			roleOpt.POST("/super-admin", setSupAdminHandler)
@@ -159,9 +154,8 @@ func registerRoleRouters(r *gin.Engine) {
 			roleOpt.DELETE("/chain-admin", roleDelHandler)
 		}
 
-		/// role.GET("/:param", roleGetHandler) // getRolesByAddress, getRolesByName, getAddrListOfRole
-		role.GET("/user-lists/:addressOrName", roleGetUserListsHandler)
-		role.GET("/role-lists/:role", roleGetRoleListsHandler)
+		role.GET("/user-lists/:addressOrName", roleGetUserListsHandler) // getRolesByAddress, getRolesByName
+		role.GET("/role-lists/:role", roleGetRoleListsHandler)          // getAddrListOfRole
 	}
 }
 
@@ -201,17 +195,6 @@ func newTempRpc() *tempRpc {
 }
 
 func getBlockNumHandler(ctx *gin.Context) {
-	// todo: how to receive parameters
-	var jsonInfo = newTempRpc()
-
-	if err := ctx.ShouldBind(jsonInfo); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	pc, _ := platoneclient.SetupClient(jsonInfo.Rpc.EndPoint)
-
-	_, _ = pc.GetTransactionReceipt(jsonInfo.Params["txHash"])
 }
 
 // ===================== Deploy =======================
@@ -260,9 +243,7 @@ func deployHandler(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(200, gin.H{
-		"result": res[0],
-	})
+	ctx.JSON(200, res[0])
 }
 
 // todo: refactory
@@ -329,15 +310,11 @@ func executeHandler(ctx *gin.Context) {
 	}
 
 	if len(res) == 1 {
-		ctx.JSON(200, gin.H{
-			"result": res[0],
-		})
+		ctx.JSON(200, res[0])
 		return
 	}
 
-	ctx.JSON(200, gin.H{
-		"result": res,
-	})
+	ctx.JSON(200, res)
 }
 
 // ===================== SYS ===========================
@@ -504,12 +481,6 @@ func newAccountHandler(ctx *gin.Context) {
 		return
 	}
 
-	runPath := utl.GetRunningTimePath()
-	keyfileDirt := runPath + defaultKeyfile
-
-	utl.FileDirectoryInit(keyfileDirt)
-	pathSep := string(os.PathSeparator)
-
 	var privateKey *ecdsa.PrivateKey
 	var err error
 	if file := ctx.PostForm("privatekey"); file != "" {
@@ -543,6 +514,9 @@ func newAccountHandler(ctx *gin.Context) {
 		return
 	}
 
+	runPath := utl.GetRunningTimePath()
+	keyfileDirt := runPath + defaultKeyfile
+	pathSep := string(os.PathSeparator)
 	keyfilepath := keyfileDirt + pathSep + "UTC--" + time.Now().Format("2006-01-02") + "--" + key.Address.Hex()
 
 	// Store the file to disk.
@@ -559,7 +533,6 @@ func newAccountHandler(ctx *gin.Context) {
 	ctx.JSON(200, gin.H{
 		"Address": key.Address.Hex(),
 	})
-
 }
 
 //======================= CNS ==========================
@@ -840,17 +813,6 @@ func roleHandler(ctx *gin.Context, prefix string) {
 	funcParams := &struct {
 		Address string
 	}{}
-
-	/*
-		switch utl.IsNameOrAddress(Id) {
-		case utl.CnsIsAddress:
-			funcName = funcName + "ByAddress"
-		case utl.CnsIsName:
-			funcName = funcName + "ByName"
-		default:
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": errInvalidParam.Error()})
-			return
-		}*/
 
 	data := newContractParams(contractAddr, funcName, "wasm", nil, funcParams)
 	posthandlerCommon(ctx, data)
@@ -1287,9 +1249,7 @@ func queryHandlerCommon(ctx *gin.Context, endPoint string, data *contractParams)
 		return
 	}
 
-	ctx.JSON(200, gin.H{
-		"result": res[0],
-	})
+	ctx.JSON(200, res[0])
 }
 
 func posthandlerCommon(ctx *gin.Context, data *contractParams) {
@@ -1321,9 +1281,7 @@ func posthandlerCommon(ctx *gin.Context, data *contractParams) {
 		return
 	}
 
-	ctx.JSON(200, gin.H{
-		"result": res[0],
-	})
+	ctx.JSON(200, res[0])
 }
 
 func handlerCallCommon(jsonInfo *temp) ([]interface{}, error) {
