@@ -30,4 +30,8 @@ try_times=1
 
 [chain]
 id=300
+rest-server= [
+    "http://localhost:6791"
+]
+
 

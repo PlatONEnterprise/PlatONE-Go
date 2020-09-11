@@ -1,9 +1,14 @@
 package util
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/data-manager/config"
 	"github.com/sirupsen/logrus"
+	"io/ioutil"
 	"net"
+	"net/http"
 	"time"
 )
 
@@ -19,6 +24,12 @@ type nodeInfo struct {
 	Typ        int    `json:"type"`
 }
 
+type nodeResult struct {
+	Code int         `json:"code"`
+	Msg  string      `json:"msg"`
+	Data []*nodeInfo `json:"data"`
+}
+
 func GetAmountOfNodes() (int, error) {
 	nodes, err := GetNodes()
 	if nil != err {
@@ -30,9 +41,31 @@ func GetAmountOfNodes() (int, error) {
 }
 
 func GetNodes() ([]*nodeInfo, error) {
-	//TODO
-	var nodes []*nodeInfo
-	return nodes, nil
+	url := fmt.Sprintf(
+		"%s%s?endpoint=%s",
+		config.Config.ChainConf.NodeRestServer,
+		"/node/components",
+		config.Config.ChainConf.NodeRpcAddress,
+	)
+
+	return urlNodeComponents(url)
+}
+
+func urlNodeComponents(url string) ([]*nodeInfo, error) {
+	var ret nodeResult
+
+	err := httpGet(url, &ret)
+	if nil != err {
+		return nil, err
+	}
+
+	if ret.Code != 0 {
+		err := errors.New("node not found,msg:" + ret.Msg)
+		logrus.Errorln(err)
+		return nil, err
+	}
+
+	return ret.Data, nil
 }
 
 func IsNodeAlive(info *nodeInfo) bool {
@@ -65,21 +98,106 @@ type cnsInfo struct {
 	CreateTime int64  `json:"create_time"`
 }
 
-func GetAllCNS() ([]*cnsInfo, error) {
-	//todo
+type cnsResult struct {
+	Code int        `json:"code"`
+	Msg  string     `json:"msg"`
+	Data []*cnsInfo `json:"data"`
+}
 
-	var cnses []*cnsInfo
-	return cnses, nil
+func GetAllCNS() ([]*cnsInfo, error) {
+	url := fmt.Sprintf(
+		"%s%s?endpoint=%s",
+		config.Config.ChainConf.NodeRestServer,
+		"/cns/components",
+		config.Config.ChainConf.NodeRpcAddress,
+	)
+
+	ret, err := urlCnsComponents(url)
+	if nil != err {
+		return nil, err
+	}
+
+	return ret, nil
 }
 
 func GetLatestCNS(name string) (*cnsInfo, error) {
-	//todo
+	url := fmt.Sprintf(
+		"%s%s/%s?endpoint=%s&version=latest",
+		config.Config.ChainConf.NodeRestServer,
+		"/cns/mapings",
+		name,
+		config.Config.ChainConf.NodeRpcAddress,
+	)
 
-	var cns cnsInfo
-	return &cns, nil
+	ret := struct {
+		Result string `json:"cnsResult"`
+	}{}
+
+	err := httpGet(url, &ret)
+	if nil != err {
+		return nil, err
+	}
+
+	var ci cnsInfo
+	ci.Name = name
+	ci.Address = ret.Result
+
+	return &ci, nil
 }
 
 func GetCNSByAddress(addr string) (*cnsInfo, error) {
-	var cns cnsInfo
-	return &cns, nil
+	url := fmt.Sprintf(
+		"%s%s?endpoint=%s&address=%s",
+		config.Config.ChainConf.NodeRestServer,
+		"/cns/components",
+		config.Config.ChainConf.NodeRpcAddress,
+		addr,
+	)
+
+	ret, err := urlCnsComponents(url)
+	if nil != err {
+		return nil, err
+	}
+
+	return ret[0], nil
+}
+
+func urlCnsComponents(url string) ([]*cnsInfo, error) {
+	var ret cnsResult
+
+	err := httpGet(url, &ret)
+	if nil != err {
+		return nil, err
+	}
+
+	if ret.Code != 0 {
+		err := errors.New("cns not found,msg:" + ret.Msg)
+		logrus.Errorln(err)
+		return nil, err
+	}
+
+	return ret.Data, nil
+}
+
+func httpGet(url string, ret interface{}) error {
+	resp, err := http.Get(url)
+	if nil != err {
+		logrus.Errorln("failed to http get,err:", err)
+		return err
+	}
+	defer resp.Body.Close()
+
+	bin, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		logrus.Errorln("failed to read from resp.body,err:", err)
+		return err
+	}
+
+	err = json.Unmarshal(bin, ret)
+	if err != nil {
+		logrus.Errorln("failed to unmarshal data that from resp.body,err:", err, "resp data:", string(bin))
+		return err
+	}
+
+	return nil
 }

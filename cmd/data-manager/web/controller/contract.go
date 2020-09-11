@@ -41,10 +41,11 @@ func (this *contractController) Contracts(ctx *webCtx.Context) {
 		cns, err := util.GetCNSByAddress(c.Address)
 		if nil != err {
 			logrus.Errorln(err)
-			ctx.IndentedJSON(http.StatusInternalServerError, err.Error())
-			return
+			//ctx.IndentedJSON(http.StatusInternalServerError, err.Error())
+			//return
+		} else {
+			c.CNSName = cns.Name
 		}
-		c.CNSName = cns.Name
 
 		cs = append(cs, &c)
 	}

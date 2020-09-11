@@ -28,7 +28,9 @@ type config struct {
 }
 
 type chainConf struct {
-	ID uint64 `toml:"id"`
+	ID             uint64 `toml:"id"`
+	NodeRestServer string `toml:"node_rest_server"`
+	NodeRpcAddress string `toml:"node_rpc_address"`
 }
 
 type logConf struct {
