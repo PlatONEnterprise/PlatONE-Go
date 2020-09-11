@@ -129,10 +129,7 @@ func GetLatestCNS(name string) (*cnsInfo, error) {
 		config.Config.ChainConf.NodeRpcAddress,
 	)
 
-	ret := struct {
-		Result string `json:"cnsResult"`
-	}{}
-
+	var ret string
 	err := httpGet(url, &ret)
 	if nil != err {
 		return nil, err
@@ -140,7 +137,7 @@ func GetLatestCNS(name string) (*cnsInfo, error) {
 
 	var ci cnsInfo
 	ci.Name = name
-	ci.Address = ret.Result
+	ci.Address = ret
 
 	return &ci, nil
 }
