@@ -91,3 +91,42 @@ func TestUrlParamConvert(t *testing.T) {
 
 	}
 }
+
+type result struct {
+	Code int         `json:"code"`
+	Msg  string      `json:"msg"`
+	Data interface{} `json:"data"`
+}
+
+// 34: "
+// 123: {
+// 92: \
+func TestUnmarshal(t *testing.T) {
+	var i interface{}
+	str := `"{\"code\":1,\"msg\":\"[CNS] the matching list is empty\",\"data\":[]}"`
+	str2 := `{\"code\":1,\"msg\":\"[CNS] the matching list is empty\",\"data\":[]}`
+	str3 := `{"code":1,"msg":"[CNS] the matching list is empty","data":[]}`
+	t.Log("1:", []byte(str), str)
+	t.Log("2:", []byte(str2), str2)
+	t.Log("3:", []byte(str3), str3)
+
+	err := json.Unmarshal([]byte(str), &i)
+	if err != nil {
+		t.Error(err)
+	}
+
+	resBytes, _ := json.Marshal(i)
+	t.Log("t1:", resBytes)
+
+	var test = &result{
+		Code: 1,
+		Msg:  "[CNS] the matching list is empty",
+		Data: nil,
+	}
+
+	resBytes, _ = json.Marshal(test)
+	t.Log("t3.1:", resBytes)
+
+	resBytes, _ = json.Marshal(str3)
+	t.Log("t3.2:", resBytes)
+}

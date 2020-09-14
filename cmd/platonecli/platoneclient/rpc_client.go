@@ -71,7 +71,7 @@ func (client *pClient) MessageCall(dataGen packet.MsgDataGen, keyfile *utils.Key
 	/// utils.PrintRequest(params)
 
 	// send the RPC calls
-	var resp interface{}
+	var resp string
 	err = client.c.Call(&resp, action, params...)
 	if err != nil {
 		errStr := fmt.Sprintf(utils.ErrSendTransacionFormat, err.Error())
@@ -79,12 +79,12 @@ func (client *pClient) MessageCall(dataGen packet.MsgDataGen, keyfile *utils.Key
 	}
 
 	// parse transaction response
-	respStr := fmt.Sprint(resp)
+	/// respStr := fmt.Sprintf("%s", resp)
 
 	if !isWrite {
-		result = dataGen.ParseNonConstantResponse(respStr, outputType)
+		result = dataGen.ParseNonConstantResponse(resp, outputType)
 	} else {
-		result[0] = respStr
+		result[0] = resp
 	}
 
 	return result, isWrite, nil

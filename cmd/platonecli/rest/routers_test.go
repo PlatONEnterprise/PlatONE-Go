@@ -125,13 +125,14 @@ func TestNodeHandlers(t *testing.T) {
 		expectedCode int
 	}{
 		// node
-		{"POST", "/node/components", testNodeAddBody, 200},
-		{"DELETE", "/node/components/node0", testNodeUpdateBody, 200},
+		/// {"POST", "/node/components", testNodeAddBody, 200},
+		/// {"DELETE", "/node/components/node0", testNodeUpdateBody, 200},
 
+		{"GET", "/node/components", "", 200},
 		{"GET", "/node/components?name=node0&endPoint=http://127.0.0.1:6791", "", 200},
 		{"GET", "/node/components/statistic?name=node0", "", 200},
 
-		{"GET", "/node/enode/deleted", "", 200}, // OMIT endPoint
+		/// {"GET", "/node/enode/deleted", "", 200}, // OMIT endPoint
 	}
 
 	router := genRestRouters()

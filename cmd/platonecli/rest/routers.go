@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"bytes"
 	"crypto/ecdsa"
 	"encoding/json"
 	"errors"
@@ -1135,11 +1136,13 @@ func nodeGetHandler(ctx *gin.Context) {
 	var contractAddr = precompile.NodeManagementAddress
 	var node = new(NodeInfo)
 	var funcName string
+	var funcParams interface{}
 
 	endPoint := ctx.Query("endPoint")
 	err := ctx.BindQuery(node)
 	if err != nil {
-
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
 	if !reflect.ValueOf(node).Elem().IsZero() {
@@ -1148,14 +1151,13 @@ func nodeGetHandler(ctx *gin.Context) {
 			funcName = "nodesNum"
 		}
 
+		funcParams = &struct {
+			Param *NodeInfo
+		}{Param: node}
 	} else {
 		funcName = "getAllNodes"
-		node = nil
+		funcParams = nil
 	}
-
-	funcParams := &struct {
-		Param *NodeInfo
-	}{Param: node}
 
 	data := newContractParams(contractAddr, funcName, "wasm", nil, funcParams)
 	queryHandlerCommon(ctx, endPoint, data)
@@ -1286,7 +1288,21 @@ func queryHandlerCommon(ctx *gin.Context, endPoint string, data *contractParams)
 		return
 	}
 
-	ctx.JSON(200, res[0])
+	ctx.JSON(200, jsonStringPatch(res[0]))
+}
+
+func jsonStringPatch(value interface{}) interface{} {
+	if reflect.ValueOf(value).Kind() == reflect.String {
+		str := value.(string)
+		// string starts with {"
+		if bytes.Equal([]byte(str)[:2], []byte{123, 34}) {
+			var m map[string]interface{}
+			json.Unmarshal([]byte(value.(string)), &m)
+			return m
+		}
+	}
+
+	return value
 }
 
 func posthandlerCommon(ctx *gin.Context, data *contractParams) {
