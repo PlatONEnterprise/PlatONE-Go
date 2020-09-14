@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	txSender         = "0x41f964b81c60a6384b97686eafa618ab7a401d1b"
+	txSender         = "0x063bc2e61696579cf4ad137fed8a7ced15501f73"
 	testContractAddr = "0xc52e02fb821334cd8a8145cafd7dd6ebafa634f8"
 )
 
@@ -75,6 +75,9 @@ func TestCnsHandlers(t *testing.T) {
 		// cns
 		{"POST", "/cns/components", testCnsPostBody, 200},
 		{"GET", "/cns/components?name=tofu&endPoint=http://127.0.0.1:6791", "", 200},
+		{"GET", "/cns/components?page-num=1&page-size=2", "", 200},
+		{"GET", "/cns/components?page-size=2", "", 200},
+		{"GET", "/cns/components", "", 200},
 		{"GET", "/cns/components/state?name=tofu&endPoint=http://127.0.0.1:6791", "", 200},
 
 		{"PUT", "/cns/mappings/tofu", testCnsPostBody, 200},
@@ -82,6 +85,9 @@ func TestCnsHandlers(t *testing.T) {
 
 		// error cases
 		{"GET", "/cns/components/state?name=tofu&address=" + testContractAddr + "&endPoint=http://127.0.0.1:6791", "", 400},
+		{"GET", "/cns/components?name=@tofu", "", 400},
+		{"GET", "/cns/components?origin=0x0023", "", 400},
+		{"GET", "/cns/components?name=0&page-size=2", "", 400},
 	}
 
 	router := genRestRouters()
@@ -377,8 +383,8 @@ func TestContractHandlers(t *testing.T) {
 	for _, data := range testCase {
 		w := httptest.NewRecorder()
 
-		file1 := NewUploadFile("files", data.codePath)
-		file2 := NewUploadFile("files", data.abiPath)
+		file1 := NewUploadFile("code", data.codePath)
+		file2 := NewUploadFile("abi", data.abiPath)
 
 		/// resParam1, _ := UnmarshalToMap(data.body)
 		resParam1 := make(map[string]string)

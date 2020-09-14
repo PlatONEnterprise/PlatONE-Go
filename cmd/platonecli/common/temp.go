@@ -238,11 +238,13 @@ func ParamValidWrap(param, paramName string) bool {
 		valid = utl.IsRoleMatch(param)
 	case "roles":
 		valid = utl.IsValidRoles(param)
-	case "email", "mobile", "version", "address", "num":
+	case "email", "mobile", "version", "num":
 		valid = utl.IsMatch(param, paramName)
 
 	// newly added for restful server
 	// todo; fix the toLower problem
+	case "orgin", "address":
+		valid = utl.IsMatch(param, "address")
 	case "contractname", "name":
 		valid = utl.IsMatch(param, "name")
 	case "sysparam":

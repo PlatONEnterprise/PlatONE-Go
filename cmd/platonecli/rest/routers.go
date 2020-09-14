@@ -211,7 +211,8 @@ func deployHandler(ctx *gin.Context) {
 
 	// read file
 	form, _ := ctx.MultipartForm()
-	files := form.File["files"]
+	/// files := form.File["files"]
+	files := append(form.File["code"], form.File["abi"][0])
 
 	for i, file := range files {
 		f, _ := file.Open()
@@ -640,8 +641,8 @@ func cnsQueryStateByAddressHandler(ctx *gin.Context) {
 
 func cnsQueryHandler(ctx *gin.Context) {
 	var contractAddr = precompile.CnsManagementAddress
-	/// var funcParams = make([]string, 1)
 	var funcName string
+	var queryRange string
 
 	// todo: if endPoint is null?
 	endPoint := ctx.Query("endPoint")
@@ -650,8 +651,13 @@ func cnsQueryHandler(ctx *gin.Context) {
 	name := ctx.Query("name")
 	address := ctx.Query("address")
 	origin := ctx.Query("origin")
+	pageNum := ctx.Query("page-num")
+	pageSize := ctx.Query("page-size")
+	if pageNum != "" || pageSize != "" {
+		queryRange = "not null"
+	}
 
-	if countQueryNum(name, address, origin) > 1 {
+	if countQueryNum(name, address, origin, queryRange) > 1 {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": errExceedQueryKeyLimit.Error()})
 		return
 	}
@@ -660,23 +666,54 @@ func cnsQueryHandler(ctx *gin.Context) {
 		Name    string
 		Address string
 		Origin  string
+		Range   string
 	}{}
 
 	switch {
 	case name != "":
-		// param check
+		if !cmd_common.ParamValidWrap(name, "name") {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": errInvalidParam.Error()})
+			return
+		}
+
 		funcName = "getRegisteredContractsByName"
 		funcParams.Name = name
 	case address != "":
-		// param check
+		if !cmd_common.ParamValidWrap(address, "address") {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": errInvalidParam.Error()})
+			return
+		}
+
 		funcName = "getRegisteredContractsByAddress"
 		funcParams.Address = address
 	case origin != "":
-		// param check
+		if !cmd_common.ParamValidWrap(address, "address") {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": errInvalidParam.Error()})
+			return
+		}
+
 		funcName = "getRegisteredContractsByOrigin"
 		funcParams.Origin = origin
+	case queryRange != "":
+		if pageNum == "" {
+			pageNum = "0"
+		}
+		if pageSize == "" {
+			pageSize = "0"
+		}
+
+		if cmd_common.ParamValidWrap(pageNum, "num") && cmd_common.ParamValidWrap(pageSize, "num") {
+			queryRange = fmt.Sprintf("(%s,%s)", pageNum, pageSize)
+		} else {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": errInvalidParam.Error()})
+			return
+		}
+
+		funcName = "getRegisteredContracts"
+		funcParams.Range = queryRange
 	default:
 		funcName = "getRegisteredContracts"
+		funcParams.Range = "(0,0)"
 	}
 
 	data := newContractParams(contractAddr, funcName, "wasm", nil, funcParams)
