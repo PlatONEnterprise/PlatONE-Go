@@ -86,7 +86,7 @@ func (this *block) block(c *dbCtx.Context, filter interface{}) (*Block, error) {
 		return nil, err
 	}
 
-	logrus.Debugf("FindLatestBlock:%+v", b)
+	logrus.Debugf("filter:", filter, "model block:%+v", b)
 	return &b, nil
 }
 

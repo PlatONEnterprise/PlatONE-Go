@@ -33,7 +33,7 @@ type nodeResult struct {
 func GetAmountOfNodes() (int, error) {
 	nodes, err := GetNodes()
 	if nil != err {
-		logrus.Errorln(err)
+		logrus.Errorln("failed to get nodes,err:", err)
 		return 0, err
 	}
 

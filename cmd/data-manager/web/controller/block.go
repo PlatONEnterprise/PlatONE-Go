@@ -19,8 +19,8 @@ type blockController struct{}
 var defaultBlockController = &blockController{}
 
 type blockRequest struct {
-	BlockHeight uint64 `json:"block_height"`
-	BlockHash   string `json:"block_hash"`
+	BlockHeight uint64 `form:"block_height"`
+	BlockHash   string `form:"block_hash"`
 }
 
 func (this *blockController) Block(ctx *webCtx.Context) {

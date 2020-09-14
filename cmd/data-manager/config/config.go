@@ -43,12 +43,12 @@ type logConf struct {
 
 type httpConf struct {
 	IP    string `toml:"ip"`
-	Port  string `toml:"port"`
+	Port  int    `toml:"port"`
 	Debug bool   `toml:"debug"`
 }
 
 func (this *httpConf) Addr() string {
-	return fmt.Sprintf("%s:%s", this.IP, this.Port)
+	return fmt.Sprintf("%s:%d", this.IP, this.Port)
 }
 
 type dbConf struct {

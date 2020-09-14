@@ -41,7 +41,7 @@ func (this *syncer) loop() {
 	for {
 		select {
 		case <-tick.C:
-			this.exec()
+			this.sync()
 
 		case <-syncTxCountTick.C:
 			for i := 0; i < config.Config.SyncTxCountConf.TryTimes; i++ {
@@ -67,21 +67,35 @@ func (this *syncer) loop() {
 	}
 }
 
-func (this *syncer) exec() {
+func (this *syncer) sync() {
 	err := this.syncNodes()
 	if nil != err {
-		logrus.Errorln(err)
+		logrus.Errorln("failed to sync nodes,err:", err)
 		//return
+	} else {
+		logrus.Debug("sync nodes success.")
+	}
+
+	err = this.syncCNS()
+	if nil != err {
+		logrus.Errorln("failed to sync blocks,err:", err)
+		//return
+	} else {
+		logrus.Debug("sync cns success.")
 	}
 
 	err = this.syncBlocks()
 	if nil != err {
-		logrus.Errorln(err)
+		logrus.Errorln("failed to sync blocks,err:", err)
 		return
 	}
+	logrus.Debug("sync blocks success.")
 
-	this.syncStats()
-	this.syncCNS()
+	err = this.syncStats()
+	if nil != err {
+		logrus.Errorln("failed to sync stats,err:", err)
+		return
+	}
 }
 
 func (this *syncer) syncBlocks() error {
@@ -232,7 +246,7 @@ func (this *syncer) syncStats() error {
 
 	totalNode, err := util.GetAmountOfNodes()
 	if nil != err {
-		logrus.Errorln(err)
+		logrus.Errorln("failed to find amount of nodes,err:", err)
 		return err
 	}
 	stats.TotalNode = uint64(totalNode)
