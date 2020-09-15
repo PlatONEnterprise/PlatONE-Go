@@ -1,10 +1,10 @@
 package controller
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/data-manager/exterror"
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/data-manager/model"
-	webCtx "github.com/PlatONEnetwork/PlatONE-Go/cmd/data-manager/web/context"
-	webEngine "github.com/PlatONEnetwork/PlatONE-Go/cmd/data-manager/web/engine"
+	"data-manager/exterror"
+	"data-manager/model"
+	webCtx "data-manager/web/context"
+	webEngine "data-manager/web/engine"
 	"net/http"
 	"strings"
 )

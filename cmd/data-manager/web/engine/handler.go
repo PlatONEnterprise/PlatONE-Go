@@ -1,9 +1,9 @@
 package engine
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/data-manager/db"
-	dbContext "github.com/PlatONEnetwork/PlatONE-Go/cmd/data-manager/db/context"
-	webContext "github.com/PlatONEnetwork/PlatONE-Go/cmd/data-manager/web/context"
+	"data-manager/db"
+	dbContext "data-manager/db/context"
+	webContext "data-manager/web/context"
 	"github.com/gin-gonic/gin"
 )
 

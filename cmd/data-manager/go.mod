@@ -5,13 +5,10 @@ go 1.14
 require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/PlatONEnetwork/PlatONE-Go v0.0.0-fe72c95c689da314dbca1c9a3707f1cc4874ffa6
-	github.com/ethereum/go-ethereum v1.9.20 // indirect
 	github.com/gin-gonic/gin v1.6.3
-	github.com/jpmorganchase/quorum v2.7.0+incompatible // indirect
-	github.com/onsi/ginkgo v1.14.0 // indirect
 	github.com/sirupsen/logrus v1.6.0
 	github.com/stretchr/testify v1.4.0
-	go.mongodb.org/mongo-driver v1.4.0
+	go.mongodb.org/mongo-driver v1.4.1
 )
 
 replace github.com/PlatONEnetwork/PlatONE-Go => ../..

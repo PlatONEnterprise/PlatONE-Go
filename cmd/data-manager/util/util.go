@@ -1,7 +1,7 @@
 package util
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/data-manager/config"
+	"data-manager/config"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"math/big"

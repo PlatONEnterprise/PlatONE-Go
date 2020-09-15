@@ -2,7 +2,7 @@ package model
 
 import (
 	"context"
-	dbCtx "github.com/PlatONEnetwork/PlatONE-Go/cmd/data-manager/db/context"
+	dbCtx "data-manager/db/context"
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"

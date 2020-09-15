@@ -1,7 +1,7 @@
 package context
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/data-manager/db"
+	"data-manager/db"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 

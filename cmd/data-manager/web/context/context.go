@@ -1,7 +1,7 @@
 package context
 
 import (
-	dbCtx "github.com/PlatONEnetwork/PlatONE-Go/cmd/data-manager/db/context"
+	dbCtx "data-manager/db/context"
 	"github.com/gin-gonic/gin"
 )
 

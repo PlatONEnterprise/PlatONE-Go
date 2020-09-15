@@ -1,10 +1,10 @@
 package controller
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/data-manager/model"
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/data-manager/util"
-	webCtx "github.com/PlatONEnetwork/PlatONE-Go/cmd/data-manager/web/context"
-	webEngine "github.com/PlatONEnetwork/PlatONE-Go/cmd/data-manager/web/engine"
+	"data-manager/model"
+	"data-manager/util"
+	webCtx "data-manager/web/context"
+	webEngine "data-manager/web/engine"
 	"github.com/sirupsen/logrus"
 	"net/http"
 )

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/data-manager/config"
+	"data-manager/config"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net"
