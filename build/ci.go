@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
-// +build none
-
 /*
 The ci command is called from Continuous Integration scripts.
 
@@ -60,7 +58,6 @@ import (
 
 	"github.com/PlatONEnetwork/PlatONE-Go/internal/build"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
-	sv "github.com/PlatONEnetwork/PlatONE-Go/swarm/version"
 )
 
 var (
@@ -140,15 +137,8 @@ var (
 		Executables: debExecutables,
 	}
 
-	debSwarm = debPackage{
-		Name:        "ethereum-swarm",
-		Version:     sv.Version,
-		Executables: debSwarmExecutables,
-	}
-
 	// Debian meta packages to build and push to Ubuntu PPA
 	debPackages = []debPackage{
-		debSwarm,
 		debEthereum,
 	}
 
@@ -203,7 +193,7 @@ func main() {
 	case "xgo":
 		doXgo(os.Args[2:])
 	case "purge":
-		doPurge(os.Args[2:])
+		log.Panic("not support now")
 	default:
 		log.Fatal("unknown command ", os.Args[1])
 	}
@@ -418,9 +408,6 @@ func doArchive(cmdline []string) {
 		basegeth = archiveBasename(*arch, params.ArchiveVersion(env.Commit))
 		geth     = "platone-" + basegeth + ext
 		alltools = "platone-alltools-" + basegeth + ext
-
-		baseswarm = archiveBasename(*arch, sv.ArchiveVersion(env.Commit))
-		swarm     = "swarm-" + baseswarm + ext
 	)
 	maybeSkipArchive(env)
 	if err := build.WriteArchive(geth, gethArchiveFiles); err != nil {
@@ -429,10 +416,8 @@ func doArchive(cmdline []string) {
 	if err := build.WriteArchive(alltools, allToolsArchiveFiles); err != nil {
 		log.Fatal(err)
 	}
-	if err := build.WriteArchive(swarm, swarmArchiveFiles); err != nil {
-		log.Fatal(err)
-	}
-	for _, archive := range []string{geth, alltools, swarm} {
+
+	for _, archive := range []string{geth, alltools} {
 		if err := archiveUpload(archive, *upload, *signer); err != nil {
 			log.Fatal(err)
 		}
@@ -464,22 +449,7 @@ func archiveUpload(archive string, blobstore string, signer string) error {
 			return err
 		}
 	}
-	// If uploading to Azure was requested, push the archive possibly with its signature
-	if blobstore != "" {
-		auth := build.AzureBlobstoreConfig{
-			Account:   strings.Split(blobstore, "/")[0],
-			Token:     os.Getenv("AZURE_BLOBSTORE_TOKEN"),
-			Container: strings.SplitN(blobstore, "/", 2)[1],
-		}
-		if err := build.AzureBlobstoreUpload(archive, filepath.Base(archive), auth); err != nil {
-			return err
-		}
-		if signer != "" {
-			if err := build.AzureBlobstoreUpload(archive+".asc", filepath.Base(archive+".asc"), auth); err != nil {
-				return err
-			}
-		}
-	}
+
 	return nil
 }
 
@@ -1043,54 +1013,4 @@ func xgoTool(args []string) *exec.Cmd {
 		cmd.Env = append(cmd.Env, e)
 	}
 	return cmd
-}
-
-// Binary distribution cleanups
-
-func doPurge(cmdline []string) {
-	var (
-		store = flag.String("store", "", `Destination from where to purge archives (usually "gethstore/builds")`)
-		limit = flag.Int("days", 30, `Age threshold above which to delete unstalbe archives`)
-	)
-	flag.CommandLine.Parse(cmdline)
-
-	if env := build.Env(); !env.IsCronJob {
-		log.Printf("skipping because not a cron job")
-		os.Exit(0)
-	}
-	// Create the azure authentication and list the current archives
-	auth := build.AzureBlobstoreConfig{
-		Account:   strings.Split(*store, "/")[0],
-		Token:     os.Getenv("AZURE_BLOBSTORE_TOKEN"),
-		Container: strings.SplitN(*store, "/", 2)[1],
-	}
-	blobs, err := build.AzureBlobstoreList(auth)
-	if err != nil {
-		log.Fatal(err)
-	}
-	// Iterate over the blobs, collect and sort all unstable builds
-	for i := 0; i < len(blobs); i++ {
-		if !strings.Contains(blobs[i].Name, "unstable") {
-			blobs = append(blobs[:i], blobs[i+1:]...)
-			i--
-		}
-	}
-	for i := 0; i < len(blobs); i++ {
-		for j := i + 1; j < len(blobs); j++ {
-			if blobs[i].Properties.LastModified.After(blobs[j].Properties.LastModified) {
-				blobs[i], blobs[j] = blobs[j], blobs[i]
-			}
-		}
-	}
-	// Filter out all archives more recent that the given threshold
-	for i, blob := range blobs {
-		if time.Since(blob.Properties.LastModified) < time.Duration(*limit)*24*time.Hour {
-			blobs = blobs[:i]
-			break
-		}
-	}
-	// Delete all marked as such and return
-	if err := build.AzureBlobstoreDelete(auth, blobs); err != nil {
-		log.Fatal(err)
-	}
 }
