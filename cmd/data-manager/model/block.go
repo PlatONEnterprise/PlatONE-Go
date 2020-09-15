@@ -61,7 +61,7 @@ func (this *block) LatestBlock(c *dbCtx.Context) (*Block, error) {
 		return nil, err
 	}
 
-	logrus.Debugf("FindLatestBlock:%+v", b)
+	logrus.Debugf("FindLatestBlock in db:%+v", b)
 	return &b, nil
 }
 

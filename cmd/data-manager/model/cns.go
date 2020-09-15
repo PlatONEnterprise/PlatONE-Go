@@ -21,6 +21,10 @@ func newCNS() *cns {
 }
 
 func (this *cns) InsertCNS(c *dbCtx.Context, infos []*CNS) error {
+	if len(infos) == 0 {
+		return nil
+	}
+
 	collection := c.Collection(collectionNameCNS)
 	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
 
@@ -75,9 +79,8 @@ func (this *cns) QueryCNS(c *dbCtx.Context, pageIndex, pageSize int64) ([]*CNS, 
 	return results, nil
 }
 
-
 func (this *cns) Total(c *dbCtx.Context) (int64, error) {
-	collection := c.Collection(collectionNameTxs)
+	collection := c.Collection(collectionNameCNS)
 	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
 
 	filter := bson.M{}

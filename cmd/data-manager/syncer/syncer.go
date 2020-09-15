@@ -78,7 +78,7 @@ func (this *syncer) sync() {
 
 	err = this.syncCNS()
 	if nil != err {
-		logrus.Errorln("failed to sync blocks,err:", err)
+		logrus.Errorln("failed to sync cns,err:", err)
 		//return
 	} else {
 		logrus.Debug("sync cns success.")
@@ -193,6 +193,7 @@ func (this *syncer) doSyncTxs(block *types.Block) error {
 		}
 		dbTx.Typ = tx.Type()
 		dbTx.Value = tx.Value().Uint64()
+		dbTx.Height = block.NumberU64()
 
 		err = model.DefaultTx.InsertTx(this.dbCtx, &dbTx)
 		if nil != err {
@@ -279,8 +280,12 @@ func (this *syncer) syncNodes() error {
 		node.PubKey = info.PubKey
 		node.RPCPort = info.RPCPort
 		node.Typ = info.Typ
+		node.Status = info.Status
+		node.Owner = info.Owner
 
 		node.IsAlive = util.IsNodeAlive(info)
+
+		nodes = append(nodes, &node)
 	}
 
 	//TODO better idea

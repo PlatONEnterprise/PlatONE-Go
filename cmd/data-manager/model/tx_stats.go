@@ -33,7 +33,6 @@ func (this *txStats) UpsertTxAmountOneDay(c *dbCtx.Context, date string, amount 
 	updateOpts := options.Update().SetUpsert(true)
 
 	_, err := collection.UpdateOne(ctx, bson.M{"date": date}, update, updateOpts)
-
 	if nil != err {
 		logrus.Errorln(err)
 		return err
@@ -43,11 +42,11 @@ func (this *txStats) UpsertTxAmountOneDay(c *dbCtx.Context, date string, amount 
 }
 
 func (this *txStats) History(c *dbCtx.Context, num int64) ([]*TxStats, error) {
-	collection := c.Collection(collectionNameTxs)
+	collection := c.Collection(collectionNameTxStats)
 	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
 
 	filter := bson.D{{}}
-	findOps := buildOptionsByQuery(0, num)
+	findOps := buildOptionsByQuery(1, num)
 	findOps.SetSort(bson.D{{"date", -1}})
 
 	cur, err := collection.Find(ctx, filter, findOps)

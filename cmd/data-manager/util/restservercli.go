@@ -14,14 +14,16 @@ import (
 
 type nodeInfo struct {
 	Name   string `json:"name"`
-	PubKey string `json:"pub_key"`
+	PubKey string `json:"publicKey"`
 	Desc   string `json:"desc"`
 	//IsAlive    bool   `json:"is_alive"`
-	InternalIP string `json:"internal_ip"`
-	ExternalIP string `json:"external_ip"`
-	RPCPort    int    `json:"rpc_port"`
-	P2PPort    int    `json:"p2p_port"`
+	InternalIP string `json:"internalIP"`
+	ExternalIP string `json:"externalIP"`
+	RPCPort    int    `json:"rpcPort"`
+	P2PPort    int    `json:"p2pPort"`
 	Typ        int    `json:"type"`
+	Status     int    `json:"status"`
+	Owner      string `json:"owner"`
 }
 
 type nodeResult struct {
@@ -142,6 +144,10 @@ func GetLatestCNS(name string) (*cnsInfo, error) {
 	return &ci, nil
 }
 
+var (
+	ErrCNSNotFound = errors.New("cns not found")
+)
+
 func GetCNSByAddress(addr string) (*cnsInfo, error) {
 	url := fmt.Sprintf(
 		"%s%s?endpoint=%s&address=%s",
@@ -156,6 +162,10 @@ func GetCNSByAddress(addr string) (*cnsInfo, error) {
 		return nil, err
 	}
 
+	if 0 == len(ret) {
+		return nil, ErrCNSNotFound
+	}
+
 	return ret[0], nil
 }
 
@@ -167,9 +177,12 @@ func urlCnsComponents(url string) ([]*cnsInfo, error) {
 		return nil, err
 	}
 
-	if ret.Code != 0 {
-		err := errors.New("cns not found,msg:" + ret.Msg)
-		logrus.Errorln(err)
+	if ret.Code == 1 {
+		logrus.Warningln("cns not found,url:", url, " result:", ret)
+		return []*cnsInfo{}, nil
+	} else if ret.Code != 0 {
+		err := errors.New(ret.Msg)
+		logrus.Errorln("get cns, result:", ret, "err:", err)
 		return nil, err
 	}
 
@@ -189,6 +202,7 @@ func httpGet(url string, ret interface{}) error {
 		logrus.Errorln("failed to read from resp.body,err:", err)
 		return err
 	}
+	logrus.Debugln("httpget body:", string(bin))
 
 	err = json.Unmarshal(bin, ret)
 	if err != nil {

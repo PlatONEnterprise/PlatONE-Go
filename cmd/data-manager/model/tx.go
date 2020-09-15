@@ -131,7 +131,7 @@ func (this *tx) txs(c *dbCtx.Context, filter interface{}, findOps *options.FindO
 }
 
 func (this *tx) Tx(c *dbCtx.Context, hash string) (*Tx, error) {
-	collection := c.Collection(collectionNameBlocks)
+	collection := c.Collection(collectionNameTxs)
 	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
 	filter := bson.M{}
 	filter["tx_hash"] = hash

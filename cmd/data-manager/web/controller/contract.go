@@ -40,7 +40,7 @@ func (this *contractController) Contracts(ctx *webCtx.Context) {
 		c.TxHash = tx.Hash
 		cns, err := util.GetCNSByAddress(c.Address)
 		if nil != err {
-			logrus.Errorln(err)
+			logrus.Warningln(err)
 			//ctx.IndentedJSON(http.StatusInternalServerError, err.Error())
 			//return
 		} else {

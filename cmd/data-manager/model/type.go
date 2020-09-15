@@ -50,6 +50,8 @@ type Node struct {
 	RPCPort    int    `json:"rpc_port" bson:"rpc_port"`
 	P2PPort    int    `json:"p2p_port" bson:"p2p_port"`
 	Typ        int    `json:"type" bson:"type"`
+	Status     int    `json:"status" bson:"status"`
+	Owner      string `json:"owner" bson:"owner"`
 }
 
 type Stats struct {

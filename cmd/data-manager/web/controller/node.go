@@ -22,5 +22,5 @@ func (this *nodeController) Nodes(ctx *webCtx.Context) {
 		return
 	}
 
-	ctx.JSON(200, ret)
+	ctx.IndentedJSON(200, ret)
 }
