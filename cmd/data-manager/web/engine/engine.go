@@ -14,6 +14,7 @@ var Default *Engine
 
 func init() {
 	Default = New()
+	Default.Use(gin.Recovery())
 	Default.Use(Cors())
 }
 
