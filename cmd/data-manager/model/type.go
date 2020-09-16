@@ -55,8 +55,8 @@ type Node struct {
 }
 
 type Stats struct {
-	LatestBlock   uint64 `json:"latest_block" bson:"latest_block"`
-	TotalTx       int64  `json:"total_tx bson:"total_tx"`
+	LatestBlock   uint64 `json:"latest_height" bson:"latest_height"`
+	TotalTx       int64  `json:"total_tx" bson:"total_tx"`
 	TotalContract int64  `json:"total_contract" bson:"total_contract"`
 	TotalNode     uint64 `json:"total_node" bson:"total_node"`
 }
