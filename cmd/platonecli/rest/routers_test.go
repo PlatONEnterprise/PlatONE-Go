@@ -19,13 +19,10 @@ import (
 
 const (
 	txSender         = "0x063bc2e61696579cf4ad137fed8a7ced15501f73"
-	testContractAddr = "0xc52e02fb821334cd8a8145cafd7dd6ebafa634f8"
+	testContractAddr = "0x942affd352030020d1d4e60160e99045f0c9cc21"
 )
 
 // ================== ACCOUNT ===========================
-const (
-	testNewAccountBody = "{\"\"}"
-)
 
 func TestAccountHandlers(t *testing.T) {
 	testCase := []struct {
@@ -35,7 +32,7 @@ func TestAccountHandlers(t *testing.T) {
 		expectedCode int
 	}{
 		// cns
-		{"POST", "/accounts", testCnsPostBody, 200},
+		{"POST", "/accounts", "", 200},
 	}
 
 	router := genRestRouters()

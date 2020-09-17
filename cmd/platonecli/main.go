@@ -5,6 +5,8 @@ import (
 	"os"
 	"sort"
 
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/cmd"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/rest"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
@@ -19,14 +21,14 @@ func init() {
 
 	// Initialize the CLI app
 	app.Commands = []cli.Command{
-		AccountCmd,  // see cmd_account.go
-		ContractCmd, // see cmd_contract.go
+		cmd.AccountCmd,  // see cmd_account.go
+		cmd.ContractCmd, // see cmd_contract.go
 		// AdminCmd,    // see cmd_admin.go, deprecated
-		CnsCmd,       // see cmd_cns.go
-		FwCmd,        // see cmd_firewall.go
-		RoleCmd,      // see cmd_role.go
-		NodeCmd,      // see cmd_node.go
-		SysConfigCmd, // see cmd_sysconfig.go
+		cmd.CnsCmd,       // see cmd_cns.go
+		cmd.FwCmd,        // see cmd_firewall.go
+		cmd.RoleCmd,      // see cmd_role.go
+		cmd.NodeCmd,      // see cmd_node.go
+		cmd.SysConfigCmd, // see cmd_sysconfig.go
 
 		StartRest, // see rest
 	}
@@ -44,11 +46,11 @@ var (
 		Name:  "rest",
 		Usage: "start a restful api server",
 		Action: func(ctx *cli.Context) {
-			port := ctx.String(RestPortFlags.Name)
+			port := ctx.String(cmd.RestPortFlags.Name)
 			rest.StartServer(port)
 			return
 		},
-		Flags:    []cli.Flag{RestPortFlags},
+		Flags:    []cli.Flag{cmd.RestPortFlags},
 		Category: "rest",
 	}
 )
@@ -56,7 +58,7 @@ var (
 //go:generate go-bindata -pkg precompile -o precompiled/bindata.go ../../release/linux/conf/contracts/...
 func main() {
 	// Initialize the related file
-	configInit()
+	cmd.ConfigInit()
 	/// abiInit()
 	/// utl.LogInit()
 

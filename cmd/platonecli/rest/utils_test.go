@@ -114,6 +114,7 @@ func TestUnmarshal(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+	t.Logf("%+v", i)
 
 	resBytes, _ := json.Marshal(i)
 	t.Log("t1:", resBytes)

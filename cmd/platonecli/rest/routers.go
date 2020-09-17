@@ -20,14 +20,14 @@ import (
 
 	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
 
-	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/utils"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/utils"
 
 	cmd_common "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/common"
-	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/precompiled"
+	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/precompiled"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/packet"
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/platoneclient"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient"
+	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/packet"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/gin-gonic/gin"
 )
@@ -181,20 +181,8 @@ func registerSysConfigRouters(r *gin.Engine) {
 	}
 }
 
-// ================= RPC =========================
-
-type tempRpc struct {
-	Params map[string]string
-	Rpc    *rpcClientParams
-}
-
-func newTempRpc() *tempRpc {
-	return &tempRpc{
-		Params: make(map[string]string, 0),
-		Rpc:    new(rpcClientParams),
-	}
-}
-
+// ===================== RPC =========================
+// TODO
 func getBlockNumHandler(ctx *gin.Context) {
 }
 
@@ -251,10 +239,22 @@ func deployHandler(ctx *gin.Context) {
 // todo: refactory
 func deploy(jsonInfo *temp) ([]interface{}, error) {
 
+	var consArgs = make([]interface{}, 0)
+	var constructor *packet.FuncDesc
+
 	vm := jsonInfo.Contract.Interpreter
-	/// data := jsonInfo.Contract.Data.getDataParams()
 	data, _ := getDataParams(jsonInfo.Contract.Data)
-	dataGenerator := packet.NewDeployDataGen([]byte(data[0]), []byte(data[1]), data[2:], vm, types.CreateTxType)
+	codeBytes := []byte(data[0])
+	abiBytes := []byte(data[1])
+	consParams := data[2:]
+
+	conAbi, _ := packet.ParseAbiFromJson(abiBytes)
+	if constructor = conAbi.GetConstructor(); constructor != nil {
+		consArgs, _ = constructor.StringToArgs(consParams)
+	}
+
+	dataGenerator := packet.NewDeployDataGen(conAbi, types.CreateTxType)
+	dataGenerator.SetInterpreter(vm, abiBytes, codeBytes, consArgs, constructor)
 
 	from := common.HexToAddress(jsonInfo.Tx.From)
 	tx := packet.NewTxParams(from, nil, "", "", "", "")
@@ -265,11 +265,12 @@ func deploy(jsonInfo *temp) ([]interface{}, error) {
 	return A(jsonInfo.Rpc.EndPoint, dataGenerator, tx, keyfile)
 }
 
-//=======================
+// ===================== Migration =======================
 func migrateHandler(ctx *gin.Context) {
 
 }
 
+// ===================== Execution =======================
 func executeHandler(ctx *gin.Context) {
 	var jsonInfo = newTemp()
 	contractAddr := ctx.Param("address")
@@ -320,12 +321,6 @@ func executeHandler(ctx *gin.Context) {
 }
 
 // ===================== SYS ===========================
-
-type contractData interface {
-	/// getDataParams() []string
-	/// paramsCheck() bool
-}
-
 type txParams struct {
 	From string `json:"from"` // the address used to send the transaction
 	/// To       string  `json:"to,omitempty"`   // the address receives the transactions
@@ -359,22 +354,6 @@ type rpcClientParams struct {
 	Passphrase string `json:"passphrase"`
 }
 
-// josnInfo:
-// {
-// 	"tx": {
-//		"from": "0x9ccf0b561c9142d3a771ce2131db8bc9fba61f6f"
-//	},
-//	"contract": {
-//		"data": {
-//			"name": "tofu",
-//			"version": "0.0.0.1",
-//		},
-//		"interpreter": "wasm"
-//	},
-//	"rpc": {
-//		"endPoint": "http://127.0.0.1:6791"
-//	}
-// }
 type temp struct {
 	Tx       *txParams
 	Contract *contractParams
@@ -516,7 +495,7 @@ func newAccountHandler(ctx *gin.Context) {
 		return
 	}
 
-	runPath := utl.GetRunningTimePath()
+	runPath := utils.GetRunningTimePath()
 	keyfileDirt := runPath + defaultKeyfile
 	pathSep := string(os.PathSeparator)
 	keyfilepath := keyfileDirt + pathSep + "UTC--" + time.Now().Format("2006-01-02") + "--" + key.Address.Hex()
@@ -549,9 +528,9 @@ func (c *cnsInfo) getDataParams() []string {
 }
 
 func (c *cnsInfo) paramsCheck() bool {
-	valid := c.Address == "" || utl.IsMatch(c.Address, "address")
-	valid = c.Name == "" || utl.IsMatch(c.Name, "name")
-	valid = c.Version == "" || utl.IsMatch(c.Version, "version")
+	valid := c.Address == "" || utils.IsMatch(c.Address, "address")
+	valid = c.Name == "" || utils.IsMatch(c.Name, "name")
+	valid = c.Version == "" || utils.IsMatch(c.Version, "version")
 	return valid
 }
 
@@ -829,7 +808,7 @@ func (c *roleInfo) getDataParams() []string {
 }
 
 func (c *roleInfo) paramsCheck() bool {
-	valid := c.Address == "" || utl.IsMatch(c.Address, "address")
+	valid := c.Address == "" || utils.IsMatch(c.Address, "address")
 	return valid
 }
 
@@ -896,14 +875,14 @@ func roleGetUserListsHandler(ctx *gin.Context) {
 	endPoint := ctx.Query("endPoint")
 	param := ctx.Param("addressOrName")
 
-	switch utl.IsNameOrAddress(param) {
-	case utl.CnsIsAddress:
+	switch cmd_common.IsNameOrAddress(param) {
+	case cmd_common.CnsIsAddress:
 		funcName = "getRolesByAddress"
 		funcParams = &struct {
 			Address string
 		}{Address: param}
 
-	case utl.CnsIsName:
+	case cmd_common.CnsIsName:
 		funcName = "getRolesByName"
 		funcParams = &struct {
 			Name string
@@ -972,7 +951,7 @@ func (c *fwInfo) getDataParams() []string {
 }
 
 func (c *fwInfo) paramsCheck() bool {
-	valid := c.Address == "" || utl.IsMatch(c.Address, "address")
+	valid := c.Address == "" || utils.IsMatch(c.Address, "address")
 	valid = c.Action == "" || (strings.EqualFold(c.Action, "accept") || strings.EqualFold(c.Action, "reject"))
 	valid = c.Rules == ""
 	return valid
@@ -1350,16 +1329,21 @@ func handlerCallCommon(jsonInfo *temp) ([]interface{}, error) {
 		funcAbi = jsonInfo.Contract.abiMethods
 	}
 
-	cns, err := cmd_common.CnsParse(jsonInfo.Contract.ContractAddr)
+	contractAbi, _ := packet.ParseAbiFromJson(funcAbi)
+	methodAbi, _ := contractAbi.GetFuncFromAbi(jsonInfo.Contract.Method)
+	funcArgs, _ := methodAbi.StringToArgs(funcParams)
+
+	cns, to, err := cmd_common.CnsParse(jsonInfo.Contract.ContractAddr)
 	if err != nil {
 		return nil, err
 	}
-	to := cmd_common.ChainParamConvert(cns.To, "to").(common.Address)
 
 	// todo: lack of virtual machine interpreter
 	vm := jsonInfo.Contract.Interpreter
 
-	dataGenerator := packet.NewContractDataGenWrap(jsonInfo.Contract.Method, funcParams, funcAbi, *cns, vm)
+	data := packet.NewData(funcArgs, methodAbi)
+	dataGenerator := packet.NewContractDataGen(data, contractAbi, cns.TxType)
+	dataGenerator.SetInterpreter(vm, cns.Name, cns.TxType)
 
 	// todo: lack of tx sender
 	from := common.HexToAddress(jsonInfo.Tx.From)
@@ -1371,42 +1355,23 @@ func handlerCallCommon(jsonInfo *temp) ([]interface{}, error) {
 	return A(jsonInfo.Rpc.EndPoint, dataGenerator, tx, keyfile)
 }
 
-func A(url string, dataGen packet.MsgDataGen, tx *packet.TxParams, keyfile *utl.Keyfile) ([]interface{}, error) {
-
+func A(url string, dataGen packet.MsgDataGen, tx *packet.TxParams, keyfile *utils.Keyfile) ([]interface{}, error) {
 	pc, err := platoneclient.SetupClient(url)
 	if err != nil {
 		return nil, err
 	}
 
-	result, isTxHash, err := pc.MessageCall(dataGen, keyfile, tx)
-	if err != nil {
-		return nil, err
-	}
-
-	// todo: isSync
-	if true && isTxHash {
-		res, err := pc.GetReceiptByPolling(result[0].(string))
-		if err != nil {
-			return result, errPollingReceipt
-		}
-
-		receiptBytes, _ := json.MarshalIndent(res, "", "\t")
-		fmt.Println(string(receiptBytes))
-
-		result[0] = dataGen.ReceiptParsing(res)
-	}
-
-	return result, nil
+	return pc.MessageCallV2(dataGen, tx, keyfile, true)
 }
 
-func parseKeyfile(from string) *utl.Keyfile {
-	fileName := utl.GetFileByKey(defaultKeyfile, from)
+func parseKeyfile(from string) *utils.Keyfile {
+	fileName := utils.GetFileByKey(defaultKeyfile, from)
 
 	if fileName != "" {
 		path := defaultKeyfile + "/" + fileName
-		keyfile, _ := cmd_common.KeyfileParsing(path)
+		keyfile, _ := utils.NewKeyfile(path)
 		return keyfile
 	}
 
-	return &utl.Keyfile{}
+	return &utils.Keyfile{}
 }
