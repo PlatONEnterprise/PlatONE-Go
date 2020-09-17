@@ -116,12 +116,18 @@ func (this *contractController) Contract(ctx *webCtx.Context) {
 		contract.CNSName = cns.Name
 	}
 
-	code, err := util.DefaultNode.CodeAt(common.BytesToAddress([]byte( result.Receipt.ContractAddress)))
+	binAddr, err := hex.DecodeString(result.Receipt.ContractAddress)
+	if nil != err {
+		ctx.IndentedJSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	code, err := util.DefaultNode.CodeAt(common.BytesToAddress(binAddr))
 	if nil != err {
 		logrus.Warningln(err)
 	} else {
 		contract.Code = hex.EncodeToString(code)
 	}
-	
+
 	ctx.IndentedJSON(200, contract)
 }

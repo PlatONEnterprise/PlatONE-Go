@@ -107,3 +107,5 @@ release/linux/conf/ctool.json
 release/linux/conf/genesis.json
 release/linux/data/
 
+cmd/data-manager/cmd/cmd
+
