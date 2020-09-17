@@ -206,7 +206,7 @@ func sysConfigParsing(param interface{}, paramName string) string {
 	}
 
 	conv := genConfigConverter(paramName)
-	return conv.parse(param)
+	return conv.Parse(param)
 }
 
 func sysConfigConvert(param, paramName string) (string, error) {
@@ -216,7 +216,7 @@ func sysConfigConvert(param, paramName string) (string, error) {
 	}
 
 	conv := genConfigConverter(paramName)
-	result, err := conv.convert(param)
+	result, err := conv.Convert(param)
 	if err != nil {
 		return "", err
 	}
@@ -224,21 +224,20 @@ func sysConfigConvert(param, paramName string) (string, error) {
 	return result.(string), nil
 }
 
-func genConfigConverter(paramName string) *convert {
-	var conv *convert
+func genConfigConverter(paramName string) *cmd_common.Convert {
 
 	switch paramName {
 	case isTxUseGases:
-		conv = newConvert(txUseGas, txNotUseGas, "1", "0", paramName)
+		return cmd_common.NewConvert(txUseGas, txNotUseGas, "1", "0", paramName)
 	case isApprDeployedCon:
-		conv = newConvert(conAudit, conNotAudit, "1", "0", paramName)
+		return cmd_common.NewConvert(conAudit, conNotAudit, "1", "0", paramName)
 	case isCheckConDeployPerm:
-		conv = newConvert(checkPerm, notCheckPerm, "1", "0", paramName)
+		return cmd_common.NewConvert(checkPerm, notCheckPerm, "1", "0", paramName)
 	case isProdEmptyBlock:
-		conv = newConvert(prodEmp, notProdEmp, "1", "0", paramName)
+		return cmd_common.NewConvert(prodEmp, notProdEmp, "1", "0", paramName)
 	default:
 		utils.Fatalf("invalid system configuration %v", paramName)
 	}
 
-	return conv
+	return nil
 }

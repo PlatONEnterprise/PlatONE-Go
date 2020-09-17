@@ -114,7 +114,7 @@ func (conv *Convert) Convert(param string) (interface{}, error) {
 	}
 }
 
-func (conv *Convert) parse(param interface{}) string {
+func (conv *Convert) Parse(param interface{}) string {
 
 	value1NotEqual := param != conv.value1
 	value2NotEqual := param != conv.value2
@@ -130,7 +130,7 @@ func (conv *Convert) parse(param interface{}) string {
 	}
 }
 
-// ================================================================================
+// ========================== Param Convert ========================================
 
 // ParamParse convert the user inputs to the value needed
 func ParamParse(param, paramName string) interface{} {

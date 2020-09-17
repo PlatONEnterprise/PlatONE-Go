@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"encoding/json"
-	"fmt"
 	"strings"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/accounts/abi"
@@ -161,79 +160,6 @@ func combineJson(c *cli.Context, arrayMust []string, bytes []byte) string {
 	/// utl.Logger.Printf("the combine json is %s\n", bytes)
 
 	return string(bytes)
-}
-
-//===============================User Input Convert=======================================
-
-// convert, convert user input from key to value
-type convert struct {
-	key1      string      // user input 1
-	key2      string      // user input 2
-	value1    interface{} // the convert value of user input 1
-	value2    interface{} // the convert value of user input 2
-	paramName string
-}
-
-// Some of the contract function inputs are numbers,
-// these numbers are hard for users to remember the meanings behind them,
-// Thus, to simplify the user input, we convert the meaningful strings to number automatically
-// For example, if user input: "valid", the converter will convert the string to 1
-func newConvert(key1, key2 string, value1, value2 interface{}, paramName string) *convert {
-	return &convert{
-		key1:      key1,
-		key2:      key2,
-		value1:    value1,
-		value2:    value2,
-		paramName: paramName,
-	}
-}
-
-func convertSelect(param, paramName string) (interface{}, error) {
-	var conv *convert
-
-	switch paramName {
-	case "operation": // registration operation
-		conv = newConvert("approve", "reject", "2", "3", paramName)
-	case "status": // node status
-		conv = newConvert("valid", "invalid", 1, 2, paramName)
-	case "type": // node type
-		conv = newConvert("consensus", "observer", 1, 0, paramName)
-	default:
-		utl.Fatalf("")
-	}
-
-	return conv.convert(param)
-}
-
-func (conv *convert) convert(param string) (interface{}, error) {
-	key1NotEqual := !strings.EqualFold(param, conv.key1)
-	key2NotEqual := !strings.EqualFold(param, conv.key2)
-
-	if key1NotEqual && key2NotEqual {
-		return nil, fmt.Errorf("the %s should be either \"%s\" or \"%s\"", conv.paramName, conv.key1, conv.key2)
-	}
-
-	if key2NotEqual {
-		return conv.value1, nil
-	} else {
-		return conv.value2, nil
-	}
-}
-
-func (conv *convert) parse(param interface{}) string {
-
-	value1NotEqual := param != conv.value1
-	value2NotEqual := param != conv.value2
-
-	if value1NotEqual && value2NotEqual {
-		panic("not match")
-	}
-
-	if value2NotEqual {
-		return conv.key1
-	} else {
-		return conv.key2
-	}
 }
 
 // OptionParamValid wraps ParamValid, it allows the input to be null
