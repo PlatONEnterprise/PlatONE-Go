@@ -1,14 +1,15 @@
 package syncer
 
 import (
-	"encoding/hex"
-	"encoding/json"
-	"fmt"
 	"data-manager/config"
 	"data-manager/db"
 	dbCtx "data-manager/db/context"
 	"data-manager/model"
 	"data-manager/util"
+	"encoding/hex"
+	"encoding/json"
+	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/sirupsen/logrus"
 	"time"
@@ -99,7 +100,7 @@ func (this *syncer) sync() {
 }
 
 func (this *syncer) syncBlocks() error {
-	block, err := defaultNode.LatestBlock()
+	block, err := util.DefaultNode.LatestBlock()
 	if nil != err {
 		logrus.Errorln(err)
 		return err
@@ -116,7 +117,7 @@ func (this *syncer) syncBlocks() error {
 
 func (this *syncer) doSyncBlocks(heightTarget, heightCur uint64) error {
 	for i := heightCur + 1; i < heightTarget; i++ {
-		block, err := defaultNode.BlockByHeight(i)
+		block, err := util.DefaultNode.BlockByHeight(i)
 		if nil != err {
 			logrus.Errorln(err)
 			return err
@@ -158,14 +159,17 @@ func (this *syncer) doSyncTxs(block *types.Block) error {
 		dbTx.Timestamp = block.Time().Int64()
 		dbTx.Hash = tx.Hash().Hex()
 		dbTx.GasLimit = tx.Gas()
-		receipt, err := defaultNode.TransactionReceipt(tx.Hash())
+		receipt, err := util.DefaultNode.TransactionReceipt(tx.Hash())
 		if nil != err {
 			logrus.Errorln("fail to get transaction receipt.err:", err)
 			return err
 		}
 		var recpt model.Receipt
 		recpt.GasUsed = receipt.GasUsed
-		recpt.ContractAddress = receipt.ContractAddress.Hex()
+		recpt.ContractAddress = receipt.ContractAddress.String()
+		if common.IsHexZeroAddress(recpt.ContractAddress) {
+			recpt.ContractAddress = ""
+		}
 
 		bin, err := json.Marshal(receipt.Logs)
 		if nil != err {

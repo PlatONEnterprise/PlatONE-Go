@@ -79,6 +79,13 @@ func (this *tx) Contracts(c *dbCtx.Context, pageIndex, pageSize int64) ([]*Tx, e
 	return this.txs(c, filter, findOps)
 }
 
+func (this *tx) ContractByAddress(c *dbCtx.Context, addr string) (*Tx, error) {
+	filter := bson.M{}
+	filter["receipt.contract_address"] = addr
+
+	return this.queryTx(c, filter)
+}
+
 func (this *tx) TxsFromAddress(c *dbCtx.Context, pageIndex, pageSize int64, addres string) ([]*Tx, error) {
 	filter := bson.M{"from": addres}
 	findOps := buildOptionsByQuery(pageIndex, pageSize)
@@ -131,10 +138,15 @@ func (this *tx) txs(c *dbCtx.Context, filter interface{}, findOps *options.FindO
 }
 
 func (this *tx) Tx(c *dbCtx.Context, hash string) (*Tx, error) {
-	collection := c.Collection(collectionNameTxs)
-	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
 	filter := bson.M{}
 	filter["tx_hash"] = hash
+
+	return this.queryTx(c, filter)
+}
+
+func (this *tx) queryTx(c *dbCtx.Context, filter bson.M) (*Tx, error) {
+	collection := c.Collection(collectionNameTxs)
+	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
 
 	var t Tx
 	err := collection.FindOne(ctx, filter).Decode(&t)

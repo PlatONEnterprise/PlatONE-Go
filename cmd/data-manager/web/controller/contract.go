@@ -5,6 +5,8 @@ import (
 	"data-manager/util"
 	webCtx "data-manager/web/context"
 	webEngine "data-manager/web/engine"
+	"encoding/hex"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/sirupsen/logrus"
 	"net/http"
 )
@@ -12,6 +14,7 @@ import (
 func init() {
 	webEngine.Default.GET("/contracts", webEngine.NewHandler(defaultContractController.Contracts))
 	webEngine.Default.GET("/cns", webEngine.NewHandler(defaultContractController.CNS))
+	webEngine.Default.GET("/contract/:address", webEngine.NewHandler(defaultContractController.Contract))
 }
 
 type contractController struct{}
@@ -79,4 +82,46 @@ func (this *contractController) CNS(ctx *webCtx.Context) {
 	}
 
 	ctx.IndentedJSON(200, newPageInfo(p.PageIndex, p.PageSize, count, result))
+}
+
+func (this *contractController) Contract(ctx *webCtx.Context) {
+	contractAddress := ctx.Param("address")
+
+	result, err := model.DefaultTx.ContractByAddress(ctx.DBCtx, contractAddress)
+	if nil != err {
+		ctx.IndentedJSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	contract := struct {
+		Address   string `json:"address"`
+		CNSName   string `json:"name"`
+		Creator   string `json:"creator"`
+		TxHash    string `json:"tx_hash"`
+		Timestamp int64  `json:"timestamp"`
+		Code      string `json:"code"`
+	}{
+		result.Receipt.ContractAddress,
+		"",
+		result.From,
+		result.Hash,
+		result.Timestamp,
+		"",
+	}
+
+	cns, err := util.GetCNSByAddress(result.Receipt.ContractAddress)
+	if nil != err {
+		logrus.Warningln(err)
+	} else {
+		contract.CNSName = cns.Name
+	}
+
+	code, err := util.DefaultNode.CodeAt(common.BytesToAddress([]byte( result.Receipt.ContractAddress)))
+	if nil != err {
+		logrus.Warningln(err)
+	} else {
+		contract.Code = hex.EncodeToString(code)
+	}
+	
+	ctx.IndentedJSON(200, contract)
 }
