@@ -162,11 +162,14 @@ func (client *pClient) ContractCall(dataGen *packet.ContractDataGen, tx *packet.
 }
 
 func (client *pClient) Send(tx *packet.TxParams, keyfile *utils.Keyfile) (string, error) {
-	params, action := tx.SendModeV2(keyfile)
+	params, action, err := tx.SendModeV2(keyfile)
+	if err != nil {
+		return "", err
+	}
 
 	// send the RPC calls
 	var resp string
-	err := client.c.Call(&resp, action, params...)
+	err = client.c.Call(&resp, action, params...)
 	if err != nil {
 		errStr := fmt.Sprintf(utils.ErrSendTransacionFormat, err.Error())
 		return "", errors.New(errStr)

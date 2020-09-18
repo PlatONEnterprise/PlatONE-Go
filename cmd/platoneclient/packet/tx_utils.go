@@ -229,7 +229,7 @@ func (tx *TxParams) SendMode(isWrite bool, keyfile *utils.Keyfile) ([]interface{
 		params = append(params, "latest")
 		action = "eth_call"
 	case keyfile.Json != nil:
-		signedTx := tx.GetSignedTx(keyfile)
+		signedTx, _ := tx.GetSignedTx(keyfile)
 		params = append(params, signedTx)
 		action = "eth_sendRawTransaction"
 	default:
@@ -240,12 +240,16 @@ func (tx *TxParams) SendMode(isWrite bool, keyfile *utils.Keyfile) ([]interface{
 	return params, action
 }
 
-func (tx *TxParams) SendModeV2(keyfile *utils.Keyfile) ([]interface{}, string) {
+func (tx *TxParams) SendModeV2(keyfile *utils.Keyfile) ([]interface{}, string, error) {
 	var action string
 	var params = make([]interface{}, 0)
 
 	if keyfile.Json != nil {
-		signedTx := tx.GetSignedTx(keyfile)
+		signedTx, err := tx.GetSignedTx(keyfile)
+		if err != nil {
+			return nil, "", err
+		}
+
 		params = append(params, signedTx)
 		action = "eth_sendRawTransaction"
 	} else {
@@ -253,11 +257,11 @@ func (tx *TxParams) SendModeV2(keyfile *utils.Keyfile) ([]interface{}, string) {
 		action = "eth_sendTransaction"
 	}
 
-	return params, action
+	return params, action, nil
 }
 
 // GetSignedTx gets the signed transaction
-func (tx *TxParams) GetSignedTx(keyfile *utils.Keyfile) string {
+func (tx *TxParams) GetSignedTx(keyfile *utils.Keyfile) (string, error) {
 
 	var txSign *types.Transaction
 
@@ -275,7 +279,10 @@ func (tx *TxParams) GetSignedTx(keyfile *utils.Keyfile) string {
 	}
 
 	// extract pk from keystore file and sign the transaction
-	priv := keyfile.GetPrivateKey()
+	priv, err := keyfile.GetPrivateKey()
+	if err != nil {
+		return "", err
+	}
 
 	// todo: choose the correct signer
 	txSign, _ = types.SignTx(txSign, types.HomesteadSigner{}, priv)
@@ -287,7 +294,7 @@ func (tx *TxParams) GetSignedTx(keyfile *utils.Keyfile) string {
 		panic(err)
 	}
 
-	return str
+	return str, nil
 }
 
 // getNonceRand generate a random nonce

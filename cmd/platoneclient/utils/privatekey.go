@@ -37,7 +37,7 @@ func NewKeyfile(keyfilePath string) (*Keyfile, error) {
 }
 
 // GetPrivateKey gets the private key by decrypting the keystore file
-func (k *Keyfile) GetPrivateKey() *ecdsa.PrivateKey {
+func (k *Keyfile) GetPrivateKey() (*ecdsa.PrivateKey, error) {
 
 	// Decrypt key with passphrase.
 	if k.Passphrase == "" {
@@ -46,10 +46,10 @@ func (k *Keyfile) GetPrivateKey() *ecdsa.PrivateKey {
 
 	key, err := keystore.DecryptKey(k.Json, k.Passphrase)
 	if err != nil {
-		utils.Fatalf("Error decrypting key: %v", err)
+		return nil, fmt.Errorf("Error decrypting key: %v", err)
 	}
 
-	return key.PrivateKey
+	return key.PrivateKey, nil
 }
 
 // todo: change prompt to --password flag?
