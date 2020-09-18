@@ -167,7 +167,15 @@ func handlerCallCommon(jsonInfo *temp) ([]interface{}, error) {
 	tx := packet.NewTxParams(from, &to, "", jsonInfo.Tx.Gas, "", "")
 
 	keyfile := parseKeyfile(jsonInfo.Tx.From)
-	keyfile.Passphrase = jsonInfo.Rpc.Passphrase
+
+	if jsonInfo.Rpc.Passphrase != "" {
+		keyfile.Passphrase = jsonInfo.Rpc.Passphrase
+
+		err := keyfile.ParsePrivateKey()
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	return A(jsonInfo.Rpc.EndPoint, dataGenerator, tx, keyfile)
 }
