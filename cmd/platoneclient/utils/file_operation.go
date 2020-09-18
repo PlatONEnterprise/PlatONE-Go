@@ -79,6 +79,10 @@ func DeleteOldFile(fileDirt string) error {
 // if found, return the file name
 func GetFileByKey(fileDirt, key string) (string, error) {
 
+	if key == "" {
+		return "", errors.New("the key can not be null")
+	}
+
 	fileList, err := ioutil.ReadDir(fileDirt)
 	if err != nil {
 		return "", err
