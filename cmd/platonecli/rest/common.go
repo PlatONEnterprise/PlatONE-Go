@@ -166,9 +166,8 @@ func handlerCallCommon(jsonInfo *temp) ([]interface{}, error) {
 	from := common.HexToAddress(jsonInfo.Tx.From)
 	tx := packet.NewTxParams(from, &to, "", jsonInfo.Tx.Gas, "", "")
 
-	keyfile := parseKeyfile(jsonInfo.Tx.From)
-
-	if jsonInfo.Rpc.Passphrase != "" {
+	keyfile, err := parseKeyfile(jsonInfo.Tx.From)
+	if err == nil {
 		keyfile.Passphrase = jsonInfo.Rpc.Passphrase
 
 		err := keyfile.ParsePrivateKey()
@@ -189,14 +188,14 @@ func A(url string, dataGen packet.MsgDataGen, tx *packet.TxParams, keyfile *util
 	return pc.MessageCallV2(dataGen, tx, keyfile, true)
 }
 
-func parseKeyfile(from string) *utils.Keyfile {
-	var keyfile = new(utils.Keyfile)
+func parseKeyfile(from string) (*utils.Keyfile, error) {
 
-	fileName, _ := utils.GetFileByKey(defaultKeyfile, from)
-	if fileName != "" {
-		path := defaultKeyfile + "/" + fileName
-		keyfile, _ = utils.NewKeyfile(path)
+	fileName, err := utils.GetFileByKey(defaultKeyfile, from)
+	if err != nil {
+		return &utils.Keyfile{}, err
 	}
 
-	return keyfile
+	path := defaultKeyfile + "/" + fileName
+	keyfile, _ := utils.NewKeyfile(path)
+	return keyfile, nil
 }

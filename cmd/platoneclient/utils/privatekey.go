@@ -38,10 +38,6 @@ func NewKeyfile(keyfilePath string) (*Keyfile, error) {
 	return keyfile, nil
 }
 
-func (k *Keyfile) SetPrivateKey(key *ecdsa.PrivateKey) {
-	k.privateKey = key
-}
-
 func (k *Keyfile) GetPrivateKey() *ecdsa.PrivateKey {
 	return k.privateKey
 }

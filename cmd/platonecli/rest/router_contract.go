@@ -92,9 +92,8 @@ func deploy(jsonInfo *temp) ([]interface{}, error) {
 	from := common.HexToAddress(jsonInfo.Tx.From)
 	tx := packet.NewTxParams(from, nil, "", "", "", "")
 
-	keyfile := parseKeyfile(jsonInfo.Tx.From)
-
-	if jsonInfo.Rpc.Passphrase != "" {
+	keyfile, err := parseKeyfile(jsonInfo.Tx.From)
+	if err == nil {
 		keyfile.Passphrase = jsonInfo.Rpc.Passphrase
 
 		err := keyfile.ParsePrivateKey()
