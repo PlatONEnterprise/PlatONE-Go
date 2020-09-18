@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -76,21 +77,24 @@ func DeleteOldFile(fileDirt string) error {
 
 // GetFileByKey search the file in the file directory by the search keywords provided
 // if found, return the file name
-func GetFileByKey(fileDirt, key string) string {
+func GetFileByKey(fileDirt, key string) (string, error) {
 
-	fileList, _ := ioutil.ReadDir(fileDirt)
+	fileList, err := ioutil.ReadDir(fileDirt)
+	if err != nil {
+		return "", err
+	}
 
 	for _, file := range fileList {
-
-		switch {
-		case file.IsDir():
+		if file.IsDir() {
 			continue
-		case strings.Contains(strings.ToLower(file.Name()), strings.ToLower(key)):
-			return file.Name()
+		}
+
+		if strings.Contains(strings.ToLower(file.Name()), strings.ToLower(key)) {
+			return file.Name(), nil
 		}
 	}
 
-	return ""
+	return "", errors.New("file not found")
 }
 
 // WriteFile writes the new data in the file, the old data will be override

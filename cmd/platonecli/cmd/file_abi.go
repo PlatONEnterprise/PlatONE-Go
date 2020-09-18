@@ -27,7 +27,7 @@ func abiInit() {
 // getAbiFile gets the abi file that matches the keywords provided
 func getAbiFile(key string) string {
 
-	fileName := utl.GetFileByKey(abiFileDirt, key)
+	fileName, _ := utl.GetFileByKey(abiFileDirt, key)
 
 	if fileName != "" {
 		return abiFileDirt + "/" + fileName

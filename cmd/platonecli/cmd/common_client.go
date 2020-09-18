@@ -49,6 +49,9 @@ func clientCommonV2(c *cli.Context, dataGen packet.MsgDataGen, to *common.Addres
 // ===========================================================
 
 func getClientConfig(c *cli.Context) (*utils.Keyfile, bool, bool, string) {
+	var account *utils.Keyfile
+	var err error
+
 	address := c.String(AccountFlags.Name)
 	keyfile := c.String(KeyfileFlags.Name)
 	isDefault := c.Bool(DefaultFlags.Name)
@@ -61,9 +64,18 @@ func getClientConfig(c *cli.Context) (*utils.Keyfile, bool, bool, string) {
 		keyfile = config.Keystore
 	}
 
-	account, err := utils.NewKeyfile(keyfile)
-	if err != nil {
-		utl.Fatalf(err.Error())
+	if keyfile != "" {
+		account, err = utils.NewKeyfile(keyfile)
+		if err != nil {
+			utl.Fatalf(err.Error())
+		}
+
+		account.Passphrase = utils.PromptPassphrase(false)
+
+		err = account.ParsePrivateKey()
+		if err != nil {
+			utl.Fatalf(err.Error())
+		}
 	}
 
 	if !isTxAccountMatch(address, account) {

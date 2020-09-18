@@ -182,13 +182,13 @@ func A(url string, dataGen packet.MsgDataGen, tx *packet.TxParams, keyfile *util
 }
 
 func parseKeyfile(from string) *utils.Keyfile {
-	fileName := utils.GetFileByKey(defaultKeyfile, from)
+	var keyfile = new(utils.Keyfile)
 
+	fileName, _ := utils.GetFileByKey(defaultKeyfile, from)
 	if fileName != "" {
 		path := defaultKeyfile + "/" + fileName
-		keyfile, _ := utils.NewKeyfile(path)
-		return keyfile
+		keyfile, _ = utils.NewKeyfile(path)
 	}
 
-	return &utils.Keyfile{}
+	return keyfile
 }

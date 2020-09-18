@@ -279,19 +279,21 @@ func (tx *TxParams) GetSignedTx(keyfile *utils.Keyfile) (string, error) {
 	}
 
 	// extract pk from keystore file and sign the transaction
-	priv, err := keyfile.GetPrivateKey()
-	if err != nil {
-		return "", err
-	}
+	// deprecated: move to the outter method
+	/*
+		priv, err := keyfile.GetPrivateKey()
+		if err != nil {
+			return "", err
+		}*/
 
 	// todo: choose the correct signer
-	txSign, _ = types.SignTx(txSign, types.HomesteadSigner{}, priv)
+	txSign, _ = types.SignTx(txSign, types.HomesteadSigner{}, keyfile.GetPrivateKey())
 	/// txSign, _ = types.SignTx(txSign, types.NewEIP155Signer(big.NewInt(300)), priv)
 	/// utl.Logger.Printf("the signed transaction is %v\n", txSign)
 
 	str, err := rlpEncode(txSign)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
 	return str, nil
