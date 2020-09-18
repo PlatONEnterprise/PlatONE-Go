@@ -43,7 +43,6 @@ func cnsQueryHandler(ctx *gin.Context) {
 	var funcName string
 	var queryRange string
 
-	// todo: if endPoint is null?
 	endPoint := ctx.Query("endPoint")
 
 	// todo: ctx.ShouldBindQuery ???
@@ -176,7 +175,10 @@ func cnsMappingGetHandler(ctx *gin.Context) {
 	version := ctx.Query("version")
 	endPoint := ctx.Query("endPoint")
 
-	// todo: paramCheck same as in sc_cns.go
+	if !cmd_common.ParamValidWrap(name, "name") || !cmd_common.ParamValidWrap(version, "version") {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": errInvalidParam.Error()})
+		return
+	}
 
 	funcName := "getContractAddress"
 	/// funcParams := cmd_common.CombineFuncParams(name, version)
@@ -193,8 +195,10 @@ func cnsMappingPostHandler(ctx *gin.Context) {
 	var contractAddr = precompile.CnsManagementAddress
 
 	name := ctx.Param("name")
-
-	// todo: paramCheck same as in sc_cns.go
+	if !cmd_common.ParamValidWrap(name, "name") {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": errInvalidParam.Error()})
+		return
+	}
 
 	funcName := "cnsRedirect"
 	funcParams := &struct {

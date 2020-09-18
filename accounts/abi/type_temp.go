@@ -1,7 +1,6 @@
 package abi
 
 import (
-	"bytes"
 	"errors"
 	"math/big"
 	"reflect"
@@ -27,8 +26,7 @@ func BytesConverter(source []byte, t string) interface{} {
 	case "float128":
 		return common.CallResAsFloat128(source)
 	case "string", "int128_s", "uint128_s", "int256_s", "uint256_s":
-		source = bytes.TrimRight(source, "\x00")
-
+		// source = bytes.TrimRight(source, "\x00")
 		if len(source) < 64 {
 			return string(source[:])
 		} else {

@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	txSender         = "0x063bc2e61696579cf4ad137fed8a7ced15501f73"
+	txSender         = "0xbadcd92587795f25da86e6a8d8cd555f30398687"
 	testContractAddr = "0x942affd352030020d1d4e60160e99045f0c9cc21"
 )
 
@@ -18,6 +18,18 @@ const (
 const (
 	testCnsPostBody = "{\"tx\":{\"from\": \"" + txSender + "\", \"gas\":\"0x10\"}," +
 		"\"contract\":{\"data\": {\"name\": \"tofu\", \"version\": \"0.0.0.1\", \"address\": \"" + testContractAddr + "\"},\"interpreter\": \"wasm\"}," +
+		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\"}}"
+
+	testCnsPostBodyLackEndPoint = "{\"tx\":{\"from\": \"" + txSender + "\", \"gas\":\"0x10\"}," +
+		"\"contract\":{\"data\": {\"name\": \"tofu\", \"version\": \"0.0.0.1\", \"address\": \"" + testContractAddr + "\"},\"interpreter\": \"wasm\"}," +
+		"\"rpc\":{\"endPoint\": \"\"}}"
+
+	testCnsPostBodyLackInterpreter = "{\"tx\":{\"from\": \"" + txSender + "\", \"gas\":\"0x10\"}," +
+		"\"contract\":{\"data\": {\"name\": \"tofu\", \"version\": \"0.0.0.1\", \"address\": \"" + testContractAddr + "\"},\"interpreter\": \"\"}," +
+		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\"}}"
+
+	testCnsPostBodyLackMethod = "{\"tx\":{\"from\": \"" + txSender + "\", \"gas\":\"0x10\"}," +
+		"\"contract\":{\"method\":\"\", \"data\": {\"name\": \"tofu\", \"version\": \"0.0.0.1\", \"address\": \"" + testContractAddr + "\"},\"interpreter\": \"wasm\"}," +
 		"\"rpc\":{\"endPoint\": \"http://127.0.0.1:6791\"}}"
 )
 
@@ -30,6 +42,10 @@ func TestCnsHandlers(t *testing.T) {
 	}{
 		// cns
 		{"POST", "/cns/components", testCnsPostBody, 200},
+		{"POST", "/cns/components", testCnsPostBodyLackEndPoint, 400},
+		{"POST", "/cns/components", testCnsPostBodyLackInterpreter, 200},
+		{"POST", "/cns/components", testCnsPostBodyLackMethod, 400},
+
 		{"GET", "/cns/components?name=tofu&endPoint=http://127.0.0.1:6791", "", 200},
 		{"GET", "/cns/components?page-num=1&page-size=2", "", 200},
 		{"GET", "/cns/components?page-size=2", "", 200},

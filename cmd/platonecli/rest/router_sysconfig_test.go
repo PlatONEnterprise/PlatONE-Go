@@ -44,19 +44,22 @@ func TestSysConfigHandlers(t *testing.T) {
 		expectedCode int
 	}{
 		// sys
-		{"PUT", "/sysConfig/block-gas-limit", testGasLimitBody, 200},
-		{"GET", "/sysConfig/block-gas-limit", "", 200},
+		/// {"PUT", "/sysConfig/block-gas-limit", testGasLimitBody, 200},
+		/// {"GET", "/sysConfig/block-gas-limit", "", 200},
 
-		{"PUT", "/sysConfig/is-produce-empty-block", testSysParamBody, 200},
-		{"GET", "/sysConfig/is-produce-empty-block", "", 200},
+		/// {"PUT", "/sysConfig/is-produce-empty-block", testSysParamBody, 200},
+		/// {"GET", "/sysConfig/is-produce-empty-block", "", 200},
 
-		{"PUT", "/sysConfig/gas-contract-name", testGasNameBody, 200},
+		/// {"PUT", "/sysConfig/check-contract-deploy-permission", testSysParamBody, 200},
+		/// {"GET", "/sysConfig/check-contract-deploy-permission", "", 200},
+
+		/// {"PUT", "/sysConfig/gas-contract-name", testGasNameBody, 200},
 		{"GET", "/sysConfig/gas-contract-name", "", 200},
 
 		// invalid
-		{"PUT", "/sysConfig/block-gas-limit", testGasLimitErrBody, 400},
-		{"PUT", "/sysConfig/is-produce-empty-block", testSysParamErrBody, 400},
-		{"PUT", "/sysConfig/gas-contract-name", testGasNameErrBody, 400},
+		/// {"PUT", "/sysConfig/block-gas-limit", testGasLimitErrBody, 400},
+		/// {"PUT", "/sysConfig/is-produce-empty-block", testSysParamErrBody, 400},
+		/// {"PUT", "/sysConfig/gas-contract-name", testGasNameErrBody, 400},
 	}
 
 	router := genRestRouters()

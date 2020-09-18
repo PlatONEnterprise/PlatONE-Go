@@ -35,7 +35,7 @@ type txParams struct {
 }
 
 type contractParams struct {
-	ContractAddr string `json:"contractAddr,omitempty"`
+	contractAddr string
 	Method       string `json:"method,omitempty"`
 	Interpreter  string `json:"interpreter,omitempty"`
 	abiMethods   []byte `json:"-"`
@@ -45,7 +45,7 @@ type contractParams struct {
 
 func newContractParams(defaultAddr, defaultMethod, defaultInter string, abiBytes []byte, dataParams interface{}) *contractParams {
 	return &contractParams{
-		ContractAddr: defaultAddr,
+		contractAddr: defaultAddr,
 		Method:       defaultMethod,
 		Interpreter:  defaultInter,
 		abiMethods:   abiBytes,
@@ -95,7 +95,7 @@ func jsonStringPatch(value interface{}) interface{} {
 		// string starts with {"
 		if bytes.Equal([]byte(str)[:2], []byte{123, 34}) {
 			var m map[string]interface{}
-			json.Unmarshal([]byte(value.(string)), &m)
+			_ = json.Unmarshal([]byte(value.(string)), &m)
 			return m
 		}
 	}
@@ -127,7 +127,6 @@ func posthandlerCommon(ctx *gin.Context, data *contractParams) {
 			return
 		}
 
-		// todo: error code
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -138,33 +137,32 @@ func posthandlerCommon(ctx *gin.Context, data *contractParams) {
 func handlerCallCommon(jsonInfo *temp) ([]interface{}, error) {
 	var funcAbi []byte
 
-	// todo: function parameters
-	/// funcParams := jsonInfo.Contract.Data.getDataParams()
 	funcParams, _ := getDataParams(jsonInfo.Contract.Data)
 
-	if p := precompile.List[jsonInfo.Contract.ContractAddr]; p != "" {
+	if p := precompile.List[jsonInfo.Contract.contractAddr]; p != "" {
 		funcAbi, _ = precompile.Asset(p)
 	} else {
 		funcAbi = jsonInfo.Contract.abiMethods
 	}
 
 	contractAbi, _ := packet.ParseAbiFromJson(funcAbi)
-	methodAbi, _ := contractAbi.GetFuncFromAbi(jsonInfo.Contract.Method)
+	methodAbi, err := contractAbi.GetFuncFromAbi(jsonInfo.Contract.Method)
+	if err != nil {
+		return nil, err
+	}
 	funcArgs, _ := methodAbi.StringToArgs(funcParams)
 
-	cns, to, err := cmd_common.CnsParse(jsonInfo.Contract.ContractAddr)
+	cns, to, err := cmd_common.CnsParse(jsonInfo.Contract.contractAddr)
 	if err != nil {
 		return nil, err
 	}
 
-	// todo: lack of virtual machine interpreter
 	vm := jsonInfo.Contract.Interpreter
 
 	data := packet.NewData(funcArgs, methodAbi)
 	dataGenerator := packet.NewContractDataGen(data, contractAbi, cns.TxType)
 	dataGenerator.SetInterpreter(vm, cns.Name, cns.TxType)
 
-	// todo: lack of tx sender
 	from := common.HexToAddress(jsonInfo.Tx.From)
 	tx := packet.NewTxParams(from, &to, "", jsonInfo.Tx.Gas, "", "")
 

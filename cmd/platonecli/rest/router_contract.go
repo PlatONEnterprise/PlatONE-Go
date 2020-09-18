@@ -62,7 +62,6 @@ func deployHandler(ctx *gin.Context) {
 			return
 		}
 
-		// todo: error code
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -141,7 +140,7 @@ func executeHandler(ctx *gin.Context) {
 			})
 			return
 		}
-		// todo: error code
+
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}

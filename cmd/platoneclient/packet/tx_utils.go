@@ -59,6 +59,9 @@ func (funcs ContractAbi) GetFuncFromAbi(name string) (*FuncDesc, error) {
 		}
 	}
 
+	if name == "" {
+		name = "null"
+	}
 	funcList := funcs.ListAbiFuncName()
 
 	return nil, fmt.Errorf("function/event %s is not found in\n%s", name, funcList)
