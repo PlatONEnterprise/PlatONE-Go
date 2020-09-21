@@ -37,6 +37,7 @@ func (this *txController) Txs(ctx *webCtx.Context) {
 		ctx.IndentedJSON(http.StatusBadRequest, err.Error())
 		return
 	}
+	setPageDefaultIfEmpty(&p)
 
 	result, err := model.DefaultTx.Txs(ctx.DBCtx, p.PageIndex, p.PageSize)
 	if nil != err {
@@ -59,6 +60,8 @@ func (this *txController) TxsInHeight(ctx *webCtx.Context) {
 		ctx.IndentedJSON(http.StatusBadRequest, err.Error())
 		return
 	}
+	setPageDefaultIfEmpty(&p)
+
 	height, err := strconv.ParseUint(ctx.Param("block_height"), 10, 64)
 	if nil != err {
 		ctx.IndentedJSON(http.StatusBadRequest, err.Error())
@@ -87,6 +90,7 @@ func (this *txController) TxsFromAddress(ctx *webCtx.Context) {
 		return
 	}
 	fromAddr := ctx.Param("from_address")
+	setPageDefaultIfEmpty(&p)
 
 	result, err := model.DefaultTx.TxsFromAddress(ctx.DBCtx, p.PageIndex, p.PageSize, fromAddr)
 	if nil != err {

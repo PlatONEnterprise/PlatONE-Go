@@ -61,6 +61,7 @@ func (this *blockController) Blocks(ctx *webCtx.Context) {
 		ctx.IndentedJSON(http.StatusBadRequest, err.Error())
 		return
 	}
+	setPageDefaultIfEmpty(&p)
 
 	result, err := model.DefaultBlock.Blocks(ctx.DBCtx, p.PageIndex, p.PageSize)
 	if nil != err {

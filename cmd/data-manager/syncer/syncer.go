@@ -116,7 +116,7 @@ func (this *syncer) syncBlocks() error {
 }
 
 func (this *syncer) doSyncBlocks(heightTarget, heightCur uint64) error {
-	for i := heightCur + 1; i < heightTarget; i++ {
+	for i := heightCur + 1; i <= heightTarget; i++ {
 		block, err := util.DefaultNode.BlockByHeight(i)
 		if nil != err {
 			logrus.Errorln(err)
@@ -249,12 +249,11 @@ func (this *syncer) syncStats() error {
 		return err
 	}
 
-	totalNode, err := util.GetAmountOfNodes()
+	stats.TotalNode, err = model.DefaultNode.AllNodeCount(this.dbCtx)
 	if nil != err {
 		logrus.Errorln("failed to find amount of nodes,err:", err)
 		return err
 	}
-	stats.TotalNode = uint64(totalNode)
 
 	err = model.DefaultStats.UpsertStats(this.dbCtx, &stats)
 	if nil != err {

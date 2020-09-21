@@ -51,6 +51,15 @@ func (this *node) DeleteAllNodes(c *dbCtx.Context) error {
 	return nil
 }
 
+func (this *node) AllNodeCount(c *dbCtx.Context) (int, error) {
+	nodes, err := this.AllNodes(c)
+	if nil != err {
+		return 0, err
+	}
+
+	return len(nodes), nil
+}
+
 func (this *node) AllNodes(c *dbCtx.Context) ([]*Node, error) {
 	collection := c.Collection(collectionNameNodes)
 	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)

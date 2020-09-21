@@ -12,6 +12,16 @@ type pageInfo struct {
 	Items     interface{} `json:"items"`
 }
 
+func setPageDefaultIfEmpty(p *page) {
+	if p.PageSize <= 0 {
+		p.PageSize = 50
+	}
+
+	if p.PageIndex <= 0 {
+		p.PageIndex = 1
+	}
+}
+
 func newPageInfo(pageIndex, pageSize, total int64, items interface{}) *pageInfo {
 	return &pageInfo{PageIndex: pageIndex, PageSize: pageSize, Total: total, Items: items}
 }

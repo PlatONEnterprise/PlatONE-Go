@@ -27,6 +27,7 @@ func (this *contractController) Contracts(ctx *webCtx.Context) {
 		ctx.IndentedJSON(http.StatusBadRequest, err.Error())
 		return
 	}
+	setPageDefaultIfEmpty(&p)
 
 	result, err := model.DefaultTx.Contracts(ctx.DBCtx, p.PageIndex, p.PageSize)
 	if nil != err {
@@ -68,6 +69,7 @@ func (this *contractController) CNS(ctx *webCtx.Context) {
 		ctx.IndentedJSON(http.StatusBadRequest, err.Error())
 		return
 	}
+	setPageDefaultIfEmpty(&p)
 
 	result, err := model.DefaultCNS.QueryCNS(ctx.DBCtx, p.PageIndex, p.PageSize)
 	if nil != err {
