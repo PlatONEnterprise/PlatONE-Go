@@ -448,22 +448,6 @@ func parseInputFromAbi(vm *exec.VirtualMachine, input []byte, abi []byte) (txTyp
 				return -1, "", nil, returnType, fmt.Errorf("invalid parameter: want 8 bytes but got %d bytes", len(bts))
 			}
 			params = append(params, int64(binary.BigEndian.Uint64(bts)))
-		case "int128", "uint128":
-			if len(bts) > 16 {
-				return -1, "", nil, returnType, fmt.Errorf("invalid parameter: want 16 bytes but got %d bytes", len(bts))
-			}
-			var l, h int64
-			if len(bts) <= 8 {
-				h = int64(binary.BigEndian.Uint64(bts))
-			} else {
-				h = int64(binary.BigEndian.Uint64(bts[:8]))
-			}
-			if len(bts) > 8 {
-				l = int64(binary.BigEndian.Uint64(bts[8:]))
-			} else {
-				l = int64(0)
-			}
-			params = append(params, h, l)
 		case "float32":
 			if len(bts) > 4 {
 				return -1, "", nil, returnType, fmt.Errorf("invalid parameter: want 4 bytes but got %d bytes", len(bts))
@@ -477,7 +461,7 @@ func parseInputFromAbi(vm *exec.VirtualMachine, input []byte, abi []byte) (txTyp
 			}
 			bits := binary.BigEndian.Uint64(bts)
 			params = append(params, int64(bits))
-		case "float128":
+		case "float128", "int128", "uint128":
 			if len(bts) != 16 {
 				return -1, "", nil, returnType, fmt.Errorf("invalid parameter: want 16 bytes but got %d bytes", len(bts))
 			}
