@@ -128,7 +128,7 @@ func fromNodes(nodes []*syscontracts.NodeInfo) []*eNode {
 		enode := &eNode{}
 		enode.PublicKey = n.PublicKey
 		enode.Port = n.P2pPort
-		enode.IP = n.InternalIP
+		enode.IP = n.ExternalIP
 
 		enodes = append(enodes, enode)
 	}
@@ -233,9 +233,9 @@ func (n *SCNode) checkParamsOfUpdateNodeAndReturnUpdatedNode(name string, update
 		if err := checkNodeDescLen(desc); err != nil {
 			return nil, err
 		}
-		if desc != ""{
+		if desc != "" {
 			node.Desc = desc
-		} else{
+		} else {
 			return nil, errors.New("desc cannot be a empty string!")
 		}
 	}

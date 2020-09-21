@@ -47,7 +47,7 @@ type NodeInfo struct {
 	Typ   uint32 `json:"type"` // 0:观察者节点；1:共识节点
 	// status 1为正常节点, 2为删除节点
 	Status     uint32 `json:"status,required"`
-	ExternalIP string `json:"externalIP"`
+	ExternalIP string `json:"externalIP,required"`
 	InternalIP string `json:"internalIP,omitempty,required"`
 	PublicKey  string `json:"publicKey,required"` //节点公钥，全网唯一，不能重复
 	RpcPort    uint32 `json:"rpcPort"`
