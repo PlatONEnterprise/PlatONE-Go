@@ -100,6 +100,7 @@ func jsonStringPatch(value interface{}) interface{} {
 			_ = json.Unmarshal(b, &m)
 			return m
 		}
+		return value
 	}
 
 	return value
