@@ -15,7 +15,9 @@ func regMatch(param, pattern string) bool {
 // IsMatch selects different patterns by the paramName
 func IsMatch(param, paramName string) bool {
 	var pattern string
-
+	if paramName == "version" && param == "latest"{
+		return true
+	}
 	switch paramName {
 	case "name":
 		pattern = `^[\w]*$` //english name: Alice_02
