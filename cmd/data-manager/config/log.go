@@ -27,6 +27,6 @@ func initLog() {
 	}
 
 	logrus.SetLevel(logLevel)
-	//logrus.SetReportCaller(true)
+	logrus.SetReportCaller(true)
 	logrus.SetFormatter(&logrus.TextFormatter{})
 }

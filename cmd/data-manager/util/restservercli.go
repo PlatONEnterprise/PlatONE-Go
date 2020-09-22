@@ -1,10 +1,10 @@
 package util
 
 import (
+	"data-manager/config"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"data-manager/config"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net"
@@ -202,7 +202,7 @@ func httpGet(url string, ret interface{}) error {
 		logrus.Errorln("failed to read from resp.body,err:", err)
 		return err
 	}
-	logrus.Debugln("httpget body:", string(bin))
+	logrus.Debugln("url:", url, "httpget body:", string(bin))
 
 	err = json.Unmarshal(bin, ret)
 	if err != nil {
