@@ -96,11 +96,10 @@ func jsonStringPatch(value interface{}) interface{} {
 		if bytes.Equal([]byte(str)[:2], []byte{123, 34}) {
 			var m map[string]interface{}
 			b := bytes.Trim([]byte(str), "\x00")
-			c := bytes.Trim([]byte(b), "\u0000")
-			_ = json.Unmarshal(c, &m)
+			//c := bytes.Trim([]byte(b), "\u0000")
+			_ = json.Unmarshal(b, &m)
 			return m
 		}
-		//return value
 	}
 
 	return value
