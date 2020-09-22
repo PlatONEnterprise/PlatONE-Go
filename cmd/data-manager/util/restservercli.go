@@ -126,7 +126,7 @@ func GetLatestCNS(name string) (*cnsInfo, error) {
 	url := fmt.Sprintf(
 		"%s%s/%s?endpoint=%s&version=latest",
 		config.Config.ChainConf.NodeRestServer,
-		"/cns/mapings",
+		"/cns/mappings",
 		name,
 		config.Config.ChainConf.NodeRpcAddress,
 	)
