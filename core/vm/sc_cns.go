@@ -61,11 +61,11 @@ type CnsManager struct {
 
 // ContractInfo stores cns registration info of a contract address
 type ContractInfo struct {
-	Name      string
-	Version   string
-	Address   common.Address
-	Origin    common.Address
-	TimeStamp uint64 `json:"create_time"`
+	Name      string         `json:"name"`
+	Version   string         `json:"version"`
+	Address   common.Address `json:"address"`
+	Origin    common.Address `json:"origin"`
+	TimeStamp uint64         `json:"create_time"`
 }
 
 func newContractInfo(name, version string, address, origin common.Address) *ContractInfo {

@@ -92,6 +92,8 @@ func jsonStringPatch(value interface{}) interface{} {
 	if reflect.ValueOf(value).Kind() == reflect.String {
 		str := value.(string)
 		// string starts with {"
+		res := bytes.Trim([]byte(str), "\x00")
+		value = bytes.Trim([]byte(res), "\u0000")
 		if bytes.Equal([]byte(str)[:2], []byte{123, 34}) {
 			var m map[string]interface{}
 			b := bytes.Trim([]byte(str), "\x00")
