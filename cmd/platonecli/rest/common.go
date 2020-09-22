@@ -92,7 +92,7 @@ func jsonStringPatch(value interface{}) interface{} {
 	if reflect.ValueOf(value).Kind() == reflect.String {
 		str := value.(string)
 		// string starts with {"
-		value = bytes.Trim([]byte(str), "\u0000")
+		res := bytes.Trim([]byte(str), "\u0000")
 		if bytes.Equal([]byte(str)[:2], []byte{123, 34}) {
 			var m map[string]interface{}
 			b := bytes.Trim([]byte(str), "\x00")
@@ -100,7 +100,7 @@ func jsonStringPatch(value interface{}) interface{} {
 			_ = json.Unmarshal(b, &m)
 			return m
 		}
-		return value
+		return string(res)
 	}
 
 	return value
