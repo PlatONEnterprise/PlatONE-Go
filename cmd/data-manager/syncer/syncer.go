@@ -322,7 +322,7 @@ func (this *syncer) syncCNS() error {
 			mapCns[info.Name] = cns
 		}
 
-		if info.Name == latest.Name && info.Version == latest.Version {
+		if info.Name == latest.Name && info.Address == latest.Address {
 			cns.Address = info.Address
 			cns.Name = info.Name
 			cns.Version = info.Version
