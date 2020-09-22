@@ -85,7 +85,6 @@ func queryHandlerCommon(ctx *gin.Context, endPoint string, data *contractParams)
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
 	ctx.JSON(200, jsonStringPatch(res[0]))
 }
 
@@ -95,7 +94,8 @@ func jsonStringPatch(value interface{}) interface{} {
 		// string starts with {"
 		if bytes.Equal([]byte(str)[:2], []byte{123, 34}) {
 			var m map[string]interface{}
-			_ = json.Unmarshal([]byte(value.(string)), &m)
+			b := bytes.Trim([]byte(str), "\x00")
+			_ = json.Unmarshal(b, &m)
 			return m
 		}
 	}
