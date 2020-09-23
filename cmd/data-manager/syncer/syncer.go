@@ -319,7 +319,7 @@ func (this *syncer) syncCNS() error {
 
 		cns, ok := mapCns[info.Name]
 		if !ok {
-			cns = &model.CNS{}
+			cns = &model.CNS{Infos: []*model.CNSInfo{}}
 			mapCns[info.Name] = cns
 		}
 
