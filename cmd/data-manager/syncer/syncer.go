@@ -12,6 +12,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/sirupsen/logrus"
+	"strings"
 	"time"
 )
 
@@ -322,7 +323,7 @@ func (this *syncer) syncCNS() error {
 			mapCns[info.Name] = cns
 		}
 
-		if info.Name == latest.Name && info.Address == latest.Address {
+		if info.Name == latest.Name && strings.ToLower(info.Address) == strings.ToLower(latest.Address) {
 			cns.Address = info.Address
 			cns.Name = info.Name
 			cns.Version = info.Version
