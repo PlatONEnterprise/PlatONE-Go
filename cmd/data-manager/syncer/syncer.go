@@ -327,13 +327,13 @@ func (this *syncer) syncCNS() error {
 			cns.Address = info.Address
 			cns.Name = info.Name
 			cns.Version = info.Version
-		} else {
-			var ci model.CNSInfo
-			ci.Version = info.Version
-			ci.Address = info.Address
-
-			cns.Infos = append(cns.Infos, &ci)
 		}
+
+		var ci model.CNSInfo
+		ci.Version = info.Version
+		ci.Address = info.Address
+
+		cns.Infos = append(cns.Infos, &ci)
 	}
 
 	var modelCnses []*model.CNS
