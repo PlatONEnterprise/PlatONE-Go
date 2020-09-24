@@ -28,16 +28,16 @@ type Tx struct {
 	Receipt   *Receipt `json:"receipt" bson:"receipt"`
 }
 
-type TxStats struct {
-	Date     string `json:"date" bson:"date"`
-	TxAmount int64  `json:"tx_amount" bson:"tx_amount"`
-}
-
 type Receipt struct {
 	ContractAddress string `json:"contract_address" bson:"contract_address"`
 	Status          uint64 `json:"status" bson:"status"`
 	Event           string `json:"event" bson:"event"`
 	GasUsed         uint64 `json:"gas_used" bson:"gas_used"`
+}
+
+type TxStats struct {
+	Date     string `json:"date" bson:"date"`
+	TxAmount int64  `json:"tx_amount" bson:"tx_amount"`
 }
 
 type Node struct {

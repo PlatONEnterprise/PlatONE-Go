@@ -18,7 +18,7 @@ type statsController struct{}
 var defaultStatsController = &statsController{}
 
 func (this *statsController) Stats(ctx *webCtx.Context) {
-	ret, err := model.DefaultStats.Stats(ctx.DBCtx)
+	ret, err := model.GetStats(ctx.DBCtx)
 	if nil != err {
 		ctx.IndentedJSON(http.StatusInternalServerError, err.Error())
 		return

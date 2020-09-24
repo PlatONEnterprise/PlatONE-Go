@@ -93,11 +93,11 @@ func (this *syncer) sync() {
 	}
 	logrus.Debug("sync blocks success.")
 
-	err = this.syncStats()
-	if nil != err {
-		logrus.Errorln("failed to sync stats,err:", err)
-		return
-	}
+	//err = this.syncStats()
+	//if nil != err {
+	//	logrus.Errorln("failed to sync stats,err:", err)
+	//	return
+	//}
 }
 
 func (this *syncer) syncBlocks() error {
@@ -228,42 +228,42 @@ func (this *syncer) syncTxStats() error {
 
 	return nil
 }
-
-func (this *syncer) syncStats() error {
-	var stats model.Stats
-	var err error
-	stats.LatestBlock, err = model.DefaultBlock.LatestHeight(this.dbCtx)
-	if nil != err {
-		logrus.Errorln(err)
-		return err
-	}
-
-	stats.TotalContract, err = model.DefaultTx.TotalContract(this.dbCtx)
-	if nil != err {
-		logrus.Errorln(err)
-		return err
-	}
-
-	stats.TotalTx, err = model.DefaultTx.TotalTx(this.dbCtx)
-	if nil != err {
-		logrus.Errorln(err)
-		return err
-	}
-
-	stats.TotalNode, err = model.DefaultNode.AllNodeCount(this.dbCtx)
-	if nil != err {
-		logrus.Errorln("failed to find amount of nodes,err:", err)
-		return err
-	}
-
-	err = model.DefaultStats.UpsertStats(this.dbCtx, &stats)
-	if nil != err {
-		logrus.Errorln(err)
-		return err
-	}
-
-	return nil
-}
+//
+//func (this *syncer) syncStats() error {
+//	var stats model.Stats
+//	var err error
+//	stats.LatestBlock, err = model.DefaultBlock.LatestHeight(this.dbCtx)
+//	if nil != err {
+//		logrus.Errorln(err)
+//		return err
+//	}
+//
+//	stats.TotalContract, err = model.DefaultTx.TotalContract(this.dbCtx)
+//	if nil != err {
+//		logrus.Errorln(err)
+//		return err
+//	}
+//
+//	stats.TotalTx, err = model.DefaultTx.TotalTx(this.dbCtx)
+//	if nil != err {
+//		logrus.Errorln(err)
+//		return err
+//	}
+//
+//	stats.TotalNode, err = model.DefaultNode.AllNodeCount(this.dbCtx)
+//	if nil != err {
+//		logrus.Errorln("failed to find amount of nodes,err:", err)
+//		return err
+//	}
+//
+//	err = model.DefaultStats.UpsertStats(this.dbCtx, &stats)
+//	if nil != err {
+//		logrus.Errorln(err)
+//		return err
+//	}
+//
+//	return nil
+//}
 
 func (this *syncer) syncNodes() error {
 	nodeInfos, err := util.GetNodes()

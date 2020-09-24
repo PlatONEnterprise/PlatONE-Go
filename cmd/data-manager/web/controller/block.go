@@ -69,11 +69,11 @@ func (this *blockController) Blocks(ctx *webCtx.Context) {
 		return
 	}
 
-	stats, err := model.DefaultStats.Stats(ctx.DBCtx)
+	block, err := model.DefaultBlock.LatestBlock(ctx.DBCtx)
 	if nil != err {
 		ctx.IndentedJSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
-	ctx.IndentedJSON(200, newPageInfo(p.PageIndex, p.PageSize, int64(stats.LatestBlock), result))
+	ctx.IndentedJSON(200, newPageInfo(p.PageIndex, p.PageSize, int64(block.Height), result))
 }

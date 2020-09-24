@@ -22,7 +22,7 @@ var defaultTxController = &txController{}
 func (this *txController) Tx(ctx *webCtx.Context) {
 	hash := ctx.Param("hash")
 
-	ret, err := model.DefaultTx.Tx(ctx.DBCtx, hash)
+	ret, err := model.DefaultTx.TxByHash(ctx.DBCtx, hash)
 	if nil != err {
 		ctx.IndentedJSON(http.StatusInternalServerError, err.Error())
 		return
@@ -45,13 +45,13 @@ func (this *txController) Txs(ctx *webCtx.Context) {
 		return
 	}
 
-	stats, err := model.DefaultStats.Stats(ctx.DBCtx)
+	totalTx, err := model.DefaultTx.TotalTx(ctx.DBCtx)
 	if nil != err {
 		ctx.IndentedJSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
-	ctx.IndentedJSON(200, newPageInfo(p.PageIndex, p.PageSize, int64(stats.TotalTx), result))
+	ctx.IndentedJSON(200, newPageInfo(p.PageIndex, p.PageSize, totalTx, result))
 }
 
 func (this *txController) TxsInHeight(ctx *webCtx.Context) {
@@ -98,11 +98,11 @@ func (this *txController) TxsFromAddress(ctx *webCtx.Context) {
 		return
 	}
 
-	stats, err := model.DefaultStats.Stats(ctx.DBCtx)
+	totalTx, err := model.DefaultTx.TotalTx(ctx.DBCtx)
 	if nil != err {
 		ctx.IndentedJSON(http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	ctx.IndentedJSON(200, newPageInfo(p.PageIndex, p.PageSize, stats.TotalTx, result))
+	ctx.IndentedJSON(200, newPageInfo(p.PageIndex, p.PageSize, totalTx, result))
 }

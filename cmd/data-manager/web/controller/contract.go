@@ -54,13 +54,13 @@ func (this *contractController) Contracts(ctx *webCtx.Context) {
 		cs = append(cs, &c)
 	}
 
-	stats, err := model.DefaultStats.Stats(ctx.DBCtx)
+	totalContract, err := model.DefaultTx.TotalContract(ctx.DBCtx)
 	if nil != err {
 		ctx.IndentedJSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
-	ctx.IndentedJSON(200, newPageInfo(p.PageIndex, p.PageSize, int64(stats.TotalContract), cs))
+	ctx.IndentedJSON(200, newPageInfo(p.PageIndex, p.PageSize, totalContract, cs))
 }
 
 func (this *contractController) CNS(ctx *webCtx.Context) {
