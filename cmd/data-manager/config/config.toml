@@ -1,0 +1,35 @@
+[http]
+ip = "127.0.0.1"
+port = "9999"
+debug = true
+
+[log]
+# trace < debug < info < warn < error < fatal < panic
+level = "debug"
+# std | file
+output = "std"
+filepath = "./data-manager.log"
+
+[db]
+ip = "127.0.0.1"
+port = "27017"
+username = "root"
+password = "root"
+dbname = "data-manager"
+
+[sync]
+interval = 5 #sec
+urls = [
+    "http://localhost:6789",
+    "http://localhost:6789"
+]
+
+[sync-tx-count]
+when="00:00:30"
+try_times=1
+
+[chain]
+id=300
+node_rest_server="http://localhost:6791"
+node_rpc_address="http://localhost:6791"
+
