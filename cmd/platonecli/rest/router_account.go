@@ -2,17 +2,15 @@ package rest
 
 import (
 	"crypto/ecdsa"
-	"io/ioutil"
-	"net/http"
-	"os"
-	"path/filepath"
-	"time"
-
 	"github.com/PlatONEnetwork/PlatONE-Go/accounts/keystore"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"github.com/gin-gonic/gin"
 	"github.com/pborman/uuid"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"path/filepath"
 )
 
 func registerAccountRouters(r *gin.Engine) {
@@ -69,7 +67,7 @@ func newAccountHandler(ctx *gin.Context) {
 	runPath := utils.GetRunningTimePath()
 	keyfileDirt := runPath + defaultKeyfile
 	pathSep := string(os.PathSeparator)
-	keyfilepath := keyfileDirt + pathSep + "UTC--" + time.Now().Format("2006-01-02") + "--" + key.Address.Hex()
+	keyfilepath := keyfileDirt + pathSep + keystore.KeyFileName(key.Address)
 
 	// Store the file to disk.
 	if err := os.MkdirAll(filepath.Dir(keyfilepath), 0700); err != nil {
