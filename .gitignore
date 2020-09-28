@@ -107,4 +107,4 @@ release/linux/conf/genesis.json
 release/linux/data/
 
 cmd/data-manager/cmd/cmd
-
+cmd/platonecli/platonecli
