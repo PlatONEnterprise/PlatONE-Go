@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"reflect"
+	"strings"
 
 	cmd_common "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient"
@@ -192,7 +193,9 @@ func A(url string, dataGen packet.MsgDataGen, tx *packet.TxParams, keyfile *util
 }
 
 func parseKeyfile(from string) (*utils.Keyfile, error) {
-
+	if strings.HasPrefix(from, "0x") {
+		from = from[2:]
+	}
 	fileName, err := utils.GetFileByKey(defaultKeyfile, from)
 	if err != nil {
 		return &utils.Keyfile{}, err
