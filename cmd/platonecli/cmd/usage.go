@@ -66,6 +66,7 @@ var AppHelpFlagGroups = []flagGroup{
 			UserRemarkFlags,
 			TelFlags,
 			EmailFlags,
+			OrganizationFlags,
 			AddressFlags,
 			UserIDFlags,
 			UserRoleFlag,
