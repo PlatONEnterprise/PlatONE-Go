@@ -60,7 +60,7 @@ The unit conversion table are as follows:
 		Usage:     "Add a user to the user platform",
 		ArgsUsage: "<address> <name> <tel> <email>",
 		Action:    userAdd,
-		Flags:     globalCmdFlags,
+		Flags:     userAddCmdFlags,
 		Description: `
 		platonecli account add <address> <name> <tel> <email>`,
 	}
