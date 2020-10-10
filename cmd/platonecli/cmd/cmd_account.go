@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 
 	cmd_common "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/common"
@@ -61,7 +62,7 @@ The unit conversion table are as follows:
 		Action:    userAdd,
 		Flags:     globalCmdFlags,
 		Description: `
-		platonecli admin user add <address> <name> <tel> <email>`,
+		platonecli account add <address> <name> <tel> <email>`,
 	}
 
 	UserUpdate = cli.Command{
@@ -71,7 +72,7 @@ The unit conversion table are as follows:
 		Action:    userUpdate,
 		Flags:     userUpdateCmdFlags,
 		Description: `
-		platonecli admin user update <address>`,
+		platonecli account update <address>`,
 	}
 
 	QueryUserCmd = cli.Command{
@@ -98,11 +99,22 @@ func transfer(c *cli.Context) {
 	fmt.Printf("result: %v\n", result[0])
 }
 
+type UserInfo struct {
+	Address string `json:"address,string,omitempty,required"`
+	Name string `json:"name,omitempty"`
+}
 func userAdd(c *cli.Context) {
-	// var strMustArray = []string{"address", "name", "mobile", "email"}
-	// strJson := combineJson(c, strMustArray, nil)
-	var strJson = c.Args().First()
+	var strMustArray = []string{"address", "name"}
+	strJson := combineJson(c, strMustArray, nil)
+	//var strJson = c.Args().First()
 
+	var userinfo UserInfo
+	address := c.Args().First()
+	userinfo.Address = address
+	name := c.Args().Get(1)
+	userinfo.Name = name
+	bytes, _ := json.Marshal(userinfo)
+	strJson = string(bytes)
 	funcParams := []string{strJson}
 	result := contractCall(c, funcParams, "addUser", precompile.UserManagementAddress)
 	fmt.Printf("%s\n", result)
