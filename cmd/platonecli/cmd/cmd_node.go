@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"strconv"
 
 	cmd_common "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/common"
 
@@ -29,7 +30,7 @@ var (
 	NodeAddCmd = cli.Command{
 		Name:      "add",
 		Usage:     "Add a node to the node list",
-		ArgsUsage: "<name> <publicKey> <externalIP> <internalIP>",
+		ArgsUsage: "<name> <publicKey> <externalIP> <internalIP> <status>",
 		Action:    nodeAdd,
 		Flags:     nodeAddCmdFlags,
 		Description: `
@@ -87,6 +88,8 @@ func nodeAdd(c *cli.Context) {
 	nodeinfo.PublicKey = c.Args().Get(1)
 	nodeinfo.ExternalIP = c.Args().Get(2)
 	nodeinfo.InternalIP = c.Args().Get(3)
+	status64,_ := strconv.ParseInt(c.Args().Get(4),10,32)
+	nodeinfo.Status = int32(status64)
 	bytes, _ := json.Marshal(nodeinfo)
 	strJson := string(bytes)
 
