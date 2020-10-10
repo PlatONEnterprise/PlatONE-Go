@@ -8,7 +8,6 @@ import (
 
 	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/precompiled"
 
-	"github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -140,9 +139,9 @@ func cnsQuery(c *cli.Context) {
 		validFlagsCount -= 1
 	}
 
-	if validFlagsCount != 1 {
-		utils.Fatalf("please select one and the only one search key")
-	}
+	//if validFlagsCount != 1 {
+	//	utils.Fatalf("please select one and the only one search key")
+	//}
 
 	switch {
 	case all:
