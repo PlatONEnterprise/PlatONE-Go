@@ -100,12 +100,12 @@ func transfer(c *cli.Context) {
 }
 
 type UserInfo struct {
-	Address string `json:"address,string,omitempty,required"`
+	Address string `json:"address,omitempty,required"`
 	Name string `json:"name,omitempty"`
 }
 func userAdd(c *cli.Context) {
-	var strMustArray = []string{"address", "name"}
-	strJson := combineJson(c, strMustArray, nil)
+	//var strMustArray = []string{"address", "name"}
+	//strJson := combineJson(c, strMustArray, nil)
 	//var strJson = c.Args().First()
 
 	var userinfo UserInfo
@@ -114,7 +114,7 @@ func userAdd(c *cli.Context) {
 	name := c.Args().Get(1)
 	userinfo.Name = name
 	bytes, _ := json.Marshal(userinfo)
-	strJson = string(bytes)
+	strJson := string(bytes)
 	funcParams := []string{strJson}
 	result := contractCall(c, funcParams, "addUser", precompile.UserManagementAddress)
 	fmt.Printf("%s\n", result)
