@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
 
 	cmd_common "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/common"
 
@@ -79,8 +81,14 @@ Except --all flag, other search keys can be combined.`,
 
 // 2020.7.6 modified, precompiled contract + combineJson deprecated
 func nodeAdd(c *cli.Context) {
+	var nodeinfo common.NodeInfo
 
-	var strJson = c.Args().First() // todo: add to the usage
+	nodeinfo.Name = c.Args().First() // todo: add to the usage
+	nodeinfo.PublicKey = c.Args().Get(1)
+	nodeinfo.ExternalIP = c.Args().Get(2)
+	nodeinfo.InternalIP = c.Args().Get(3)
+	bytes, _ := json.Marshal(nodeinfo)
+	strJson := string(bytes)
 
 	funcParams := []string{strJson}
 	result := contractCall(c, funcParams, "add", precompile.NodeManagementAddress)
