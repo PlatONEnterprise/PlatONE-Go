@@ -102,19 +102,38 @@ func transfer(c *cli.Context) {
 type UserInfo struct {
 	Address string `json:"address,omitempty,required"`
 	Name string `json:"name,omitempty"`
+	DescInfo string `json:"descInfo,omitempty"` // 描述信息，可变更
+}
+type UserDescInfo struct {
+	Email        string `json:"email,omitempty"`
+	Organization string `json:"organization,omitempty"`
+	Phone        string `json:"phone,omitempty"`
 }
 func userAdd(c *cli.Context) {
 	//var strMustArray = []string{"address", "name"}
 	//strJson := combineJson(c, strMustArray, nil)
 	//var strJson = c.Args().First()
 
+	phone := c.String(TelFlags.Name)
+	email := c.String(EmailFlags.Name)
+	organization := c.String(OrganizationFlags.Name)
+	var userdescinfo UserDescInfo
+	userdescinfo.Phone = phone
+	userdescinfo.Email = email
+	userdescinfo.Organization = organization
+	desbytes, _ := json.Marshal(userdescinfo)
+	desinfo := string(desbytes)
+
+
 	var userinfo UserInfo
 	address := c.Args().First()
 	userinfo.Address = address
 	name := c.Args().Get(1)
 	userinfo.Name = name
+	userinfo.DescInfo = desinfo
 	bytes, _ := json.Marshal(userinfo)
 	strJson := string(bytes)
+
 	funcParams := []string{strJson}
 	result := contractCall(c, funcParams, "addUser", precompile.UserManagementAddress)
 	fmt.Printf("%s\n", result)

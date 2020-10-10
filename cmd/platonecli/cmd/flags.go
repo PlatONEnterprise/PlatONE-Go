@@ -75,12 +75,16 @@ var (
 
 	// user
 	TelFlags = cli.StringFlag{
-		Name:  "mobile",
+		Name:  "phone",
 		Usage: "The mobile number of a user",
 	}
 	EmailFlags = cli.StringFlag{
 		Name:  "email",
 		Usage: "The email address of a user",
+	}
+	OrganizationFlags = cli.StringFlag{
+		Name:  "organization",
+		Usage: "The organization of a user",
 	}
 	UserRemarkFlags = cli.StringFlag{
 		Name:  "remark",
