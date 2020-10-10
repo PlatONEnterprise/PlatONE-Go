@@ -143,7 +143,7 @@ func userUpdate(c *cli.Context) {
 	account := c.Args().First()
 	paramValid(account, "address")
 
-	strJson := "{\"mobile\":\"\",\"email\":\"\"}"
+	strJson := "{\"phone\":\"\",\"email\":\"\",\"organization\":\"\"}"
 	str := combineJson(c, nil, []byte(strJson))
 
 	funcParams := cmd_common.CombineFuncParams(account, str)
