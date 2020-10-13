@@ -3,10 +3,9 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	cmd_common "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"strconv"
-
-	cmd_common "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/common"
 
 	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/precompiled"
 
@@ -88,8 +87,15 @@ func nodeAdd(c *cli.Context) {
 	nodeinfo.PublicKey = c.Args().Get(1)
 	nodeinfo.ExternalIP = c.Args().Get(2)
 	nodeinfo.InternalIP = c.Args().Get(3)
-	status64,_ := strconv.ParseInt(c.Args().Get(4),10,32)
-	nodeinfo.Status = int32(status64)
+	delayNum,_ := strconv.ParseInt(c.String(NodeDelayNumFlags.Name),10,32)
+	nodeinfo.DelayNum = uint64(delayNum)
+	p2pPort,_ := strconv.ParseInt(c.String(NodeP2pPortFlags.Name), 10,32)
+	nodeinfo.P2pPort = int32(p2pPort)
+	rpcPort,_ := strconv.ParseInt(c.String(NodeRpcPortFlags.Name), 10,32)
+	nodeinfo.RpcPort = int32(rpcPort)
+	nodeinfo.Desc = c.String(NodeDescFlags.Name)
+	//status64,_ := strconv.ParseInt(c.Args().Get(4),10,32)
+	//nodeinfo.Status = int32(status64)
 	bytes, _ := json.Marshal(nodeinfo)
 	strJson := string(bytes)
 
