@@ -87,6 +87,7 @@ func nodeAdd(c *cli.Context) {
 	nodeinfo.PublicKey = c.Args().Get(1)
 	nodeinfo.ExternalIP = c.Args().Get(2)
 	nodeinfo.InternalIP = c.Args().Get(3)
+	nodeinfo.Status = 1
 	delayNum,_ := strconv.ParseInt(c.String(NodeDelayNumFlags.Name),10,32)
 	nodeinfo.DelayNum = uint64(delayNum)
 	p2pPort,_ := strconv.ParseInt(c.String(NodeP2pPortFlags.Name), 10,32)
