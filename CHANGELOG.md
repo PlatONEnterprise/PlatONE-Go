@@ -1,5 +1,13 @@
 # Changelog
 
+## [unknown]
+### Improvements
+* [other] 删除whisper
+* [other] 删除swarm
+* [other] 删除mobile
+* [other] 删除cmd/wnode（Whisper node）
+
+
 ## ## [0.9.12] 2020-08-25
 ### Breaking Changes
 ### Improvements
