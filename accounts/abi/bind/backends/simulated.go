@@ -68,7 +68,7 @@ func NewSimulatedBackend(alloc core.GenesisAlloc, gasLimit uint64) *SimulatedBac
 	database := ethdb.NewMemDatabase()
 	genesis := core.Genesis{Config: params.AllEthashProtocolChanges, GasLimit: gasLimit, Alloc: alloc}
 	genesis.MustCommit(database)
-	blockchain, _, _ := core.NewBlockChain(database, nil,nil, genesis.Config, nil, vm.Config{}, nil, nil)
+	blockchain, _, _ := core.NewBlockChain(database, nil, nil, genesis.Config, nil, vm.Config{}, nil)
 
 	backend := &SimulatedBackend{
 		database:   database,
@@ -418,11 +418,11 @@ func (m callmsg) Gas() uint64          { return m.CallMsg.Gas }
 func (m callmsg) Value() *big.Int      { return m.CallMsg.Value }
 func (m callmsg) Data() []byte         { return m.CallMsg.Data }
 
-func (m callmsg) TxType() uint64 	   {return 0}
-func (m callmsg) SetTo(to common.Address)  {}
-func (m callmsg) SetData(b []byte)  {}
-func (m callmsg) SetTxType(src uint64)  {}
-func (m callmsg) SetNonce(n uint64)        {}
+func (m callmsg) TxType() uint64          { return 0 }
+func (m callmsg) SetTo(to common.Address) {}
+func (m callmsg) SetData(b []byte)        {}
+func (m callmsg) SetTxType(src uint64)    {}
+func (m callmsg) SetNonce(n uint64)       {}
 
 // filterBackend implements filters.Backend to support filtering for logs without
 // taking bloom-bits acceleration structures into account.
@@ -430,9 +430,10 @@ type filterBackend struct {
 	db ethdb.Database
 	bc *core.BlockChain
 }
-func (fb *filterBackend) ExtendedDb() ethdb.Database  { return nil }
-func (fb *filterBackend) ChainDb() ethdb.Database  { return fb.db }
-func (fb *filterBackend) EventMux() *event.TypeMux { panic("not supported") }
+
+func (fb *filterBackend) ExtendedDb() ethdb.Database { return nil }
+func (fb *filterBackend) ChainDb() ethdb.Database    { return fb.db }
+func (fb *filterBackend) EventMux() *event.TypeMux   { panic("not supported") }
 
 func (fb *filterBackend) HeaderByNumber(ctx context.Context, block rpc.BlockNumber) (*types.Header, error) {
 	if block == rpc.LatestBlockNumber {

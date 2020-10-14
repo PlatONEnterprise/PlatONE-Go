@@ -110,7 +110,7 @@ func (t *BlockTest) Run() error {
 		return fmt.Errorf("genesis block state root does not match test: computed=%x, test=%x", gblock.Root().Bytes()[:6], t.json.Genesis.StateRoot[:6])
 	}
 
-	chain,_ ,err := core.NewBlockChain(db, nil, nil, config, nil, vm.Config{}, nil, nil)
+	chain, _, err := core.NewBlockChain(db, nil, nil, config, nil, vm.Config{}, nil)
 	if err != nil {
 		return err
 	}
