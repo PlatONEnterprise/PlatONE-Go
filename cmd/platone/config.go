@@ -136,9 +136,9 @@ func makeConfigNode(ctx *cli.Context) (*node.Node, gethConfig) {
 
 
 	// load cbft config file.
-	if cbftConfig := cfg.Eth.LoadCbftConfig(cfg.Node); cbftConfig != nil {
-		cfg.Eth.CbftConfig = *cbftConfig
-	}
+	//if cbftConfig := cfg.Eth.LoadCbftConfig(cfg.Node); cbftConfig != nil {
+	//	cfg.Eth.CbftConfig = *cbftConfig
+	//}
 
 	if ctx.GlobalIsSet(utils.EthStatsURLFlag.Name) {
 		cfg.Ethstats.URL = ctx.GlobalString(utils.EthStatsURLFlag.Name)

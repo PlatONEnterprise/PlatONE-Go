@@ -1,14 +1,24 @@
 # Changelog
 
 ## [unknown]
+
+### Breaking Changes
+* [system contract] 系统合约重构成预编译合约形式
+
 ### Improvements
 * [other] 删除whisper
 * [other] 删除swarm
 * [other] 删除mobile
 * [other] 删除cmd/wnode（Whisper node）
+* [other] 删除cbft
+* [other] 版本管理采用mod模型
+
+### Features
+* [chain] 添加一链多账本功能（群组预编译化系统合约等等）
+* [other] 可视化运维平台
 
 
-## ## [0.9.12] 2020-08-25
+## [0.9.12] 2020-08-25
 ### Breaking Changes
 ### Improvements
 * [chain] genesis时间戳自动设置为当前系统时间 --葛鑫
@@ -21,6 +31,7 @@
 ### Improvements
 ### Features
 * [chain] WASM虚拟机对大浮点数和大整数的支持 --于宗坤
+* [other] PlatONE-CDT
 
 ### Bug Fixes
 
