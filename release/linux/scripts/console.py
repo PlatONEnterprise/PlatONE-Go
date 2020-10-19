@@ -51,6 +51,10 @@ class Cli(Cmd):
 
             #create node key and account
             print("[INFO]: auto create node key, and create genesis.json")
+            writeToNewFile(os.path.join(rootDir,"node.ip"),ip)
+            writeToNewFile(os.path.join(rootDir,"node.rpc_port"),rpcPort)
+            writeToNewFile(os.path.join(rootDir,"node.p2p_port"),p2pPort)
+            writeToNewFile(os.path.join(rootDir,"node.ws_port"),wsPort)
             nodePriKey,nodePubKey,nodeAddress = self.createNodeKey({"rootDir":rootDir})
             if CONFIG["from"] == "":
                 self.createAccount({"rootDir":rootDir,"password":password})
@@ -81,7 +85,7 @@ class Cli(Cmd):
             time.sleep(2)
             self.addChainAdmin({"addr":CONFIG["from"]})
             time.sleep(2)
-            self.addNodeCMD({"name":nodeAddress,"type":1,"publicKey":nodePubKey,"desc":"","externalIP":ip,"internalIP":ip,"rpcPort":rpcPort,"p2pPort":p2pPort,"owner":nodeAddress,"status":1})
+            self.addNodeCMD({"name":"node"+groupid,"type":1,"publicKey":nodePubKey,"desc":"","externalIP":ip,"internalIP":ip,"rpcPort":rpcPort,"p2pPort":p2pPort,"owner":nodeAddress,"status":1})
             if isDirect:
                 return 0,"success"
         except Exception as err:
@@ -89,7 +93,7 @@ class Cli(Cmd):
             return 1,str(err)
 
     def do_four(self,line):
-        """start four node completely in group 0,node_1 and node_2 in  group 1
+        """start four node completely in group 0,node-1 and node-2 in  group 1
         Usage:
             four  [command options]
             Options::
@@ -117,9 +121,9 @@ class Cli(Cmd):
             for i in range (1,5):
                 #i == 4 means add node1 to group1  
                 nodeId = 1 if i == 4 else i
-                nodeName = "node_" + str(nodeId)
+                nodeName = "node" + str(nodeId)
                 cfgPath = os.path.join(os.path.dirname(CONFIG_PATH),'config_{0}.json'.format(str(nodeId)))
-                dataDir = os.path.join(os.path.dirname(CONFIG["datadir"]),'node_'+ str(nodeId))
+                dataDir = os.path.join(os.path.dirname(CONFIG["datadir"]),'node-'+ str(nodeId))
 
                 groupId = 1 if i == 4 else 0
                 creatorEnode = creatorEnodeOfGroup1 if i == 4 else creatorEnodeOfGroup0
@@ -128,7 +132,7 @@ class Cli(Cmd):
                 rpcPortT = str(DEFAULT_RPC_PORT + 100*nodeId + groupId)
                 wsPortT =  str(DEFAULT_WS_PORT + 100*nodeId + groupId)
                 dashPortT = str(DEFAULT_DASHBOARD_PORT + 100*nodeId + groupId)
-                print('=============================add {0} to group_{1}===================================================='.format(nodeName,str(groupId)))
+                print('=============================add {0} to group-{1}===================================================='.format(nodeName,str(groupId)))
                 cmd = "./console.py group join --creator_enode {0} --password {1} --config {2} --datadir {3} --port {4} --rpcport {5} --wsport {6} --dashport {7} --ip {8} --groupid {9} --direct".format(
                     creatorEnode,
                     password,
@@ -257,9 +261,9 @@ class Cli(Cmd):
             try:
                 ret = subprocess.check_output(cmd,shell=True)
                 ret = json.loads(ret.decode('utf-8'))
-                print('[INFO]: group_' + id + ' is running,current block number is ' + str(eval(ret["result"])))
+                print('[INFO]: group-' + id + ' is running,current block number is ' + str(eval(ret["result"])))
             except Exception:
-                print('[INFO]: group_' + id + ' is stopped')
+                print('[INFO]: group-' + id + ' is stopped')
         return 0
 
     def do_ctool(self,line):
@@ -268,7 +272,8 @@ class Cli(Cmd):
             ctool [subcommand] [options]
         """
         try:
-            cmd = "{0}/ctool {1}".format(BIN_DIR,line)
+            cmd = "{0}/ctool {1} --config {2}".format(BIN_DIR,line,CTOOL_CONF_PATH)
+            print(cmd)
             subprocess.check_output(cmd,shell=True)
             return 0,"success"
         except Exception:
@@ -376,6 +381,9 @@ class Cli(Cmd):
         except Exception as err:
             print("[ERROR]: " + str(err))
             return 1,str(err)
+    
+    def do_exit(self,line):
+        sys.exit(0)
 
     def parse(self,args):
         return args.split()
@@ -416,7 +424,9 @@ class Cli(Cmd):
         rootDir =  args["rootDir"]
         groupid = args["groupid"]
         chainid = args["chainid"]
-        groupDir = os.path.join(rootDir,'group_' + groupid)
+        groupDir = rootDir
+        if groupid != "0":
+            groupDir = os.path.join(rootDir,'group-' + groupid)
         genesisPath = os.path.join(groupDir,'genesis.json')
         if os.path.exists(genesisPath):
             print("[INFO]: group " + groupid + " find genesis.json successfully")
@@ -438,7 +448,9 @@ class Cli(Cmd):
         rootDir =  args["rootDir"]
         groupid = args["groupid"]
 
-        datadir = os.path.join(rootDir,'group_' + groupid )
+        datadir = rootDir
+        if groupid != "0":
+            datadir = os.path.join(rootDir,'group-' + groupid )
         if os.path.exists(os.path.join(datadir, 'platone')):
             print("[INFO]: Data dir found,skip init chain step")
             return False
@@ -454,7 +466,7 @@ class Cli(Cmd):
             tmp = {"id":groupid}
             for key,v in CONFIG["groups"][0].items():
                 if key == "id":
-                            continue
+                    continue
                 tmp[key] = args[key]
             CONFIG["groups"].append(tmp)
         else:
@@ -466,26 +478,39 @@ class Cli(Cmd):
                         CONFIG["groups"][i][key] = args[key]
         
         onConfigUpdate()
-
-        groupCfgPath = os.path.join(CONFIG["datadir"],"group_" + groupid ,"config.toml")
+        groupCfgPath = os.path.join(CONFIG["datadir"],"config.toml")
+        if groupid != "0":
+            groupCfgPath = os.path.join(CONFIG["datadir"],"group-" + groupid ,"config.toml")
         if not os.path.exists(groupCfgPath):
             writeToNewFile(groupCfgPath,CHAIN_CONF_TEMPLATE)
-        print("[INFO]: setup chain config for group_ " + groupid + " successful")
+        print("[INFO]: setup chain config for group-" + groupid + " successful")
 
     def startNode(self,group):
         if group["status"] == 0:
             return
-        dataPath = os.path.join(CONFIG["datadir"],"group_" + group["id"])
-        configPath = os.path.join(CONFIG["datadir"],"group_" + group["id"] ,"config.toml")
+        dataPath = CONFIG["datadir"]
+        configPath = os.path.join(CONFIG["datadir"],"config.toml")
+        if group["id"] != "0":
+            dataPath = os.path.join(CONFIG["datadir"],"group-" + group["id"])
+            configPath = os.path.join(CONFIG["datadir"],"group-" + group["id"] ,"config.toml")
         nodeKeyPath = os.path.join(CONFIG["datadir"],"node.prikey")
         keystorePath = os.path.join(CONFIG["datadir"],"keystore")
 
         if not os.path.exists(configPath):
-            raise Exception("config file for group_" + group["id"] +" not found")
+            raise Exception("config file for group-" + group["id"] +" not found")
 
         logPath = os.path.join(dataPath,"logs")
         mkdir(logPath)
 
+        #TODO find bootnodes in genesis if not found in group config
+        arrayBootNods = group["bootstrapNodes"]
+        if len(arrayBootNods) == 0:
+            genesisPath = os.path.join(dataPath,"genesis.json")
+            if os.path.exists(genesisPath):
+                genesisData = readAllFromFile(genesisPath)
+                genesis = json.loads(genesisData)
+                arrayBootNods = genesis["config"]["istanbul"]["suggestObserverNodes"]
+            
         cmd = "nohup {0}/platone --config {1} --datadir {2} --nodiscover --nodekey {3} --keystore {4} --port {5} --rpc --rpcport {6} --rpccorsdomain \"*\" --ws --wsaddr 0.0.0.0 --wsport {7} --wsorigins \"*\" --dashboard.host {8} --bootnodes {9} --wasmlog  {10} --wasmlogsize {11} --moduleLogParams '{12}' --gcmode  archive  --debug 1>/dev/null 2>{13}/platone_error.log &".format(
         BIN_DIR,
         configPath,  
@@ -496,22 +521,24 @@ class Cli(Cmd):
         group["rpcPort"],
         group["wsPort"],
         group["dashboardPort"],
-        ",".join(group["bootstrapNodes"]),
+        ",".join(arrayBootNods),
         os.path.join(logPath,"wasm_log"),
         "67108864",
         json.dumps({"platone_log":["/"],"__dir__":[logPath],"__size__":["67108864"]}),
         logPath)
         print(cmd)
         subprocess.Popen(cmd,shell=True,preexec_fn=os.setpgrp)
-        print("[INFO]: start group_" + group["id"] + " successfully")
+        print("[INFO]: start group-" + group["id"] + " successfully")
 
     def stopNode(self,group):
-        configPath = os.path.join(CONFIG["datadir"],"group_" + group["id"] ,"config.toml")
-        cmd = "ps -ef --columns 1000 | grep \"platone --config " + configPath +"\" | grep -v grep | awk \'{print $2}\'"
+        dataDir = CONFIG["datadir"]
+        if group["id"] != "0":
+            dataDir = os.path.join(CONFIG["datadir"],"group-" + group["id"])
+        cmd = "ps -ef --columns 1000 | grep \" --datadir " + dataDir +" \" | grep -v grep | awk \'{print $2}\'"
         ret = subprocess.check_output(cmd,shell=True).decode('utf-8')
         if ret != '':
             subprocess.call("kill -9 " + ret,shell=True)
-            print("[INFO]: group_" +  group["id"] + " stopped")
+            print("[INFO]: group-" +  group["id"] + " stopped")
 
     def createGroup(self,args):
         if str(GROUP_ID) != "0":
@@ -526,6 +553,10 @@ class Cli(Cmd):
         wsPort = findFlag(args,"--wsport",str(DEFAULT_WS_PORT + intGroupID))
         dashboardPort = findFlag(args,"--dashport",str(DEFAULT_DASHBOARD_PORT + intGroupID))
 
+        writeToNewFile(os.path.join(rootDir,"node.ip"),ip)
+        writeToNewFile(os.path.join(rootDir,"node.rpc_port"),rpcPort)
+        writeToNewFile(os.path.join(rootDir,"node.p2p_port"),p2pPort)
+        writeToNewFile(os.path.join(rootDir,"node.ws_port"),wsPort)
         nodePriKey,nodePubKey,nodeAddress = self.createNodeKey({"rootDir":rootDir})
         selfEnode = "enode://{0}@{1}:{2}".format(nodePubKey,ip,p2pPort)
         self.createGenesis({"rootDir":rootDir,"groupid":groupid,"chainid":chainid,"creatorEnode":selfEnode})
@@ -547,7 +578,7 @@ class Cli(Cmd):
         time.sleep(2)
         self.addChainAdmin({"addr":CONFIG["from"]})
         time.sleep(2)
-        self.addNodeCMD({"name":nodeAddress,"type":1,"publicKey":nodePubKey,"desc":"","externalIP":ip,"internalIP":ip,"rpcPort":rpcPort,"p2pPort":p2pPort,"owner":nodeAddress,"status":1})
+        self.addNodeCMD({"name":"node"+groupid,"type":1,"publicKey":nodePubKey,"desc":"","externalIP":ip,"internalIP":ip,"rpcPort":rpcPort,"p2pPort":p2pPort,"owner":nodeAddress,"status":1})
 
         #register group in group0
         time.sleep(2)
@@ -569,6 +600,10 @@ class Cli(Cmd):
 
         if not  GROUP_ID == 0:
             switch('0')
+        writeToNewFile(os.path.join(rootDir,"node.ip"),ip)
+        writeToNewFile(os.path.join(rootDir,"node.rpc_port"),rpcPort)
+        writeToNewFile(os.path.join(rootDir,"node.p2p_port"),p2pPort)
+        writeToNewFile(os.path.join(rootDir,"node.ws_port"),wsPort)
         nodePriKey,nodePubKey,nodeAddress = self.createNodeKey({"rootDir":rootDir})
 
         if CONFIG["from"] == "":
@@ -846,6 +881,7 @@ if __name__ == '__main__':
 
         # read config file
         CONFIG_PATH = findFlag(sys.argv,"--config",os.path.join(os.path.abspath('..'),'conf/config.json')) 
+        CTOOL_CONF_PATH = os.path.join(os.path.dirname(CONFIG_PATH),"ctool.json")
         datadir = findFlag(sys.argv,"--datadir",'')
 
         if os.path.exists(CONFIG_PATH):
@@ -857,16 +893,38 @@ if __name__ == '__main__':
             CONFIG = json.loads(json.dumps(CONF_TEMPLATE))
             if datadir == '':
                 mkdir(os.path.join(os.path.abspath('..'),'data'))
-                CONFIG["datadir"] = os.path.join(os.path.abspath('..'),'data/node_0')
+                CONFIG["datadir"] = os.path.join(os.path.abspath('..'),'data/node-0')
             else:
-                 CONFIG["datadir"] = datadir
+                CONFIG["datadir"] = datadir
+
+            if os.path.exists(CTOOL_CONF_PATH):
+                ctoolData = readAllFromFile(CTOOL_CONF_PATH)
+                ctoolJson = json.loads(ctoolData)
+                CONFIG["from"] = ctoolJson["from"]
+                CONFIG["groups"][0]["url"] = ctoolJson["url"]
+
+            maybeWSPath = os.path.join(CONFIG["datadir"],"node.ws_port")
+            if os.path.exists(maybeWSPath):
+                ws_port = readAllFromFile(maybeWSPath)
+                CONFIG["groups"][0]["wsPort"] = ws_port
+
+            maybeP2pPortPath = os.path.join(CONFIG["datadir"],"node.p2p_port")
+            if os.path.exists(maybeP2pPortPath):
+                p2p_port = readAllFromFile(maybeP2pPortPath)
+                CONFIG["groups"][0]["p2pPort"] = p2p_port
+
+            maybeRpcPortPath = os.path.join(CONFIG["datadir"],"node.rpc_port")
+            if os.path.exists(maybeRpcPortPath):
+                rpc_port = readAllFromFile(maybeRpcPortPath)
+                CONFIG["groups"][0]["rpcPort"] = rpc_port
+
+            
             writeToNewFile(CONFIG_PATH,json.dumps(CONFIG,indent=4,sort_keys=True))
         
         mkdir(CONFIG["datadir"])
         GROUPS = loadGroupsFromConfig(CONFIG)
 
         #generate ctool config file
-        CTOOL_CONF_PATH = os.path.join(os.path.dirname(CONFIG_PATH),".ctool.json")
         GROUP_ID = 0
         switch(str(GROUP_ID))
         
