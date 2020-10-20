@@ -10,8 +10,9 @@
 * [other] 删除swarm
 * [other] 删除mobile
 * [other] 删除cmd/wnode（Whisper node）
-* [other] 删除cbft
+* [other] cbft整理
 * [other] 版本管理采用mod模型
+* [other] 删除pow相关逻辑
 
 ### Features
 * [chain] 添加一链多账本功能（群组预编译化系统合约等等）

@@ -23,12 +23,9 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"math"
 	"math/big"
-	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
-
-	"github.com/PlatONEnetwork/PlatONE-Go/core/cbfttypes"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
@@ -233,10 +230,8 @@ func (pm *ProtocolManager) Start(maxPeers int) {
 	pm.minedBlockSub = pm.eventMux.Subscribe(core.NewMinedBlockEvent{})
 	// broadcast prepare mined blocks
 	pm.prepareMinedBlockSub = pm.eventMux.Subscribe(core.PrepareMinedBlockEvent{})
-	pm.blockSignatureSub = pm.eventMux.Subscribe(core.BlockSignatureEvent{})
 	go pm.minedBroadcastLoop()
 	go pm.prepareMinedBlockcastLoop()
-	go pm.blockSignaturecastLoop()
 
 	// start sync handlers
 	go pm.syncer()
@@ -758,80 +753,6 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 			log.Warn("Block already in blockchain,discard this msg", "err", err)
 			return nil
 		}
-		if cbftEngine, ok := pm.engine.(consensus.Bft); ok {
-			if flag, err := cbftEngine.IsConsensusNode(); !flag || err != nil {
-				log.Warn("local node is not consensus node,discard this msg")
-			} else if flag, err := cbftEngine.CheckConsensusNode(p.Peer.ID()); !flag || err != nil {
-				log.Warn("remote node is not consensus node,discard this msg")
-			} else if err := cbftEngine.OnNewBlock(pm.blockchain, request.Block); err != nil {
-				log.Error("deliver prepareBlockMsg data to cbft engine failed", "err", err)
-			}
-			return nil
-		} else {
-			log.Warn("Consensus engine is not cbft", "GoRoutineID", common.CurrentGoRoutineID(), "peerId", p.id, "hash", request.Block.Hash(), "number", request.Block.NumberU64())
-		}
-
-	case msg.Code == BlockSignatureMsg:
-		// Retrieve and decode the propagated block
-		var request blockSignature
-		if err := msg.Decode(&request); err != nil {
-			return errResp(ErrDecode, "%v: %v", msg, err)
-		}
-		log.Debug("~ Received a broadcast message[BlockSignatureMsg]------------", "GoRoutineID", common.CurrentGoRoutineID(), "peerId", p.id, "SignHash", request.SignHash, "Hash", request.Hash, "Number", request.Number, "Signature", request.Signature.String())
-		engineBlockSignature := &cbfttypes.BlockSignature{request.SignHash, request.Hash, request.Number, request.Signature}
-		if cbftEngine, ok := pm.engine.(consensus.Bft); ok {
-			//if pm.downloader.IsRunning() {
-			//	log.Warn("downloader is running,discard this msg")
-			//}
-			strValue := rpc.MonitorReadData(rpc.BlockConsensusStartTime, engineBlockSignature.SignHash.String(), pm.txpool.ExtendedDb())
-			if 0 == len(strValue) {
-				rpc.MonitorWriteData(rpc.BlockConsensusStartTime, engineBlockSignature.SignHash.String(), "", pm.txpool.ExtendedDb())
-			}
-
-			if flag, err := cbftEngine.IsConsensusNode(); !flag || err != nil {
-				log.Warn("local node is not consensus node,discard this msg")
-			} else if flag, err := cbftEngine.CheckConsensusNode(p.Peer.ID()); !flag || err != nil {
-				log.Warn("remote node is not consensus node,discard this msg")
-			} else if err := cbftEngine.OnBlockSignature(pm.blockchain, p.Peer.ID(), engineBlockSignature); err != nil {
-				log.Error("deliver blockSignatureMsg data to cbft engine failed", "blockHash", request.Hash, "err", err)
-			}
-			return nil
-		}
-
-	case msg.Code == PongMsg:
-		curTime := time.Now().UnixNano()
-		log.Debug("handle a eth Pong message", "curTime", curTime)
-		if cbftEngine, ok := pm.engine.(consensus.Bft); ok {
-			var pingTime [1]string
-			if err := msg.Decode(&pingTime); err != nil {
-				return errResp(ErrDecode, "%v: %v", msg, err)
-			}
-			p.lock.Lock()
-			defer p.lock.Unlock()
-			for {
-				e := p.PingList.Front()
-				if e != nil {
-					log.Trace("Front element of p.PingList", "element", e)
-					if t, ok := p.PingList.Remove(e).(string); ok {
-						if t == pingTime[0] {
-
-							tInt64, err := strconv.ParseInt(t, 10, 64)
-							if err != nil {
-								return errResp(ErrDecode, "%v: %v", msg, err)
-							}
-
-							log.Trace("calculate net latency", "sendPingTime", tInt64, "receivePongTime", curTime)
-							latency := (curTime - tInt64) / 2 / 1000000
-							cbftEngine.OnPong(p.Peer.ID(), latency)
-							break
-						}
-					}
-				} else {
-					log.Trace("end of p.PingList")
-					break
-				}
-			}
-		}
 	default:
 		return errResp(ErrInvalidMsgCode, "%v", msg.Code)
 	}
@@ -892,16 +813,6 @@ func (pm *ProtocolManager) MulticastConsensus(a interface{}) {
 				"peerId", peer.id, "Hash", block.Hash(), "Number", block.Number())
 			peer.AsyncSendPrepareBlock(block)
 		}
-	} else if signature, ok := a.(*cbfttypes.BlockSignature); ok {
-		for _, peer := range peers {
-			strValue := rpc.MonitorReadData(rpc.BlockConsensusStartTime, signature.Hash.String(), pm.txpool.ExtendedDb())
-			if 0 == len(strValue) {
-				rpc.MonitorWriteData(rpc.BlockConsensusStartTime, signature.Hash.String(), "", pm.txpool.ExtendedDb())
-			}
-			log.Warn("~ Send a broadcast message[BlockSignatureMsg]------------",
-				"peerId", peer.id, "SignHash", signature.SignHash, "Hash", signature.Hash, "Number", signature.Number, "SignHash", signature.SignHash)
-			peer.AsyncSendSignature(signature)
-		}
 	}
 }
 
@@ -960,14 +871,6 @@ func (pm *ProtocolManager) prepareMinedBlockcastLoop() {
 	for obj := range pm.prepareMinedBlockSub.Chan() {
 		if ev, ok := obj.Data.(core.PrepareMinedBlockEvent); ok {
 			pm.MulticastConsensus(ev.Block) // propagate block to consensus peers
-		}
-	}
-}
-
-func (pm *ProtocolManager) blockSignaturecastLoop() {
-	for obj := range pm.blockSignatureSub.Chan() {
-		if ev, ok := obj.Data.(core.BlockSignatureEvent); ok {
-			pm.MulticastConsensus(ev.BlockSignature) // propagate blockSignature to consensus peers
 		}
 	}
 }

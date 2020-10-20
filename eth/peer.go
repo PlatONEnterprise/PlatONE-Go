@@ -20,7 +20,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/cbfttypes"
 	"math/big"
 	"sync"
 	"time"
@@ -97,7 +96,6 @@ type peer struct {
 	queuedAnns         chan *types.Block         // Queue of blocks to announce to the peer
 	term               chan struct{}             // Termination channel to stop the broadcaster
 	queuedPreBlock     chan *preBlockEvent
-	queuedSignature    chan *signatureEvent
 }
 
 func newPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) *peer {
@@ -113,7 +111,6 @@ func newPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) *peer {
 		queuedAnns:      make(chan *types.Block, maxQueuedAnns),
 		term:            make(chan struct{}),
 		queuedPreBlock:  make(chan *preBlockEvent, maxQueuedPreBlock),
-		queuedSignature: make(chan *signatureEvent, maxQueuedSignature),
 	}
 }
 
@@ -142,17 +139,9 @@ func (p *peer) broadcast() {
 				}
 				p.Log().Trace("Propagated prepare block", "number", prop.block.Number(), "hash", prop.block.Hash())
 
-			case prop := <-p.queuedSignature:
-				signature := &cbfttypes.BlockSignature{prop.SignHash, prop.Hash, prop.Number, prop.Signature}
-				if err := p.SendSignature(signature); err != nil {
-					return
-				}
-				p.Log().Trace("Propagated block signature", "hash", signature.Hash)
-
 			case <-p.term:
 				return
 			}
-
 		}
 	}()
 
@@ -594,18 +583,6 @@ func (ps *peerSet) PeersWithConsensus(engine consensus.Engine) []*peer {
 	ps.lock.RLock()
 	defer ps.lock.RUnlock()
 
-	if cbftEngine, ok := engine.(consensus.Bft); ok {
-		if consensusNodes, err := cbftEngine.ConsensusNodes(); err == nil && len(consensusNodes) > 0 {
-			list := make([]*peer, 0, len(consensusNodes))
-			for _, nodeID := range consensusNodes {
-				nodeID := fmt.Sprintf("%x", nodeID.Bytes()[:8])
-				if peer, ok := ps.peers[nodeID]; ok {
-					list = append(list, peer)
-				}
-			}
-			return list
-		}
-	}
 	return nil
 }
 
@@ -614,15 +591,6 @@ func (ps *peerSet) PeersWithoutConsensus(engine consensus.Engine) []*peer {
 	defer ps.lock.RUnlock()
 
 	consensusNodeMap := make(map[string]string)
-	if cbftEngine, ok := engine.(consensus.Bft); ok {
-		if consensusNodes, err := cbftEngine.ConsensusNodes(); err == nil && len(consensusNodes) > 0 {
-			for _, nodeID := range consensusNodes {
-				nodeID := fmt.Sprintf("%x", nodeID.Bytes()[:8])
-				consensusNodeMap[nodeID] = nodeID
-			}
-		}
-	}
-
 	list := make([]*peer, 0, len(ps.peers))
 	for nodeId, peer := range ps.peers {
 		if _, ok := consensusNodeMap[nodeId]; !ok {
@@ -655,17 +623,5 @@ func (p *peer) AsyncSendPrepareBlock(block *types.Block) {
 		p.Log().Debug("Send prepare block propagation", "number", block.NumberU64(), "hash", block.Hash())
 	default:
 		p.Log().Debug("Dropping prepare block propagation", "number", block.NumberU64(), "hash", block.Hash())
-	}
-}
-
-func (p *peer) SendSignature(signature *cbfttypes.BlockSignature) error {
-	return p2p.Send(p.rw, BlockSignatureMsg, []interface{}{signature.SignHash, signature.Hash, signature.Number, signature.Signature})
-}
-
-func (p *peer) AsyncSendSignature(signature *cbfttypes.BlockSignature) {
-	select {
-	case p.queuedSignature <- &signatureEvent{SignHash: signature.SignHash, Hash: signature.Hash, Number: signature.Number, Signature: signature.Signature}:
-	default:
-		p.Log().Debug("Dropping block Signature", "Hash", signature.Hash)
 	}
 }

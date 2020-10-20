@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
@@ -34,28 +33,14 @@ type receiptsCache struct {
 }
 
 func (pbc *BlockChainCache) CurrentBlock() *types.Block {
-	if cbft, ok := pbc.Engine().(consensus.Bft); ok {
-		if block := cbft.HighestLogicalBlock(); block != nil {
-			log.Debug("get CurrentBlock() in cbft")
-			return block
-		}
-	}
 	log.Debug("get CurrentBlock() in chain")
 	return pbc.currentBlock.Load().(*types.Block)
 }
 
 func (pbc *BlockChainCache) GetBlock(hash common.Hash, number uint64) *types.Block {
-	var block *types.Block
-	if cbft, ok := pbc.Engine().(consensus.Bft); ok {
-		log.Trace("find block on cbft engine", "RoutineID", common.CurrentGoRoutineID(), "hash", hash, "number", number)
-		block = cbft.GetBlock(hash, number)
-	}
+	block := pbc.getBlock(hash, number)
 	if block == nil {
-		log.Trace("cannot find block on cbft engine , try to find it in chain", "RoutineID", common.CurrentGoRoutineID(), "hash", hash, "number", number)
-		block = pbc.getBlock(hash, number)
-		if block == nil {
-			log.Trace("cannot find block in chain", "RoutineID", common.CurrentGoRoutineID(), "hash", hash, "number", number)
-		}
+		log.Trace("cannot find block in chain", "RoutineID", common.CurrentGoRoutineID(), "hash", hash, "number", number)
 	}
 	return block
 }
