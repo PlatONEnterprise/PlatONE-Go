@@ -6,13 +6,9 @@
 * [system contract] 系统合约重构成预编译合约形式
 
 ### Improvements
-* [other] 删除whisper
-* [other] 删除swarm
-* [other] 删除mobile
-* [other] 删除cmd/wnode（Whisper node）
-* [other] cbft整理
-* [other] 版本管理采用mod模型
-* [other] 删除pow相关逻辑
+* [other] 版本管理采用mod模型 - 汤涌，于宗坤，杜满想
+* [other] 删除whisper,swarm,mobile,cmd/wnode（Whisper node）- 杜满想
+* [other] 删除pow相关逻辑(reorg,sidechain),删除cbft - 杜满想
 
 ### Features
 * [chain] 添加一链多账本功能（群组预编译化系统合约等等）

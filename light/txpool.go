@@ -212,71 +212,6 @@ func (pool *TxPool) rollbackTxs(hash common.Hash, txc txStateChanges) {
 	batch.Write()
 }
 
-// reorgOnNewHead sets a new head header, processing (and rolling back if necessary)
-// the blocks since the last known head and returns a txStateChanges map containing
-// the recently mined and rolled back transaction hashes. If an error (context
-// timeout) occurs during checking new blocks, it leaves the locally known head
-// at the latest checked block and still returns a valid txStateChanges, making it
-// possible to continue checking the missing blocks at the next chain head event
-func (pool *TxPool) reorgOnNewHead(ctx context.Context, newHeader *types.Header) (txStateChanges, error) {
-	txc := make(txStateChanges)
-	oldh := pool.chain.GetHeaderByHash(pool.head)
-	newh := newHeader
-	// find common ancestor, create list of rolled back and new block hashes
-	var oldHashes, newHashes []common.Hash
-	for oldh.Hash() != newh.Hash() {
-		if oldh.Number.Uint64() >= newh.Number.Uint64() {
-			oldHashes = append(oldHashes, oldh.Hash())
-			oldh = pool.chain.GetHeader(oldh.ParentHash, oldh.Number.Uint64()-1)
-		}
-		if oldh.Number.Uint64() < newh.Number.Uint64() {
-			newHashes = append(newHashes, newh.Hash())
-			newh = pool.chain.GetHeader(newh.ParentHash, newh.Number.Uint64()-1)
-			if newh == nil {
-				// happens when CHT syncing, nothing to do
-				newh = oldh
-			}
-		}
-	}
-	if oldh.Number.Uint64() < pool.clearIdx {
-		pool.clearIdx = oldh.Number.Uint64()
-	}
-	// roll back old blocks
-	for _, hash := range oldHashes {
-		pool.rollbackTxs(hash, txc)
-	}
-	pool.head = oldh.Hash()
-	// check mined txs of new blocks (array is in reversed order)
-	for i := len(newHashes) - 1; i >= 0; i-- {
-		hash := newHashes[i]
-		if err := pool.checkMinedTxs(ctx, hash, newHeader.Number.Uint64()-uint64(i), txc); err != nil {
-			return txc, err
-		}
-		pool.head = hash
-	}
-
-	// clear old mined tx entries of old blocks
-	if idx := newHeader.Number.Uint64(); idx > pool.clearIdx+txPermanent {
-		idx2 := idx - txPermanent
-		if len(pool.mined) > 0 {
-			for i := pool.clearIdx; i < idx2; i++ {
-				hash := rawdb.ReadCanonicalHash(pool.chainDb, i)
-				if list, ok := pool.mined[hash]; ok {
-					hashes := make([]common.Hash, len(list))
-					for i, tx := range list {
-						hashes[i] = tx.Hash()
-					}
-					pool.relay.Discard(hashes)
-					delete(pool.mined, hash)
-				}
-			}
-		}
-		pool.clearIdx = idx2
-	}
-
-	return txc, nil
-}
-
 // blockCheckTimeout is the time limit for checking new blocks for mined
 // transactions. Checking resumes at the next chain head event if timed out.
 const blockCheckTimeout = time.Second * 3
@@ -303,12 +238,6 @@ func (pool *TxPool) setNewHead(head *types.Header) {
 	pool.mu.Lock()
 	defer pool.mu.Unlock()
 
-	ctx, cancel := context.WithTimeout(context.Background(), blockCheckTimeout)
-	defer cancel()
-
-	txc, _ := pool.reorgOnNewHead(ctx, head)
-	m, r := txc.getLists()
-	pool.relay.NewHead(pool.head, m, r)
 	pool.homestead = pool.config.IsHomestead(head.Number)
 	pool.signer = types.MakeSigner(pool.config, head.Number)
 }

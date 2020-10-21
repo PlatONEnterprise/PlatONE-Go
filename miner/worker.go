@@ -50,9 +50,6 @@ const (
 	// chainHeadChanSize is the size of channel listening to ChainHeadEvent.
 	chainHeadChanSize = 10
 
-	// chainSideChanSize is the size of channel listening to ChainSideEvent.
-	chainSideChanSize = 10
-
 	// resubmitAdjustChanSize is the size of resubmitting interval adjustment channel.
 	resubmitAdjustChanSize = 10
 
@@ -155,8 +152,6 @@ type worker struct {
 	txsSub       event.Subscription
 	chainHeadCh  chan core.ChainHeadEvent
 	chainHeadSub event.Subscription
-	chainSideCh  chan core.ChainSideEvent
-	chainSideSub event.Subscription
 
 	// Channels
 	newWorkCh             chan *newWorkReq
@@ -219,7 +214,6 @@ func newWorker(config *params.ChainConfig, engine consensus.Engine, eth Backend,
 		pendingTasks:          make(map[common.Hash]*task),
 		txsCh:                 make(chan core.NewTxsEvent, txChanSize),
 		chainHeadCh:           make(chan core.ChainHeadEvent, chainHeadChanSize),
-		chainSideCh:           make(chan core.ChainSideEvent, chainSideChanSize),
 		newWorkCh:             make(chan *newWorkReq),
 		taskCh:                make(chan *task),
 		resultCh:              make(chan *types.Block, resultQueueSize),
@@ -234,7 +228,6 @@ func newWorker(config *params.ChainConfig, engine consensus.Engine, eth Backend,
 	}
 	// Subscribe events for blockchain
 	worker.chainHeadSub = eth.BlockChain().SubscribeChainHeadEvent(worker.chainHeadCh)
-	worker.chainSideSub = eth.BlockChain().SubscribeChainSideEvent(worker.chainSideCh)
 
 	// Sanitize recommit interval if the user-specified one is too short.
 	if recommit < minRecommitInterval {
@@ -461,7 +454,7 @@ func (w *worker) newWorkLoop(recommit time.Duration) {
 func (w *worker) mainLoop() {
 	// defer w.txsSub.Unsubscribe()
 	defer w.chainHeadSub.Unsubscribe()
-	defer w.chainSideSub.Unsubscribe()
+	//defer w.chainSideSub.Unsubscribe()
 
 	for {
 		select {
@@ -471,8 +464,6 @@ func (w *worker) mainLoop() {
 		case <-w.exitCh:
 			return
 		case <-w.chainHeadSub.Err():
-			return
-		case <-w.chainSideSub.Err():
 			return
 
 		case block := <-w.prepareResultCh:
