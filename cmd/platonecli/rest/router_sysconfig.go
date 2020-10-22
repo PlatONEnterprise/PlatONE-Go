@@ -47,7 +47,7 @@ func txGasLimitHandler(ctx *gin.Context) {
 
 func isTxUseGasHandler(ctx *gin.Context) {
 	funcParams := &struct {
-		SysParam string
+		SysParam uint32
 	}{}
 
 	sysConfigHandler(ctx, funcParams)
