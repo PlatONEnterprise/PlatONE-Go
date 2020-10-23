@@ -47,7 +47,7 @@ func txGasLimitHandler(ctx *gin.Context) {
 
 func isTxUseGasHandler(ctx *gin.Context) {
 	funcParams := &struct {
-		SysParam uint32
+		IsTxUseGas string
 	}{}
 
 	sysConfigHandler(ctx, funcParams)
@@ -55,7 +55,7 @@ func isTxUseGasHandler(ctx *gin.Context) {
 
 func isApproveDeployedContractHandler(ctx *gin.Context) {
 	funcParams := &struct {
-		SysParam string
+		IsApproveDeployedContract string
 	}{}
 
 	sysConfigHandler(ctx, funcParams)
@@ -63,7 +63,7 @@ func isApproveDeployedContractHandler(ctx *gin.Context) {
 
 func checkContractDeployPermissionHandler(ctx *gin.Context) {
 	funcParams := &struct {
-		SysParam string
+		CheckContractDeployPermission string
 	}{}
 
 	sysConfigHandler(ctx, funcParams)
@@ -71,7 +71,7 @@ func checkContractDeployPermissionHandler(ctx *gin.Context) {
 
 func isProduceEmptyBlockHandler(ctx *gin.Context) {
 	funcParams := &struct {
-		SysParam string
+		IsProduceEmptyBlock string
 	}{}
 
 	sysConfigHandler(ctx, funcParams)
@@ -79,7 +79,7 @@ func isProduceEmptyBlockHandler(ctx *gin.Context) {
 
 func gasContractNameHandler(ctx *gin.Context) {
 	funcParams := &struct {
-		ContractName string
+		GasContractName string
 	}{}
 
 	sysConfigHandler(ctx, funcParams)
