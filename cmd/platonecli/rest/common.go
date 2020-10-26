@@ -89,9 +89,6 @@ func queryHandlerCommon(ctx *gin.Context, endPoint string, data *contractParams)
 		if ok {
 			json.Unmarshal([]byte(restring), &nodes)
 		}
-
-
-
 		ctx.JSON(200, len(nodes))
 	}
 	if err != nil {
