@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 	"reflect"
 	"strings"
@@ -89,6 +90,7 @@ func queryHandlerCommon(ctx *gin.Context, endPoint string, data *contractParams)
 		if ok {
 			json.Unmarshal([]byte(restring), &nodes)
 		}
+		log.Fatal(1)
 		ctx.JSON(200, len(nodes))
 	}else {
 
@@ -96,6 +98,7 @@ func queryHandlerCommon(ctx *gin.Context, endPoint string, data *contractParams)
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+		log.Fatal(2)
 		ctx.JSON(200, jsonStringPatch(res[0]))
 	}
 }
