@@ -82,6 +82,18 @@ func queryHandlerCommon(ctx *gin.Context, endPoint string, data *contractParams)
 	}
 
 	res, err := handlerCallCommon(jsonInfo)
+	if data.Method == "getAllNodes" {
+		var nodes []NodeInfo
+		jsonres := jsonStringPatch(res[0])
+		restring, ok := jsonres.(string)
+		if ok {
+			json.Unmarshal([]byte(restring), &nodes)
+		}
+
+
+
+		ctx.JSON(200, len(nodes))
+	}
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
