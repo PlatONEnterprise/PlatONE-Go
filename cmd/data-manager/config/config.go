@@ -149,7 +149,7 @@ func validateConfig() {
 		panic("invalid log output")
 	}
 
-	if Config.LogConf.FilePath == LogOutputFile {
+	if Config.LogConf.Output == LogOutputFile {
 		if "" == strings.TrimSpace(Config.LogConf.FilePath) {
 			panic("invalid log.filepath")
 		}

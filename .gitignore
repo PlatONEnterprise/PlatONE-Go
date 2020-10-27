@@ -108,3 +108,6 @@ release/linux/data/
 
 cmd/data-manager/cmd/cmd
 cmd/platonecli/platonecli
+release/linux/bin/build
+release/linux/bin/cmd
+
