@@ -9,7 +9,9 @@ import (
 func main() {
 	app := cli.NewApp()
 	app.Name = "pltestnet"
-	app.Action = testnetCommand
+	app.Commands = cli.Commands{
+		testnetCommand,
+	}
 
 	if err := app.Run(os.Args); err != nil {
 		fmt.Fprintln(os.Stderr, err)

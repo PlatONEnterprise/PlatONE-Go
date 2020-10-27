@@ -1,12 +1,14 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
 var (
 	defaultSNFlag = defaultStartNodeFlag{
 		ip:          "0.0.0.0",
-		gcmode:      " archive ",
-		pprof:       " --pprof --pprofaddr 0.0.0.0 ",
+		pprof:       "--pprof --pprofaddr 0.0.0.0 ",
 		wasmlog:     "wasm_log",
 		wasmlogsize: 67108864,
 		nodeKey:     "nodekey",
@@ -17,13 +19,12 @@ var (
 		rpccorsdomain: "*",
 		identity:      "platone",
 		bootnodes:     "",
-		other:         " --nodiscover --debug ",
+		other:         "--nodiscover --debug",
 	}
 )
 
 type defaultStartNodeFlag struct {
 	ip            string //common net address for p2p,rpc,ws
-	gcmode        string
 	pprof         string
 	wasmlog       string
 	wasmlogsize   int
@@ -37,16 +38,23 @@ type defaultStartNodeFlag struct {
 	logsDir       string
 }
 
+func initDefaultStartNodeEnv(datadir string) {
+	if err := os.MkdirAll(fmt.Sprintf("%s/%s/%s", datadir, defaultSNFlag.logsDir, defaultSNFlag.wasmlog), os.ModePerm); nil != err {
+		panic(err)
+	}
+
+	genNodeKeyFile(fmt.Sprintf("%s/%s", datadir, defaultSNFlag.nodeKey))
+}
+
 func (this defaultStartNodeFlag) ToFlags(datadir string) string {
-	return fmt.Sprintf(` --identity %s --wsorigins "%s" --rpccorsdomain "%s" --bootnodes %s --gcmode %s 
-%s %s 
---nodekey %s/%s --datadir %s --ipcpath %s/%s 
---wasmlog %s/%s/%s --wasmlogsize %d 
---moduleLogParams '{"platone_log": ["/"], "__dir__": ["%s/%s"], "__size__": ["67108864"]}'`,
-		this.identity, this.wsorigins, this.rpccorsdomain, this.bootnodes, this.gcmode,
+	return fmt.Sprintf(` --identity %s --wsorigins "%s" --rpccorsdomain "%s" --bootnodes %s  %s %s --nodekey %s/%s --datadir %s --ipcpath %s/%s --wasmlog %s/%s/%s --wasmlogsize %d --moduleLogParams '{"platone_log": ["/"], "__dir__": ["%s/%s"], "__size__": ["67108864"]}'`,
+		this.identity, this.wsorigins, this.rpccorsdomain, this.bootnodes,
 		this.pprof, this.other,
-		datadir, this.nodeKey, datadir, datadir, this.ipcpath,
-		datadir, this.logsDir, this.wasmlog, this.wasmlogsize,
+		datadir, this.nodeKey,
+		datadir,
+		datadir, this.ipcpath,
+		datadir, this.logsDir, this.wasmlog,
+		this.wasmlogsize,
 		datadir, this.logsDir,
 	)
 }

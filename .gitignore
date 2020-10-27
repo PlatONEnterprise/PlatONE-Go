@@ -111,3 +111,7 @@ release/linux/bin/platonecli
 
 cmd/data-manager/cmd/cmd
 cmd/platonecli/platonecli
+cmd/localtestnet/localtestnet
+cmd/localtestnet/localtestnetdata/
+cmd/localtestnet/nohup.out
+cmd/localtestnet/platone

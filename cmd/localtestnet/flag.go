@@ -11,27 +11,21 @@ var (
 		Value: 4,
 	}
 
-	PlatONEDirFlag = cli.StringFlag{
-		Name:  "platone.dir",
-		Usage: "PlatONE directory",
-		Value: "./",
-	}
-
-	PlatONECliDirFlag = cli.StringFlag{
-		Name:  "platone.dir",
-		Usage: "Platonecli directory",
+	BinaryDirFlag = cli.StringFlag{
+		Name:  "binary.dir",
+		Usage: "Binary directory",
 		Value: "./",
 	}
 
 	DataDirFlag = cli.StringFlag{
 		Name:  "datadir",
 		Usage: "Testnet Data directory for node data",
-		Value: "./localtestnet",
+		Value: "./localtestnetdata",
 	}
 
 	GCModeFlag = cli.StringFlag{
 		Name:  "gcmode",
-		Usage: `Blockchain garbage collection mode ("full", "archive") (default: "full")`,
+		Usage: `Blockchain garbage collection mode ("full", "archive")`,
 		Value: "full",
 	}
 
