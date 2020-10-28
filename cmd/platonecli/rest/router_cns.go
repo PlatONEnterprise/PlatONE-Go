@@ -85,7 +85,7 @@ func cnsQueryHandler(ctx *gin.Context) {
 		funcName = "getRegisteredContractsByAddress"
 		funcParams.Address = address
 	case origin != "":
-		if !cmd_common.ParamValidWrap(address, "address") {
+		if !cmd_common.ParamValidWrap(origin, "address") {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": errInvalidParam.Error()})
 			return
 		}
