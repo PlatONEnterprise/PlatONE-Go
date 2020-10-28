@@ -2,6 +2,7 @@ package rest
 
 import (
 	"crypto/ecdsa"
+	"encoding/hex"
 	"github.com/PlatONEnetwork/PlatONE-Go/accounts/keystore"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
@@ -35,11 +36,18 @@ func newAccountHandler(ctx *gin.Context) {
 	var err error
 	if file := ctx.PostForm("privatekey"); file != "" {
 		// Load private key from file.
-		privateKey, err = crypto.LoadECDSA(file)
+		key, err := hex.DecodeString(files)
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"Can't load private key: ": err.Error()})
 			return
 		}
+		privateKey, err = crypto.ToECDSA(key)
+
+		//privateKey, err = crypto.LoadECDSA(file)
+		//if err != nil {
+		//	ctx.JSON(http.StatusBadRequest, gin.H{"Can't load private key: ": err.Error()})
+		//	return
+		//}
 	} else {
 		// If not loaded, generate random.
 		privateKey, err = crypto.GenerateKey()
