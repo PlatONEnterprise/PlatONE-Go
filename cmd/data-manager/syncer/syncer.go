@@ -12,6 +12,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/sirupsen/logrus"
+	"sort"
 	"strings"
 	"time"
 )
@@ -228,6 +229,7 @@ func (this *syncer) syncTxStats() error {
 
 	return nil
 }
+
 //
 //func (this *syncer) syncStats() error {
 //	var stats model.Stats
@@ -347,6 +349,10 @@ func (this *syncer) syncCNS() error {
 		logrus.Errorln(err)
 		return err
 	}
+
+	sort.SliceStable(modelCnses, func(i, j int) bool {
+		return strings.Compare(modelCnses[i].Name, modelCnses[j].Name) > 0
+	})
 
 	return model.DefaultCNS.InsertCNS(this.dbCtx, modelCnses)
 }
