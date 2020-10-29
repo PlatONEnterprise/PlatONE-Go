@@ -30,9 +30,9 @@ type CommonResult struct {
 }
 
 type NodeInfo struct {
-	Name  string `json:"name,omitempty"` //这个名称意义是？
+	Name  string `json:"name,omitempty"`  //这个名称意义是？
 	Owner string `json:"owner,omitempty"` //没有用到？删除？
-	Desc  string `json:"desc,omitempty"` //没有用到？删除？
+	Desc  string `json:"desc,omitempty"`  //没有用到？删除？
 	Types int32  `json:"type,omitempty"`
 	// status 1为正常节点, 2为删除节点
 	Status     int32  `json:"status,omitempty"`
@@ -45,6 +45,12 @@ type NodeInfo struct {
 	DelayNum uint64 `json:"delayNum,omitempty"`
 }
 
+type VRFParams struct {
+	ElectionEpoch     uint64   `json:"electionEpoch,omitempty"`
+	NextElectionBlock *big.Int `json:"nextElectionBlock,omitempty"`
+	ValidatorCount    uint64   `json:"validatorCount,omitempty"`
+}
+
 type SystemParameter struct {
 	BlockGasLimit                 int64
 	TxGasLimit                    int64
@@ -52,8 +58,9 @@ type SystemParameter struct {
 	GasContractName               string
 	GasContractAddr               Address
 	CheckContractDeployPermission int64
-	IsTxUseGas 			  		  bool
+	IsTxUseGas                    bool
 	IsProduceEmptyBlock           bool
+	VRF                           VRFParams
 }
 
 type SystemConfig struct {
@@ -64,7 +71,7 @@ type SystemConfig struct {
 	ContractAddress map[string]Address
 }
 
-var SysCfg  = &SystemConfig{
+var SysCfg = &SystemConfig{
 	SystemConfigMu: &sync.RWMutex{},
 	Nodes:          make([]NodeInfo, 0),
 	HighsetNumber:  new(big.Int).SetInt64(0),
@@ -75,11 +82,16 @@ var SysCfg  = &SystemConfig{
 			ProduceDuration: int32(10),
 			BlockInterval:   int32(1),
 		},
+		VRF: VRFParams{
+			ElectionEpoch:     0,
+			NextElectionBlock: big.NewInt(0),
+			ValidatorCount:    0,
+		},
 	},
 	ContractAddress: make(map[string]Address),
 }
 
-func InitSystemconfig(root NodeInfo) {
+func InitSystemconfig(root NodeInfo, vrf *VRFParams) {
 	SysCfg = &SystemConfig{
 		SystemConfigMu: &sync.RWMutex{},
 		Nodes:          make([]NodeInfo, 0),
@@ -96,6 +108,10 @@ func InitSystemconfig(root NodeInfo) {
 	}
 	if root.Types == 1 {
 		SysCfg.Nodes = append(SysCfg.Nodes, root)
+	}
+
+	if vrf != nil {
+		SysCfg.SysParam.VRF = *vrf
 	}
 }
 

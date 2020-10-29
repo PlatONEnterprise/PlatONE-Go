@@ -52,31 +52,19 @@ func New(config *params.IstanbulConfig, privateKey *ecdsa.PrivateKey, db ethdb.D
 	recents, _ := lru.NewARC(inmemorySnapshots)
 	recentMessages, _ := lru.NewARC(inmemoryPeers)
 	knownMessages, _ := lru.NewARC(inmemoryMessages)
+
+	var address common.Address
 	if privateKey == nil {
-		backend := &backend{
-			config:           config,
-			istanbulEventMux: new(event.TypeMux),
-			msgFeed:		  new(event.Feed),
-			privateKey:       privateKey,
-			address:          common.BytesToAddress([]byte("0x0000000000000000000000000000000000000112")),
-			logger:           log.New(),
-			db:               db,
-			commitCh:         make(chan *types.Block, 1),
-			recents:          recents,
-			candidates:       make(map[common.Address]bool),
-			coreStarted:      false,
-			recentMessages:   recentMessages,
-			knownMessages:    knownMessages,
-		}
-		backend.core = istanbulCore.New(backend, backend.config)
-		return backend
+		address = common.BytesToAddress([]byte("0x0000000000000000000000000000000000000112"))
+	} else {
+		address = crypto.PubkeyToAddress(privateKey.PublicKey)
 	}
 	backend := &backend{
 		config:           config,
 		istanbulEventMux: new(event.TypeMux),
-		msgFeed:		  new(event.Feed),
+		msgFeed:          new(event.Feed),
 		privateKey:       privateKey,
-		address:          crypto.PubkeyToAddress(privateKey.PublicKey),
+		address:          address,
 		logger:           log.New(),
 		db:               db,
 		commitCh:         make(chan *types.Block, 1),
@@ -108,7 +96,7 @@ type environment struct {
 type backend struct {
 	config           *params.IstanbulConfig
 	istanbulEventMux *event.TypeMux
-	msgFeed 		 *event.Feed
+	msgFeed          *event.Feed
 	privateKey       *ecdsa.PrivateKey
 	address          common.Address
 	core             istanbulCore.Engine
@@ -205,11 +193,10 @@ func (sb *backend) Gossip(valSet istanbul.ValidatorSet, payload []byte) error {
 
 func (sb *backend) writeCommitedBlockWithState(block *types.Block) error {
 	var (
-		chain    *core.BlockChain
-		receipts = make([]*types.Receipt, len(sb.current.receipts))
-		logs     []*types.Log
-		events   []interface{}
-		ok       bool
+		chain  *core.BlockChain
+		logs   []*types.Log
+		events []interface{}
+		ok     bool
 	)
 
 	if chain, ok = sb.chain.(*core.BlockChain); !ok {
@@ -218,17 +205,15 @@ func (sb *backend) writeCommitedBlockWithState(block *types.Block) error {
 	if sb.current == nil {
 		return errors.New("sb.current is nil")
 	}
-	if chain.HasBlock(block.Hash(), block.NumberU64()){
+	if chain.HasBlock(block.Hash(), block.NumberU64()) {
 		return nil
 	}
 
-	for i, receipt := range sb.current.receipts {
-		receipts[i] = new(types.Receipt)
-		*receipts[i] = *receipt
+	for _, receipt := range sb.current.receipts {
 		// Update the block hash in all logs since it is now available and not when the
 		// receipt/log of individual transactions were created.
-		for _, log := range receipt.Logs {
-			log.BlockHash = block.Hash()
+		for j, _ := range receipt.Logs {
+			receipt.Logs[j].BlockHash = block.Hash()
 		}
 		logs = append(logs, receipt.Logs...)
 	}
@@ -353,11 +338,11 @@ func (sb *backend) makeCurrent(parentRoot common.Hash, header *types.Header) err
 	}
 
 	env := &environment{
-		signer:    types.NewEIP155Signer(chain.Config().ChainID),
-		state:     state,
-		header:    header,
-		gasPool:   gp,
-		txs: make([]*types.Transaction,0),
+		signer:  types.NewEIP155Signer(chain.Config().ChainID),
+		state:   state,
+		header:  header,
+		gasPool: gp,
+		txs:     make([]*types.Transaction, 0),
 	}
 
 	// Keep track of transactions which return errors so they can be removed
@@ -390,9 +375,9 @@ func (sb *backend) excuteBlock(proposal istanbul.Proposal) error {
 		return errors.New("Proposal's parent block is not in current chain")
 	}
 
-	if err = sb.makeCurrent(parent.Root(), header);err != nil{
+	if err = sb.makeCurrent(parent.Root(), header); err != nil {
 		return err
-	}else{
+	} else {
 		// Iterate over and process the individual transactios
 		txsMap := make(map[common.Hash]struct{})
 		for _, tx := range block.Transactions() {

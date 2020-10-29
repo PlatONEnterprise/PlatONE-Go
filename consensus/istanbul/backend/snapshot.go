@@ -258,7 +258,7 @@ func (s *Snapshot) apply(chain consensus.ChainReader, sb *backend, headers []*ty
 		}
 	*/
 
-	validatorNodesList, _ := getConsensusNodesList(chain, sb, headers, snap.Number+uint64(len(headers)))
+	validatorNodesList, _ := getConsensusNodesList(chain, sb, snap.Number+uint64(len(headers)))
 	if len(validatorNodesList) == 0 {
 		snap.Number += uint64(len(headers))
 		snap.Hash = headers[len(headers)-1].Hash()

@@ -17,10 +17,10 @@
 package params
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
 	"crypto/ecdsa"
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
 	"math/big"
 )
 
@@ -142,18 +142,18 @@ var (
 	//
 	// This configuration is intentionally not using keyed fields to force anyone
 	// adding flags to the config to also have to set these fields.
-	AllEthashProtocolChanges = &ChainConfig{big.NewInt(1337), "", big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, nil, nil, nil, ""}
+	AllEthashProtocolChanges = &ChainConfig{big.NewInt(1337), "", big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, nil, nil, nil, "", nil}
 
 	// AllCliqueProtocolChanges contains every protocol change (EIPs) introduced
 	// and accepted by the Ethereum core developers into the Clique consensus.
 	//
 	// This configuration is intentionally not using keyed fields to force anyone
 	// adding flags to the config to also have to set these fields.
-	AllCliqueProtocolChanges = &ChainConfig{big.NewInt(1337), "", big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, &CliqueConfig{Period: 0, Epoch: 30000}, nil, nil, ""}
+	AllCliqueProtocolChanges = &ChainConfig{big.NewInt(1337), "", big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, &CliqueConfig{Period: 0, Epoch: 30000}, nil, nil, "", nil}
 
-	TestChainConfig = &ChainConfig{big.NewInt(1), "", big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, nil, nil, nil, ""}
+	TestChainConfig = &ChainConfig{big.NewInt(1), "", big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, nil, nil, nil, "", nil}
 
-	AllCbftProtocolChanges = &ChainConfig{big.NewInt(1337), "", big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, nil, new(CbftConfig), nil, ""}
+	AllCbftProtocolChanges = &ChainConfig{big.NewInt(1337), "", big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, nil, new(CbftConfig), nil, "", nil}
 	TestRules              = TestChainConfig.Rules(new(big.Int))
 )
 
@@ -200,6 +200,8 @@ type ChainConfig struct {
 
 	// Various vm interpreter
 	VMInterpreter string `json:"interpreter,omitempty"`
+
+	VRF *VRFConfig `json:"vrf,omitempty"`
 }
 
 // EthashConfig is the consensus engine configs for proof-of-work based sealing.
@@ -230,7 +232,13 @@ type IstanbulConfig struct {
 	Epoch          uint64          `json:"epoch,omitempty"`   // The number of blocks after which to checkpoint and reset the pending votes
 	InitialNodes   []discover.Node `json:"initialNodes,omitempty"`
 	ValidatorNodes []discover.Node `json:"validatorNodes,omitempty"`
-	ObserverNodes   []discover.Node `json:"suggestObserverNodes,omitempty"`
+	ObserverNodes  []discover.Node `json:"suggestObserverNodes,omitempty"`
+}
+
+type VRFConfig struct {
+	ElectionEpoch     uint64   `json:"electionEpoch,omitempty"`
+	NextElectionBlock *big.Int `json:"nextElectionBlock,omitempty"`
+	ValidatorCount    uint64   `json:"validatorCount,omitempty"`
 }
 
 // CliqueConfig is the consensus engine configs for proof-of-authority based sealing.

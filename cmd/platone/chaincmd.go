@@ -593,5 +593,14 @@ func InitInnerCallFuncFromChain(bc *core.BlockChain) {
 	}
 
 	common.SetSysContractCallFunc(sysContractCall)
-	common.InitSystemconfig(common.NodeInfo{})
+	vrf := new(common.VRFParams)
+	if bc.Config().VRF != nil {
+		vrfCfg := bc.Config().VRF
+		vrf = &common.VRFParams{
+			ElectionEpoch:     vrfCfg.ElectionEpoch,
+			NextElectionBlock: vrfCfg.NextElectionBlock,
+			ValidatorCount:    vrfCfg.ValidatorCount,
+		}
+	}
+	common.InitSystemconfig(common.NodeInfo{}, vrf)
 }

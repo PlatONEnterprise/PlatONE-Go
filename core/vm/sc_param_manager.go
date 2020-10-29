@@ -17,6 +17,8 @@ var (
 	isCheckContractDeployPermission = generateStateKey("isCheckContractDeployPermission")
 	isApproveDeployedContractKey    = generateStateKey("IsApproveDeployedContract")
 	isTxUseGasKey                   = generateStateKey("IsTxUseGas")
+
+	vrfParamsKey = generateStateKey("VRFParamsKey")
 )
 
 const (
@@ -339,6 +341,42 @@ func (u *ParamManager) setIsTxUseGas(isTxUseGas uint64) (int32, error) {
 	return ret, err
 }
 
+func (u *ParamManager) checkVRFParams(params common.VRFParams) error {
+	if params.ValidatorCount < 1 {
+		return errValidatorCountInvalid
+	}
+	return nil
+}
+
+func (u *ParamManager) setVRFParams(params common.VRFParams) error {
+	if err := u.checkVRFParams(params); err != nil {
+		u.emitNotifyEventInParam("SetVRFParams", paramInvalid, fmt.Sprintf("param is invalid."))
+		return err
+	}
+	_, err := u.doParamSet(vrfParamsKey, params)
+	if err != nil {
+		switch err {
+		case errNoPermission:
+			u.emitNotifyEventInParam("SetVRFParams", callerHasNoPermission, fmt.Sprintf("%s has no permission to adjust param.", u.caller.String()))
+			return err
+
+		case errEncodeFailure:
+			u.emitNotifyEventInParam("SetVRFParams", encodeFailure, fmt.Sprintf("%v failed to encode.", isTxUseGasKey))
+			return err
+		}
+	}
+	u.emitNotifyEventInParam("IsTxUseGas", doParamSetSuccess, fmt.Sprintf("param set successful."))
+	return nil
+}
+
+func (u *ParamManager) getVRFParams() (*common.VRFParams, error) {
+	var b common.VRFParams
+	if err := u.getParam(vrfParamsKey, &b); err != nil && err != errEmptyValue {
+		return &b, err
+	}
+	return &b, nil
+}
+
 // 获取交易是否消耗 gas
 func (u *ParamManager) getIsTxUseGas() (uint32, error) {
 	var isUseGas = isTxUseGasDefault
@@ -398,5 +436,7 @@ func (u *ParamManager) AllExportFns() SCExportFns {
 		"getIsApproveDeployedContract":     u.getIsApproveDeployedContract,
 		"setIsTxUseGas":                    u.setIsTxUseGas,
 		"getIsTxUseGas":                    u.getIsTxUseGas,
+		"setVRFParams":                     u.setVRFParams,
+		"getVRFParams":                     u.getVRFParams,
 	}
 }

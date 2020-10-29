@@ -16,6 +16,11 @@
       	"initialNodes": [],
         "validatorNodes": [__VALIDATORS__],
         "suggestObserverNodes": [__OBSERVES__]
+    },
+    "vrf":{
+        "electionEpoch":0,
+        "nextElectionBlock":15,
+        "validatorCount" :10
     }
   },
   "nonce": "0x0",

@@ -165,6 +165,21 @@ func InitInnerCallFunc(ethPtr *Ethereum) {
 			if res != nil {
 				sc.SysParam.GasContractName = common.CallResAsString(res)
 			}
+
+			funcName = "getVRFParams"
+			funcParams = []interface{}{}
+			res = callContract(paramAddr, common.GenCallData(funcName, funcParams))
+			if res != nil {
+				strRes := common.CallResAsString(res)
+				var tmpVrfParam common.VRFParams
+				if err := json.Unmarshal(utils.String2bytes(strRes), &tmpVrfParam); err != nil {
+					log.Warn("unmarshal vrf params failed", "result", strRes, "err", err.Error())
+				} else {
+					sc.SysParam.VRF.ElectionEpoch = tmpVrfParam.ElectionEpoch
+					sc.SysParam.VRF.NextElectionBlock = tmpVrfParam.NextElectionBlock
+					sc.SysParam.VRF.ValidatorCount = tmpVrfParam.ValidatorCount
+				}
+			}
 		}
 
 		if sc.SysParam.GasContractName != "" {
@@ -211,10 +226,20 @@ func InitInnerCallFunc(ethPtr *Ethereum) {
 
 	common.SetSysContractCallFunc(sysContractCall)
 	if _, ok := ethPtr.engine.(consensus.Istanbul); !ok {
-		common.InitSystemconfig(root)
+		common.InitSystemconfig(root, nil)
 		return
 	}
-	common.InitSystemconfig(common.NodeInfo{})
+
+	vrf := new(common.VRFParams)
+	if ethPtr.chainConfig.VRF != nil {
+		vrfCfg := ethPtr.chainConfig.VRF
+		vrf = &common.VRFParams{
+			ElectionEpoch:     vrfCfg.ElectionEpoch,
+			NextElectionBlock: vrfCfg.NextElectionBlock,
+			ValidatorCount:    vrfCfg.ValidatorCount,
+		}
+	}
+	common.InitSystemconfig(common.NodeInfo{}, vrf)
 }
 
 type LesServer interface {
