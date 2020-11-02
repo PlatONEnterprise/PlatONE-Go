@@ -421,16 +421,6 @@ func (pool *TxPool) lockedReset(oldHead, newHead *types.Header) {
 	pool.reset(oldHead, newHead)
 }
 
-// This method is called by cbft
-func (pool *TxPool) Reset(newBlock *types.Block) {
-	if pool == nil {
-		// tx pool not initialized yet.
-		return
-	}
-	log.Debug("call Reset()", "RoutineID", common.CurrentGoRoutineID(), "hash", newBlock.Hash(), "number", newBlock.NumberU64(), "parentHash", newBlock.ParentHash(), "pool.chainHeadCh.len", len(pool.chainHeadCh))
-	pool.chainHeadCh <- newBlock
-}
-
 func (pool *TxPool) ForkedReset(origTress, newTress []*types.Block) {
 	log.Debug("call ForkedReset()", "RoutineID", common.CurrentGoRoutineID(), "len(origTress)", len(origTress), "len(newTress)", len(newTress))
 

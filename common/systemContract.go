@@ -18,11 +18,6 @@ func SetSysContractCallFunc(f func(*SystemConfig)) {
 	sysContractCall = f
 }
 
-type CBFTProduceBlockCfg struct {
-	ProduceDuration int32 `json:"ProduceDuration"`
-	BlockInterval   int32 `json:"BlockInterval"`
-}
-
 type CommonResult struct {
 	RetCode int32      `json:"code"`
 	RetMsg  string     `json:"msg"`
@@ -30,16 +25,16 @@ type CommonResult struct {
 }
 
 type NodeInfo struct {
-	Name  string `json:"name,omitempty"` //这个名称意义是？
-	Owner string `json:"owner,omitempty"` //没有用到？删除？
-	Desc  string `json:"desc,omitempty"` //没有用到？删除？
+	Name  string `json:"name,omitempty"`
+	Owner string `json:"owner,omitempty"`
+	Desc  string `json:"desc,omitempty"`
 	Types int32  `json:"type,omitempty"`
 	// status 1为正常节点, 2为删除节点
 	Status     int32  `json:"status,omitempty"`
-	ExternalIP string `json:"externalIP,omitempty"` //没有用到？删除？
+	ExternalIP string `json:"externalIP,omitempty"`
 	InternalIP string `json:"internalIP,omitempty"`
 	PublicKey  string `json:"publicKey,omitempty"`
-	RpcPort    int32  `json:"rpcPort,omitempty"` //没有用到？删除？
+	RpcPort    int32  `json:"rpcPort,omitempty"`
 	P2pPort    int32  `json:"p2pPort,omitempty"`
 	// delay set validatorSet
 	DelayNum uint64 `json:"delayNum,omitempty"`
@@ -48,7 +43,6 @@ type NodeInfo struct {
 type SystemParameter struct {
 	BlockGasLimit                 int64
 	TxGasLimit                    int64
-	CBFTTime                      CBFTProduceBlockCfg
 	GasContractName               string
 	GasContractAddr               Address
 	CheckContractDeployPermission int64
@@ -71,10 +65,6 @@ var SysCfg  = &SystemConfig{
 	SysParam: &SystemParameter{
 		BlockGasLimit: 0xffffffffffff,
 		TxGasLimit:    100000000000000,
-		CBFTTime: CBFTProduceBlockCfg{
-			ProduceDuration: int32(10),
-			BlockInterval:   int32(1),
-		},
 	},
 	ContractAddress: make(map[string]Address),
 }
@@ -87,10 +77,6 @@ func InitSystemconfig(root NodeInfo) {
 		SysParam: &SystemParameter{
 			BlockGasLimit: 0xffffffffffff,
 			TxGasLimit:    10000000000000,
-			CBFTTime: CBFTProduceBlockCfg{
-				ProduceDuration: int32(10),
-				BlockInterval:   int32(1),
-			},
 		},
 		ContractAddress: make(map[string]Address),
 	}
@@ -159,12 +145,6 @@ func (sc *SystemConfig) GetHighsetNumber() *big.Int {
 	sc.SystemConfigMu.RLock()
 	defer sc.SystemConfigMu.RUnlock()
 	return sc.HighsetNumber
-}
-
-func (sc *SystemConfig) GetCBFTTime() CBFTProduceBlockCfg {
-	sc.SystemConfigMu.RLock()
-	defer sc.SystemConfigMu.RUnlock()
-	return sc.SysParam.CBFTTime
 }
 
 func (sc *SystemConfig) GetNormalNodes() []NodeInfo {

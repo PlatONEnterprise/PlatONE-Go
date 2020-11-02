@@ -36,11 +36,6 @@ func (cc *ChainContext) Engine() consensus.Engine {
 	return cc.engine
 }
 
-type CBFTProduceBlockCfg struct {
-	ProduceDuration int32 `json:"ProduceDuration"`
-	BlockInterval   int32 `json:"BlockInterval"`
-}
-
 type commonResult struct {
 	RetCode int32      `json:"code"`
 	RetMsg  string     `json:"msg"`

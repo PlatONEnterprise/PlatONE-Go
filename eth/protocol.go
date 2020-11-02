@@ -60,9 +60,6 @@ const (
 	BlockBodiesMsg     = 0x06
 	NewBlockMsg        = 0x07
 	PrepareBlockMsg   = 0x08
-	BlockSignatureMsg = 0x09
-
-	PongMsg = 0x0a
 
 	// Protocol messages belonging to eth/63
 	GetNodeDataMsg = 0x0d

@@ -18,7 +18,6 @@ package core
 
 import (
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/cbfttypes"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 )
 
@@ -34,7 +33,6 @@ type PendingLogsEvent struct {
 type NewMinedBlockEvent struct{ Block *types.Block }
 
 type PrepareMinedBlockEvent struct{ Block *types.Block }
-type BlockSignatureEvent struct{ BlockSignature *cbfttypes.BlockSignature }
 
 // RemovedLogsEvent is posted when a reorg happens
 type RemovedLogsEvent struct{ Logs []*types.Log }

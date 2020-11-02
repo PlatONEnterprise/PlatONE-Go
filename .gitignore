@@ -105,9 +105,16 @@ release/linux/bin/wnode
 release/linux/conf/ctool.json
 release/linux/conf/genesis.json
 release/linux/data/
+release/linux/bin/cmd
+release/linux/bin/build
+release/linux/bin/platonecli
 
 cmd/data-manager/cmd/cmd
 cmd/platonecli/platonecli
 release/linux/bin/build
 release/linux/bin/cmd
 
+cmd/localtestnet/localtestnet
+cmd/localtestnet/localtestnetdata/
+cmd/localtestnet/nohup.out
+cmd/localtestnet/platone

@@ -244,30 +244,30 @@ func (c *ChainIndexer) newHead(head uint64, reorg bool) {
 	// If a reorg happened, invalidate all sections until that point
 	if reorg {
 		// Revert the known section number to the reorg point
-		known := head / c.sectionSize
-		stored := known
-		if known < c.checkpointSections {
-			known = 0
-		}
-		if stored < c.checkpointSections {
-			stored = c.checkpointSections
-		}
-		if known < c.knownSections {
-			c.knownSections = known
-		}
-		// Revert the stored sections from the database to the reorg point
-		if stored < c.storedSections {
-			c.setValidSections(stored)
-		}
-		// Update the new head number to the finalized section end and notify children
-		head = known * c.sectionSize
-
-		if head < c.cascadedHead {
-			c.cascadedHead = head
-			for _, child := range c.children {
-				child.newHead(c.cascadedHead, true)
-			}
-		}
+		//known := head / c.sectionSize
+		//stored := known
+		//if known < c.checkpointSections {
+		//	known = 0
+		//}
+		//if stored < c.checkpointSections {
+		//	stored = c.checkpointSections
+		//}
+		//if known < c.knownSections {
+		//	c.knownSections = known
+		//}
+		//// Revert the stored sections from the database to the reorg point
+		//if stored < c.storedSections {
+		//	c.setValidSections(stored)
+		//}
+		//// Update the new head number to the finalized section end and notify children
+		//head = known * c.sectionSize
+		//
+		//if head < c.cascadedHead {
+		//	c.cascadedHead = head
+		//	for _, child := range c.children {
+		//		child.newHead(c.cascadedHead, true)
+		//	}
+		//}
 		return
 	}
 	// No reorg, calculate the number of newly known sections and update if high enough

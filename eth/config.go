@@ -17,12 +17,7 @@
 package eth
 
 import (
-	"fmt"
 	"math/big"
-	"os"
-	"os/user"
-	"path/filepath"
-	"runtime"
 	"time"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
@@ -30,25 +25,12 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/downloader"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth/gasprice"
-	"github.com/PlatONEnetwork/PlatONE-Go/log"
-	"github.com/PlatONEnetwork/PlatONE-Go/node"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
-)
-
-const (
-	datadirCbftConfig = "cbft.json" // Path within the datadir to the cbft config
 )
 
 // DefaultConfig contains default settings for use on the Ethereum main net.
 var DefaultConfig = Config{
 	SyncMode: downloader.FullSync,
-	CbftConfig: CbftConfig{
-		Period:           1,
-		Epoch:            250000,
-		MaxLatency:       600,
-		LegalCoefficient: 1.0,
-		Duration:         10,
-	},
 	NetworkId:     1,
 	LightPeers:    100,
 	DatabaseCache: 768,
@@ -64,21 +46,6 @@ var DefaultConfig = Config{
 		Blocks:     20,
 		Percentile: 60,
 	},
-
-}
-
-func init() {
-	home := os.Getenv("HOME")
-	if home == "" {
-		if user, err := user.Current(); err == nil {
-			home = user.HomeDir
-		}
-	}
-	if runtime.GOOS == "windows" {
-		//DefaultConfig.Ethash.DatasetDir = filepath.Join(home, "AppData", "Ethash")
-	} else {
-		//DefaultConfig.Ethash.DatasetDir = filepath.Join(home, ".ethash")
-	}
 }
 
 //go:generate gencodec -type Config -field-override configMarshaling -formats toml -out gen_config.go
@@ -87,8 +54,6 @@ type Config struct {
 	// The genesis block, which is inserted if the database is empty.
 	// If nil, the Ethereum main net block is used.
 	Genesis *core.Genesis `toml:",omitempty"`
-
-	CbftConfig CbftConfig `toml:",omitempty"`
 
 	// Protocol options
 	NetworkId uint64 // Network ID to use for selecting peers to connect to
@@ -135,67 +100,6 @@ type Config struct {
 
 }
 
-type CbftConfig struct {
-	Period           uint64  `json:"period"` // Number of seconds between blocks to enforce
-	Epoch            uint64  `json:"epoch"`  // Epoch length to reset votes and checkpoint
-	MaxLatency       int64   `json:"maxLatency"`
-	LegalCoefficient float64 `json:"legalCoefficient"`
-	Duration         int64   `json:"duration"`
-	//mock
-	//InitialNodes []discover.Node   `json:"initialNodes"`
-	//NodeID       discover.NodeID   `json:"nodeID,omitempty"`
-	//PrivateKey   *ecdsa.PrivateKey `json:"PrivateKey,omitempty"`
-}
-
-type IstanbulConfig struct {
-	Period           uint64  `json:"period"` // Number of seconds between blocks to enforce
-	Epoch            uint64  `json:"epoch"`  // Epoch length to reset votes and checkpoint
-	//mock
-	//InitialNodes []discover.Node   `json:"initialNodes"`
-	//NodeID       discover.NodeID   `json:"nodeID,omitempty"`
-	//PrivateKey   *ecdsa.PrivateKey `json:"PrivateKey,omitempty"`
-}
-
 type configMarshaling struct {
 	MinerExtraData hexutil.Bytes
-}
-
-// StaticNodes returns a list of node enode URLs configured as static nodes.
-func (c *Config) LoadCbftConfig(nodeConfig node.Config) *CbftConfig {
-	return c.parsePersistentCbftConfig(filepath.Join(nodeConfig.DataDir, datadirCbftConfig))
-}
-
-// StaticNodes returns a list of node enode URLs configured as static nodes.
-func (c *Config) LoadIstanbulConfig(nodeConfig node.Config) *IstanbulConfig {
-	return c.parsePersistentIstanbulConfig(filepath.Join(nodeConfig.DataDir, datadirCbftConfig))
-}
-
-// parsePersistentNodes parses a list of discovery node URLs loaded from a .json
-// file from within the data directory.
-func (c *Config) parsePersistentCbftConfig(path string) *CbftConfig {
-	if _, err := os.Stat(path); err != nil {
-		return nil
-	}
-	// Load the nodes from the config file.
-	config := CbftConfig{}
-	if err := common.LoadJSON(path, &config); err != nil {
-		log.Error(fmt.Sprintf("Can't load cbft config file %s: %v", path, err))
-		return nil
-	}
-	return &config
-}
-
-// parsePersistentNodes parses a list of discovery node URLs loaded from a .json
-// file from within the data directory.
-func (c *Config) parsePersistentIstanbulConfig(path string) *IstanbulConfig {
-	if _, err := os.Stat(path); err != nil {
-		return nil
-	}
-	// Load the nodes from the config file.
-	config := IstanbulConfig{}
-	if err := common.LoadJSON(path, &config); err != nil {
-		log.Error(fmt.Sprintf("Can't load cbft config file %s: %v", path, err))
-		return nil
-	}
-	return &config
 }

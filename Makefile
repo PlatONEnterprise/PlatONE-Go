@@ -11,9 +11,6 @@
 GOBIN = $(shell pwd)/build/bin
 GO ?= latest
 
-#syscontracts:
-#	build/build_syscontracts.sh
-
 platonecli:
 	build/build_deps.sh
 	build/env.sh go run build/ci.go install ./cmd/platonecli
@@ -29,12 +26,6 @@ platone:
 	@echo "Done building."
 	@echo "Run \"$(GOBIN)/platone\" to launch platone."
 
-
-swarm:
-	build/env.sh go run build/ci.go install ./cmd/swarm
-	@echo "Done building."
-	@echo "Run \"$(GOBIN)/swarm\" to launch swarm."
-
 #syscontract:
 #	build/build_syscontracts.sh
 
@@ -42,7 +33,6 @@ all:
 	build/build_deps.sh
 	build/env.sh go run build/ci.go install
 	build/move_bin_to_release.sh
-
 
 android:
 	build/env.sh go run build/ci.go aar --local

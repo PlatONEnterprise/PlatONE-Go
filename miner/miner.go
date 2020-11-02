@@ -19,7 +19,6 @@ package miner
 
 import (
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/cbfttypes"
 	"sync/atomic"
 	"time"
 
@@ -55,14 +54,13 @@ type Miner struct {
 	shouldStart int32 // should start indicates whether we should start after sync
 }
 
-func New(eth Backend, config *params.ChainConfig, mux *event.TypeMux, engine consensus.Engine, recommit time.Duration, gasFloor, gasCeil uint64, isLocalBlock func(block *types.Block) bool,
-	blockSignatureCh chan *cbfttypes.BlockSignature, cbftResultCh chan *cbfttypes.CbftResult, highestLogicalBlockCh chan *types.Block, blockChainCache *core.BlockChainCache) *Miner {
+func New(eth Backend, config *params.ChainConfig, mux *event.TypeMux, engine consensus.Engine, recommit time.Duration, gasFloor, gasCeil uint64, isLocalBlock func(block *types.Block) bool, highestLogicalBlockCh chan *types.Block, blockChainCache *core.BlockChainCache) *Miner {
 	miner := &Miner{
 		eth:      eth,
 		mux:      mux,
 		engine:   engine,
 		exitCh:   make(chan struct{}),
-		worker:   newWorker(config, engine, eth, mux, recommit, gasFloor, gasCeil, isLocalBlock, blockSignatureCh, cbftResultCh, highestLogicalBlockCh, blockChainCache),
+		worker:   newWorker(config, engine, eth, mux, recommit, gasFloor, gasCeil, isLocalBlock, highestLogicalBlockCh, blockChainCache),
 		canStart: 1,
 	}
 	go miner.update()
@@ -101,9 +99,6 @@ func (self *Miner) update() {
 					self.Start(self.coinbase)
 				}
 
-				if cbft, ok := self.engine.(consensus.Bft); ok {
-					cbft.OnBlockSynced()
-				}
 				// stop immediately and ignore all further pending events
 				return
 			}

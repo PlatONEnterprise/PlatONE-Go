@@ -17,10 +17,9 @@
 package params
 
 import (
+	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
-	"crypto/ecdsa"
-	"fmt"
 	"math/big"
 )
 
@@ -52,9 +51,6 @@ var (
 		EIP158Block:         big.NewInt(2675000),
 		ByzantiumBlock:      big.NewInt(4370000),
 		ConstantinopleBlock: nil,
-		Cbft: &CbftConfig{
-			InitialNodes: convertNodeUrl(initialConsensusNodes),
-		},
 		VMInterpreter: "wasm",
 	}
 
@@ -122,11 +118,6 @@ var (
 		EIP158Block:         big.NewInt(3),
 		ByzantiumBlock:      big.NewInt(1035301),
 		ConstantinopleBlock: nil,
-		Cbft: &CbftConfig{
-			Period:   3,
-			Epoch:    30000,
-			Duration: 30,
-		},
 	}
 	// RinkebyTrustedCheckpoint contains the light client trusted checkpoint for the Rinkeby test network.
 	RinkebyTrustedCheckpoint = &TrustedCheckpoint{
@@ -142,18 +133,17 @@ var (
 	//
 	// This configuration is intentionally not using keyed fields to force anyone
 	// adding flags to the config to also have to set these fields.
-	AllEthashProtocolChanges = &ChainConfig{big.NewInt(1337), "", big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, nil, nil, nil, ""}
+	AllEthashProtocolChanges = &ChainConfig{big.NewInt(1337), "", big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, nil, nil, ""}
 
 	// AllCliqueProtocolChanges contains every protocol change (EIPs) introduced
 	// and accepted by the Ethereum core developers into the Clique consensus.
 	//
 	// This configuration is intentionally not using keyed fields to force anyone
 	// adding flags to the config to also have to set these fields.
-	AllCliqueProtocolChanges = &ChainConfig{big.NewInt(1337), "", big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, &CliqueConfig{Period: 0, Epoch: 30000}, nil, nil, ""}
+	AllCliqueProtocolChanges = &ChainConfig{big.NewInt(1337), "", big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, &CliqueConfig{Period: 0, Epoch: 30000}, nil, ""}
 
-	TestChainConfig = &ChainConfig{big.NewInt(1), "", big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, nil, nil, nil, ""}
+	TestChainConfig = &ChainConfig{big.NewInt(1), "", big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, nil, nil, ""}
 
-	AllCbftProtocolChanges = &ChainConfig{big.NewInt(1337), "", big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, nil, new(CbftConfig), nil, ""}
 	TestRules              = TestChainConfig.Rules(new(big.Int))
 )
 
@@ -195,7 +185,6 @@ type ChainConfig struct {
 
 	// Various consensus engines
 	Clique   *CliqueConfig   `json:"clique,omitempty"`
-	Cbft     *CbftConfig     `json:"cbft,omitempty"`
 	Istanbul *IstanbulConfig `json:"istanbul,omitempty"`
 
 	// Various vm interpreter
@@ -210,17 +199,6 @@ func (c *EthashConfig) String() string {
 	return "ethash"
 }
 
-type CbftConfig struct {
-	Period           uint64  `json:"period,omitempty"`           // Number of seconds between blocks to enforce
-	Epoch            uint64  `json:"epoch,omitempty"`            // Epoch length to reset votes and checkpoint
-	MaxLatency       int64   `json:"maxLatency,omitempty"`       // number of milliseconds of max net latency between the consensus nodes
-	LegalCoefficient float64 `json:"legalCoefficient,omitempty"` // coefficient for checking if a block is in it's turn
-	Duration         int64   `json:"duration,omitempty"`         // number of seconds for a node to produce blocks
-	//mock
-	InitialNodes []discover.Node   `json:"initialNodes,omitempty"`
-	NodeID       discover.NodeID   `json:"-"`
-	PrivateKey   *ecdsa.PrivateKey `json:"PrivateKey,omitempty"`
-}
 type ProposerPolicy uint64
 
 type IstanbulConfig struct {
@@ -230,7 +208,7 @@ type IstanbulConfig struct {
 	Epoch          uint64          `json:"epoch,omitempty"`   // The number of blocks after which to checkpoint and reset the pending votes
 	InitialNodes   []discover.Node `json:"initialNodes,omitempty"`
 	ValidatorNodes []discover.Node `json:"validatorNodes,omitempty"`
-	ObserverNodes   []discover.Node `json:"suggestObserverNodes,omitempty"`
+	ObserverNodes  []discover.Node `json:"suggestObserverNodes,omitempty"`
 }
 
 // CliqueConfig is the consensus engine configs for proof-of-authority based sealing.
@@ -250,9 +228,8 @@ func (c *ChainConfig) String() string {
 	switch {
 	case c.Clique != nil:
 		engine = c.Clique
-		// joey.lyu
-	case c.Cbft != nil:
-		engine = c.Cbft
+	case c.Istanbul != nil:
+		engine = "istanbul"
 	default:
 		engine = "unknown"
 	}

@@ -22,23 +22,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 	"math/big"
 	"runtime"
 	"sync"
 	"sync/atomic"
-	"time"
-
-	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/accounts"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
-	"github.com/PlatONEnetwork/PlatONE-Go/consensus/cbft"
 	istanbulBackend "github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul/backend"
 	"github.com/PlatONEnetwork/PlatONE-Go/core"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/bloombits"
-	"github.com/PlatONEnetwork/PlatONE-Go/core/cbfttypes"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
@@ -61,20 +57,6 @@ import (
 )
 
 func InitInnerCallFunc(ethPtr *Ethereum) {
-	var rootNode discover.Node
-	var root common.NodeInfo
-	if _, ok := ethPtr.engine.(consensus.Istanbul); !ok {
-		rootNode = ethPtr.chainConfig.Cbft.InitialNodes[0]
-		root = common.NodeInfo{
-			Types:      1,
-			Status:     1,
-			Name:       "root",
-			PublicKey:  rootNode.ID.String(),
-			P2pPort:    int32(rootNode.UDP),
-			ExternalIP: rootNode.IP.String(),
-		}
-	}
-
 	sysContractCall := func(sc *common.SystemConfig) {
 		ctx := context.Background()
 
@@ -193,27 +175,11 @@ func InitInnerCallFunc(ethPtr *Ethereum) {
 				log.Debug("contract inner error", "code", tmp.RetCode, "msg", tmp.RetMsg)
 			} else {
 				sc.Nodes = tmp.Data
-				if _, ok := ethPtr.engine.(consensus.Istanbul); !ok {
-					hasRoot := false
-					for _, node := range sc.Nodes {
-						if node.PublicKey == rootNode.ID.String() {
-							hasRoot = true
-							break
-						}
-					}
-					if !hasRoot {
-						sc.Nodes = append(sc.Nodes, root)
-					}
-				}
 			}
 		}
 	}
 
 	common.SetSysContractCallFunc(sysContractCall)
-	if _, ok := ethPtr.engine.(consensus.Istanbul); !ok {
-		common.InitSystemconfig(root)
-		return
-	}
 	common.InitSystemconfig(common.NodeInfo{})
 }
 
@@ -298,8 +264,6 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	}
 	log.Info("Initialised chain configuration", "config", chainConfig)
 
-	blockSignatureCh := make(chan *cbfttypes.BlockSignature, 20)
-	cbftResultCh := make(chan *cbfttypes.CbftResult)
 	highestLogicalBlockCh := make(chan *types.Block)
 
 	eth := &Ethereum{
@@ -309,7 +273,7 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 		chainConfig:    chainConfig,
 		eventMux:       ctx.EventMux,
 		accountManager: ctx.AccountManager,
-		engine:         CreateConsensusEngine(ctx, chainConfig, config.MinerNotify, config.MinerNoverify, chainDb, blockSignatureCh, cbftResultCh, highestLogicalBlockCh, &config.CbftConfig),
+		engine:         CreateConsensusEngine(ctx, chainConfig, chainDb),
 		shutdownChan:   make(chan bool),
 		networkID:      config.NetworkId,
 		gasPrice:       config.MinerGasPrice,
@@ -336,8 +300,7 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	cacheConfig := &core.CacheConfig{Disabled: config.NoPruning, TrieNodeLimit: config.TrieCache, TrieTimeLimit: config.TrieTimeout}
 	common.SetCurrentInterpreterType(chainConfig.VMInterpreter)
 
-	funcSyncCBFTParam := cbft.ReloadCBFTParams
-	eth.blockchain, missingStateBlocks, err = core.NewBlockChain(chainDb, extDb, cacheConfig, eth.chainConfig, eth.engine, vmConfig, eth.shouldPreserve, funcSyncCBFTParam)
+	eth.blockchain, missingStateBlocks, err = core.NewBlockChain(chainDb, extDb, cacheConfig, eth.chainConfig, eth.engine, vmConfig, eth.shouldPreserve)
 	if err != nil {
 		return nil, err
 	}
@@ -358,8 +321,7 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	}
 	eth.APIBackend.gpo = gasprice.NewOracle(eth.APIBackend, gpoParams)
 
-	// set init system param function, then reload cbft param before start up miner
-
+	// set init system param function, then reload system param before start up miner
 	InitInnerCallFunc(eth)
 	if common.SysCfg != nil {
 		common.SysCfg.UpdateSystemConfig()
@@ -373,11 +335,6 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 		}
 	}
 
-	if _, ok := eth.engine.(consensus.Bft); ok {
-		log.Trace("Load system config after start up eth")
-		cbft.ReloadCBFTParams()
-	}
-
 	if config.TxPool.Journal != "" {
 		config.TxPool.Journal = ctx.ResolvePath(config.TxPool.Journal)
 	}
@@ -385,33 +342,15 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	eth.txPool = core.NewTxPool(config.TxPool, eth.chainConfig, blockChainCache, chainDb, eth.extDb)
 	log.Debug("Transaction pool info", "pool", eth.txPool)
 
-	// modify by platone remove consensusCache
-	//var consensusCache *cbft.Cache = cbft.NewCache(eth.blockchain)
 	recommit := config.MinerRecommit
-	if common.SysCfg != nil {
-		recommit = time.Duration(common.SysCfg.GetCBFTTime().BlockInterval) * time.Second
-	}
-	eth.miner = miner.New(eth, eth.chainConfig, eth.EventMux(), eth.engine, recommit, config.MinerGasFloor, config.MinerGasCeil, eth.isLocalBlock, blockSignatureCh, cbftResultCh, highestLogicalBlockCh, blockChainCache)
+	eth.miner = miner.New(eth, eth.chainConfig, eth.EventMux(), eth.engine, recommit, config.MinerGasFloor, config.MinerGasCeil, eth.isLocalBlock, highestLogicalBlockCh, blockChainCache)
 	eth.miner.SetEtherbase(crypto.PubkeyToAddress(ctx.NodeKey().PublicKey))
 	eth.miner.SetExtra(makeExtraData(config.MinerExtraData))
-
-	if _, ok := eth.engine.(consensus.Bft); ok {
-		cbft.SetBlockChainCache(blockChainCache)
-		cbft.SetBackend(eth.blockchain, eth.txPool)
-	}
 
 	if eth.protocolManager, err = NewProtocolManager(eth.chainConfig, config.SyncMode, config.NetworkId, eth.eventMux, eth.txPool, eth.engine, eth.blockchain, chainDb); err != nil {
 		return nil, err
 	}
 
-	var rootNodes []discover.Node
-	if _, ok := eth.engine.(consensus.Istanbul); !ok {
-		rootNodes = chainConfig.Cbft.InitialNodes
-		if len(rootNodes) != 0 {
-			p2p.AddRootPeer(rootNodes[0])
-			p2p.SetRootNode(&rootNodes[0])
-		}
-	}
 	return eth, nil
 }
 
@@ -457,25 +396,8 @@ func CreateExtDB(ctx *node.ServiceContext, config *Config, name string) (ethdb.D
 }
 
 // CreateConsensusEngine creates the required type of consensus engine instance for an Ethereum service
-func CreateConsensusEngine(ctx *node.ServiceContext, chainConfig *params.ChainConfig, notify []string, noverify bool, db ethdb.Database,
-	blockSignatureCh chan *cbfttypes.BlockSignature, cbftResultCh chan *cbfttypes.CbftResult, highestLogicalBlockCh chan *types.Block, cbftConfig *CbftConfig) consensus.Engine {
-	// If proof-of-authority is requested, set it up
-	if chainConfig.Cbft != nil {
-		if cbftConfig.Period < 1 {
-			chainConfig.Cbft.Period = 1
-		} else {
-			chainConfig.Cbft.Period = cbftConfig.Period
-		}
-		chainConfig.Cbft.Epoch = cbftConfig.Epoch
-		chainConfig.Cbft.MaxLatency = cbftConfig.MaxLatency
-		chainConfig.Cbft.LegalCoefficient = cbftConfig.LegalCoefficient
-		chainConfig.Cbft.Duration = cbftConfig.Duration
-		return cbft.New(chainConfig.Cbft, blockSignatureCh, cbftResultCh, highestLogicalBlockCh)
-	} else if chainConfig.Istanbul != nil {
-		//if chainConfig.Istanbul.Epoch != 0 {
-		//	config.Istanbul.Epoch = chainConfig.Istanbul.Epoch
-		//}
-		//config.Istanbul.ProposerPolicy = istanbul.ProposerPolicy(chainConfig.Istanbul.ProposerPolicy)
+func CreateConsensusEngine(ctx *node.ServiceContext, chainConfig *params.ChainConfig, db ethdb.Database) consensus.Engine {
+	if chainConfig.Istanbul != nil {
 		return istanbulBackend.New(chainConfig.Istanbul, ctx.NodeKey(), db)
 	}
 	return nil
@@ -653,9 +575,6 @@ func (s *Ethereum) StartMining(threads int) error {
 		eb, err := s.Etherbase()
 		if err != nil {
 			log.Error("Cannot start mining without etherbase", "err", err)
-			if _, ok := s.engine.(consensus.Bft); ok {
-				panic("Cannot start mining without etherbase")
-			}
 			return fmt.Errorf("etherbase missing: %v", err)
 		}
 		// If mining is started, we can disable the transaction rejection mechanism
@@ -728,14 +647,8 @@ func (s *Ethereum) Start(srvr *p2p.Server) error {
 		for _, n := range p2p.GetBootNodes() {
 			srvr.AddPeer(discover.NewNode(n.ID, n.IP, n.UDP, n.TCP))
 		}
-	} else if engine, ok := s.engine.(consensus.Bft); ok {
-		engine.SetPrivateKey(srvr.Config.PrivateKey)
-		if flag, err := engine.IsConsensusNode(); flag && err == nil {
-			for _, n := range s.chainConfig.Cbft.InitialNodes {
-				srvr.AddConsensusPeer(discover.NewNode(n.ID, n.IP, n.UDP, n.TCP))
-			}
-		}
 	}
+
 	s.StartMining(1)
 	if s.lesServer != nil {
 		s.lesServer.Start(srvr)
