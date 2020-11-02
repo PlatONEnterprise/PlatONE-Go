@@ -123,7 +123,7 @@ var (
 		Usage: "Switch the node type to consensus after <delayNum> numbers of blocks generated",
 	}
 	NodePublicKeyFlags = cli.StringFlag{
-		Name:  "publickey",
+		Name:  "publicKey",
 		Usage: "Node's public key for secure p2p communication",
 	}
 	NodeDescFlags = cli.StringFlag{

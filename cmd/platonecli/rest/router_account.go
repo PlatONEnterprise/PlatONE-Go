@@ -36,7 +36,7 @@ func newAccountHandler(ctx *gin.Context) {
 	var err error
 	if file := ctx.PostForm("privatekey"); file != "" {
 		// Load private key from file.
-		key, err := hex.DecodeString(files)
+		key, err := hex.DecodeString(file)
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"Can't load private key: ": err.Error()})
 			return
