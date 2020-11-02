@@ -118,3 +118,4 @@ cmd/localtestnet/localtestnet
 cmd/localtestnet/localtestnetdata/
 cmd/localtestnet/nohup.out
 cmd/localtestnet/platone
+release/linux/bin/localtestnet
