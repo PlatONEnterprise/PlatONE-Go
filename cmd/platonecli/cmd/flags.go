@@ -361,7 +361,7 @@ var (
 		ContractVmFlags,
 		TransferValueFlag,
 		ShowContractMethodsFlag)
-	contractMethodsCmd = append([]cli.Flag{}, ContractAbiFilePathFlag, ContractIDFlag)
+	contractMethodsCmd = append([]cli.Flag{}, ContractAbiFilePathFlag)
 
 	// cns
 	cnsResolveCmdFlags = append(globalCmdFlags, CnsVersionFlags)
