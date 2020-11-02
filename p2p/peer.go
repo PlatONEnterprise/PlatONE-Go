@@ -306,20 +306,8 @@ func (p *Peer) handle(msg Msg) error {
 		go SendItems(p.rw, pongMsg)*/
 
 	case msg.Code == pongMsg:
-		//added by Joey
-		proto := p.running["eth"]
-
-		msg.Code = 0x0a + proto.offset
-
-		//code := fmt.Sprintf("msg.Code: 0x%x", msg.Code)
-		//log.Debug("Receive a Pong message, reset msg.Code for eth protocol", "msg.Code", code)
-
-		select {
-		case proto.in <- msg:
-			return nil
-		case <-p.closed:
-			return io.EOF
-		}
+		code := fmt.Sprintf("msg.Code: 0x%x", msg.Code)
+		log.Debug("Receive a Pong message, reset msg.Code for eth protocol", "msg.Code", code)
 	case msg.Code == discMsg:
 		var reason [1]DiscReason
 		// This is the last message. We don't need to discard or
