@@ -141,7 +141,7 @@ func ParamParse(param, paramName string) interface{} {
 	case "contract", "user":
 		i = IsNameOrAddress(param)
 		if i == CnsIsUndefined {
-			err = fmt.Errorf(utils.ErrParamInValidSyntax, "contract address")
+			err = fmt.Errorf(utils.ErrParamInValidSyntax, "name or contract address")
 		}
 	case "delayNum", "p2pPort", "rpcPort":
 		if utils.IsInRange(param, 65535) {
