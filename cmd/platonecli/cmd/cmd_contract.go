@@ -187,16 +187,15 @@ func isTypeLenLong(v reflect.Value) bool {
 	}
 }
 
-//TODO test
 func migrate(c *cli.Context) {
 
-	funcName := "migrateFrom" // 内置
+	funcName := "migrate" // 内置
 	sourceAddr := c.Args().Get(0)
 	targetAddr := c.Args().Get(1) // 必选参数
 
 	paramValid(sourceAddr, "address")
 
-	if targetAddr != "" {
+	if targetAddr != "" && sourceAddr != ""{
 		paramValid(targetAddr, "address")
 		funcParams := cmd_common.CombineFuncParams(sourceAddr, targetAddr)
 		result := contractCall(c, funcParams, funcName, precompile.ContractDataProcessorAddress)
@@ -204,6 +203,7 @@ func migrate(c *cli.Context) {
 	} else {
 		// future feature
 		// txType := MIG_DP_TYPE
+		fmt.Println("invalid param")
 	}
 }
 
