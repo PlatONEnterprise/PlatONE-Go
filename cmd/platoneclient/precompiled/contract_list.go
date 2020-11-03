@@ -27,7 +27,7 @@ var List = map[string]string{
 	ParameterManagementAddress:   "../../release/linux/conf/contracts/paramManager.cpp.abi.json",
 	FirewallManagementAddress:    "../../release/linux/conf/contracts/fireWall.abi.json",
 	GroupManagementAddress:       "../../release/linux/conf/contracts/groupManager.cpp.abi.json",
-	ContractDataProcessorAddress: "../../release/linux/conf/contracts/contractdata.cpp.abi.json",
+	ContractDataProcessorAddress: "../../release/linux/conf/contracts/contractData.cpp.abi.json",
 
 	CnsInitRegEvent: "../../release/linux/conf/contracts/cnsInitRegEvent.json",
 	CnsInvokeEvent:  "../../release/linux/conf/contracts/cnsInvokeEvent.json",
