@@ -1,0 +1,23 @@
+[
+    {
+        "name": "migrate",
+        "inputs": [
+            {
+                "name": "src",
+                "type": "string"
+            },
+            {
+                "name": "dest",
+                "type": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "int32"
+            }
+        ],
+        "constant": "false",
+        "type": "function"
+    }
+]
