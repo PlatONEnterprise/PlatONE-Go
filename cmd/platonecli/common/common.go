@@ -3,6 +3,7 @@ package common
 import (
 	"errors"
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"strconv"
 	"strings"
 
@@ -10,7 +11,7 @@ import (
 
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 
-	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/precompiled"
+	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/precompiled"
 	"github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/utils"
 	utl "github.com/PlatONEnetwork/PlatONE-Go/cmd/utils"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
@@ -38,7 +39,7 @@ func CombineFuncParams(args ...string) []string {
 func AbiParse(abiFilePath, str string) []byte {
 	var err error
 	var abiBytes []byte
-
+	log.Debug(str)
 	// todo: equalFold string?
 	if p := precompile.List[str]; p != "" {
 		precompiledAbi, _ := precompile.Asset(p)
