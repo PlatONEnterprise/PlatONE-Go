@@ -330,7 +330,7 @@ var (
 	)
 
 	// user
-	userAddCmdFlags = append(globalCmdFlags, TelFlags, EmailFlags, OrganizationFlags)
+	userAddCmdFlags    = append(globalCmdFlags, TelFlags, EmailFlags, OrganizationFlags)
 	userUpdateCmdFlags = append(globalCmdFlags, TelFlags, EmailFlags, OrganizationFlags)
 	userQueryCmdFlags  = append(globalCmdFlags, UserIDFlags, ShowAllFlags)
 

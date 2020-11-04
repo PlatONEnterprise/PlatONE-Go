@@ -195,7 +195,7 @@ func migrate(c *cli.Context) {
 
 	paramValid(sourceAddr, "address")
 
-	if targetAddr != "" && sourceAddr != ""{
+	if targetAddr != "" && sourceAddr != "" {
 		paramValid(targetAddr, "address")
 		funcParams := cmd_common.CombineFuncParams(sourceAddr, targetAddr)
 		result := contractCall(c, funcParams, funcName, precompile.ContractDataProcessorAddress)

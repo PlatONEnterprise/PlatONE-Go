@@ -90,7 +90,7 @@ func queryHandlerCommon(ctx *gin.Context, endPoint string, data *contractParams)
 			json.Unmarshal([]byte(restring), &nodes)
 		}
 		ctx.JSON(200, len(nodes))
-	}else {
+	} else {
 
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

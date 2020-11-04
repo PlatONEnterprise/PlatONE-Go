@@ -100,8 +100,8 @@ func transfer(c *cli.Context) {
 }
 
 type UserInfo struct {
-	Address string `json:"address,omitempty,required"`
-	Name string `json:"name,omitempty"`
+	Address  string `json:"address,omitempty,required"`
+	Name     string `json:"name,omitempty"`
 	DescInfo string `json:"descInfo,omitempty"` // 描述信息，可变更
 }
 type UserDescInfo struct {
@@ -109,6 +109,7 @@ type UserDescInfo struct {
 	Organization string `json:"organization,omitempty"`
 	Phone        string `json:"phone,omitempty"`
 }
+
 func userAdd(c *cli.Context) {
 	//var strMustArray = []string{"address", "name"}
 	//strJson := combineJson(c, strMustArray, nil)
@@ -123,7 +124,6 @@ func userAdd(c *cli.Context) {
 	userdescinfo.Organization = organization
 	desbytes, _ := json.Marshal(userdescinfo)
 	desinfo := string(desbytes)
-
 
 	var userinfo UserInfo
 	address := c.Args().First()
