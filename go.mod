@@ -26,6 +26,7 @@ require (
 	github.com/influxdata/influxdb v1.2.3-0.20180221223340-01288bdb0883
 	github.com/jackpal/go-nat-pmp v1.0.2-0.20160603034137-1fa385a6f458
 	github.com/jpmorganchase/quorum v2.7.0+incompatible
+	github.com/jteeuwen/go-bindata v3.0.7+incompatible // indirect
 	github.com/julienschmidt/httprouter v1.1.1-0.20170430222011-975b5c4c7c21
 	github.com/karalabe/hid v0.0.0-20170821103837-f00545f9f374
 	github.com/maruel/panicparse v0.0.0-20160720141634-ad661195ed0e // indirect
