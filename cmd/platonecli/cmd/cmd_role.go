@@ -108,7 +108,7 @@ The caller should be a chainAdmin, call this function to add the account to Node
 		Name:      "delNodeAdmin",
 		Usage:     "del the account from NodeAdmin",
 		ArgsUsage: "<address>",
-		Action:    addNodeAdmin,
+		Action:    delNodeAdmin,
 		Flags:     roleCmdFlags,
 		Description: `
 		platonecli role delNodeAdmin <address>
