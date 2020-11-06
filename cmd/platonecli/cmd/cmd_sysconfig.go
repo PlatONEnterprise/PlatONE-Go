@@ -206,7 +206,7 @@ func sysconfigToString(param interface{}) interface{} {
 }
 
 func sysConfigParsing(param interface{}, paramName string) string {
-	if paramName == txGasLim || paramName == blockGasLim {
+	if paramName == txGasLim || paramName == blockGasLim || paramName == gasContract{
 		return param.(string)
 	}
 
