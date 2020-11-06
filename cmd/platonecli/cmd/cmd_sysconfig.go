@@ -197,6 +197,9 @@ func sysconfigToString(param interface{}) interface{} {
 	case reflect.Uint32:
 		return strconv.FormatUint(uint64(param.(uint32)), 10)
 
+	case reflect.String:
+		return param
+
 	default:
 		panic("not support, please add the corresponding type")
 	}
