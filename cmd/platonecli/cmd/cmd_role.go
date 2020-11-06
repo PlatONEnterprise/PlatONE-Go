@@ -197,7 +197,7 @@ func transferSuperAdmin(c *cli.Context) {
 	}
 
 	funcParams := []string{addr}
-	callUserManager(c, "transferSuperAdmin", funcParams)
+	callUserManager(c, "transferSuperAdminByAddress", funcParams)
 }
 
 func addChainAdmin(c *cli.Context) {

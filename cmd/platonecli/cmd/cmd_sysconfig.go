@@ -122,6 +122,7 @@ func checkConfigParam(param string, key string) bool {
 		num, err := strconv.ParseUint(param, 10, 0)
 		if err != nil {
 			utils.Fatalf("param invalid")
+
 			return false
 		}
 
@@ -136,6 +137,7 @@ func checkConfigParam(param string, key string) bool {
 		num, err := strconv.ParseUint(param, 10, 0)
 		if err != nil {
 			utils.Fatalf("param invalid")
+
 			return false
 		}
 
