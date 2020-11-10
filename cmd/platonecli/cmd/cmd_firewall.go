@@ -176,7 +176,9 @@ func fwExport(c *cli.Context) {
 	funcName := "__sys_FwExport"
 	filePath := c.String(FilePathFlags.Name)
 	addr := c.Args().First()
-
+	if !common.IsHexAddress(addr) {
+		panic("the first argument should be hex address")
+	}
 	funcParams := []string{addr}
 	result := contractCall(c, funcParams, funcName, precompile.FirewallManagementAddress)
 
