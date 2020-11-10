@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"reflect"
 	"strconv"
 
@@ -85,14 +86,33 @@ func setSysConfig(c *cli.Context) {
 		len(isCheckContractDeployPermission)+len(isProduceEmptyBlock)+len(gasContractName) > 15 {
 		utils.Fatalf("please set one system configuration at a time")
 	}
+	if txGasLimit != "" {
+		setConfig(c, txGasLimit, txGasLim)
+	}
+	if blockGasLimit != "" {
+		setConfig(c, blockGasLimit, blockGasLim)
 
-	setConfig(c, txGasLimit, txGasLim)
-	setConfig(c, blockGasLimit, blockGasLim)
-	setConfig(c, isTxUseGas, isTxUseGases)
-	setConfig(c, isApproveDeployedContract, isApprDeployedCon)
-	setConfig(c, isCheckContractDeployPermission, isCheckConDeployPerm)
-	setConfig(c, isProduceEmptyBlock, isProdEmptyBlock)
-	setConfig(c, gasContractName, gasContract)
+	}
+	if blockGasLimit != "" {
+		setConfig(c, isTxUseGas, isTxUseGases)
+
+	}
+	if blockGasLimit != "" {
+		setConfig(c, isApproveDeployedContract, isApprDeployedCon)
+
+	}
+	if blockGasLimit != "" {
+		setConfig(c, isCheckContractDeployPermission, isCheckConDeployPerm)
+
+	}
+	if blockGasLimit != "" {
+		setConfig(c, isProduceEmptyBlock, isProdEmptyBlock)
+
+	}
+	if blockGasLimit != "" {
+		setConfig(c, gasContractName, gasContract)
+
+	}
 
 }
 
@@ -121,7 +141,7 @@ func checkConfigParam(param string, key string) bool {
 		// number check
 		num, err := strconv.ParseUint(param, 10, 0)
 		if err != nil {
-			utils.Fatalf("param invalid")
+			log.Println("param invalid")
 
 			return false
 		}
@@ -136,7 +156,7 @@ func checkConfigParam(param string, key string) bool {
 	case "BlockGasLimit":
 		num, err := strconv.ParseUint(param, 10, 0)
 		if err != nil {
-			utils.Fatalf("param invalid")
+			log.Println("param invalid1")
 
 			return false
 		}
@@ -208,7 +228,7 @@ func sysconfigToString(param interface{}) interface{} {
 }
 
 func sysConfigParsing(param interface{}, paramName string) string {
-	if paramName == txGasLim || paramName == blockGasLim || paramName == gasContract{
+	if paramName == txGasLim || paramName == blockGasLim || paramName == gasContract {
 		return param.(string)
 	}
 
