@@ -31,20 +31,19 @@ import (
 
 // Constants to match up protocol versions and messages
 const (
-	eth62 = 62
-	eth63 = 63
+	platoneV1 = 1
 )
 
 // ProtocolName is the official short name of the protocol used during capability negotiation.
-var ProtocolName = "eth"
-var ProtocolNameArr = []string{"eth", "eth"}//, "istanbul"}
+
+var ProtocolNameArr = []string{"platone"}
 
 // ProtocolVersions are the upported versions of the eth protocol (first is primary).
-var ProtocolVersions = []uint{eth63, eth62}
+var ProtocolVersions = []uint{platoneV1}
 
 // ProtocolLengths are the number of implemented message corresponding to different protocol versions.
 //var ProtocolLengths = []uint64{17, 8}
-var ProtocolLengths = []uint64{18, 8}
+var ProtocolLengths = []uint64{21}
 
 const ProtocolMaxMsgSize = 10 * 1024 * 1024 // Maximum cap on the size of a protocol message
 
@@ -59,7 +58,7 @@ const (
 	GetBlockBodiesMsg  = 0x05
 	BlockBodiesMsg     = 0x06
 	NewBlockMsg        = 0x07
-	PrepareBlockMsg   = 0x08
+	PrepareBlockMsg    = 0x08
 
 	// Protocol messages belonging to eth/63
 	GetNodeDataMsg = 0x0d
@@ -67,7 +66,11 @@ const (
 	GetReceiptsMsg = 0x0f
 	ReceiptsMsg    = 0x10
 	// protocol message belonging to Istanbul
-	IstanbulMsg      = 0x11
+	IstanbulMsg = 0x11
+	// protocol message for transaction hash
+	GetPooledTxMsg = 0x12
+	PooledTxMsg    = 0x13
+	TxHashesMsg    = 0x14
 )
 
 type errCode int
@@ -102,6 +105,15 @@ var errorToString = map[int]string{
 }
 
 type txPool interface {
+
+	// Has returns an indicator whether txpool has a transaction
+	// cached with the given hash.
+	Has(hash common.Hash) bool
+
+	// Get retrieves the transaction from local txpool with given
+	// tx hash.
+	Get(hash common.Hash) *types.Transaction
+
 	// AddRemotes should add the given transactions to the pool.
 	AddRemotes([]*types.Transaction) []error
 

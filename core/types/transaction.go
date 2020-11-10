@@ -51,9 +51,10 @@ const (
 type Transaction struct {
 	data txdata
 	// caches
-	hash atomic.Value
-	size atomic.Value
-	from atomic.Value
+	hash   atomic.Value
+	size   atomic.Value
+	from   atomic.Value
+	router int32
 }
 
 type txdata struct {
@@ -271,6 +272,14 @@ func (tx *Transaction) Cost() *big.Int {
 
 func (tx *Transaction) RawSignatureValues() (*big.Int, *big.Int, *big.Int) {
 	return tx.data.V, tx.data.R, tx.data.S
+}
+
+func (tx *Transaction) RouterMark() {
+	tx.router++
+}
+
+func (tx *Transaction) FromRemote() bool {
+	return tx.router == 1
 }
 
 // Transactions is a Transaction slice type for basic sorting.

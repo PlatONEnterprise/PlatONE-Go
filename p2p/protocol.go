@@ -18,6 +18,7 @@ package p2p
 
 import (
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
 )
@@ -52,6 +53,8 @@ type Protocol struct {
 	// about a certain peer in the network. If an info retrieval function is set,
 	// but returns nil, it is assumed that the protocol handshake is still running.
 	PeerInfo func(id discover.NodeID) interface{}
+
+	UpdatePeer func(nodeInfo *common.NodeInfo)
 }
 
 func (p Protocol) cap() Cap {
@@ -78,4 +81,12 @@ func (cs capsByNameAndVersion) Len() int      { return len(cs) }
 func (cs capsByNameAndVersion) Swap(i, j int) { cs[i], cs[j] = cs[j], cs[i] }
 func (cs capsByNameAndVersion) Less(i, j int) bool {
 	return cs[i].Name < cs[j].Name || (cs[i].Name == cs[j].Name && cs[i].Version < cs[j].Version)
+}
+
+type capsByVersion []Cap
+
+func (cs capsByVersion) Len() int      { return len(cs) }
+func (cs capsByVersion) Swap(i, j int) { cs[i], cs[j] = cs[j], cs[i] }
+func (cs capsByVersion) Less(i, j int) bool {
+	return cs[i].Version < cs[j].Version
 }

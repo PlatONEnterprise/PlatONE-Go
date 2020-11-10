@@ -46,7 +46,7 @@ type SystemParameter struct {
 	GasContractName               string
 	GasContractAddr               Address
 	CheckContractDeployPermission int64
-	IsTxUseGas 			  		  bool
+	IsTxUseGas                    bool
 	IsProduceEmptyBlock           bool
 }
 
@@ -54,13 +54,19 @@ type SystemConfig struct {
 	SystemConfigMu  *sync.RWMutex
 	SysParam        *SystemParameter
 	Nodes           []NodeInfo
+	nodeMap         map[string]*NodeInfo
+	ConsensusNodes  []*NodeInfo
+	DeleteNodes     []*NodeInfo
 	HighsetNumber   *big.Int
 	ContractAddress map[string]Address
 }
 
-var SysCfg  = &SystemConfig{
+var SysCfg = &SystemConfig{
 	SystemConfigMu: &sync.RWMutex{},
 	Nodes:          make([]NodeInfo, 0),
+	nodeMap:        make(map[string]*NodeInfo),
+	ConsensusNodes: make([]*NodeInfo, 0),
+	DeleteNodes:    make([]*NodeInfo, 0),
 	HighsetNumber:  new(big.Int).SetInt64(0),
 	SysParam: &SystemParameter{
 		BlockGasLimit: 0xffffffffffff,
@@ -163,30 +169,18 @@ func (sc *SystemConfig) GetNormalNodes() []NodeInfo {
 func (sc *SystemConfig) IsValidJoinNode(publicKey string) bool {
 	sc.SystemConfigMu.RLock()
 	defer sc.SystemConfigMu.RUnlock()
-	var validNodes = make([]NodeInfo, 0)
 
-	for _, node := range sc.Nodes {
-		if node.Status == 1 && node.PublicKey == publicKey {
-			validNodes = append(validNodes, node)
-		}
+	if node, ok := sc.nodeMap[publicKey]; ok {
+		return node.Status == 1
 	}
-
-	return len(validNodes) == 1
+	return false
 }
 
-func (sc *SystemConfig) GetConsensusNodes() []NodeInfo {
+func (sc *SystemConfig) GetConsensusNodes() []*NodeInfo {
 	sc.SystemConfigMu.RLock()
 	defer sc.SystemConfigMu.RUnlock()
 
-	consensusNodes := make([]NodeInfo, 0)
-
-	for _, node := range sc.Nodes {
-		if node.Status == 1 && node.Types == 1 {
-			consensusNodes = append(consensusNodes, node)
-		}
-	}
-
-	return consensusNodes
+	return sc.ConsensusNodes
 }
 
 func (sc *SystemConfig) GetConsensusNodesFilterDelay(number uint64, nodes []NodeInfo, isOldBlock bool) []NodeInfo {
@@ -209,17 +203,11 @@ func (sc *SystemConfig) GetConsensusNodesFilterDelay(number uint64, nodes []Node
 	return consensusNodes
 }
 
-func (sc *SystemConfig) GetDeletedNodes() []NodeInfo {
+func (sc *SystemConfig) GetDeletedNodes() []*NodeInfo {
 	sc.SystemConfigMu.RLock()
 	defer sc.SystemConfigMu.RUnlock()
 
-	var deletedNodes = make([]NodeInfo, 0)
-	for _, node := range sc.Nodes {
-		if node.Status != 1 {
-			deletedNodes = append(deletedNodes, node)
-		}
-	}
-	return deletedNodes
+	return sc.DeleteNodes
 }
 
 func (sc *SystemConfig) GetContractAddress(name string) Address {
@@ -238,4 +226,28 @@ func (sc *SystemConfig) GetGasContractAddress() Address {
 	sc.SystemConfigMu.RLock()
 	defer sc.SystemConfigMu.RUnlock()
 	return sc.SysParam.GasContractAddr
+}
+
+func (sc *SystemConfig) GenerateNodeData() {
+	sc.nodeMap = make(map[string]*NodeInfo)
+	sc.ConsensusNodes = make([]*NodeInfo, 0)
+	sc.DeleteNodes = make([]*NodeInfo, 0)
+	for i, node := range sc.Nodes {
+		sc.nodeMap[node.PublicKey] = &sc.Nodes[i]
+		if node.Status != 1 {
+			sc.DeleteNodes = append(sc.DeleteNodes, &sc.Nodes[i])
+		} else if node.Types == 1 {
+			sc.ConsensusNodes = append(sc.ConsensusNodes, &sc.Nodes[i])
+		}
+	}
+}
+
+func (sc *SystemConfig) GetNodeTypes(publicKey string) int32 {
+	sc.SystemConfigMu.RLock()
+	defer sc.SystemConfigMu.RUnlock()
+
+	if node, ok := sc.nodeMap[publicKey]; ok {
+		return node.Types
+	}
+	return 0
 }

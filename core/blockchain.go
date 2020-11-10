@@ -39,7 +39,6 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/metrics"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"github.com/PlatONEnetwork/PlatONE-Go/trie"
@@ -1260,8 +1259,6 @@ func (st *insertStats) report(chain []*types.Block, index int, cache common.Stor
 		}
 		log.Info("Imported new chain segment", context...)
 
-		p2p.UpdatePeer()
-
 		*st = insertStats{startTime: now, lastIndex: index + 1}
 	}
 }
@@ -1289,8 +1286,8 @@ func (bc *BlockChain) PostChainEvents(events []interface{}, logs []*types.Log) {
 		case ChainHeadEvent:
 			bc.chainHeadFeed.Send(ev)
 
-		//case ChainSideEvent:
-		//	bc.chainSideFeed.Send(ev)
+			//case ChainSideEvent:
+			//	bc.chainSideFeed.Send(ev)
 		}
 	}
 }

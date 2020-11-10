@@ -381,36 +381,45 @@ func (srv *Server) RemovePeer(node *discover.Node) {
 	}
 }
 
-// UpdatePeer by nodeManager contract
 func UpdatePeer() {
-	if server == nil {
-		log.Info("updatePeer: srv is nil")
-		return
+	if server != nil {
+		go server.updatePeer()
 	}
-	joinNodes := make([]string, 0)
-	for _, peer := range server.PeersInfo() {
-		en := fmt.Sprintf("enode://%s@%s", peer.ID, peer.Network.RemoteAddress)
-		joinNodes = append(joinNodes, en)
-	}
+}
+
+func (srv *Server) updatePeer() {
+	joinNodes := srv.Peers()
+
+	delNodes := common.SysCfg.GetDeletedNodes()
 	log.Info("********** current joinNodes length **********", "len", len(joinNodes))
-	if err := server.ExcludeDelNodes(joinNodes); err != nil {
+	if err := server.removeDelNodes(delNodes, joinNodes); err != nil {
 		log.Warn(err.Error())
 	}
-	server.AddExtraNormalNodes(joinNodes)
+
+	consensusNodes := common.SysCfg.GetConsensusNodes()
+	log.Info("********** current consensus Len **********", "len", len(consensusNodes))
+	if err := server.updateConsensusNodes(consensusNodes, joinNodes); err != nil {
+		log.Warn(err.Error())
+	}
 }
 
-func (srv *Server) ExcludeDelNodes(joinNodes []string) (err error) {
-	delENodes := common.SysCfg.GetDeletedNodes()
+func (srv *Server) removeDelNodes(delENodes []*common.NodeInfo, joinNodes []*Peer) (err error) {
+next:
 	for _, eNode := range delENodes {
-		delEn := fmt.Sprintf("enode://%s@%s:%d", eNode.PublicKey, eNode.ExternalIP, eNode.P2pPort)
-		if node, err := discover.ParseNode(delEn); err == nil {
-			for _, joinNode := range joinNodes {
-				if strings.Contains(joinNode, node.ID.String()) {
-					if !BootNodesNotExempt && IsNodeInBootNodes(node.ID.String()) {
-						continue
+		for _, joinNode := range joinNodes {
+			if eNode.PublicKey == joinNode.ID().String() {
+				delEn := fmt.Sprintf("enode://%s@%s:%d", eNode.PublicKey, eNode.ExternalIP, eNode.P2pPort)
+				if node, err := discover.ParseNode(delEn); err == nil {
+					if IsNodeInBootNodes(eNode.PublicKey) {
+						if !BootNodesNotExempt {
+							continue next
+						} else {
+							srv.RemovePeer(node)
+						}
+					} else {
+						srv.RemoveConsensusPeer(node)
 					}
-					log.Info("remove del node", "nodePubKey", node.ID.String())
-					srv.RemovePeer(node)
+					log.Info("remove del node", "nodePubKey", eNode.PublicKey)
 				}
 			}
 		}
@@ -418,43 +427,25 @@ func (srv *Server) ExcludeDelNodes(joinNodes []string) (err error) {
 	return
 }
 
-func (srv *Server) ExcludeSelfInDelList(joinNodes []string) (err error) {
-	for _, delNode := range common.SysCfg.GetDeletedNodes() {
-		en := fmt.Sprintf("enode://%s@%s:%d", delNode.PublicKey, delNode.ExternalIP, delNode.P2pPort)
-		if node, e := discover.ParseNode(en); e == nil && node.ID.String() == srv.Self().ID.String() {
-			err = errServerSelfInDelList
-			for _, joinNode := range joinNodes {
-				if n, err := discover.ParseNode(joinNode); err == nil {
-					srv.RemovePeer(n)
-				}
-			}
-			break
-		}
-	}
-	return
-}
-
-func (srv *Server) AddExtraNormalNodes(joinNodes []string) (err error) {
-	nNodes := common.SysCfg.GetNormalNodes()
-	log.Info("********** GetNormalNodes Len **********", "len", len(nNodes))
+func (srv *Server) updateConsensusNodes(nNodes []*common.NodeInfo, joinNodes []*Peer) (err error) {
 next:
 	for _, eNode := range nNodes {
+		curPubKey := eNode.PublicKey
+		for _, joinNode := range joinNodes {
+			if curPubKey == joinNode.ID().String() {
+				joinNode.running.UpdatePeer(eNode)
+				continue next
+			}
+		}
 		eNodeStr := fmt.Sprintf("enode://%s@%s:%d", eNode.PublicKey, eNode.ExternalIP, eNode.P2pPort)
-
 		var node *discover.Node
 		if node, err = discover.ParseNode(eNodeStr); err != nil {
 			continue
 		}
-		curPubKey := node.ID.String()
-		for _, joinNode := range joinNodes {
-			if ok := strings.Contains(joinNode, curPubKey); ok {
-				continue next
-			}
-		}
 		// not connected and not myself
 		if srv.Self().ID.String() != curPubKey {
 			log.Info("Add new node", "PublicKey", curPubKey)
-			srv.AddPeer(node)
+			srv.AddConsensusPeer(node)
 		}
 	}
 	return
@@ -705,10 +696,11 @@ func (srv *Server) Start() (err error) {
 	//}
 
 	dynPeers := srv.maxDialedConns()
-	dialer := newDialState(srv.StaticNodes, srv.BootstrapNodes, srv.ntab, dynPeers, srv.NetRestrict)
+	nodeID := discover.PubkeyID(&srv.PrivateKey.PublicKey)
+	dialer := newDialState(srv.StaticNodes, srv.BootstrapNodes, srv.ntab, dynPeers, srv.NetRestrict, nodeID)
 
 	// handshake
-	srv.ourHandshake = &protoHandshake{Version: baseProtocolVersion, Name: srv.Name, ID: discover.PubkeyID(&srv.PrivateKey.PublicKey)}
+	srv.ourHandshake = &protoHandshake{Version: baseProtocolVersion, Name: srv.Name, ID: nodeID}
 	for _, p := range srv.Protocols {
 		srv.ourHandshake.Caps = append(srv.ourHandshake.Caps, p.cap())
 	}
@@ -808,6 +800,7 @@ func (srv *Server) run(dialstate dialer) {
 
 running:
 	for {
+		log.Info("********** current peers length **********", "len", len(peers))
 		scheduleTasks()
 
 		select {
@@ -956,9 +949,9 @@ func (srv *Server) protoHandshakeChecks(peers map[discover.NodeID]*Peer, inbound
 
 func (srv *Server) encHandshakeChecks(peers map[discover.NodeID]*Peer, inboundCount int, c *conn) error {
 	switch {
-	case !c.is(trustedConn | staticDialedConn | consensusDialedConn) && len(peers) >= srv.MaxPeers:
+	case !c.is(trustedConn|staticDialedConn|consensusDialedConn) && len(peers) >= srv.MaxPeers:
 		return DiscTooManyPeers
-	case !c.is(trustedConn | consensusDialedConn) && c.is(inboundConn) && inboundCount >= srv.maxInboundConns():
+	case !c.is(trustedConn|consensusDialedConn) && c.is(inboundConn) && inboundCount >= srv.maxInboundConns():
 		return DiscTooManyPeers
 	case peers[c.id] != nil:
 		return DiscAlreadyConnected
@@ -1106,8 +1099,8 @@ func (srv *Server) setupConn(c *conn, flags connFlag, dialDest *discover.Node) e
 		clog.Trace("Wrong devp2p handshake identity", "err", phs.ID)
 		return DiscUnexpectedIdentity
 	}
-	
-	pubk,err := c.id.Pubkey()
+
+	pubk, err := c.id.Pubkey()
 	pubkr := crypto.FromECDSAPub(pubk)
 	pubStr := hex.EncodeToString(pubkr[1:])
 	if dialDest != nil || common.SysCfg.IsValidJoinNode(pubStr) {

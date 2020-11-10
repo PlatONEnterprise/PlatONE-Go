@@ -26,6 +26,10 @@ var (
 	propTxnInTrafficMeter     = metrics.NewRegisteredMeter("eth/prop/txns/in/traffic", nil)
 	propTxnOutPacketsMeter    = metrics.NewRegisteredMeter("eth/prop/txns/out/packets", nil)
 	propTxnOutTrafficMeter    = metrics.NewRegisteredMeter("eth/prop/txns/out/traffic", nil)
+	propTxHashInPacketsMeter  = metrics.NewRegisteredMeter("eth/prop/txhashes/in/packets", nil)
+	propTxHashInTrafficMeter  = metrics.NewRegisteredMeter("eth/prop/txhashes/in/traffic", nil)
+	propTxHashOutPacketsMeter = metrics.NewRegisteredMeter("eth/prop/txhashes/out/packets", nil)
+	propTxHashOutTrafficMeter = metrics.NewRegisteredMeter("eth/prop/txhashes/out/traffic", nil)
 	propHashInPacketsMeter    = metrics.NewRegisteredMeter("eth/prop/hashes/in/packets", nil)
 	propHashInTrafficMeter    = metrics.NewRegisteredMeter("eth/prop/hashes/in/traffic", nil)
 	propHashOutPacketsMeter   = metrics.NewRegisteredMeter("eth/prop/hashes/out/packets", nil)
@@ -92,17 +96,19 @@ func (rw *meteredMsgReadWriter) ReadMsg() (p2p.Msg, error) {
 	case msg.Code == BlockBodiesMsg:
 		packets, traffic = reqBodyInPacketsMeter, reqBodyInTrafficMeter
 
-	case rw.version >= eth63 && msg.Code == NodeDataMsg:
+	case msg.Code == NodeDataMsg:
 		packets, traffic = reqStateInPacketsMeter, reqStateInTrafficMeter
-	case rw.version >= eth63 && msg.Code == ReceiptsMsg:
+	case msg.Code == ReceiptsMsg:
 		packets, traffic = reqReceiptInPacketsMeter, reqReceiptInTrafficMeter
 
 	case msg.Code == NewBlockHashesMsg:
 		packets, traffic = propHashInPacketsMeter, propHashInTrafficMeter
 	case msg.Code == NewBlockMsg:
 		packets, traffic = propBlockInPacketsMeter, propBlockInTrafficMeter
-	case msg.Code == TxMsg:
+	case msg.Code == TxMsg || msg.Code == PooledTxMsg:
 		packets, traffic = propTxnInPacketsMeter, propTxnInTrafficMeter
+	case msg.Code == TxHashesMsg || msg.Code == GetPooledTxMsg:
+		packets, traffic = propTxHashInPacketsMeter, propTxHashInTrafficMeter
 	}
 	packets.Mark(1)
 	traffic.Mark(int64(msg.Size))
@@ -119,17 +125,19 @@ func (rw *meteredMsgReadWriter) WriteMsg(msg p2p.Msg) error {
 	case msg.Code == BlockBodiesMsg:
 		packets, traffic = reqBodyOutPacketsMeter, reqBodyOutTrafficMeter
 
-	case rw.version >= eth63 && msg.Code == NodeDataMsg:
+	case msg.Code == NodeDataMsg:
 		packets, traffic = reqStateOutPacketsMeter, reqStateOutTrafficMeter
-	case rw.version >= eth63 && msg.Code == ReceiptsMsg:
+	case msg.Code == ReceiptsMsg:
 		packets, traffic = reqReceiptOutPacketsMeter, reqReceiptOutTrafficMeter
 
 	case msg.Code == NewBlockHashesMsg:
 		packets, traffic = propHashOutPacketsMeter, propHashOutTrafficMeter
 	case msg.Code == NewBlockMsg:
 		packets, traffic = propBlockOutPacketsMeter, propBlockOutTrafficMeter
-	case msg.Code == TxMsg:
+	case msg.Code == TxMsg || msg.Code == PooledTxMsg:
 		packets, traffic = propTxnOutPacketsMeter, propTxnOutTrafficMeter
+	case msg.Code == TxHashesMsg || msg.Code == GetPooledTxMsg:
+		packets, traffic = propTxHashOutPacketsMeter, propTxHashOutTrafficMeter
 	}
 	packets.Mark(1)
 	traffic.Mark(int64(msg.Size))

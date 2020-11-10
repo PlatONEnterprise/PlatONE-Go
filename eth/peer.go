@@ -46,6 +46,8 @@ const (
 	// contain a single transaction, or thousands.
 	maxQueuedTxs = 128
 
+	maxQueuedTxHashes = 128
+
 	// maxQueuedProps is the maximum number of block propagations to queue up before
 	// dropping broadcasts. There's not much point in queueing stale blocks, so a few
 	// that might cover uncles should be enough.
@@ -62,12 +64,20 @@ const (
 	handshakeTimeout = 5 * time.Second
 )
 
+// max is a helper function which returns the larger of the two given integers.
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
 // PeerInfo represents a short summary of the Ethereum sub-protocol metadata known
 // about a connected peer.
 type PeerInfo struct {
-	Version    int      `json:"version"`    // Ethereum protocol version negotiated
-	BN         *big.Int `json:"number"`     // The block number of the peer's blockchain
-	Head       string   `json:"head"`       // SHA3 hash of the peer's best owned block
+	Version int      `json:"version"` // Ethereum protocol version negotiated
+	BN      *big.Int `json:"number"`  // The block number of the peer's blockchain
+	Head    string   `json:"head"`    // SHA3 hash of the peer's best owned block
 }
 
 // propEvent is a block propagation, waiting for its turn in the broadcast queue.
@@ -92,25 +102,29 @@ type peer struct {
 	knownBlocks        mapset.Set                // Set of block hashes known to be known by this peer
 	knownPrepareBlocks mapset.Set                // Set of prepareblock hashes known to be known by this peer
 	queuedTxs          chan []*types.Transaction // Queue of transactions to broadcast to the peer
+	queuedHashes       chan []common.Hash        // Queue of transaction hashes to broadcast to the peer
 	queuedProps        chan *propEvent           // Queue of blocks to broadcast to the peer
 	queuedAnns         chan *types.Block         // Queue of blocks to announce to the peer
 	term               chan struct{}             // Termination channel to stop the broadcaster
 	queuedPreBlock     chan *preBlockEvent
+	types              int32 // remote node's types   consensus(1) / observer(0)
 }
 
 func newPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) *peer {
 	return &peer{
-		Peer:            p,
-		rw:              rw,
-		version:         version,
-		id:              fmt.Sprintf("%x", p.ID().Bytes()[:8]),
-		knownTxs:        mapset.NewSet(),
-		knownBlocks:     mapset.NewSet(),
-		queuedTxs:       make(chan []*types.Transaction, maxQueuedTxs),
-		queuedProps:     make(chan *propEvent, maxQueuedProps),
-		queuedAnns:      make(chan *types.Block, maxQueuedAnns),
-		term:            make(chan struct{}),
-		queuedPreBlock:  make(chan *preBlockEvent, maxQueuedPreBlock),
+		Peer:           p,
+		rw:             rw,
+		version:        version,
+		id:             fmt.Sprintf("%x", p.ID().Bytes()[:8]),
+		knownTxs:       mapset.NewSet(),
+		knownBlocks:    mapset.NewSet(),
+		queuedTxs:      make(chan []*types.Transaction, maxQueuedTxs),
+		queuedHashes:   make(chan []common.Hash, maxQueuedTxHashes),
+		queuedProps:    make(chan *propEvent, maxQueuedProps),
+		queuedAnns:     make(chan *types.Block, maxQueuedAnns),
+		term:           make(chan struct{}),
+		queuedPreBlock: make(chan *preBlockEvent, maxQueuedPreBlock),
+		types:          common.SysCfg.GetNodeTypes(p.ID().String()),
 	}
 }
 
@@ -159,6 +173,23 @@ func (p *peer) broadcast() {
 			}
 		}
 	}()
+
+	go func() {
+		for {
+			select {
+			case hashes := <-p.queuedHashes:
+				if err := p.sendPooledTransactionHashes(hashes); err != nil {
+					p.Log().Error("Broadcast transaction hashes error ", "err", err)
+					return
+				}
+				p.Log().Trace("Broadcast transaction hashes", "count", len(hashes))
+
+			case <-p.term:
+				return
+			}
+		}
+	}()
+
 }
 
 // close signals the broadcast goroutine to terminate.
@@ -166,14 +197,22 @@ func (p *peer) close() {
 	close(p.term)
 }
 
+func (p *peer) setTypes(types int32) {
+	p.types = types
+}
+
+func (p *peer) IsConsensus() bool {
+	return p.types == 1
+}
+
 // Info gathers and returns a collection of metadata known about a peer.
 func (p *peer) Info() *PeerInfo {
 	hash, bn := p.Head()
 
 	return &PeerInfo{
-		Version:    p.version,
-		BN: bn,
-		Head:       hash.Hex(),
+		Version: p.version,
+		BN:      bn,
+		Head:    hash.Hex(),
 	}
 }
 
@@ -241,6 +280,34 @@ func (p *peer) AsyncSendTransactions(txs []*types.Transaction) {
 		}
 	default:
 		//p.Log().Debug("Dropping transaction propagation", "count", len(txs))
+	}
+}
+
+// sendPooledTransactionHashes sends transaction hashes to the peer and includes
+// them in its transaction hash set for future reference.
+//
+// This method is a helper used by the async transaction announcer. Don't call it
+// directly as the queueing (memory) and transmission (bandwidth) costs should
+// not be managed directly.
+func (p *peer) sendPooledTransactionHashes(hashes []common.Hash) error {
+
+	for _, hash := range hashes {
+		p.knownTxs.Add(hash)
+	}
+	return p2p.Send(p.rw, TxHashesMsg, hashes)
+}
+
+// AsyncSendPooledTransactionHashes queues a list of transactions hashes to eventually
+// announce to a remote peer.  The number of pending sends are capped (new ones
+// will force old sends to be dropped)
+func (p *peer) AsyncSendPooledTransactionHashes(hashes []common.Hash) {
+	select {
+	case p.queuedHashes <- hashes:
+		for _, hash := range hashes {
+			p.knownTxs.Add(hash)
+		}
+	case <-p.term:
+		p.Log().Debug("Dropping transaction hashes", "count", len(hashes))
 	}
 }
 
@@ -315,6 +382,22 @@ func (p *peer) SendReceiptsRLP(receipts []rlp.RawValue) error {
 	return p2p.Send(p.rw, ReceiptsMsg, receipts)
 }
 
+// SendPooledTransactionsRLP sends requested transactions to the peer and adds the
+// hashes in its transaction hash set for future reference.
+//
+// Note, the method assumes the hashes are correct and correspond to the list of
+// transactions being sent.
+func (p *peer) SendPooledTransactionsRLP(hashes []common.Hash, txs []rlp.RawValue) error {
+	// Mark all the transactions as known, but ensure we don't overflow our limits
+	for p.knownTxs.Cardinality() > max(0, maxKnownTxs-len(hashes)) {
+		p.knownTxs.Pop()
+	}
+	for _, hash := range hashes {
+		p.knownTxs.Add(hash)
+	}
+	return p2p.Send(p.rw, PooledTxMsg, txs)
+}
+
 // RequestOneHeader is a wrapper around the header query functions to fetch a
 // single header. It is used solely by the fetcher.
 func (p *peer) RequestOneHeader(hash common.Hash) error {
@@ -354,6 +437,12 @@ func (p *peer) RequestNodeData(hashes []common.Hash) error {
 func (p *peer) RequestReceipts(hashes []common.Hash) error {
 	p.Log().Debug("Fetching batch of receipts", "count", len(hashes))
 	return p2p.Send(p.rw, GetReceiptsMsg, hashes)
+}
+
+// RequestTxs fetches a batch of transactions from a remote node.
+func (p *peer) RequestTxs(hashes []common.Hash) error {
+	p.Log().Debug("Fetching batch of transactions", "count", len(hashes))
+	return p2p.Send(p.rw, GetPooledTxMsg, hashes)
 }
 
 // Handshake executes the eth protocol handshake, negotiating version number,
@@ -533,9 +622,22 @@ func (ps *peerSet) PeersWithoutTx(hash common.Hash) []*peer {
 	return list
 }
 
+func (ps *peerSet) ConsensusPeers() []*peer {
+	ps.lock.RLock()
+	defer ps.lock.RUnlock()
+
+	list := make([]*peer, 0, len(ps.peers))
+	for _, p := range ps.peers {
+		if p.IsConsensus() {
+			list = append(list, p)
+		}
+	}
+	return list
+}
+
 // ConsensusPeersWithoutTx retrieves a list of consensus peers that do not have a given transaction
 // in their set of known hashes.
-func (ps *peerSet) ConsensusPeersWithoutTx(csPeers []*peer, hash common.Hash) []*peer{
+func (ps *peerSet) ConsensusPeersWithoutTx(csPeers []*peer, hash common.Hash) []*peer {
 	ps.lock.RLock()
 	defer ps.lock.RUnlock()
 

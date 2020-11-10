@@ -17,6 +17,8 @@
 package node
 
 import (
+	"errors"
+	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/accounts"
 	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
@@ -24,8 +26,6 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
 	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
-	"errors"
-	"fmt"
 	"github.com/prometheus/prometheus/util/flock"
 	"net"
 	"os"
@@ -226,7 +226,6 @@ func (n *Node) Start() error {
 	n.stop = make(chan struct{})
 	running.SetServer()
 	p2p.UpdatePeer() // when start, update one time
-
 	return nil
 }
 

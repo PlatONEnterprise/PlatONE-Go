@@ -244,6 +244,7 @@ func loadLastConsensusNodesList(chain consensus.ChainReader, sb *backend, header
 				log.Info("contract inner error", "code", tmp.RetCode, "msg", tmp.RetMsg)
 			} else {
 				sc.Nodes = tmp.Data
+				sc.GenerateNodeData()
 			}
 		}
 		return

@@ -59,6 +59,21 @@ func (pm *ProtocolManager) syncTransactions(p *peer) {
 	}
 }
 
+// syncTransactionHashes starts sending all currently pending transaction hashes to the given peer.
+func (pm *ProtocolManager) syncTransactionHashes(p *peer) {
+	var hashes []common.Hash
+	pending, _ := pm.txpool.Pending()
+	for _, batch := range pending {
+		for i := 0; i < batch.Len(); i++ {
+			hashes = append(hashes, batch[i].Hash())
+		}
+	}
+	if len(hashes) == 0 {
+		return
+	}
+	p.AsyncSendPooledTransactionHashes(hashes)
+}
+
 // txsyncLoop takes care of the initial transaction sync for each new
 // connection. When a new peer appears, we relay all currently pending
 // transactions. In order to minimise egress bandwidth usage, we send
@@ -135,7 +150,10 @@ func (pm *ProtocolManager) txsyncLoop() {
 func (pm *ProtocolManager) syncer() {
 	// Start and ensure cleanup of sync mechanisms
 	pm.fetcher.Start()
+	pm.txFetcher.Start()
+
 	defer pm.fetcher.Stop()
+	defer pm.txFetcher.Stop()
 	defer pm.downloader.Terminate()
 
 	// Wait for different events to fire synchronisation operations
@@ -167,7 +185,6 @@ func (pm *ProtocolManager) isUnNormalBootNodes() bool {
 			if p2p.IsNodeInBootNodes(pm.peers.Peer(peer.id).Peer.Info().ID) &&
 				peer.bn.Uint64() <= pm.blockchain.CurrentBlock().NumberU64() {
 				p2p.BootNodesNotExempt = true
-				p2p.UpdatePeer()
 				return true
 			}
 		}
@@ -182,7 +199,6 @@ func (pm *ProtocolManager) isUnNormalBootNodesAtPeer(peer *peer) bool {
 	if key := pm.peers.Peer(peer.id).Peer.Info().ID; p2p.IsNodeInBootNodes(key) &&
 		peer.bn.Uint64() <= pm.blockchain.CurrentBlock().NumberU64() && !common.SysCfg.IsValidJoinNode(key) {
 		p2p.BootNodesNotExempt = true
-		p2p.UpdatePeer()
 		return true
 	}
 	return false
@@ -246,6 +262,4 @@ func (pm *ProtocolManager) synchronise(peer *peer) {
 		// more reliably update peers or the local TD state.
 		go pm.BroadcastBlock(head, false)
 	}
-
-	p2p.UpdatePeer()
 }

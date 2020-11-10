@@ -83,6 +83,7 @@ type dialstate struct {
 
 	start     time.Time        // time when the dialer was first used
 	bootnodes []*discover.Node // default dials when there are no peers
+	self      discover.NodeID
 }
 
 type discoverTable interface {
@@ -128,7 +129,8 @@ type waitExpireTask struct {
 	time.Duration
 }
 
-func newDialState(static []*discover.Node, bootnodes []*discover.Node, ntab discoverTable, maxdyn int, netrestrict *netutil.Netlist) *dialstate {
+func newDialState(static []*discover.Node, bootnodes []*discover.Node, ntab discoverTable, maxdyn int,
+	netrestrict *netutil.Netlist, nodeID discover.NodeID) *dialstate {
 	s := &dialstate{
 		maxDynDials: maxdyn,
 		ntab:        ntab,
@@ -139,6 +141,7 @@ func newDialState(static []*discover.Node, bootnodes []*discover.Node, ntab disc
 		bootnodes:   make([]*discover.Node, len(bootnodes)),
 		randomNodes: make([]*discover.Node, maxdyn/2),
 		hist:        new(dialHistory),
+		self:        nodeID,
 	}
 	copy(s.bootnodes, bootnodes)
 	for _, n := range static {
@@ -361,7 +364,7 @@ func (s *dialstate) checkDial(n *discover.Node, peers map[discover.NodeID]*Peer)
 		return errAlreadyDialing
 	case peers[n.ID] != nil:
 		return errAlreadyConnected
-	case s.ntab != nil && n.ID == s.ntab.Self().ID:
+	case n.ID.String() == s.self.String():
 		return errSelf
 	case s.netrestrict != nil && !s.netrestrict.Contains(n.IP):
 		return errNotWhitelisted
@@ -383,7 +386,6 @@ func (s *dialstate) taskDone(t task, now time.Time) {
 }
 
 func (t *dialTask) Do(srv *Server) {
-	UpdatePeer()
 
 	selfPublicKey := srv.Self().ID.String()
 	destPublicKey := t.dest.ID.String()

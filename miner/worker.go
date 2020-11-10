@@ -18,7 +18,6 @@ package miner
 
 import (
 	"bytes"
-	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
 	"math/big"
 	"sync"
 	"sync/atomic"
@@ -391,7 +390,6 @@ func (w *worker) newWorkLoop(recommit time.Duration) {
 			if h, ok := w.engine.(consensus.Handler); ok {
 				h.NewChainHead()
 			}
-			p2p.UpdatePeer()
 		case <-timer.C:
 			// If mining is running resubmit a new work cycle periodically to pull in
 			// higher priced transactions. Disable this overhead for pending blocks.

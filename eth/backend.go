@@ -175,6 +175,8 @@ func InitInnerCallFunc(ethPtr *Ethereum) {
 				log.Debug("contract inner error", "code", tmp.RetCode, "msg", tmp.RetMsg)
 			} else {
 				sc.Nodes = tmp.Data
+				sc.GenerateNodeData()
+				p2p.UpdatePeer()
 			}
 		}
 	}

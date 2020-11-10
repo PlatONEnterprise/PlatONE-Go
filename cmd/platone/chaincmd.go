@@ -19,6 +19,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
 	"math/big"
 	"os"
 	"runtime"
@@ -588,6 +589,8 @@ func InitInnerCallFuncFromChain(bc *core.BlockChain) {
 				log.Debug("contract inner error", "code", tmp.RetCode, "msg", tmp.RetMsg)
 			} else {
 				sc.Nodes = tmp.Data
+				sc.GenerateNodeData()
+				p2p.UpdatePeer()
 			}
 		}
 	}
