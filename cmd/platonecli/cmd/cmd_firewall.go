@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 
 	cmd_common "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/common"
 
@@ -181,9 +182,15 @@ func fwExport(c *cli.Context) {
 	// trim the firewall "ContractAddr" and "Active" tag
 	var r = new(ExportFwStatus)
 	_ = json.Unmarshal([]byte(result.(string)), r)
-	rBytes, _ := json.Marshal(r)
-
-	_ = utl.WriteFile(rBytes, filePath)
+	rBytes, err := json.Marshal(r)
+	if err != nil{
+		log.Fatal(err)
+	}
+	err = utl.WriteFile(rBytes, filePath)
+	if err != nil{
+		log.Fatal(err)
+	}
+	log.Println("Success")
 }
 
 func fwImport(c *cli.Context) {
