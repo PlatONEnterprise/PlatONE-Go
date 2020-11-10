@@ -93,23 +93,23 @@ func setSysConfig(c *cli.Context) {
 		setConfig(c, blockGasLimit, blockGasLim)
 
 	}
-	if blockGasLimit != "" {
+	if isTxUseGas != "" {
 		setConfig(c, isTxUseGas, isTxUseGases)
 
 	}
-	if blockGasLimit != "" {
+	if isApproveDeployedContract != "" {
 		setConfig(c, isApproveDeployedContract, isApprDeployedCon)
 
 	}
-	if blockGasLimit != "" {
+	if isCheckContractDeployPermission != "" {
 		setConfig(c, isCheckContractDeployPermission, isCheckConDeployPerm)
 
 	}
-	if blockGasLimit != "" {
+	if isProduceEmptyBlock != "" {
 		setConfig(c, isProduceEmptyBlock, isProdEmptyBlock)
 
 	}
-	if blockGasLimit != "" {
+	if gasContractName != "" {
 		setConfig(c, gasContractName, gasContract)
 
 	}
