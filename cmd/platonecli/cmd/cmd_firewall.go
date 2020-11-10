@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"log"
 
 	cmd_common "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/common"
@@ -197,7 +198,9 @@ func fwImport(c *cli.Context) {
 	funcName := "__sys_FwImport"
 	filePath := c.String(FilePathFlags.Name)
 	addr := c.Args().First()
-
+	if !common.IsHexAddress(addr) {
+		panic("the first argument should be hex address")
+	}
 	fileBytes, err := utl.ParseFileToBytes(filePath)
 	fmt.Println(fileBytes)
 	if err != nil {
