@@ -156,7 +156,7 @@ func checkConfigParam(param string, key string) bool {
 	case "BlockGasLimit":
 		num, err := strconv.ParseUint(param, 10, 0)
 		if err != nil {
-			log.Println("param invalid1")
+			log.Println("param invalid")
 
 			return false
 		}
