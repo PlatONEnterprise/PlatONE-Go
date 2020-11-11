@@ -87,8 +87,6 @@ func getGenesisAndKeys(n int) (*core.Genesis, []*ecdsa.PrivateKey) {
 	genesis.Config = params.TestChainConfig
 	// force enable Istanbul engine
 	genesis.Config.Istanbul = &params.IstanbulConfig{}
-	genesis.Config.Ethash = nil
-	genesis.Difficulty = defaultDifficulty
 	genesis.Nonce = emptyNonce.Uint64()
 	genesis.Mixhash = types.IstanbulDigest
 
@@ -124,7 +122,6 @@ func makeHeader(parent *types.Block, config *istanbul.Config) *types.Header {
 		GasUsed:    0,
 		Extra:      parent.Extra(),
 		Time:       new(big.Int).Add(parent.Time(), new(big.Int).SetUint64(config.BlockPeriod)),
-		Difficulty: defaultDifficulty,
 	}
 	return header
 }
@@ -274,7 +271,6 @@ func TestVerifyHeader(t *testing.T) {
 	// invalid difficulty
 	block = makeBlockWithoutSeal(chain, engine, chain.Genesis())
 	header = block.Header()
-	header.Difficulty = big.NewInt(2)
 	err = engine.VerifyHeader(chain, header, false)
 	if err != errInvalidDifficulty {
 		t.Errorf("error mismatch: have %v, want %v", err, errInvalidDifficulty)

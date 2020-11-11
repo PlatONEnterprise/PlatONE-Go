@@ -84,7 +84,6 @@ var (
 	errMismatchTxhashes = errors.New("mismatch transcations hashes")
 )
 var (
-	defaultDifficulty = big.NewInt(1)
 	//nilUncleHash      = types.CalcUncleHash(nil) // Always Keccak256(RLP([])) as uncles are meaningless outside of PoW.
 	emptyNonce = types.BlockNonce{}
 	now        = time.Now
@@ -133,18 +132,6 @@ func (sb *backend) verifyHeader(chain consensus.ChainReader, header *types.Heade
 	if header.Nonce != (emptyNonce) && !bytes.Equal(header.Nonce[:], nonceAuthVote) && !bytes.Equal(header.Nonce[:], nonceDropVote) {
 		return errInvalidNonce
 	}
-	// Ensure that the mix digest is zero as we don't have fork protection currently
-	//if header.MixDigest != types.IstanbulDigest {
-	//	return errInvalidMixDigest
-	//}
-	// Ensure that the block doesn't contain any uncles which are meaningless in Istanbul
-	//if header.UncleHash != nilUncleHash {
-	//	return errInvalidUncleHash
-	//}
-	// Ensure that the block's difficulty is meaningful (may not be correct at this point)
-	//if header.Difficulty == nil || header.Difficulty.Cmp(defaultDifficulty) != 0 {
-	//	return errInvalidDifficulty
-	//}
 
 	return sb.verifyCascadingFields(chain, header, parents)
 }
@@ -307,10 +294,6 @@ func (sb *backend) VerifySeal(chain consensus.ChainReader, header *types.Header)
 		return errUnknownBlock
 	}
 
-	// ensure that the difficulty equals to defaultDifficulty
-	//if header.Difficulty.Cmp(defaultDifficulty) != 0 {
-	//	return errInvalidDifficulty
-	//}
 	return sb.verifySigner(chain, header, nil)
 }
 
@@ -330,7 +313,6 @@ func (sb *backend) Prepare(chain consensus.ChainReader, header *types.Header) er
 		return consensus.ErrUnknownAncestor
 	}
 	// use the same difficulty for all blocks
-	//header.Difficulty = defaultDifficulty
 
 	// Assemble the voting snapshot
 	snap, err := sb.snapshot(chain, number-1, header.ParentHash, nil)

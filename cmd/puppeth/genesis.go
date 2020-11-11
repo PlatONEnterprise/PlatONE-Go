@@ -19,7 +19,6 @@ package main
 import (
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
-	"github.com/PlatONEnetwork/PlatONE-Go/core"
 )
 
 // cppEthereumGenesisSpec represents the genesis specification format used by the
@@ -28,11 +27,6 @@ type cppEthereumGenesisSpec struct {
 	SealEngine string `json:"sealEngine"`
 	Params     struct {
 		AccountStartNonce       hexutil.Uint64 `json:"accountStartNonce"`
-		HomesteadForkBlock      hexutil.Uint64 `json:"homesteadForkBlock"`
-		EIP150ForkBlock         hexutil.Uint64 `json:"EIP150ForkBlock"`
-		EIP158ForkBlock         hexutil.Uint64 `json:"EIP158ForkBlock"`
-		ByzantiumForkBlock      hexutil.Uint64 `json:"byzantiumForkBlock"`
-		ConstantinopleForkBlock hexutil.Uint64 `json:"constantinopleForkBlock"`
 		NetworkID               hexutil.Uint64 `json:"networkID"`
 		ChainID                 hexutil.Uint64 `json:"chainID"`
 		MaximumExtraDataSize    hexutil.Uint64 `json:"maximumExtraDataSize"`
@@ -47,7 +41,6 @@ type cppEthereumGenesisSpec struct {
 
 	Genesis struct {
 		Nonce      hexutil.Bytes  `json:"nonce"`
-		Difficulty *hexutil.Big   `json:"difficulty"`
 		MixHash    common.Hash    `json:"mixHash"`
 		Author     common.Address `json:"author"`
 		Timestamp  hexutil.Uint64 `json:"timestamp"`
@@ -77,96 +70,4 @@ type cppEthereumGenesisSpecBuiltin struct {
 type cppEthereumGenesisSpecLinearPricing struct {
 	Base uint64 `json:"base"`
 	Word uint64 `json:"word"`
-}
-
-// parityChainSpec is the chain specification format used by Parity.
-type parityChainSpec struct {
-	Name   string `json:"name"`
-	Engine struct {
-	} `json:"engine"`
-
-	Params struct {
-		MaximumExtraDataSize hexutil.Uint64 `json:"maximumExtraDataSize"`
-		MinGasLimit          hexutil.Uint64 `json:"minGasLimit"`
-		GasLimitBoundDivisor hexutil.Uint64 `json:"gasLimitBoundDivisor"`
-		NetworkID            hexutil.Uint64 `json:"networkID"`
-		MaxCodeSize          uint64         `json:"maxCodeSize"`
-		EIP155Transition     uint64         `json:"eip155Transition"`
-		EIP98Transition      uint64         `json:"eip98Transition"`
-		EIP86Transition      uint64         `json:"eip86Transition"`
-		EIP140Transition     uint64         `json:"eip140Transition"`
-		EIP211Transition     uint64         `json:"eip211Transition"`
-		EIP214Transition     uint64         `json:"eip214Transition"`
-		EIP658Transition     uint64         `json:"eip658Transition"`
-	} `json:"params"`
-
-	Genesis struct {
-		Seal struct {
-			Ethereum struct {
-				Nonce   hexutil.Bytes `json:"nonce"`
-				MixHash hexutil.Bytes `json:"mixHash"`
-			} `json:"ethereum"`
-		} `json:"seal"`
-
-		Difficulty *hexutil.Big   `json:"difficulty"`
-		Author     common.Address `json:"author"`
-		Timestamp  hexutil.Uint64 `json:"timestamp"`
-		ParentHash common.Hash    `json:"parentHash"`
-		ExtraData  hexutil.Bytes  `json:"extraData"`
-		GasLimit   hexutil.Uint64 `json:"gasLimit"`
-	} `json:"genesis"`
-
-	Nodes    []string                                   `json:"nodes"`
-	Accounts map[common.Address]*parityChainSpecAccount `json:"accounts"`
-}
-
-// parityChainSpecAccount is the prefunded genesis account and/or precompiled
-// contract definition.
-type parityChainSpecAccount struct {
-	Balance *hexutil.Big            `json:"balance"`
-	Nonce   uint64                  `json:"nonce,omitempty"`
-	Builtin *parityChainSpecBuiltin `json:"builtin,omitempty"`
-}
-
-// parityChainSpecBuiltin is the precompiled contract definition.
-type parityChainSpecBuiltin struct {
-	Name       string                  `json:"name,omitempty"`
-	ActivateAt uint64                  `json:"activate_at,omitempty"`
-	Pricing    *parityChainSpecPricing `json:"pricing,omitempty"`
-}
-
-// parityChainSpecPricing represents the different pricing models that builtin
-// contracts might advertise using.
-type parityChainSpecPricing struct {
-	Linear       *parityChainSpecLinearPricing       `json:"linear,omitempty"`
-	ModExp       *parityChainSpecModExpPricing       `json:"modexp,omitempty"`
-	AltBnPairing *parityChainSpecAltBnPairingPricing `json:"alt_bn128_pairing,omitempty"`
-}
-
-type parityChainSpecLinearPricing struct {
-	Base uint64 `json:"base"`
-	Word uint64 `json:"word"`
-}
-
-type parityChainSpecModExpPricing struct {
-	Divisor uint64 `json:"divisor"`
-}
-
-type parityChainSpecAltBnPairingPricing struct {
-	Base uint64 `json:"base"`
-	Pair uint64 `json:"pair"`
-}
-
-// pyEthereumGenesisSpec represents the genesis specification format used by the
-// Python Ethereum implementation.
-type pyEthereumGenesisSpec struct {
-	Nonce      hexutil.Bytes     `json:"nonce"`
-	Timestamp  hexutil.Uint64    `json:"timestamp"`
-	ExtraData  hexutil.Bytes     `json:"extraData"`
-	GasLimit   hexutil.Uint64    `json:"gasLimit"`
-	Difficulty *hexutil.Big      `json:"difficulty"`
-	Mixhash    common.Hash       `json:"mixhash"`
-	Coinbase   common.Address    `json:"coinbase"`
-	Alloc      core.GenesisAlloc `json:"alloc"`
-	ParentHash common.Hash       `json:"parentHash"`
 }
