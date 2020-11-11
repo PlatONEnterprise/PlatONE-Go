@@ -32,7 +32,6 @@ var (
 	// MainnetChainConfig is the chain parameters to run a node on the main network.
 	MainnetChainConfig = &ChainConfig{
 		ChainID:       big.NewInt(1),
-		EmptyBlock:    "on",
 		VMInterpreter: "wasm",
 	}
 
@@ -50,16 +49,16 @@ var (
 	//
 	// This configuration is intentionally not using keyed fields to force anyone
 	// adding flags to the config to also have to set these fields.
-	AllEthashProtocolChanges = &ChainConfig{big.NewInt(1337), "", nil, nil, ""}
+	AllEthashProtocolChanges = &ChainConfig{big.NewInt(1337),  nil, nil, ""}
 
 	// AllCliqueProtocolChanges contains every protocol change (EIPs) introduced
 	// and accepted by the Ethereum core developers into the Clique consensus.
 	//
 	// This configuration is intentionally not using keyed fields to force anyone
 	// adding flags to the config to also have to set these fields.
-	AllCliqueProtocolChanges = &ChainConfig{big.NewInt(1337), "", &CliqueConfig{Period: 0, Epoch: 30000}, nil, ""}
+	AllCliqueProtocolChanges = &ChainConfig{big.NewInt(1337),  &CliqueConfig{Period: 0, Epoch: 30000}, nil, ""}
 
-	TestChainConfig = &ChainConfig{big.NewInt(1), "", nil, nil, ""}
+	TestChainConfig = &ChainConfig{big.NewInt(1),  nil, nil, ""}
 )
 
 // TrustedCheckpoint represents a set of post-processed trie roots (CHT and
@@ -81,7 +80,6 @@ type TrustedCheckpoint struct {
 // set of configuration options.
 type ChainConfig struct {
 	ChainID    *big.Int `json:"chainId"` // chainId identifies the current chain and is used for replay protection
-	EmptyBlock string   `json:"emptyBlock"`
 
 	// Various consensus engines
 	Clique   *CliqueConfig   `json:"clique,omitempty"`

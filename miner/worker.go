@@ -133,12 +133,11 @@ func (e *commitWorkEnv) getHighestLogicalBlock() *types.Block {
 // worker is the main object which takes care of submitting new work to consensus engine
 // and gathering the sealing result.
 type worker struct {
-	extdb      ethdb.Database
-	EmptyBlock string
-	config     *params.ChainConfig
-	engine     consensus.Engine
-	eth        Backend
-	chain      *core.BlockChain
+	extdb  ethdb.Database
+	config *params.ChainConfig
+	engine consensus.Engine
+	eth    Backend
+	chain  *core.BlockChain
 
 	gasFloor uint64
 	gasCeil  uint64
@@ -231,8 +230,6 @@ func newWorker(config *params.ChainConfig, engine consensus.Engine, eth Backend,
 		log.Warn("Sanitizing miner recommit interval", "provided", recommit, "updated", minRecommitInterval)
 		recommit = minRecommitInterval
 	}
-
-	worker.EmptyBlock = config.EmptyBlock
 
 	worker.recommit = recommit
 	worker.commitDuration = int64((float64)(recommit.Nanoseconds()/1e6) * defaultCommitRatio)
@@ -837,7 +834,7 @@ func (w *worker) commitNewWork(interrupt *int32, noempty bool, timestamp int64, 
 		return
 	}
 
-	if !noempty && "on" == w.EmptyBlock {
+	if !noempty {
 		// Create an empty block based on temporary copied state for sealing in advance without waiting block
 		// execution finished.
 		w.commit(nil, false, tstart)
@@ -856,10 +853,6 @@ func (w *worker) commitNewWork(interrupt *int32, noempty bool, timestamp int64, 
 
 	// Short circuit if there is no available pending transactions
 	if len(pending) == 0 {
-		if "off" == w.EmptyBlock {
-			//return
-		}
-
 		if _, ok := w.engine.(consensus.Istanbul); ok {
 			w.commit(nil, true, tstart)
 		} else {
@@ -904,9 +897,6 @@ func (w *worker) commitNewWork(interrupt *int32, noempty bool, timestamp int64, 
 // commit runs any post-transaction state modifications, assembles the final block
 // and commits new work if consensus engine is running.
 func (w *worker) commit(interval func(), update bool, start time.Time) error {
-	if "off" == w.EmptyBlock && 0 == len(w.current.txs) {
-		return nil
-	}
 	// Deep copy receipts here to avoid interaction between different tasks.
 	receipts := make([]*types.Receipt, len(w.current.receipts))
 	for i, l := range w.current.receipts {
