@@ -385,7 +385,7 @@ func (sb *backend) Prepare(chain consensus.ChainReader, header *types.Header) er
 // consensus rules that happen at finalization (e.g. block rewards).
 func (sb *backend) Finalize(chain consensus.ChainReader, header *types.Header, state *state.StateDB, txs []*types.Transaction, receipts []*types.Receipt) (*types.Block, error) {
 	// No block rewards in Istanbul, so the state remains as is and uncles are dropped
-	header.Root = state.IntermediateRoot(chain.Config().IsEIP158(header.Number))
+	header.Root = state.IntermediateRoot(true)
 	//header.UncleHash = nilUncleHash
 
 	// Assemble and return the final block for sealing

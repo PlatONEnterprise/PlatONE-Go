@@ -231,8 +231,6 @@ type TxPool struct {
 
 	wg sync.WaitGroup // for shutdown sync
 
-	homestead bool
-
 	txExtBuffer chan *txExt
 }
 
@@ -344,9 +342,6 @@ func (pool *TxPool) loop() {
 		case block := <-pool.chainHeadCh:
 			if block != nil {
 				pool.mu.Lock()
-				if pool.chainconfig.IsHomestead(block.Number()) {
-					pool.homestead = true
-				}
 				pool.reset(head.Header(), block.Header())
 				head = block
 
@@ -356,9 +351,6 @@ func (pool *TxPool) loop() {
 		case ev := <-pool.chainHeadEventCh:
 			if ev.Block != nil {
 				pool.mu.Lock()
-				if pool.chainconfig.IsHomestead(ev.Block.Number()) {
-					pool.homestead = true
-				}
 				pool.reset(head.Header(), ev.Block.Header())
 				head = ev.Block
 

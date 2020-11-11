@@ -56,7 +56,7 @@ func New(config *params.IstanbulConfig, privateKey *ecdsa.PrivateKey, db ethdb.D
 		backend := &backend{
 			config:           config,
 			istanbulEventMux: new(event.TypeMux),
-			msgFeed:		  new(event.Feed),
+			msgFeed:          new(event.Feed),
 			privateKey:       privateKey,
 			address:          common.BytesToAddress([]byte("0x0000000000000000000000000000000000000112")),
 			logger:           log.New(),
@@ -74,7 +74,7 @@ func New(config *params.IstanbulConfig, privateKey *ecdsa.PrivateKey, db ethdb.D
 	backend := &backend{
 		config:           config,
 		istanbulEventMux: new(event.TypeMux),
-		msgFeed:		  new(event.Feed),
+		msgFeed:          new(event.Feed),
 		privateKey:       privateKey,
 		address:          crypto.PubkeyToAddress(privateKey.PublicKey),
 		logger:           log.New(),
@@ -108,7 +108,7 @@ type environment struct {
 type backend struct {
 	config           *params.IstanbulConfig
 	istanbulEventMux *event.TypeMux
-	msgFeed 		 *event.Feed
+	msgFeed          *event.Feed
 	privateKey       *ecdsa.PrivateKey
 	address          common.Address
 	core             istanbulCore.Engine
@@ -218,7 +218,7 @@ func (sb *backend) writeCommitedBlockWithState(block *types.Block) error {
 	if sb.current == nil {
 		return errors.New("sb.current is nil")
 	}
-	if chain.HasBlock(block.Hash(), block.NumberU64()){
+	if chain.HasBlock(block.Hash(), block.NumberU64()) {
 		return nil
 	}
 
@@ -353,11 +353,11 @@ func (sb *backend) makeCurrent(parentRoot common.Hash, header *types.Header) err
 	}
 
 	env := &environment{
-		signer:    types.NewEIP155Signer(chain.Config().ChainID),
-		state:     state,
-		header:    header,
-		gasPool:   gp,
-		txs: make([]*types.Transaction,0),
+		signer:  types.NewEIP155Signer(chain.Config().ChainID),
+		state:   state,
+		header:  header,
+		gasPool: gp,
+		txs:     make([]*types.Transaction, 0),
 	}
 
 	// Keep track of transactions which return errors so they can be removed
@@ -390,9 +390,9 @@ func (sb *backend) excuteBlock(proposal istanbul.Proposal) error {
 		return errors.New("Proposal's parent block is not in current chain")
 	}
 
-	if err = sb.makeCurrent(parent.Root(), header);err != nil{
+	if err = sb.makeCurrent(parent.Root(), header); err != nil {
 		return err
-	}else{
+	} else {
 		// Iterate over and process the individual transactios
 		txsMap := make(map[common.Hash]struct{})
 		for _, tx := range block.Transactions() {
@@ -416,11 +416,7 @@ func (sb *backend) excuteBlock(proposal istanbul.Proposal) error {
 			sb.current.receipts = append(sb.current.receipts, receipt)
 			sb.current.tcount++
 
-			if chain.Config().IsByzantium(chain.CurrentHeader().Number) {
-				sb.current.state.Finalise(true)
-			} else {
-				sb.current.state.IntermediateRoot(chain.Config().IsEIP158(chain.CurrentHeader().Number))
-			}
+			sb.current.state.Finalise(true)
 		}
 
 		if sb.current.state.IntermediateRoot(true) != block.Root() {

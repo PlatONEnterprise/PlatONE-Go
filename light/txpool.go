@@ -238,8 +238,7 @@ func (pool *TxPool) setNewHead(head *types.Header) {
 	pool.mu.Lock()
 	defer pool.mu.Unlock()
 
-	pool.homestead = pool.config.IsHomestead(head.Number)
-	pool.signer = types.MakeSigner(pool.config, head.Number)
+	pool.signer = types.MakeSigner(pool.config)
 }
 
 // Stop stops the light transaction pool

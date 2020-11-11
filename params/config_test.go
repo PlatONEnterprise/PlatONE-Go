@@ -39,7 +39,7 @@ func TestCheckCompatible(t *testing.T) {
 		},
 		{
 			stored: AllEthashProtocolChanges,
-			new:    &ChainConfig{HomesteadBlock: nil},
+			new:    &ChainConfig{},
 			head:   3,
 			wantErr: &ConfigCompatError{
 				What:         "Homestead fork block",
@@ -50,7 +50,7 @@ func TestCheckCompatible(t *testing.T) {
 		},
 		{
 			stored: AllEthashProtocolChanges,
-			new:    &ChainConfig{HomesteadBlock: big.NewInt(1)},
+			new:    &ChainConfig{},
 			head:   3,
 			wantErr: &ConfigCompatError{
 				What:         "Homestead fork block",
@@ -60,8 +60,8 @@ func TestCheckCompatible(t *testing.T) {
 			},
 		},
 		{
-			stored: &ChainConfig{HomesteadBlock: big.NewInt(30), EIP150Block: big.NewInt(10)},
-			new:    &ChainConfig{HomesteadBlock: big.NewInt(25), EIP150Block: big.NewInt(20)},
+			stored: &ChainConfig{},
+			new:    &ChainConfig{},
 			head:   25,
 			wantErr: &ConfigCompatError{
 				What:         "EIP150 fork block",
