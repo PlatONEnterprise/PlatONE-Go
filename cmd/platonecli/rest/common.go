@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"log"
 	"net/http"
 	"reflect"
 	"strings"
@@ -81,7 +80,6 @@ func queryHandlerCommon(ctx *gin.Context, endPoint string, data *contractParams)
 	if endPoint != "" {
 		jsonInfo.Rpc.EndPoint = endPoint
 	}
-	log.Fatal(jsonInfo.Rpc.EndPoint)
 	res, err := handlerCallCommon(jsonInfo)
 	if data.Method == "getAllNodes" {
 		//var nodes []NodeInfo
