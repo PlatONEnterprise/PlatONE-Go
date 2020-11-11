@@ -30,7 +30,7 @@ import (
 // lockedHash and preprepare are for round change when lock exists,
 // we need to keep a reference of preprepare in order to propose locked proposal when there is a lock and itself is the proposer
 func newRoundState(view *istanbul.View, validatorSet istanbul.ValidatorSet, lockedHash common.Hash,
-	preprepare *istanbul.Preprepare, pendingRequest *istanbul.Request, hasBadProposal func(hash common.Hash) bool,
+	preprepare *istanbul.Preprepare, pendingRequest *istanbul.Request,
 	lockedRound *big.Int, lockedPrepares *messageSet) *roundState {
 	return &roundState{
 		round:          view.Round,
@@ -41,8 +41,6 @@ func newRoundState(view *istanbul.View, validatorSet istanbul.ValidatorSet, lock
 		lockedHash:     lockedHash,
 		mu:             new(sync.RWMutex),
 		pendingRequest: pendingRequest,
-		hasBadProposal: hasBadProposal,
-
 		lockedRound:    lockedRound,
 		lockedPrepares: lockedPrepares,
 	}
@@ -66,8 +64,7 @@ type roundState struct {
 	lockedRound    *big.Int
 	lockedPrepares *messageSet
 
-	mu             *sync.RWMutex
-	hasBadProposal func(hash common.Hash) bool
+	mu *sync.RWMutex
 }
 
 func (s *roundState) GetPrepareOrCommitSize() int {
@@ -175,7 +172,8 @@ func (s *roundState) IsHashLocked() bool {
 	if common.EmptyHash(s.lockedHash) {
 		return false
 	}
-	return !s.hasBadProposal(s.GetLockedHash())
+
+	return true
 }
 
 func (s *roundState) GetLockedHash() common.Hash {
