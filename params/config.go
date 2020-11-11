@@ -49,16 +49,9 @@ var (
 	//
 	// This configuration is intentionally not using keyed fields to force anyone
 	// adding flags to the config to also have to set these fields.
-	AllEthashProtocolChanges = &ChainConfig{big.NewInt(1337),  nil, nil, ""}
+	AllEthashProtocolChanges = &ChainConfig{big.NewInt(1337), nil, ""}
 
-	// AllCliqueProtocolChanges contains every protocol change (EIPs) introduced
-	// and accepted by the Ethereum core developers into the Clique consensus.
-	//
-	// This configuration is intentionally not using keyed fields to force anyone
-	// adding flags to the config to also have to set these fields.
-	AllCliqueProtocolChanges = &ChainConfig{big.NewInt(1337),  &CliqueConfig{Period: 0, Epoch: 30000}, nil, ""}
-
-	TestChainConfig = &ChainConfig{big.NewInt(1),  nil, nil, ""}
+	TestChainConfig = &ChainConfig{big.NewInt(1), nil, ""}
 )
 
 // TrustedCheckpoint represents a set of post-processed trie roots (CHT and
@@ -79,10 +72,9 @@ type TrustedCheckpoint struct {
 // that any network, identified by its genesis block, can have its own
 // set of configuration options.
 type ChainConfig struct {
-	ChainID    *big.Int `json:"chainId"` // chainId identifies the current chain and is used for replay protection
+	ChainID *big.Int `json:"chainId"` // chainId identifies the current chain and is used for replay protection
 
 	// Various consensus engines
-	Clique   *CliqueConfig   `json:"clique,omitempty"`
 	Istanbul *IstanbulConfig `json:"istanbul,omitempty"`
 
 	// Various vm interpreter
@@ -109,23 +101,10 @@ type IstanbulConfig struct {
 	ObserverNodes  []discover.Node `json:"suggestObserverNodes,omitempty"`
 }
 
-// CliqueConfig is the consensus engine configs for proof-of-authority based sealing.
-type CliqueConfig struct {
-	Period uint64 `json:"period"` // Number of seconds between blocks to enforce
-	Epoch  uint64 `json:"epoch"`  // Epoch length to reset votes and checkpoint
-}
-
-// String implements the stringer interface, returning the consensus engine details.
-func (c *CliqueConfig) String() string {
-	return "clique"
-}
-
 // String implements the fmt.Stringer interface.
 func (c *ChainConfig) String() string {
 	var engine interface{}
 	switch {
-	case c.Clique != nil:
-		engine = c.Clique
 	case c.Istanbul != nil:
 		engine = "istanbul"
 	default:
@@ -150,7 +129,7 @@ func (c *ChainConfig) GasTable(num *big.Int) GasTable {
 // Rules is a one time interface meaning that it shouldn't be used in between transition
 // phases.
 type Rules struct {
-	ChainID                                   *big.Int
+	ChainID *big.Int
 }
 
 // Rules ensures c's ChainID is not nil.

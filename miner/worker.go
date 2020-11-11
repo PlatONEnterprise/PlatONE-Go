@@ -400,14 +400,6 @@ func (w *worker) newWorkLoop(recommit time.Duration) {
 				} else {
 					timer.Reset(100 * time.Millisecond)
 				}
-			} else if w.config.Clique == nil || w.config.Clique.Period > 0 {
-				// Short circuit if no new transaction arrives.
-				if atomic.LoadInt32(&w.newTxs) == 0 {
-					timer.Reset(recommit)
-					continue
-				}
-				timestamp = time.Now().UnixNano() / 1e6
-				commit(true, commitInterruptResubmit, nil)
 			}
 
 		case interval := <-w.resubmitIntervalCh:

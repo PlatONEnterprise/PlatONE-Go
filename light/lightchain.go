@@ -460,9 +460,6 @@ func (self *LightChain) SyncCht(ctx context.Context) bool {
 	sections, _, _ := self.odr.ChtIndexer().Sections()
 
 	latest := sections*self.indexerConfig.ChtSize - 1
-	if clique := self.hc.Config().Clique; clique != nil {
-		latest -= latest % clique.Epoch // epoch snapshot for clique
-	}
 	if head >= latest {
 		return false
 	}

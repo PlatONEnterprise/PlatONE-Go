@@ -44,20 +44,10 @@ func (w *wizard) makeGenesis() {
 	// Figure out which consensus engine to choose
 	fmt.Println()
 	fmt.Println("Which consensus engine to use? ")
-	fmt.Println(" 1. Clique - proof-of-authority")
 
 	choice := w.read()
 	switch {
 	case choice == "1":
-		// In the case of clique, configure the consensus parameters
-		genesis.Config.Clique = &params.CliqueConfig{
-			Period: 15,
-			Epoch:  30000,
-		}
-		fmt.Println()
-		fmt.Println("How many seconds should blocks take? (default = 15)")
-		genesis.Config.Clique.Period = uint64(w.readDefaultInt(15))
-
 		// We also need the initial list of signers
 		fmt.Println()
 		fmt.Println("Which accounts are allowed to seal? (mandatory at least one)")
