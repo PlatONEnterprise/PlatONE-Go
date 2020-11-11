@@ -41,7 +41,6 @@ type cppEthereumGenesisSpec struct {
 
 	Genesis struct {
 		Nonce      hexutil.Bytes  `json:"nonce"`
-		MixHash    common.Hash    `json:"mixHash"`
 		Author     common.Address `json:"author"`
 		Timestamp  hexutil.Uint64 `json:"timestamp"`
 		ParentHash common.Hash    `json:"parentHash"`
