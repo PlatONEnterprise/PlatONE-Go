@@ -83,13 +83,13 @@ func queryHandlerCommon(ctx *gin.Context, endPoint string, data *contractParams)
 
 	res, err := handlerCallCommon(jsonInfo)
 	if data.Method == "getAllNodes" {
-		var nodes []NodeInfo
+		//var nodes []NodeInfo
 		jsonres := jsonStringPatch(res[0])
-		restring, ok := jsonres.(string)
-		if ok {
-			json.Unmarshal([]byte(restring), &nodes)
-		}
-		ctx.JSON(200, len(nodes))
+		//restring, ok := jsonres.(string)
+		//if ok {
+		//	json.Unmarshal([]byte(restring), &nodes)
+		//}
+		ctx.JSON(200, jsonres)
 	} else {
 
 		if err != nil {
