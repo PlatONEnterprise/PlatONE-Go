@@ -668,6 +668,11 @@ web3._extend({
 			call: 'istanbul_getValidators',
 			params: 0
 		}),
+		new web3._extend.Method({
+			name: 'getCandidates',
+			call: 'istanbul_candidates',
+			params: 0
+		}),
 	],
 	properties:
 	[]

@@ -59,36 +59,12 @@ type nodeInfo struct {
 // new a dpos and miner a new block
 func getConsensusNodesList(chain consensus.ChainReader, sb *backend, number uint64) ([]discover.NodeID, error) {
 	var tmp []common.NodeInfo
-	var tmpVrfParam *common.VRFParams
-	isOldBlock := number < chain.CurrentHeader().Number.Uint64()
-
-	if !isOldBlock {
-		tmpVrfParam = &common.SysCfg.SysParam.VRF
-	} else {
-		resVRF := CallSystemContractAtBlockNumber(chain, sb, number, "__sys_ParamManager", "getVRFParams", []interface{}{})
-		vrf := ParseResultToExtractType(resVRF, common.VRFParams{})
-		if vrf != nil {
-			tmpVrfParam = vrf.(*common.VRFParams)
-		}
-	}
-
+	tmpVrfParam := getVRFParamsAtNumber(chain, sb, number)
 	if tmpVrfParam.ElectionEpoch != 0 {
 		// vrf feature is active
-		resVrfConsensusNodes := CallSystemContractAtBlockNumber(chain, sb, number, "__sys_NodeManager", "getVrfConsensusNodes", []interface{}{})
-		nodes := ParseResultToExtractType(resVrfConsensusNodes, common.CommonResult{})
-		if nodes != nil {
-			tmp = nodes.(*common.CommonResult).Data
-		}
+		tmp = getVrfConsensusNodesAtNumber(chain, sb, number)
 	} else {
-		if !isOldBlock {
-			tmp = common.SysCfg.GetValidatorNodesFilterDelay(number, []common.NodeInfo{}, isOldBlock)
-		} else {
-			resNodes := CallSystemContractAtBlockNumber(chain, sb, number, "__sys_NodeManager", "getAllNodes", []interface{}{})
-			nodes := ParseResultToExtractType(resNodes, common.CommonResult{})
-			if nodes != nil {
-				tmp = common.SysCfg.GetValidatorNodesFilterDelay(number, nodes.(*common.CommonResult).Data, isOldBlock)
-			}
-		}
+		tmp = getCandidateNodesAtNumber(chain, sb, number)
 	}
 
 	nodeIDs := make([]discover.NodeID, 0, len(tmp))
@@ -101,6 +77,43 @@ func getConsensusNodesList(chain consensus.ChainReader, sb *backend, number uint
 		}
 	}
 	return nodeIDs, nil
+}
+
+func getVRFParamsAtNumber(chain consensus.ChainReader, sb *backend, number uint64) *common.VRFParams {
+	isOldBlock := number < chain.CurrentHeader().Number.Uint64()
+	if !isOldBlock {
+		return &common.SysCfg.SysParam.VRF
+	}
+
+	resVRF := CallSystemContractAtBlockNumber(chain, sb, number, "__sys_ParamManager", "getVRFParams", []interface{}{})
+	vrf := ParseResultToExtractType(resVRF, common.VRFParams{})
+	if vrf != nil {
+		return vrf.(*common.VRFParams)
+	}
+	return nil
+}
+
+func getVrfConsensusNodesAtNumber(chain consensus.ChainReader, sb *backend, number uint64) []common.NodeInfo {
+	resVrfConsensusNodes := CallSystemContractAtBlockNumber(chain, sb, number, "__sys_NodeManager", "getVrfConsensusNodes", []interface{}{})
+	nodes := ParseResultToExtractType(resVrfConsensusNodes, common.CommonResult{})
+	if nodes != nil {
+		return nodes.(*common.CommonResult).Data
+	}
+	return []common.NodeInfo{}
+}
+
+func getCandidateNodesAtNumber(chain consensus.ChainReader, sb *backend, number uint64) []common.NodeInfo {
+	isOldBlock := number < chain.CurrentHeader().Number.Uint64()
+	nodes := make([]common.NodeInfo, 0)
+	if isOldBlock {
+		resNodes := CallSystemContractAtBlockNumber(chain, sb, number, "__sys_NodeManager", "getAllNodes", []interface{}{})
+		tmp := ParseResultToExtractType(resNodes, common.CommonResult{})
+		if tmp != nil {
+			nodes = tmp.(*common.CommonResult).Data
+		}
+	}
+
+	return common.SysCfg.GetValidatorNodesFilterDelay(number, nodes, isOldBlock)
 }
 
 func ParseResultToExtractType(res []byte, v interface{}) interface{} {
