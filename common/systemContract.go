@@ -46,9 +46,9 @@ type NodeInfo struct {
 }
 
 type VRFParams struct {
-	ElectionEpoch     uint64   `json:"electionEpoch,omitempty"`
-	NextElectionBlock *big.Int `json:"nextElectionBlock,omitempty"`
-	ValidatorCount    uint64   `json:"validatorCount,omitempty"`
+	ElectionEpoch     uint64 `json:"electionEpoch"`
+	NextElectionBlock uint64 `json:"nextElectionBlock"`
+	ValidatorCount    uint64 `json:"validatorCount"`
 }
 
 type SystemParameter struct {
@@ -84,7 +84,7 @@ var SysCfg = &SystemConfig{
 		},
 		VRF: VRFParams{
 			ElectionEpoch:     0,
-			NextElectionBlock: big.NewInt(0),
+			NextElectionBlock: 0,
 			ValidatorCount:    0,
 		},
 	},
@@ -225,7 +225,7 @@ func (sc *SystemConfig) GetConsensusNodes() []NodeInfo {
 	return consensusNodes
 }
 
-func (sc *SystemConfig) GetConsensusNodesFilterDelay(number uint64, nodes []NodeInfo, isOldBlock bool) []NodeInfo {
+func (sc *SystemConfig) GetValidatorNodesFilterDelay(number uint64, nodes []NodeInfo, isOldBlock bool) []NodeInfo {
 	sc.SystemConfigMu.RLock()
 	defer sc.SystemConfigMu.RUnlock()
 	var nodesInfos []NodeInfo

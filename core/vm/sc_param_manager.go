@@ -1,6 +1,7 @@
 package vm
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/big"
 
@@ -348,33 +349,46 @@ func (u *ParamManager) checkVRFParams(params common.VRFParams) error {
 	return nil
 }
 
-func (u *ParamManager) setVRFParams(params common.VRFParams) error {
+func (u *ParamManager) setVRFParams(params common.VRFParams) (int32, error) {
 	if err := u.checkVRFParams(params); err != nil {
 		u.emitNotifyEventInParam("SetVRFParams", paramInvalid, fmt.Sprintf("param is invalid."))
-		return err
+		return 0, err
 	}
 	_, err := u.doParamSet(vrfParamsKey, params)
 	if err != nil {
 		switch err {
 		case errNoPermission:
 			u.emitNotifyEventInParam("SetVRFParams", callerHasNoPermission, fmt.Sprintf("%s has no permission to adjust param.", u.caller.String()))
-			return err
+			return 0, err
 
 		case errEncodeFailure:
 			u.emitNotifyEventInParam("SetVRFParams", encodeFailure, fmt.Sprintf("%v failed to encode.", isTxUseGasKey))
-			return err
+			return 0, err
 		}
 	}
-	u.emitNotifyEventInParam("IsTxUseGas", doParamSetSuccess, fmt.Sprintf("param set successful."))
-	return nil
+	u.emitNotifyEventInParam("SetVRFParams", doParamSetSuccess, fmt.Sprintf("param set successful."))
+	return 0, nil
 }
 
-func (u *ParamManager) getVRFParams() (*common.VRFParams, error) {
-	var b common.VRFParams
+func (u *ParamManager) getVRFParams() (common.VRFParams, error) {
+	b := common.VRFParams{}
 	if err := u.getParam(vrfParamsKey, &b); err != nil && err != errEmptyValue {
-		return &b, err
+		return b, err
 	}
-	return &b, nil
+	return b, nil
+}
+
+func (u *ParamManager) getVRFParamsWrapper() (string, error) {
+	vrf, err := u.getVRFParams()
+	if err != nil {
+		return "", nil
+	}
+
+	b, err := json.Marshal(vrf)
+	if err != nil {
+		return "", nil
+	}
+	return string(b), nil
 }
 
 // 获取交易是否消耗 gas
@@ -437,6 +451,6 @@ func (u *ParamManager) AllExportFns() SCExportFns {
 		"setIsTxUseGas":                    u.setIsTxUseGas,
 		"getIsTxUseGas":                    u.getIsTxUseGas,
 		"setVRFParams":                     u.setVRFParams,
-		"getVRFParams":                     u.getVRFParams,
+		"getVRFParams":                     u.getVRFParamsWrapper,
 	}
 }

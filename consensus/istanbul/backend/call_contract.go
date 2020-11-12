@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"math/big"
+	"reflect"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
@@ -41,12 +42,6 @@ type CBFTProduceBlockCfg struct {
 	BlockInterval   int32 `json:"BlockInterval"`
 }
 
-type commonResult struct {
-	RetCode int32      `json:"code"`
-	RetMsg  string     `json:"msg"`
-	Data    []nodeInfo `json:"data"`
-}
-
 type nodeInfo struct {
 	Name       string `json:"name,omitempty"`
 	Owner      string `json:"owner,omitempty"`
@@ -64,14 +59,36 @@ type nodeInfo struct {
 // new a dpos and miner a new block
 func getConsensusNodesList(chain consensus.ChainReader, sb *backend, number uint64) ([]discover.NodeID, error) {
 	var tmp []common.NodeInfo
+	var tmpVrfParam *common.VRFParams
 	isOldBlock := number < chain.CurrentHeader().Number.Uint64()
 
 	if !isOldBlock {
-		tmp = common.SysCfg.GetConsensusNodesFilterDelay(number, []common.NodeInfo{}, isOldBlock)
+		tmpVrfParam = &common.SysCfg.SysParam.VRF
 	} else {
-		res := CallSystemContractAtBlockNumber(chain, sb, number, "__sys_NodeManager", CallSystemContractRes)
-		nodes := ParseResultToNodeInfos(res)
-		tmp = common.SysCfg.GetConsensusNodesFilterDelay(number, nodes, isOldBlock)
+		resVRF := CallSystemContractAtBlockNumber(chain, sb, number, "__sys_ParamManager", "getVRFParams", []interface{}{})
+		vrf := ParseResultToExtractType(resVRF, common.VRFParams{})
+		if vrf != nil {
+			tmpVrfParam = vrf.(*common.VRFParams)
+		}
+	}
+
+	if tmpVrfParam.ElectionEpoch != 0 {
+		// vrf feature is active
+		resVrfConsensusNodes := CallSystemContractAtBlockNumber(chain, sb, number, "__sys_NodeManager", "getVrfConsensusNodes", []interface{}{})
+		nodes := ParseResultToExtractType(resVrfConsensusNodes, common.CommonResult{})
+		if nodes != nil {
+			tmp = nodes.(*common.CommonResult).Data
+		}
+	} else {
+		if !isOldBlock {
+			tmp = common.SysCfg.GetValidatorNodesFilterDelay(number, []common.NodeInfo{}, isOldBlock)
+		} else {
+			resNodes := CallSystemContractAtBlockNumber(chain, sb, number, "__sys_NodeManager", "getAllNodes", []interface{}{})
+			nodes := ParseResultToExtractType(resNodes, common.CommonResult{})
+			if nodes != nil {
+				tmp = common.SysCfg.GetValidatorNodesFilterDelay(number, nodes.(*common.CommonResult).Data, isOldBlock)
+			}
+		}
 	}
 
 	nodeIDs := make([]discover.NodeID, 0, len(tmp))
@@ -86,22 +103,15 @@ func getConsensusNodesList(chain consensus.ChainReader, sb *backend, number uint
 	return nodeIDs, nil
 }
 
-func ParseResultToNodeInfos(res []byte) []common.NodeInfo {
+func ParseResultToExtractType(res []byte, v interface{}) interface{} {
+	t := reflect.TypeOf(v)
+	d := reflect.New(t).Interface()
 	strRes := common.CallResAsString(res)
-	var tmp common.CommonResult
-	if err := json.Unmarshal(utils.String2bytes(strRes), &tmp); err != nil {
+	if err := json.Unmarshal(utils.String2bytes(strRes), &d); err != nil {
 		log.Warn("ParseResultToNodeInfos: unmarshal consensus node list failed", "result", strRes, "err", err.Error())
 		return nil
-	} else if tmp.RetCode != 0 {
-		log.Debug("ParseResultToNodeInfos: contract inner error", "code", tmp.RetCode, "msg", tmp.RetMsg)
-		return nil
-	} else {
-		return tmp.Data
 	}
-}
-
-func CallSystemContractRes(conAddr common.Address, callContract func(conAddr common.Address, data []byte) []byte) []byte {
-	return callContract(conAddr, common.GenCallData("getAllNodes", []interface{}{}))
+	return d
 }
 
 func CallSystemContractAtBlockNumber(
@@ -109,7 +119,8 @@ func CallSystemContractAtBlockNumber(
 	sb *backend,
 	number uint64,
 	sysContractName string,
-	fn func(conAddr common.Address, callContract func(conAddr common.Address, data []byte) []byte) []byte,
+	sysFuncName string,
+	sysFuncParams []interface{},
 ) []byte {
 	_state, _ := state.New(chain.GetHeaderByNumber(number).Root, state.NewDatabase(sb.db))
 	if _state == nil {
@@ -136,5 +147,5 @@ func CallSystemContractAtBlockNumber(
 		return nil
 	}
 	contractAddr := common.HexToAddress(strRes)
-	return fn(contractAddr, callContract)
+	return callContract(contractAddr, common.GenCallData(sysFuncName, sysFuncParams))
 }

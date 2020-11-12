@@ -35,8 +35,9 @@ const (
 )
 
 const (
-	keyOfNodesNameDB = "nodes-name-key"
-	prefixNodeName   = "sc-node-name"
+	keyOfNodesNameDB         = "nodes-name-key"
+	prefixNodeName           = "sc-node-name"
+	keyOfConsensisNodeNameDB = "consensis-nodes-name-key"
 )
 
 var (
@@ -70,6 +71,25 @@ type eNode struct {
 
 func (en *eNode) String() string {
 	return fmt.Sprintf("enode://%s@%s:%d", en.PublicKey, en.IP, en.Port)
+}
+
+type NodeForElection struct {
+	*syscontracts.NodeInfo
+	rank common.Hash
+}
+
+type NodesForElection []NodeForElection
+
+func (n NodesForElection) Len() int {
+	return len(n)
+}
+
+func (n NodesForElection) Less(i, j int) bool {
+	return n[i].rank.Hex() < n[j].rank.Hex()
+}
+
+func (n NodesForElection) Swap(i, j int) {
+	n[i], n[j] = n[j], n[i]
 }
 
 func checkRequiredFieldsIsEmpty(node *syscontracts.NodeInfo) error {
@@ -145,6 +165,10 @@ type SCNode struct {
 
 func NewSCNode(db StateDB) *SCNode {
 	return &SCNode{stateDB: db, contractAddr: syscontracts.NodeManagementAddress, blockNumber: big.NewInt(0)}
+}
+
+func (n *SCNode) SetBlockNumber(num *big.Int) {
+	n.blockNumber = num
 }
 
 func (n *SCNode) checkParamsOfAddNode(node *syscontracts.NodeInfo) error {
@@ -541,4 +565,91 @@ func (n *SCNode) emitNotifyEvent(code CodeType, msg string) {
 
 func (n *SCNode) emitEvent(topic string, code CodeType, msg string) {
 	emitEvent(n.contractAddr, n.stateDB, n.blockNumber.Uint64(), topic, code, msg)
+}
+
+func (n *SCNode) VrfElection(nonce []byte) (int32, error) {
+
+	scParam := &ParamManager{
+		stateDB:      n.stateDB,
+		contractAddr: &syscontracts.ParameterManagementAddress,
+		caller:       n.caller,
+		blockNumber:  n.blockNumber,
+	}
+
+	vrf, err := scParam.getVRFParams()
+	if err != nil {
+		return 0, err
+	}
+
+	if vrf.ElectionEpoch == 0 ||
+		(vrf.NextElectionBlock != n.blockNumber.Uint64() && n.blockNumber.Uint64()%vrf.ElectionEpoch != 0) {
+		n.emitEvent("no need for election", operateSuccess, string(vrf.ElectionEpoch))
+		return 0, nil
+	}
+
+	h1 := common.RlpHash(nonce)
+
+	consensusNodes := NodesForElection{}
+	nodes, err := n.GetAllNodes()
+	if err != nil {
+		return 0, err
+	}
+	for _, node := range nodes {
+		n.emitEvent("nodeInfo", operateSuccess, node.String())
+		if node.Status == 1 && node.Typ == 1 && node.DelayNum <= n.blockNumber.Uint64() {
+			h2 := common.RlpHash(node.PublicKey)
+			h := common.Hash{}
+			for i, _ := range h {
+				h[i] = h1[i] ^ h2[i]
+			}
+			consensusNodes = append(consensusNodes, NodeForElection{node, h})
+		}
+	}
+	sort.Sort(consensusNodes)
+
+	n.emitEvent("consensusNodeInfo", operateSuccess, string(len(consensusNodes)))
+	if len(consensusNodes) > int(vrf.ValidatorCount) {
+		consensusNodes = consensusNodes[:vrf.ValidatorCount]
+	}
+
+	names := make([]string, 0)
+	for _, v := range consensusNodes {
+		names = append(names, v.Name)
+	}
+
+	encodedNames, err := rlp.EncodeToBytes(names)
+	if err != nil {
+		return 0, err
+	}
+	n.setState(keyOfConsensisNodeNameDB, encodedNames)
+	return 0, nil
+}
+
+func (n *SCNode) GetVrfConsensusNodes() ([]*syscontracts.NodeInfo, error) {
+	bin := n.getState(keyOfConsensisNodeNameDB)
+	if len(bin) == 0 {
+		return n.GetAllNodes()
+	}
+
+	var names []string
+	err := rlp.DecodeBytes(bin, &names)
+	if err != nil {
+		return nil, err
+	}
+
+	var nodes []*syscontracts.NodeInfo
+	for _, name := range names {
+		n.emitEvent("GetVrfConsensusNodes", operateSuccess, name)
+		node, err := n.getNodeByName(name)
+		if err != nil {
+			return nil, err
+		}
+		nodes = append(nodes, node)
+	}
+
+	if len(nodes) == 0 {
+		return nil, errNodeNotFound
+	}
+
+	return nodes, nil
 }

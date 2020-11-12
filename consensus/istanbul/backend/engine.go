@@ -20,9 +20,10 @@ import (
 	"bytes"
 	"crypto/ecdsa"
 	"errors"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"math/big"
 	"time"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
@@ -32,11 +33,12 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul/validator"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto/sha3"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
-	"github.com/hashicorp/golang-lru"
+	lru "github.com/hashicorp/golang-lru"
 )
 
 const (
@@ -173,7 +175,7 @@ func (sb *backend) verifyCascadingFields(chain consensus.ChainReader, header *ty
 	}
 
 	//// Verify VRF Nonce
-	if chain.Config().VRF.ElectionEpoch != 0 {
+	if common.SysCfg.SysParam.VRF.ElectionEpoch != 0 {
 		if err := sb.verifyVRF(chain, header); err != nil {
 			return err
 		}
@@ -398,10 +400,16 @@ func (sb *backend) Prepare(chain consensus.ChainReader, header *types.Header) er
 // Note, the block header and state database might be updated to reflect any
 // consensus rules that happen at finalization (e.g. block rewards).
 func (sb *backend) Finalize(chain consensus.ChainReader, header *types.Header, state *state.StateDB, txs []*types.Transaction, receipts []*types.Receipt) (*types.Block, error) {
-	// No block rewards in Istanbul, so the state remains as is and uncles are dropped
-	header.Root = state.IntermediateRoot(chain.Config().IsEIP158(header.Number))
-	//header.UncleHash = nilUncleHash
-
+	//log.Error(fmt.Errorf("root before:%x", header.Root).Error())
+	// vrf election
+	scNode := vm.NewSCNode(state)
+	scNode.SetBlockNumber(header.Number)
+	parent := chain.GetHeader(header.ParentHash, header.Number.Uint64()-1)
+	if _, err := scNode.VrfElection(parent.Nonce[:]); err != nil {
+		return nil, err
+	}
+	header.Root = state.IntermediateRoot(true)
+	//log.Error(fmt.Errorf("root after:%x", header.Root).Error())
 	// Assemble and return the final block for sealing
 	return types.NewBlock(header, txs, receipts), nil
 }

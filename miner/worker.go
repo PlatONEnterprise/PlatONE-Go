@@ -25,6 +25,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus/misc"
@@ -38,7 +39,6 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
-	"fmt"
 )
 
 const (
@@ -87,9 +87,9 @@ const (
 type environment struct {
 	signer types.Signer
 
-	state     *state.StateDB // apply state changes here
-	tcount    int            // tx count in cycle
-	gasPool   *core.GasPool  // available gas used to pack transactions
+	state   *state.StateDB // apply state changes here
+	tcount  int            // tx count in cycle
+	gasPool *core.GasPool  // available gas used to pack transactions
 
 	header   *types.Header
 	txs      []*types.Transaction
@@ -141,12 +141,12 @@ func (e *commitWorkEnv) getHighestLogicalBlock() *types.Block {
 // worker is the main object which takes care of submitting new work to consensus engine
 // and gathering the sealing result.
 type worker struct {
-	extdb  ethdb.Database
+	extdb      ethdb.Database
 	EmptyBlock string
-	config *params.ChainConfig
-	engine consensus.Engine
-	eth    Backend
-	chain  *core.BlockChain
+	config     *params.ChainConfig
+	engine     consensus.Engine
+	eth        Backend
+	chain      *core.BlockChain
 
 	gasFloor uint64
 	gasCeil  uint64
@@ -173,8 +173,8 @@ type worker struct {
 	resubmitIntervalCh    chan time.Duration
 	resubmitAdjustCh      chan *intervalAdjust
 
-	current      *environment                 // An environment for current running cycle.
-	unconfirmed  *unconfirmedBlocks           // A set of locally mined blocks pending canonicalness confirmations.
+	current     *environment       // An environment for current running cycle.
+	unconfirmed *unconfirmedBlocks // A set of locally mined blocks pending canonicalness confirmations.
 
 	mu       sync.RWMutex // The lock used to protect the coinbase and extra fields
 	coinbase common.Address
@@ -210,7 +210,7 @@ func newWorker(config *params.ChainConfig, engine consensus.Engine, eth Backend,
 	blockSignatureCh chan *cbfttypes.BlockSignature, cbftResultCh chan *cbfttypes.CbftResult, highestLogicalBlockCh chan *types.Block, blockChainCache *core.BlockChainCache) *worker {
 
 	worker := &worker{
-		extdb:				   eth.ExtendedDb(),
+		extdb:                 eth.ExtendedDb(),
 		config:                config,
 		engine:                engine,
 		eth:                   eth,
@@ -319,7 +319,7 @@ func (w *worker) start() {
 
 	atomic.StoreInt32(&w.running, 1)
 	w.startCh <- struct{}{}
-	if eng, ok := w.engine.(consensus.Istanbul); ok{
+	if eng, ok := w.engine.(consensus.Istanbul); ok {
 		eng.Start(w.chain, w.chain.CurrentBlock, nil)
 	}
 }
@@ -328,7 +328,7 @@ func (w *worker) start() {
 func (w *worker) stop() {
 	atomic.StoreInt32(&w.running, 0)
 
-	if eng, ok := w.engine.(consensus.Istanbul); ok{
+	if eng, ok := w.engine.(consensus.Istanbul); ok {
 		eng.Stop()
 	}
 }
@@ -491,13 +491,13 @@ func (w *worker) newWorkLoop(recommit time.Duration) {
 				timestamp = time.Now().UnixNano() / 1e6
 				commit(false, commitInterruptResubmit, commitBlock)
 
-			} else if eng, ok := w.engine.(consensus.Istanbul); ok{
+			} else if eng, ok := w.engine.(consensus.Istanbul); ok {
 				// todo: shouldSeal()
 				if eng.ShouldSeal() {
 					log.Debug("************ ShouldSeal() -> true *************")
 					commit(false, commitInterruptResubmit, nil)
 					timer.Reset(1000 * time.Millisecond)
-				} else{
+				} else {
 					timer.Reset(100 * time.Millisecond)
 				}
 			} else if w.config.Clique == nil || w.config.Clique.Period > 0 {
@@ -565,7 +565,7 @@ func (w *worker) mainLoop() {
 			// add the new uncle block if valid and regenerate a mining block.
 		// removed by PlatONE
 
-		case  ev := <-w.txsCh:
+		case ev := <-w.txsCh:
 			// Apply transactions to the pending state if we're not mining.
 			// Note all transactions received may not be continuous with transactions
 			// already included in the current mining block. These transactions will
@@ -593,14 +593,13 @@ func (w *worker) mainLoop() {
 				atomic.AddInt32(&w.newTxs, int32(len(ev.Txs)))
 			}
 
-
 		// System stopped
 		case <-w.exitCh:
 			return
 
 		/*
-		case <-w.txsSub.Err():
-			return
+			case <-w.txsSub.Err():
+				return
 		*/
 
 		case <-w.chainHeadSub.Err():
@@ -688,7 +687,7 @@ func (w *worker) taskLoop() {
 					log.Warn("【Bft engine】Block sealing failed", "err", err)
 
 				} else {
-					rpc.MonitorWriteData(rpc.BlockConsensusStartTime, sealedBlock.Hash().String(),"", w.extdb)
+					rpc.MonitorWriteData(rpc.BlockConsensusStartTime, sealedBlock.Hash().String(), "", w.extdb)
 					log.Info("sealedBlock.hash", "seal():", sealedBlock.Hash())
 				}
 				continue
@@ -860,7 +859,7 @@ func (w *worker) resultLoop() {
 				}
 				rpc.MonitorWriteData(rpc.BlockPrimay, block.Hash().String(), bIsPrimaryNode, w.extdb)
 			}
-			rpc.MonitorWriteData(rpc.BlockCommitTime, block.Hash().String(),"", w.extdb)
+			rpc.MonitorWriteData(rpc.BlockCommitTime, block.Hash().String(), "", w.extdb)
 			log.Info("Successfully write new block", "hash", block.Hash(), "number", block.NumberU64())
 
 			// load system contract configure
@@ -908,9 +907,9 @@ func (w *worker) makeCurrent(parent *types.Block, header *types.Header) error {
 		return err
 	}
 	env := &environment{
-		signer:    types.NewEIP155Signer(w.config.ChainID),
-		state:     state,
-		header:    header,
+		signer: types.NewEIP155Signer(w.config.ChainID),
+		state:  state,
+		header: header,
 	}
 
 	// Keep track of transactions which return errors so they can be removed
@@ -947,7 +946,6 @@ func (w *worker) commitTransaction(tx *types.Transaction, coinbase common.Addres
 
 	return receipt.Logs, nil
 }
-
 
 func (w *worker) commitTransactionsWithHeader(header *types.Header, txs *types.TransactionsByPriceAndNonce, coinbase common.Address, interrupt *int32, timestamp int64) (bool, bool) {
 	// Short circuit if current is nil
@@ -1015,40 +1013,40 @@ func (w *worker) commitTransactionsWithHeader(header *types.Header, txs *types.T
 			continue
 		}
 		// Start executing the transaction
-		rpc.MonitorWriteData(rpc.TransactionExecuteStartTime, tx.Hash().String(),"", w.extdb)
+		rpc.MonitorWriteData(rpc.TransactionExecuteStartTime, tx.Hash().String(), "", w.extdb)
 		w.current.state.Prepare(tx.Hash(), common.Hash{}, w.current.tcount)
 		txHash := tx.Hash()
 		log.Trace("Start executing the transaction", "txHash", fmt.Sprintf("%x", txHash[:log.LogHashLen]), "blockNumber", header.Number)
 		logs, err := w.commitTransaction(tx, coinbase)
-		rpc.MonitorWriteData(rpc.TransactionExecuteEndTime, tx.Hash().String(),"", w.extdb)
+		rpc.MonitorWriteData(rpc.TransactionExecuteEndTime, tx.Hash().String(), "", w.extdb)
 		switch err {
 		case core.ErrGasLimitReached:
 			// Pop the current out-of-gas transaction without shifting in the next from the account
 			log.Warn("Gas limit exceeded for current block", "blockNumber", header.Number, "blockParentHash", header.ParentHash, "tx.hash", tx.Hash(), "sender", from, "senderCurNonce", w.current.state.GetNonce(from), "tx.nonce", tx.Nonce())
 			txs.Pop()
-			rpc.MonitorWriteData(rpc.TransactionExecuteStatus, tx.Hash().String(),"false", w.extdb)
+			rpc.MonitorWriteData(rpc.TransactionExecuteStatus, tx.Hash().String(), "false", w.extdb)
 		case core.ErrNonceTooLow:
 			// New head notification data race between the transaction pool and miner, shift
 			log.Warn("Skipping transaction with low nonce", "blockNumber", header.Number, "blockParentHash", header.ParentHash, "tx.hash", tx.Hash(), "sender", from, "senderCurNonce", w.current.state.GetNonce(from), "tx.nonce", tx.Nonce())
 			txs.Shift()
-			rpc.MonitorWriteData(rpc.TransactionExecuteStatus, tx.Hash().String(),"false", w.extdb)
+			rpc.MonitorWriteData(rpc.TransactionExecuteStatus, tx.Hash().String(), "false", w.extdb)
 		case core.ErrNonceTooHigh:
 			// Reorg notification data race between the transaction pool and miner, skip account =
 			log.Warn("Skipping account with hight nonce", "blockNumber", header.Number, "blockParentHash", header.ParentHash, "tx.hash", tx.Hash(), "sender", from, "senderCurNonce", w.current.state.GetNonce(from), "tx.nonce", tx.Nonce())
 			txs.Pop()
-			rpc.MonitorWriteData(rpc.TransactionExecuteStatus, tx.Hash().String(),"false", w.extdb)
+			rpc.MonitorWriteData(rpc.TransactionExecuteStatus, tx.Hash().String(), "false", w.extdb)
 		case nil:
 			// Everything ok, collect the logs and shift in the next transaction from the same account
 			coalescedLogs = append(coalescedLogs, logs...)
 			w.current.tcount++
 			txs.Shift()
-			rpc.MonitorWriteData(rpc.TransactionExecuteStatus, tx.Hash().String(),"true", w.extdb)
+			rpc.MonitorWriteData(rpc.TransactionExecuteStatus, tx.Hash().String(), "true", w.extdb)
 		default:
 			// Strange error, discard the transaction and get the next in line (note, the
 			// nonce-too-high clause will prevent us from executing in vain).
 			log.Warn("Transaction failed, account skipped", "blockNumber", header.Number, "blockParentHash", header.ParentHash, "hash", tx.Hash(), "hash", tx.Hash(), "err", err)
 			txs.Shift()
-			rpc.MonitorWriteData(rpc.TransactionExecuteStatus, tx.Hash().String(),"false", w.extdb)
+			rpc.MonitorWriteData(rpc.TransactionExecuteStatus, tx.Hash().String(), "false", w.extdb)
 		}
 	}
 
@@ -1207,7 +1205,7 @@ func (w *worker) commitNewWork(interrupt *int32, noempty bool, timestamp int64, 
 	if _, ok := w.engine.(consensus.Bft); ok {
 		parent = commitBlock
 		//timestamp = time.Now().UnixNano() / 1e6
-	} else if _, ok := w.engine.(consensus.Istanbul); ok{
+	} else if _, ok := w.engine.(consensus.Istanbul); ok {
 		parent = w.chain.CurrentBlock()
 		//log.Info("parentBlock Number: " + parent.Number().String())
 	} else {
@@ -1234,10 +1232,10 @@ func (w *worker) commitNewWork(interrupt *int32, noempty bool, timestamp int64, 
 	// Only set the coinbase if our consensus engine is running (avoid spurious block rewards)
 	if w.isRunning() {
 		/*
-		if w.coinbase == (common.Address{}) {
-			log.Error("Refusing to mine without etherbase")
-			return
-		}
+			if w.coinbase == (common.Address{}) {
+				log.Error("Refusing to mine without etherbase")
+				return
+			}
 		*/
 		header.Coinbase = w.coinbase
 	}
@@ -1301,9 +1299,9 @@ func (w *worker) commitNewWork(interrupt *int32, noempty bool, timestamp int64, 
 		}
 		if _, ok := w.engine.(consensus.Bft); ok {
 			w.commit(nil, true, tstart)
-		} else if _, ok := w.engine.(consensus.Istanbul); ok{
+		} else if _, ok := w.engine.(consensus.Istanbul); ok {
 			w.commit(nil, true, tstart)
-		}else {
+		} else {
 			w.updateSnapshot()
 		}
 		return
@@ -1362,7 +1360,7 @@ func (w *worker) commit(interval func(), update bool, start time.Time) error {
 		receipts[i] = new(types.Receipt)
 		*receipts[i] = *l
 	}
-	s := w.current.state.Copy()
+	s := w.current.state
 	block, err := w.engine.Finalize(w.chain, w.current.header, s, w.current.txs, w.current.receipts)
 	if err != nil {
 		return err
@@ -1382,7 +1380,7 @@ func (w *worker) commit(interval func(), update bool, start time.Time) error {
 			feesEth := new(big.Float).Quo(new(big.Float).SetInt(feesWei), new(big.Float).SetInt(big.NewInt(params.Ether)))
 
 			log.Info("Commit new mining work", "number", block.Number(), "sealhash", w.engine.SealHash(block.Header()), "receiptHash", block.ReceiptHash(),
-				 "txs", w.current.tcount, "gas", block.GasUsed(), "fees", feesEth, "elapsed", common.PrettyDuration(time.Since(start)))
+				"txs", w.current.tcount, "gas", block.GasUsed(), "fees", feesEth, "elapsed", common.PrettyDuration(time.Since(start)))
 
 		case <-w.exitCh:
 			log.Info("Worker has exited")
@@ -1431,13 +1429,13 @@ func (w *worker) shouldCommit(timestamp int64) (bool, *types.Block) {
 	} else {
 		pending, err := w.eth.TxPool().PendingLimited()
 		if err == nil && len(pending) > 0 {
-			log.Info("w.eth.TxPool()","pending:", len(pending))
+			log.Info("w.eth.TxPool()", "pending:", len(pending))
 			shouldCommit = true
 		}
 	}
 
 	if shouldCommit && timestamp != 0 {
-		shouldCommit = (timestamp-commitTime) >= w.recommit.Nanoseconds()/1e6
+		shouldCommit = (timestamp - commitTime) >= w.recommit.Nanoseconds()/1e6
 	}
 	if shouldCommit {
 		w.commitWorkEnv.commitBaseBlock = highestLogicalBlock

@@ -407,12 +407,17 @@ func (sb *backend) excuteBlock(proposal istanbul.Proposal) error {
 				sb.current.state.IntermediateRoot(chain.Config().IsEIP158(chain.CurrentHeader().Number))
 			}
 		}
+		block, err = sb.Finalize(chain, header, sb.current.state, block.Transactions(), sb.current.receipts)
+		if err != nil {
+			return err
+		}
 
 		if sb.current.state.IntermediateRoot(true) != block.Root() {
 			sb.current = nil
 			return errors.New("Invalid block root")
 		}
 		sb.current.block = block
+		sb.current.header = block.Header()
 	}
 
 	return nil

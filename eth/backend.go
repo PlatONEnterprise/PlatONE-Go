@@ -229,17 +229,7 @@ func InitInnerCallFunc(ethPtr *Ethereum) {
 		common.InitSystemconfig(root, nil)
 		return
 	}
-
-	vrf := new(common.VRFParams)
-	if ethPtr.chainConfig.VRF != nil {
-		vrfCfg := ethPtr.chainConfig.VRF
-		vrf = &common.VRFParams{
-			ElectionEpoch:     vrfCfg.ElectionEpoch,
-			NextElectionBlock: vrfCfg.NextElectionBlock,
-			ValidatorCount:    vrfCfg.ValidatorCount,
-		}
-	}
-	common.InitSystemconfig(common.NodeInfo{}, vrf)
+	common.InitSystemconfig(common.NodeInfo{}, nil)
 }
 
 type LesServer interface {

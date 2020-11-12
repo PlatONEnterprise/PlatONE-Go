@@ -35,8 +35,8 @@ func (un *UpdateNode) SetTyp(typ uint32) {
 	un.Typ = &typ
 }
 
-func (un *UpdateNode) String() string{
-	str,_ := json.Marshal(un)
+func (un *UpdateNode) String() string {
+	str, _ := json.Marshal(un)
 	return string(str)
 }
 
@@ -56,15 +56,15 @@ type NodeInfo struct {
 	DelayNum uint64 `json:"delayNum,omitempty"` //共识节点延迟设置的区块高度 (可选, 默认实时设置)
 }
 
-func (node *NodeInfo) String() string{
-	str,_ := json.Marshal(node)
+func (node *NodeInfo) String() string {
+	str, _ := json.Marshal(node)
 	return string(str)
 }
 
 type UserInfo struct {
 	Address    common.Address `json:"address,string,omitempty,required"` // 地址，不可变更
 	Authorizer common.Address `json:"authorizer,string,omitempty"`       // 授权者，不可变更
-	Name       string `json:"name,omitempty"`             // 用户名，不可变更
+	Name       string         `json:"name,omitempty"`                    // 用户名，不可变更
 
 	DescInfo string `json:"descInfo,omitempty"` // 描述信息，可变更
 	Version  uint32 `json:"version,omitempty"`  // 可变更

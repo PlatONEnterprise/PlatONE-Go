@@ -29,6 +29,18 @@
         "type": "function"
     },
     {
+        "name": "getVrfConsensusNodes",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
         "name": "validJoinNode",
         "inputs": [
             {
