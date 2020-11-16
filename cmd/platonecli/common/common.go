@@ -39,14 +39,12 @@ func AbiParse(abiFilePath, str string) []byte {
 	var err error
 	var abiBytes []byte
 
-	// todo: equalFold string?
-	if p := precompile.List[str]; p != "" {
-		precompiledAbi, _ := precompile.Asset(p)
-		return precompiledAbi
-	}
-
 	if abiFilePath == "" {
-		/// abiFilePath = getAbiFileFromLocal(str)
+		// todo: equalFold string?
+		if p := precompile.List[str]; p != "" {
+			precompiledAbi, _ := precompile.Asset(p)
+			return precompiledAbi
+		}
 	}
 
 	abiBytes, err = utils.ParseFileToBytes(abiFilePath)
