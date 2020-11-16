@@ -88,7 +88,6 @@ func getGenesisAndKeys(n int) (*core.Genesis, []*ecdsa.PrivateKey) {
 	// force enable Istanbul engine
 	genesis.Config.Istanbul = &params.IstanbulConfig{}
 	genesis.Nonce = emptyNonce.Uint64()
-	genesis.Mixhash = types.IstanbulDigest
 
 	appendValidators(genesis, addrs)
 	return genesis, nodeKeys

@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"math/big"
 	"strings"
+	"time"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 
@@ -51,7 +52,7 @@ type Genesis struct {
 	Nonce     uint64              `json:"nonce"`
 	Timestamp uint64              `json:"timestamp"`
 	ExtraData []byte              `json:"extraData"`
-	GasLimit  uint64              `json:"gasLimit"   gencodec:"required"`
+	GasLimit  uint64              `json:"gasLimit" `
 	Coinbase  common.Address      `json:"coinbase"`
 	Alloc     GenesisAlloc        `json:"alloc"      gencodec:"required"`
 
@@ -246,6 +247,9 @@ func (g *Genesis) ToBlock(db ethdb.Database) *types.Block {
 	if g.GasLimit == 0 {
 		head.GasLimit = params.GenesisGasLimit
 	}
+	if head.Time.Uint64() == 0 {
+		head.Time = big.NewInt(time.Now().Unix())
+	}
 	statedb.Commit(false)
 	statedb.Database().TrieDB().Commit(root, true)
 
@@ -336,8 +340,4 @@ func decodePrealloc(data string) GenesisAlloc {
 		ga[common.BigToAddress(account.Addr)] = GenesisAccount{Balance: account.Balance}
 	}
 	return ga
-}
-
-func Alloc() GenesisAlloc {
-	return decodePrealloc(testnetAllocData)
 }

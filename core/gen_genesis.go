@@ -14,14 +14,14 @@ import (
 
 var _ = (*genesisSpecMarshaling)(nil)
 
+// MarshalJSON marshals as JSON.
 func (g Genesis) MarshalJSON() ([]byte, error) {
 	type Genesis struct {
 		Config     *params.ChainConfig                         `json:"config"`
 		Nonce      math.HexOrDecimal64                         `json:"nonce"`
 		Timestamp  math.HexOrDecimal64                         `json:"timestamp"`
 		ExtraData  hexutil.Bytes                               `json:"extraData"`
-		GasLimit   math.HexOrDecimal64                         `json:"gasLimit"   gencodec:"required"`
-		Mixhash    common.Hash                                 `json:"mixHash"`
+		GasLimit   math.HexOrDecimal64                         `json:"gasLimit" `
 		Coinbase   common.Address                              `json:"coinbase"`
 		Alloc      map[common.UnprefixedAddress]GenesisAccount `json:"alloc"      gencodec:"required"`
 		Number     math.HexOrDecimal64                         `json:"number"`
@@ -47,14 +47,14 @@ func (g Genesis) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&enc)
 }
 
+// UnmarshalJSON unmarshals from JSON.
 func (g *Genesis) UnmarshalJSON(input []byte) error {
 	type Genesis struct {
 		Config     *params.ChainConfig                         `json:"config"`
 		Nonce      *math.HexOrDecimal64                        `json:"nonce"`
 		Timestamp  *math.HexOrDecimal64                        `json:"timestamp"`
 		ExtraData  *hexutil.Bytes                              `json:"extraData"`
-		GasLimit   *math.HexOrDecimal64                        `json:"gasLimit"   gencodec:"required"`
-		Mixhash    *common.Hash                                `json:"mixHash"`
+		GasLimit   *math.HexOrDecimal64                        `json:"gasLimit" `
 		Coinbase   *common.Address                             `json:"coinbase"`
 		Alloc      map[common.UnprefixedAddress]GenesisAccount `json:"alloc"      gencodec:"required"`
 		Number     *math.HexOrDecimal64                        `json:"number"`
@@ -77,10 +77,9 @@ func (g *Genesis) UnmarshalJSON(input []byte) error {
 	if dec.ExtraData != nil {
 		g.ExtraData = *dec.ExtraData
 	}
-	if dec.GasLimit == nil {
-		return errors.New("missing required field 'gasLimit' for Genesis")
+	if dec.GasLimit != nil {
+		g.GasLimit = uint64(*dec.GasLimit)
 	}
-	g.GasLimit = uint64(*dec.GasLimit)
 	if dec.Coinbase != nil {
 		g.Coinbase = *dec.Coinbase
 	}
