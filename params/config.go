@@ -92,13 +92,12 @@ func (c *EthashConfig) String() string {
 type ProposerPolicy uint64
 
 type IstanbulConfig struct {
-	RequestTimeout uint64          `json:"timeout,omitempty"` // The timeout for each Istanbul round in milliseconds.
-	BlockPeriod    uint64          `json:"period,omitempty"`  // Default minimum difference between two consecutive block's timestamps in second
-	ProposerPolicy ProposerPolicy  `json:"policy,omitempty"`  // The policy for proposer selection
-	Epoch          uint64          `json:"epoch,omitempty"`   // The number of blocks after which to checkpoint and reset the pending votes
-	InitialNodes   []discover.Node `json:"initialNodes,omitempty"`
-	ValidatorNodes []discover.Node `json:"validatorNodes,omitempty"`
-	ObserverNodes  []discover.Node `json:"suggestObserverNodes,omitempty"`
+	RequestTimeout     uint64         `json:"timeout,omitempty"` // The timeout for each Istanbul round in milliseconds.
+	BlockPeriod        uint64         `json:"period,omitempty"`  // Default minimum difference between two consecutive block's timestamps in second
+	ProposerPolicy     ProposerPolicy `json:"policy,omitempty"`  // The policy for proposer selection
+	//Epoch              uint64         `json:"epoch,omitempty"`   // The number of blocks after which to checkpoint and reset the pending votes
+	FirstValidatorNode discover.Node  `json:"firstValidatorNode,omitempty"`
+	//ObserverNodes  []discover.Node `json:"suggestObserverNodes,omitempty"`
 }
 
 // String implements the fmt.Stringer interface.

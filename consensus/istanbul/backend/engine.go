@@ -197,15 +197,6 @@ func (sb *backend) VerifyHeaders(chain consensus.ChainReader, headers []*types.H
 	return abort, results
 }
 
-// VerifyUncles verifies that the given block's uncles conform to the consensus
-// rules of a given engine.
-func (sb *backend) VerifyUncles(chain consensus.ChainReader, block *types.Block) error {
-	//if len(block.Uncles()) > 0 {
-	//	return errInvalidUncleHash
-	//}
-	return nil
-}
-
 // verifySigner checks whether the signer is in parent's validator set
 func (sb *backend) verifySigner(chain consensus.ChainReader, header *types.Header, parents []*types.Header) error {
 	// Verifying the genesis block is not supported
@@ -320,31 +311,6 @@ func (sb *backend) Prepare(chain consensus.ChainReader, header *types.Header) er
 		return err
 	}
 
-	/*
-		// get valid candidate list
-		sb.candidatesLock.RLock()
-		var addresses []common.Address
-		var authorizes []bool
-		for address, authorize := range sb.candidates {
-			if snap.checkVote(address, authorize) {
-				addresses = append(addresses, address)
-				authorizes = append(authorizes, authorize)
-			}
-		}
-		sb.candidatesLock.RUnlock()
-
-		// pick one of the candidates randomly
-		if len(addresses) > 0 {
-			index := rand.Intn(len(addresses))
-			// add validator voting in coinbase
-			header.Coinbase = addresses[index]
-			if authorizes[index] {
-				copy(header.Nonce[:], nonceAuthVote)
-			} else {
-				copy(header.Nonce[:], nonceDropVote)
-			}
-		}
-	*/
 	// add validators in snapshot to extraData's validators section
 	extra, err := prepareExtra(header, snap.validators())
 	if err != nil {
@@ -528,7 +494,7 @@ func (sb *backend) snapshot(chain consensus.ChainReader, number uint64, hash com
 		}
 		// If an on-disk checkpoint snapshot can be found, use that
 		if number%checkpointInterval == 0 {
-			if s, err := loadSnapshot(sb.config.Epoch, sb.db, hash); err == nil {
+			if s, err := loadSnapshot(sb.db, hash); err == nil {
 				log.Trace("Loaded voting snapshot form disk", "number", number, "hash", hash)
 				snap = s
 				break
@@ -542,35 +508,29 @@ func (sb *backend) snapshot(chain consensus.ChainReader, number uint64, hash com
 				return nil, err
 			}
 
-			//istanbulExtra, err := types.ExtractIstanbulExtra(genesis)
-			//if err != nil {
-			//	return nil, err
-			//}
-
 			addrs := make([]common.Address, 0)
 
-			if len(sb.config.ValidatorNodes) == 0 {
-				log.Crit("genesis.json not specified ValidatorNodes")
+			if sb.config.FirstValidatorNode.ID.String() == "" {
+				log.Crit("genesis.json not specified FirstValidatorNode")
 			}
 
-			for _, nodeId := range sb.config.ValidatorNodes[:1] {
-				prefix := make([]byte, 1)
-				prefix[0] = 4
-				nodeID := append(prefix, nodeId.ID[:]...)
+			nodeId := sb.config.FirstValidatorNode
+			prefix := make([]byte, 1)
+			prefix[0] = 4
+			nodeID := append(prefix, nodeId.ID[:]...)
 
-				pubKey, err := crypto.UnmarshalPubkey(nodeID)
-				if err != nil {
-					log.Info("NodeID unmarshal to pubKey failed")
-					continue
-				}
-
-				addr := crypto.PubkeyToAddress(*pubKey).Hex()
-
-				addrs = append(addrs, common.HexToAddress(addr))
+			pubKey, err := crypto.UnmarshalPubkey(nodeID)
+			if err != nil {
+				log.Info("NodeID unmarshal to pubKey failed")
+				continue
 			}
+
+			addr := crypto.PubkeyToAddress(*pubKey).Hex()
+
+			addrs = append(addrs, common.HexToAddress(addr))
 
 			//snap = newSnapshot(sb.config.Epoch, 0, genesis.Hash(), validator.NewSet(istanbulExtra.Validators, sb.config.ProposerPolicy))
-			snap = newSnapshot(sb.config.Epoch, 0, genesis.Hash(), validator.NewSet(addrs, sb.config.ProposerPolicy))
+			snap = newSnapshot(0, genesis.Hash(), validator.NewSet(addrs, sb.config.ProposerPolicy))
 			if err := snap.store(sb.db); err != nil {
 				return nil, err
 			}

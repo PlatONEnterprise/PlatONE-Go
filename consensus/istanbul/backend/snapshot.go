@@ -52,7 +52,7 @@ type Tally struct {
 
 // Snapshot is the state of the authorization voting at a given point in time.
 type Snapshot struct {
-	Epoch uint64 // The number of blocks after which to checkpoint and reset the pending votes
+	//Epoch uint64 // The number of blocks after which to checkpoint and reset the pending votes
 
 	Number uint64                   // Block number where the snapshot was created
 	Hash   common.Hash              // Block hash where the snapshot was created
@@ -64,9 +64,9 @@ type Snapshot struct {
 // newSnapshot create a new snapshot with the specified startup parameters. This
 // method does not initialize the set of recent validators, so only ever use if for
 // the genesis block.
-func newSnapshot(epoch uint64, number uint64, hash common.Hash, valSet istanbul.ValidatorSet) *Snapshot {
+func newSnapshot(number uint64, hash common.Hash, valSet istanbul.ValidatorSet) *Snapshot {
 	snap := &Snapshot{
-		Epoch:  epoch,
+		//Epoch:  epoch,
 		Number: number,
 		Hash:   hash,
 		ValSet: valSet,
@@ -76,7 +76,7 @@ func newSnapshot(epoch uint64, number uint64, hash common.Hash, valSet istanbul.
 }
 
 // loadSnapshot loads an existing snapshot from the database.
-func loadSnapshot(epoch uint64, db ethdb.Database, hash common.Hash) (*Snapshot, error) {
+func loadSnapshot(db ethdb.Database, hash common.Hash) (*Snapshot, error) {
 	blob, err := db.Get(append([]byte(dbKeySnapshotPrefix), hash[:]...))
 	if err != nil {
 		return nil, err
@@ -85,7 +85,7 @@ func loadSnapshot(epoch uint64, db ethdb.Database, hash common.Hash) (*Snapshot,
 	if err := json.Unmarshal(blob, snap); err != nil {
 		return nil, err
 	}
-	snap.Epoch = epoch
+	//snap.Epoch = epoch
 
 	return snap, nil
 }
@@ -102,7 +102,7 @@ func (s *Snapshot) store(db ethdb.Database) error {
 // copy creates a deep copy of the snapshot, though not the individual votes.
 func (s *Snapshot) copy() *Snapshot {
 	cpy := &Snapshot{
-		Epoch:  s.Epoch,
+		//Epoch:  s.Epoch,
 		Number: s.Number,
 		Hash:   s.Hash,
 		ValSet: s.ValSet.Copy(),
@@ -180,84 +180,6 @@ func (s *Snapshot) apply(chain consensus.ChainReader, sb *backend, headers []*ty
 	// Iterate through the headers and create a new snapshot
 	snap := s.copy()
 
-	/*
-		for _, header := range headers {
-			// Remove any votes on checkpoint blocks
-			number := header.Number.Uint64()
-			if number%s.Epoch == 0 {
-				snap.Votes = nil
-				snap.Tally = make(map[common.Address]Tally)
-			}
-			// Resolve the authorization key and check against validators
-			validator, err := ecrecover(header)
-			if err != nil {
-				return nil, err
-			}
-			if _, v := snap.ValSet.GetByAddress(validator); v == nil {
-				return nil, errUnauthorized
-			}
-
-			// Header authorized, discard any previous votes from the validator
-			for i, vote := range snap.Votes {
-				if vote.Validator == validator && vote.Address == header.Coinbase {
-					// Uncast the vote from the cached tally
-					snap.uncast(vote.Address, vote.Authorize)
-
-					// Uncast the vote from the chronological list
-					snap.Votes = append(snap.Votes[:i], snap.Votes[i+1:]...)
-					break // only one vote allowed
-				}
-			}
-			// Tally up the new vote from the validator
-			var authorize bool
-			switch {
-			case bytes.Compare(header.Nonce[:], nonceAuthVote) == 0:
-				authorize = true
-			case bytes.Compare(header.Nonce[:], nonceDropVote) == 0:
-				authorize = false
-			default:
-				return nil, errInvalidVote
-			}
-			if snap.cast(header.Coinbase, authorize) {
-				snap.Votes = append(snap.Votes, &Vote{
-					Validator: validator,
-					Block:     number,
-					Address:   header.Coinbase,
-					Authorize: authorize,
-				})
-			}
-			// If the vote passed, update the list of validators
-			if tally := snap.Tally[header.Coinbase]; tally.Votes > snap.ValSet.Size()/2 {
-				if tally.Authorize {
-					snap.ValSet.AddValidator(header.Coinbase)
-				} else {
-					snap.ValSet.RemoveValidator(header.Coinbase)
-
-					// Discard any previous votes the deauthorized validator cast
-					for i := 0; i < len(snap.Votes); i++ {
-						if snap.Votes[i].Validator == header.Coinbase {
-							// Uncast the vote from the cached tally
-							snap.uncast(snap.Votes[i].Address, snap.Votes[i].Authorize)
-
-							// Uncast the vote from the chronological list
-							snap.Votes = append(snap.Votes[:i], snap.Votes[i+1:]...)
-
-							i--
-						}
-					}
-				}
-				// Discard any previous votes around the just changed account
-				for i := 0; i < len(snap.Votes); i++ {
-					if snap.Votes[i].Address == header.Coinbase {
-						snap.Votes = append(snap.Votes[:i], snap.Votes[i+1:]...)
-						i--
-					}
-				}
-				delete(snap.Tally, header.Coinbase)
-			}
-		}
-	*/
-
 	validatorNodesList, _ := getConsensusNodesList(chain, sb, headers, snap.Number+uint64(len(headers)))
 	if len(validatorNodesList) == 0 {
 		snap.Number += uint64(len(headers))
@@ -314,7 +236,7 @@ type snapshotJSON struct {
 
 func (s *Snapshot) toJSONStruct() *snapshotJSON {
 	return &snapshotJSON{
-		Epoch:      s.Epoch,
+		//Epoch:      s.Epoch,
 		Number:     s.Number,
 		Hash:       s.Hash,
 		Votes:      s.Votes,
@@ -331,7 +253,7 @@ func (s *Snapshot) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
-	s.Epoch = j.Epoch
+	//s.Epoch = j.Epoch
 	s.Number = j.Number
 	s.Hash = j.Hash
 	s.Votes = j.Votes

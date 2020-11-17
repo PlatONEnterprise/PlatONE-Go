@@ -561,10 +561,10 @@ func (sb *backend) ShouldSeal() bool {
 // Check if the first node of the network is allowed to produce blocks
 func (sb *backend) CheckFirstNodeCommitAtWrongTime() error {
 	block := sb.currentBlock()
-	if block.NumberU64() != 0 || len(sb.config.ValidatorNodes) == 0 {
+	if block.NumberU64() != 0 || sb.config.FirstValidatorNode.ID.String() == "" {
 		return nil
 	}
-	nodeId := sb.config.ValidatorNodes[0].ID.String()
+	nodeId := sb.config.FirstValidatorNode.ID.String()
 	// 1. self is the first node of validatorNodes in genesis
 	// 2. The node startup specifies bootNodes,
 	// 	  and if it is not specified itself, no block generation is performed.

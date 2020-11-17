@@ -38,5 +38,4 @@ var  DefaultConfig = &Config{
 	RequestTimeout: 10000,
 	BlockPeriod:    1,
 	ProposerPolicy: RoundRobin,
-	Epoch:          30000,
 }
