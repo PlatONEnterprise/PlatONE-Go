@@ -27,7 +27,6 @@ import (
 	"time"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/core"
 	"github.com/PlatONEnetwork/PlatONE-Go/eth"
 	"github.com/PlatONEnetwork/PlatONE-Go/internal/jsre"
 	"github.com/PlatONEnetwork/PlatONE-Go/node"
@@ -95,7 +94,7 @@ func newTester(t *testing.T, confOverride func(*eth.Config)) *tester {
 		t.Fatalf("failed to create node: %v", err)
 	}
 	ethConf := &eth.Config{
-		Genesis:   core.DeveloperGenesisBlock(15, common.Address{}),
+		//Genesis:   core.DeveloperGenesisBlock(15, common.Address{}),
 		Etherbase: common.HexToAddress(testAddress),
 	}
 	if confOverride != nil {

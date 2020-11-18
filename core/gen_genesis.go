@@ -17,7 +17,7 @@ var _ = (*genesisSpecMarshaling)(nil)
 // MarshalJSON marshals as JSON.
 func (g Genesis) MarshalJSON() ([]byte, error) {
 	type Genesis struct {
-		Config     *params.ChainConfig                         `json:"config"`
+		Config     *params.ChainConfig                         `json:"config"  gencodec:"required"`
 		Nonce      math.HexOrDecimal64                         `json:"nonce"`
 		Timestamp  math.HexOrDecimal64                         `json:"timestamp"`
 		ExtraData  hexutil.Bytes                               `json:"extraData"`
@@ -50,7 +50,7 @@ func (g Genesis) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON unmarshals from JSON.
 func (g *Genesis) UnmarshalJSON(input []byte) error {
 	type Genesis struct {
-		Config     *params.ChainConfig                         `json:"config"`
+		Config     *params.ChainConfig                         `json:"config"  gencodec:"required"`
 		Nonce      *math.HexOrDecimal64                        `json:"nonce"`
 		Timestamp  *math.HexOrDecimal64                        `json:"timestamp"`
 		ExtraData  *hexutil.Bytes                              `json:"extraData"`
@@ -65,9 +65,10 @@ func (g *Genesis) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &dec); err != nil {
 		return err
 	}
-	if dec.Config != nil {
-		g.Config = dec.Config
+	if dec.Config == nil {
+		return errors.New("missing required field 'config' for Genesis")
 	}
+	g.Config = dec.Config
 	if dec.Nonce != nil {
 		g.Nonce = uint64(*dec.Nonce)
 	}

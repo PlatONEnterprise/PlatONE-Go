@@ -5,7 +5,8 @@
 ### Breaking Changes
 * [system contract] 系统合约重构成预编译合约形式
 * [other] 删除eip，DAO等版本升级的Hard Fork和兼容性检查;
-* [other] 删除Rinkeby，Testnet;删除ChainConfig的EmptyBlock设置;删除Clique config；删除difficulty；删除mixhash
+* [other] 删除Rinkeby，Testnet;删除ChainConfig的EmptyBlock设置;删除Clique；删除difficulty；删除dev模式；
+* [other] 删除默认配置,并重写了genesis初始化逻辑。
 
 ### Improvements
 * [other] 版本管理采用mod模型 - 汤涌，于宗坤，杜满想

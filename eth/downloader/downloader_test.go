@@ -20,7 +20,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
-	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
 	"io/ioutil"
 	"math/big"
 	"sync"

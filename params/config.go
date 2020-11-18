@@ -29,12 +29,6 @@ var (
 )
 
 var (
-	// MainnetChainConfig is the chain parameters to run a node on the main network.
-	MainnetChainConfig = &ChainConfig{
-		ChainID:       big.NewInt(1),
-		VMInterpreter: "wasm",
-	}
-
 	// MainnetTrustedCheckpoint contains the light client trusted checkpoint for the main network.
 	MainnetTrustedCheckpoint = &TrustedCheckpoint{
 		Name:         "mainnet",
@@ -43,15 +37,6 @@ var (
 		CHTRoot:      common.HexToHash("0x5d1027dfae688c77376e842679ceada87fd94738feb9b32ef165473bfbbb317b"),
 		BloomRoot:    common.HexToHash("0xd38be1a06aabd568e10957fee4fcc523bc64996bcf31bae3f55f86e0a583919f"),
 	}
-
-	// AllEthashProtocolChanges contains every protocol change (EIPs) introduced
-	// and accepted by the Ethereum core developers into the Ethash consensus.
-	//
-	// This configuration is intentionally not using keyed fields to force anyone
-	// adding flags to the config to also have to set these fields.
-	AllEthashProtocolChanges = &ChainConfig{big.NewInt(1337), nil, ""}
-
-	TestChainConfig = &ChainConfig{big.NewInt(1), nil, ""}
 )
 
 // TrustedCheckpoint represents a set of post-processed trie roots (CHT and
@@ -95,9 +80,7 @@ type IstanbulConfig struct {
 	RequestTimeout     uint64         `json:"timeout,omitempty"` // The timeout for each Istanbul round in milliseconds.
 	BlockPeriod        uint64         `json:"period,omitempty"`  // Default minimum difference between two consecutive block's timestamps in second
 	ProposerPolicy     ProposerPolicy `json:"policy,omitempty"`  // The policy for proposer selection
-	//Epoch              uint64         `json:"epoch,omitempty"`   // The number of blocks after which to checkpoint and reset the pending votes
 	FirstValidatorNode discover.Node  `json:"firstValidatorNode,omitempty"`
-	//ObserverNodes  []discover.Node `json:"suggestObserverNodes,omitempty"`
 }
 
 // String implements the fmt.Stringer interface.
