@@ -6,7 +6,8 @@ import (
 )
 
 var (
-	sysContractCall func(sc *SystemConfig) = nil
+	paramSysContractConfUpdateFn func(sc *SystemConfig) = nil
+	nodeSysContractConfUpdateFn  func(sc *SystemConfig) = nil
 
 	SystemContractList = []string{
 		"__sys_NodeManager",
@@ -14,8 +15,12 @@ var (
 		"__sys_ParamManager"}
 )
 
-func SetSysContractCallFunc(f func(*SystemConfig)) {
-	sysContractCall = f
+func SetParamSysContractUpdateFunc(f func(*SystemConfig)) {
+	paramSysContractConfUpdateFn = f
+}
+
+func SetNodeSysContractUpdateFunc(f func(*SystemConfig)) {
+	nodeSysContractConfUpdateFn = f
 }
 
 type CommonResult struct {
@@ -92,14 +97,30 @@ func InitSystemconfig(root NodeInfo) {
 }
 
 func (sc *SystemConfig) UpdateSystemConfig() {
+	sc.UpdateParamsSysContractConfig()
+	sc.UpdateNodeSysContractConfig()
+}
+
+func (sc *SystemConfig) UpdateNodeSysContractConfig() {
 	sc.SystemConfigMu.Lock()
 	defer sc.SystemConfigMu.Unlock()
 
-	if sysContractCall == nil {
+	if nodeSysContractConfUpdateFn == nil {
 		return
 	}
 
-	sysContractCall(sc)
+	nodeSysContractConfUpdateFn(sc)
+}
+
+func (sc *SystemConfig) UpdateParamsSysContractConfig() {
+	sc.SystemConfigMu.Lock()
+	defer sc.SystemConfigMu.Unlock()
+
+	if paramSysContractConfUpdateFn == nil {
+		return
+	}
+
+	paramSysContractConfUpdateFn(sc)
 }
 
 func (sc *SystemConfig) IsProduceEmptyBlock() bool {

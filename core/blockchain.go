@@ -20,6 +20,7 @@ package core
 import (
 	"errors"
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 	"io"
 	"math/big"
 	"sync"
@@ -497,9 +498,27 @@ func (bc *BlockChain) insert(block *types.Block) {
 		bc.currentFastBlock.Store(block)
 	}
 
-	// load system contract configure
-	if common.SysCfg != nil {
-		common.SysCfg.UpdateSystemConfig()
+	//load system contract configure
+	UpdateSystemConfig(block)
+}
+
+func UpdateSystemConfig(block *types.Block) {
+	for _, tx := range block.Body().Transactions {
+		//not deploy tx
+		if nil == tx.To() {
+			continue
+		}
+
+		switch tx.To().Hex() {
+		case syscontracts.NodeManagementAddress.Hex():
+			if common.SysCfg != nil {
+				common.SysCfg.UpdateNodeSysContractConfig()
+			}
+		case syscontracts.ParameterManagementAddress.Hex():
+			if common.SysCfg != nil {
+				common.SysCfg.UpdateParamsSysContractConfig()
+			}
+		}
 	}
 }
 
