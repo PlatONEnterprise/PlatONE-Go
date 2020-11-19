@@ -95,3 +95,8 @@ func UpdateNodeSysContractConfig(bc *BlockChain, sysContractConf *common.SystemC
 		p2p.UpdatePeer()
 	}
 }
+
+func UpdateSysContractConfig(bc *BlockChain, sysContractConf *common.SystemConfig) {
+	UpdateParamSysContractConfig(bc, sysContractConf)
+	UpdateNodeSysContractConfig(bc, sysContractConf)
+}

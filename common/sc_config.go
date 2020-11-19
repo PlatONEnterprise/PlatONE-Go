@@ -5,24 +5,6 @@ import (
 	"sync"
 )
 
-var (
-	paramSysContractConfUpdateFn func(sc *SystemConfig) = nil
-	nodeSysContractConfUpdateFn  func(sc *SystemConfig) = nil
-
-	SystemContractList = []string{
-		"__sys_NodeManager",
-		"__sys_UserManager",
-		"__sys_ParamManager"}
-)
-
-func SetParamSysContractUpdateFunc(f func(*SystemConfig)) {
-	paramSysContractConfUpdateFn = f
-}
-
-func SetNodeSysContractUpdateFunc(f func(*SystemConfig)) {
-	nodeSysContractConfUpdateFn = f
-}
-
 type CommonResult struct {
 	RetCode int32      `json:"code"`
 	RetMsg  string     `json:"msg"`
@@ -78,49 +60,6 @@ var SysCfg = &SystemConfig{
 		TxGasLimit:    100000000000000,
 	},
 	ContractAddress: make(map[string]Address),
-}
-
-func InitSystemconfig(root NodeInfo) {
-	SysCfg = &SystemConfig{
-		SystemConfigMu: &sync.RWMutex{},
-		Nodes:          make([]NodeInfo, 0),
-		HighsetNumber:  new(big.Int).SetInt64(0),
-		SysParam: &SystemParameter{
-			BlockGasLimit: 0xffffffffffff,
-			TxGasLimit:    10000000000000,
-		},
-		ContractAddress: make(map[string]Address),
-	}
-	if root.Types == 1 {
-		SysCfg.Nodes = append(SysCfg.Nodes, root)
-	}
-}
-
-func (sc *SystemConfig) UpdateSystemConfig() {
-	sc.UpdateParamsSysContractConfig()
-	sc.UpdateNodeSysContractConfig()
-}
-
-func (sc *SystemConfig) UpdateNodeSysContractConfig() {
-	sc.SystemConfigMu.Lock()
-	defer sc.SystemConfigMu.Unlock()
-
-	if nodeSysContractConfUpdateFn == nil {
-		return
-	}
-
-	nodeSysContractConfUpdateFn(sc)
-}
-
-func (sc *SystemConfig) UpdateParamsSysContractConfig() {
-	sc.SystemConfigMu.Lock()
-	defer sc.SystemConfigMu.Unlock()
-
-	if paramSysContractConfUpdateFn == nil {
-		return
-	}
-
-	paramSysContractConfUpdateFn(sc)
 }
 
 func (sc *SystemConfig) IsProduceEmptyBlock() bool {

@@ -499,10 +499,10 @@ func (bc *BlockChain) insert(block *types.Block) {
 	}
 
 	//load system contract configure
-	UpdateSystemConfig(block)
+	bc.UpdateSystemConfig(block)
 }
 
-func UpdateSystemConfig(block *types.Block) {
+func (bc *BlockChain) UpdateSystemConfig(block *types.Block) {
 	for _, tx := range block.Body().Transactions {
 		//not deploy tx
 		if nil == tx.To() {
@@ -511,13 +511,9 @@ func UpdateSystemConfig(block *types.Block) {
 
 		switch tx.To().Hex() {
 		case syscontracts.NodeManagementAddress.Hex():
-			if common.SysCfg != nil {
-				common.SysCfg.UpdateNodeSysContractConfig()
-			}
+			UpdateNodeSysContractConfig(bc, common.SysCfg)
 		case syscontracts.ParameterManagementAddress.Hex():
-			if common.SysCfg != nil {
-				common.SysCfg.UpdateParamsSysContractConfig()
-			}
+			UpdateParamSysContractConfig(bc, common.SysCfg)
 		}
 	}
 }
@@ -1050,16 +1046,6 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		lastCanon     *types.Block
 		coalescedLogs []*types.Log
 	)
-	// Start the parallel header verifier
-	//headers := make([]*types.Header, len(chain))
-	//seals := make([]bool, len(chain))
-	//
-	//for i, block := range chain {
-	//	headers[i] = block.Header()
-	//	seals[i] = true
-	//}
-	//abort, results := bc.engine.VerifyHeaders(bc, headers, seals)
-	//defer close(abort)
 
 	// Start a parallel signature recovery (signer will fluke on fork transition, minimal perf loss)
 	senderCacher.recoverFromBlocks(types.MakeSigner(bc.chainConfig), chain)
