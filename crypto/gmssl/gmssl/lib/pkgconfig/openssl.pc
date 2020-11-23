@@ -1,0 +1,9 @@
+prefix=/home/gexin/repo/GmSSL/build
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: GmSSL
+Description: Secure Sockets Layer and cryptography libraries and tools
+Version: 2.5.4
+Requires: libssl libcrypto

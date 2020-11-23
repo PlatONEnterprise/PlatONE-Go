@@ -1,0 +1,12 @@
+prefix=/home/gexin/repo/GmSSL/build
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+enginesdir=${libdir}/engines-1.1
+
+Name: GmSSL-libcrypto
+Description: GmSSL cryptography library
+Version: 2.5.4
+Libs: -L${libdir} -lcrypto
+Libs.private: -ldl -static 
+Cflags: -I${includedir}
