@@ -1,17 +1,27 @@
 package main
 
 import (
-	"os/exec"
+	"path/filepath"
 	"regexp"
 )
 
+var (
+	account = ""
+)
+
 func genAccount(datadir string) string {
-	out, err := exec.Command("./platone", "--datadir", datadir, "account new --password ./conf/account.password").Output()
-	if nil != err {
-		panic(err)
+	if !filepath.IsAbs(datadir) {
+		datadir = calcAbsPath(datadir)
 	}
+	password := calcAbsPath("./conf/account.password")
+
+	out := RunCmd(calcAbsPath("platone"), nil,"account", "new", "--password", password, "--datadir", datadir)
 
 	r := regexp.MustCompile(`Address: \{(.*)\}`)
+	acc := r.FindStringSubmatch(string(out))[1]
+	if account == "" {
+		account = acc
+	}
 
-	return r.FindStringSubmatch(string(out))[1]
+	return account
 }

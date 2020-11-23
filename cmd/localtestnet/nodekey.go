@@ -8,40 +8,43 @@ import (
 	"io/ioutil"
 )
 
-var privateKey *ecdsa.PrivateKey
+var bootnode = ""
 
-func getEnode() string {
-	if nil != privateKey {
-		genNodeKey()
-	}
+func PrkToEnode(prk *ecdsa.PrivateKey) string {
+	pubkey := hex.EncodeToString(crypto.FromECDSAPub(&prk.PublicKey)[1:])
 
-	pubkey := hex.EncodeToString(crypto.FromECDSAPub(&privateKey.PublicKey)[1:])
+	return fmt.Sprintf("enode://%s@127.0.0.1:1680", pubkey)
+}
 
-	return fmt.Sprintf("enode://%s:127.0.0.1:1680", pubkey)
+func PrkToHex(prk *ecdsa.PrivateKey) string {
+	return hex.EncodeToString(crypto.FromECDSA(prk))
 }
 
 //return privatekey
-func genNodeKey() string {
-	if nil != privateKey {
-		return hex.EncodeToString(crypto.FromECDSA(privateKey))
-	}
-
-	var err error
+func genNodeKey() *ecdsa.PrivateKey {
 	// generate random.
-	privateKey, err = crypto.GenerateKey()
+	privateKey, err := crypto.GenerateKey()
 	if err != nil {
 		panic(fmt.Errorf("Failed to generate random private key: %w", err))
 	}
 
+	if "" == bootnode {
+		bootnode = PrkToEnode(privateKey)
+	}
 	// Output some information.
 	//	Address:    crypto.PubkeyToAddress(privateKey.PublicKey).Hex(),
 	//	PublicKey:  hex.EncodeToString(crypto.FromECDSAPub(&privateKey.PublicKey)[1:]),
 	//	PrivateKey: hex.EncodeToString(crypto.FromECDSA(privateKey)),
-	return hex.EncodeToString(crypto.FromECDSA(privateKey))
+
+	return privateKey
 }
 
-func genNodeKeyFile(filename string) {
-	if err := ioutil.WriteFile(filename, []byte(genNodeKey()), 0666); nil != err {
+//return privatekey
+func genNodeKeyFile(filename string) *ecdsa.PrivateKey {
+	prk := genNodeKey()
+	if err := ioutil.WriteFile(filename, []byte(PrkToHex(prk)), 0666); nil != err {
 		panic(err)
 	}
+
+	return prk
 }

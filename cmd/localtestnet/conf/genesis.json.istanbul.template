@@ -1,33 +1,17 @@
 {
     "config": {
     "chainId": 300,
-    "homesteadBlock": 1,
-    "eip150Block": 2,
-    "eip150Hash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-    "eip155Block": 3,
-    "eip158Block": 3,
-    "byzantiumBlock": 4,
-    "interpreter": "all",
+    "interpreter": "wasm",
     "istanbul": {
     	"timeout": 10000,
       	"period": 1,
       	"policy": 0,
-      	"epoch": 1000,
-      	"initialNodes": [],
-        "validatorNodes": [""],
-        "suggestObserverNodes": [""]
+      	"firstValidatorNode": "enode://00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000@127.0.0.1:16789"
     }
   },
-  "nonce": "0x0",
   "timestamp": "",
   "extraData": "0x00",
-  "gasLimit": "0xffffffffffff",
-  "difficulty": "0x40000",
-  "mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-  "coinbase": "0x0000000000000000000000000000000000000000",
   "alloc": {
-  },
-  "number": "0x0",
-  "gasUsed": "0x0",
-  "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+  }
 }
+

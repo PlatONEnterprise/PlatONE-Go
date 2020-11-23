@@ -87,14 +87,9 @@ function create_genesis() {
     NODE_KEY=`cat ${NODE_DIR}/node.pubkey`
     default_enode="enode://${NODE_KEY}@${1}:${2}"
     if [[ $VALIDATOR_NODES != "" ]]; then
-         replaceList "__VALIDATORS__" $VALIDATOR_NODES
+         replaceList "__VALIDATOR__" $VALIDATOR_NODES
     else
-         replaceList "__VALIDATORS__" $default_enode
-    fi
-    if [[ $OBSERVE_NODES != "" ]]; then
-         replaceList "__OBSERVES__" $OBSERVE_NODES
-    else
-         replaceList "__OBSERVES__" $default_enode
+         replaceList "__VALIDATOR__" $default_enode
     fi
 
      ${BIN_PATH}/repstr ${CONF_PATH}/genesis.json "DEFAULT-ACCOUNT" 0000000000000000000000000000000000000001
