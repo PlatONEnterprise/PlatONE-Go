@@ -13,7 +13,7 @@ var bootnode = ""
 func PrkToEnode(prk *ecdsa.PrivateKey) string {
 	pubkey := hex.EncodeToString(crypto.FromECDSAPub(&prk.PublicKey)[1:])
 
-	return fmt.Sprintf("enode://%s@127.0.0.1:1680", pubkey)
+	return fmt.Sprintf("enode://%s@127.0.0.1:%d", pubkey, p2pPortBase)
 }
 
 func PrkToHex(prk *ecdsa.PrivateKey) string {

@@ -11,6 +11,7 @@ func main() {
 	app.Name = "pltestnet"
 	app.Commands = cli.Commands{
 		testnetCommand,
+		clearCommand,
 	}
 
 	if err := app.Run(os.Args); err != nil {

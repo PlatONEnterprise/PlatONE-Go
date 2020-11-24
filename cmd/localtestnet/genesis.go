@@ -17,7 +17,7 @@ var (
 )
 
 func initGenesis(conf *startNodeConfig) {
-	RunCmd("platone", nil,"init", genesisFile, "--datadir", conf.DataDir)
+	RunCmd("./platone", "init", genesisFile, "--datadir", conf.DataDir)
 }
 
 func setGenesisFilePath() {

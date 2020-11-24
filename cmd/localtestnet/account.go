@@ -15,7 +15,7 @@ func genAccount(datadir string) string {
 	}
 	password := calcAbsPath("./conf/account.password")
 
-	out := RunCmd(calcAbsPath("platone"), nil,"account", "new", "--password", password, "--datadir", datadir)
+	out := RunCmd(calcAbsPath("platone"), "account", "new", "--password", password, "--datadir", datadir)
 
 	r := regexp.MustCompile(`Address: \{(.*)\}`)
 	acc := r.FindStringSubmatch(string(out))[1]

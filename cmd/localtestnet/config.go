@@ -88,7 +88,7 @@ func (this *startNodeConfig) P2PFlag() string {
 }
 
 func (this *startNodeConfig) RPCFlag() string {
-	return fmt.Sprintf(" --rpc --rpcaddr %s --rpcport %d --rpcapi db,eth,net,web3,admin,personal,txpool,istanbul  ", this.ip, this.WSPort)
+	return fmt.Sprintf(" --rpc --rpcaddr %s --rpcport %d --rpcapi db,eth,net,web3,admin,personal,txpool,istanbul  ", this.ip, this.RPCPort)
 }
 
 func (this *startNodeConfig) WSFlag() string {

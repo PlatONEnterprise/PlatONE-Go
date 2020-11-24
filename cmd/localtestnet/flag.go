@@ -9,19 +9,19 @@ var (
 	RPCPortFlag = cli.IntFlag{
 		Name:  "rpcport",
 		Usage: "HTTP-RPC server listening port",
-		Value: 6780,
+		Value: 6500,
 	}
 
 	P2PPortFlag = cli.IntFlag{
 		Name:  "p2pport",
 		Usage: "P2P network listening port",
-		Value: 16780,
+		Value: 6600,
 	}
 
 	WSPortFlag = cli.IntFlag{
 		Name:  "wsport",
 		Usage: "WS-RPC server listening port",
-		Value: 26780,
+		Value: 6700,
 	}
 	DataDirFlag = cli.StringFlag{
 		Name:  "datadir",

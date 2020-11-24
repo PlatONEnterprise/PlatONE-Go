@@ -16,6 +16,13 @@ func initStartNodeEnv(conf *startNodeConfig) {
 
 	if 0 == conf.index {
 		genAccount(conf.DataDir)
+
+		pid := fmt.Sprintf("%s/pids", dataDirBase)
+		var err error
+		pidFile, err = os.Create(pid)
+		if nil != err {
+			panic(err)
+		}
 	}
 
 	genNodeKeyFile(fmt.Sprintf("%s/%s", conf.DataDir, conf.nodeKeyFile))
@@ -23,6 +30,17 @@ func initStartNodeEnv(conf *startNodeConfig) {
 	//create platone error log
 	var err error
 	if conf.errLogFileHandler, err = os.Create(fmt.Sprintf("%s/%s/platone_error.log", conf.DataDir, conf.logsDir)); nil != err {
+		panic(err)
+	}
+}
+
+var (
+	pidFile *os.File = nil
+)
+
+func savePID(pid int) {
+	_, err := pidFile.WriteString(fmt.Sprintf("%d|", pid))
+	if nil != err {
 		panic(err)
 	}
 }

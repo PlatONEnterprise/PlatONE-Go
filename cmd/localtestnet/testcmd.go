@@ -2,7 +2,6 @@ package main
 
 import (
 	"gopkg.in/urfave/cli.v1"
-	"os"
 	"path/filepath"
 	"strings"
 )
@@ -31,11 +30,8 @@ necessary files (private validator, genesis, config, etc.).`,
 
 func startTestnetChain(ctx *cli.Context) error {
 	parseFlag(ctx)
-
 	if autoClear {
-		if err := os.RemoveAll(dataDirBase); nil != err {
-			panic(err)
-		}
+		clearDataAndKillProcess(dataDirBase)
 	}
 
 	for i := 0; i < nodeNumber; i++ {
@@ -68,5 +64,6 @@ func startNode(conf *startNodeConfig) {
 		}
 	}
 
-	RunCmd("nohup", conf.errLogFileHandler, arg...)
+	pid := StartCmd("nohup", conf.errLogFileHandler, arg...)
+	savePID(pid)
 }
