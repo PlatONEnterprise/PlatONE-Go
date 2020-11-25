@@ -116,7 +116,6 @@ type backend struct {
 	db               ethdb.Database
 	chain            consensus.ChainReader
 	currentBlock     func() *types.Block
-	hasBadBlock      func(hash common.Hash) bool
 	current          *environment
 
 	// the channels for istanbul engine notifications
@@ -434,11 +433,6 @@ func (sb *backend) Verify(proposal istanbul.Proposal, isProposer bool) (time.Dur
 		return 0, errInvalidProposal
 	}
 
-	// check bad block
-	if sb.HasBadProposal(block.Hash()) {
-		return 0, core.ErrBlacklistedHash
-	}
-
 	// check block body
 	txnHash := types.DeriveSha(block.Transactions())
 	//uncleHash := types.CalcUncleHash(block.Uncles())
@@ -533,13 +527,6 @@ func (sb *backend) LastProposal() (istanbul.Proposal, common.Address) {
 
 	// Return header only block here since we don't need block body
 	return block, proposer
-}
-
-func (sb *backend) HasBadProposal(hash common.Hash) bool {
-	if sb.hasBadBlock == nil {
-		return false
-	}
-	return sb.hasBadBlock(hash)
 }
 
 // SealHash returns the hash of a block prior to it being sealed.

@@ -112,7 +112,7 @@ func (in *WASMInterpreter) preCheckFunction(contract *Contract, input []byte, ab
 //
 // It's important to note that any errors returned by the interpreter should be
 // considered a revert-and-consume-all-gas operations except for
-// errExecutionReverted which means revert-and-keep-gas-lfet.
+// errExecutionReverted which means revert-and-keep-gas-left.
 func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (ret []byte, err error) {
 	defer func() {
 		if er := recover(); er != nil {

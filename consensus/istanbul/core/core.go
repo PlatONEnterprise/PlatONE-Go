@@ -83,7 +83,7 @@ type core struct {
 
 	backend               istanbul.Backend
 	events                *event.TypeMuxSubscription
-	msgFeedSub 	          event.Subscription
+	msgFeedSub            event.Subscription
 	msgCh                 chan istanbul.MessageEvent
 	finalCommittedSub     *event.TypeMuxSubscription
 	timeoutSub            *event.TypeMuxSubscription
@@ -275,7 +275,7 @@ func (c *core) startNewRoundWhenEmpty(round *big.Int) {
 	// New snapshot for new round
 	logger.Debug("startNewRound", "roundChange", true)
 	//c.updateRoundState(newView, c.valSet, true)
-	c.current = newRoundState(newView, c.valSet, common.Hash{}, nil, nil, c.backend.HasBadProposal, big.NewInt(0), nil)
+	c.current = newRoundState(newView, c.valSet, common.Hash{}, nil, nil, big.NewInt(0), nil)
 
 	// Calculate new proposer
 	c.valSet.CalcProposer(lastProposer, newView.Round.Uint64())
@@ -393,12 +393,12 @@ func (c *core) updateRoundState(view *istanbul.View, validatorSet istanbul.Valid
 	// Lock only if both roundChange is true and it is locked
 	if roundChange && c.current != nil {
 		if c.current.IsHashLocked() {
-			c.current = newRoundState(view, validatorSet, c.current.GetLockedHash(), c.current.Preprepare, c.current.pendingRequest, c.backend.HasBadProposal, c.current.lockedRound, c.current.lockedPrepares)
+			c.current = newRoundState(view, validatorSet, c.current.GetLockedHash(), c.current.Preprepare, c.current.pendingRequest, c.current.lockedRound, c.current.lockedPrepares)
 		} else {
-			c.current = newRoundState(view, validatorSet, common.Hash{}, nil, c.current.pendingRequest, c.backend.HasBadProposal, big.NewInt(0), nil)
+			c.current = newRoundState(view, validatorSet, common.Hash{}, nil, c.current.pendingRequest, big.NewInt(0), nil)
 		}
 	} else {
-		c.current = newRoundState(view, validatorSet, common.Hash{}, nil, nil, c.backend.HasBadProposal, big.NewInt(0), nil)
+		c.current = newRoundState(view, validatorSet, common.Hash{}, nil, nil, big.NewInt(0), nil)
 	}
 }
 
@@ -446,7 +446,7 @@ func (c *core) newRoundChangeTimerWhenEmpty() {
 	//if round > 0 {
 	//	timeout += time.Duration(math.Pow(1.5, float64(round))) * time.Second
 	//}
-	log.Debug("newRoundChangeTimer", "round", round, "lastResetRound", c.lastResetRound,"timeout", timeout)
+	log.Debug("newRoundChangeTimer", "round", round, "lastResetRound", c.lastResetRound, "timeout", timeout)
 	c.roundChangeTimer = time.AfterFunc(timeout, func() {
 		c.sendEvent(timeoutEvent{})
 	})
@@ -461,15 +461,15 @@ func (c *core) newRoundChangeTimer() {
 	if round > 0 {
 		mul := math.Pow(2, float64(round-c.lastResetRound))
 		maxTimeout := 2 * time.Hour
-		if mul > float64(maxTimeout / timeout){
+		if mul > float64(maxTimeout/timeout) {
 			mul = float64(maxTimeout / timeout)
 		}
 		timeout = time.Duration(mul) * timeout
-	} else{
+	} else {
 		c.lastResetRound = round
 	}
 
-	log.Debug("newRoundChangeTimer", "round", round, "lastResetRound", c.lastResetRound,"timeout", timeout)
+	log.Debug("newRoundChangeTimer", "round", round, "lastResetRound", c.lastResetRound, "timeout", timeout)
 	c.roundChangeTimer = time.AfterFunc(timeout, func() {
 		c.sendEvent(timeoutEvent{})
 	})

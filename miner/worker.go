@@ -290,7 +290,7 @@ func (w *worker) start() {
 	atomic.StoreInt32(&w.running, 1)
 	w.startCh <- struct{}{}
 	if eng, ok := w.engine.(consensus.Istanbul); ok {
-		eng.Start(w.chain, w.chain.CurrentBlock, nil)
+		eng.Start(w.chain, w.chain.CurrentBlock)
 	}
 }
 
