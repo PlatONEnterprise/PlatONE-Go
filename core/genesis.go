@@ -173,7 +173,7 @@ func SetupGenesisBlock(db ethdb.Database, genesis *Genesis) (*params.ChainConfig
 		}
 	}
 
-	log.Warn("Chain already have been initialized.")
+	log.Info("Chain already have been initialized.")
 	return storedcfg, stored, nil
 }
 
