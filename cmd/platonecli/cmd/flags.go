@@ -294,7 +294,33 @@ var (
 		Usage: "Specify the rest server listening port number, e.g. :8000",
 	}
 
-	//=============================================================================
+	// ca
+	KeyFileFlag = cli.StringFlag{
+		Name:"keyfile",
+		Usage: "keyfile for private key, only support PEM format",
+	}
+
+	OutFileFlag = cli.StringFlag{
+		Name: "file",
+		Usage:"file to store the key or certificate",
+	}
+
+	CurveFlag = cli.StringFlag{
+		Name:"curve",
+		Usage: "curve to generate key",
+	}
+
+	TargetFlag = cli.StringFlag{
+		Name:"target",
+		Usage: "private or public or both",
+	}
+
+	FormatFlag = cli.StringFlag{
+		Name:"format",
+		Usage:"PEM or HEX",
+	}
+
+//=============================================================================
 	globalCmdFlags = []cli.Flag{
 		UrlFlags,
 		AccountFlags,
@@ -379,4 +405,13 @@ var (
 
 	// role
 	roleCmdFlags = globalCmdFlags
+
+	// ca
+	CaCmdFlags = []cli.Flag{
+		KeyFileFlag,
+		FormatFlag,
+		OutFileFlag,
+		CurveFlag,
+		TargetFlag,
+	}
 )
