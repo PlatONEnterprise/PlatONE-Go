@@ -344,6 +344,7 @@ func (sb *backend) Finalize(chain consensus.ChainReader, header *types.Header, s
 // seal place on top.
 func (sb *backend) Seal(chain consensus.ChainReader, block *types.Block, sealResultCh chan<- *types.Block, stop <-chan struct{}) (*types.Block, error) {
 	// update the block header timestamp and signature and propose the block to core engine
+	sb.logger.Debug("a backend seal", "block",block,"block",block.Number(),"hash",block.Hash())
 	header := block.Header()
 	number := header.Number.Uint64()
 
@@ -381,6 +382,7 @@ func (sb *backend) Seal(chain consensus.ChainReader, block *types.Block, sealRes
 		sb.sealMu.Unlock()
 	}
 	defer clear()
+	sb.logger.Debug("b backend seal", "block",block,"block",block.Number(),"hash",block.Hash())
 
 	// post block into Istanbul engine
 	go sb.EventMux().Post(istanbul.RequestEvent{

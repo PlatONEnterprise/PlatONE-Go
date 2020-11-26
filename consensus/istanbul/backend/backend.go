@@ -93,7 +93,7 @@ func New(config *params.IstanbulConfig, privateKey *ecdsa.PrivateKey, db ethdb.D
 // ----------------------------------------------------------------------------
 // environment is the engine's current environment and holds all of the current state information.
 type environment struct {
-	signer types.Signer
+	//signer types.Signer
 	block  *types.Block
 
 	state   *state.StateDB // apply state changes here
@@ -347,7 +347,7 @@ func (sb *backend) makeCurrent(parentRoot common.Hash, header *types.Header) err
 	}
 
 	env := &environment{
-		signer:  types.NewEIP155Signer(chain.Config().ChainID),
+		//signer:  types.NewEIP155Signer(chain.Config().ChainID),
 		state:   state,
 		header:  header,
 		gasPool: gp,

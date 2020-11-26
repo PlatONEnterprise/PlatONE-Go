@@ -45,7 +45,7 @@ func (c *core) sendPreprepare(request *istanbul.Request) {
 			preprepare.LockedHash = c.current.lockedHash
 			preprepare.LockedPrepares = c.current.lockedPrepares
 		}
-		logger.Debug("sendPreprepare", "proposal", preprepare.Proposal.Hash())
+		logger.Debug("sendPreprepare", "proposal", preprepare.Proposal.Hash(),"view",preprepare.View.String())
 
 		encodedPreprepare, err := Encode(preprepare)
 		if err != nil {
@@ -135,6 +135,7 @@ func (c *core) handlePreprepare(msg *message, src istanbul.Validator) error {
 			// Either
 			//   1. the locked proposal and the received proposal match
 			//   2. we have no locked proposal
+			c.logger.Debug("received preprepare,","preprepar",preprepare)
 			c.acceptPreprepare(preprepare)
 			c.setState(StatePreprepared)
 			c.sendPrepare()

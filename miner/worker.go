@@ -105,7 +105,6 @@ const (
 // newWorkReq represents a request for new sealing work submitting with relative interrupt notifier.
 type newWorkReq struct {
 	interrupt   *int32
-	noempty     bool
 	timestamp   int64
 	commitBlock *types.Block
 }
@@ -326,12 +325,12 @@ func (w *worker) newWorkLoop(recommit time.Duration) {
 	<-timer.C // discard the initial tick
 
 	// commit aborts in-flight transaction execution with given signal and resubmits a new one.
-	commit := func(noempty bool, s int32, baseBlock *types.Block) {
+	commit := func(s int32, baseBlock *types.Block) {
 		if interrupt != nil {
 			atomic.StoreInt32(interrupt, s)
 		}
 		interrupt = new(int32)
-		w.newWorkCh <- &newWorkReq{interrupt: interrupt, noempty: noempty, timestamp: timestamp, commitBlock: baseBlock}
+		w.newWorkCh <- &newWorkReq{interrupt: interrupt, timestamp: timestamp, commitBlock: baseBlock}
 		timer.Reset(recommit)
 		atomic.StoreInt32(&w.newTxs, 0)
 	}
@@ -372,7 +371,7 @@ func (w *worker) newWorkLoop(recommit time.Duration) {
 		case <-w.startCh:
 			clearPending(w.chain.CurrentBlock().NumberU64())
 			timestamp = time.Now().UnixNano() / 1e6
-			commit(false, commitInterruptNewHead, nil)
+			commit(commitInterruptNewHead, nil)
 
 		case head := <-w.chainHeadCh:
 			clearPending(head.Block.NumberU64())
@@ -395,7 +394,7 @@ func (w *worker) newWorkLoop(recommit time.Duration) {
 			if eng, ok := w.engine.(consensus.Istanbul); ok {
 				if eng.ShouldSeal() {
 					log.Debug("ShouldSeal() -> true")
-					commit(false, commitInterruptResubmit, nil)
+					commit(commitInterruptResubmit, nil)
 					timer.Reset(1000 * time.Millisecond)
 				} else {
 					timer.Reset(100 * time.Millisecond)
@@ -444,7 +443,7 @@ func (w *worker) mainLoop() {
 	for {
 		select {
 		case req := <-w.newWorkCh:
-			w.commitNewWork(req.interrupt, req.noempty, req.timestamp, req.commitBlock)
+			w.commitNewWork(req.interrupt, req.timestamp, req.commitBlock)
 		// System stopped
 		case <-w.exitCh:
 			return
@@ -769,7 +768,7 @@ func (w *worker) commitTransactionsWithHeader(header *types.Header, txs *types.T
 }
 
 // commitNewWork generates several new sealing tasks based on the parent block.
-func (w *worker) commitNewWork(interrupt *int32, noempty bool, timestamp int64, commitBlock *types.Block) {
+func (w *worker) commitNewWork(interrupt *int32, timestamp int64, commitBlock *types.Block) {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
 
@@ -824,12 +823,6 @@ func (w *worker) commitNewWork(interrupt *int32, noempty bool, timestamp int64, 
 	if err != nil {
 		log.Error("Failed to create mining context", "err", err)
 		return
-	}
-
-	if !noempty {
-		// Create an empty block based on temporary copied state for sealing in advance without waiting block
-		// execution finished.
-		w.commit(nil, false, tstart)
 	}
 
 	// Fill the block with all available pending transactions.
