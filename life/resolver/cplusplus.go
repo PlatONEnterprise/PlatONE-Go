@@ -9,8 +9,8 @@ package resolver
 #cgo CXXFLAGS: -std=c++14
 #include "printqf.h"
 #include "print128.h"
-#cgo LDFLAGS: -L ./sig/ -lsig -lcrypto -lssl -ldl -lpthread
-#include "./sig/sig.h"
+#cgo LDFLAGS: -L ../../crypto/gmssl/gmssl/lib   -lsig -lcrypto -lssl -ldl -lpthread
+#include "../../crypto/gmssl/sig.h"
 */
 import "C"
 

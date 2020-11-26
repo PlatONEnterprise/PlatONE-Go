@@ -1,3 +1,0 @@
-
-SOURCE[../fips]=fipsprov.c selftest.c
-INCLUDE[../fips]=../implementations/include ../common/include
