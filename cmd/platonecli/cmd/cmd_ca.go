@@ -1,22 +1,24 @@
 package cmd
 
 import (
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto/gmssl"
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto/gmssl"
 	"gopkg.in/urfave/cli.v1"
 	"io/ioutil"
 	"os"
+	"strings"
 )
 var (
 	CaCmd = cli.Command{
-		Name:      "account",
-		Usage:     "Manage accounts",
+		Name:      "ca",
+		Usage:     "Manage CA",
 		ArgsUsage: "",
-		Category:  "account",
+		Category:  "CA management",
 		Description: `
 	`,
 		Subcommands: []cli.Command{
 			KeyGenerateCmd,
+
 		},
 	}
 
@@ -40,16 +42,89 @@ func parseFlags (c *cli.Context) (string, string, string, string, string){
 
 	return curve, file,target, format, keyfile
 }
+func readFromFile(keyfile string) string {
+	res, err := ioutil.ReadFile(keyfile)
+	if err != nil {
+		fmt.Println("read fail", err)
+	}
+	return string(res)
+}
 
-func generateKey(c *cli.Context) {
-	curve, file,target, format, _ := parseFlags(c)
+func generateKeyPair(curve, file, format string){
+	privatefile := "private-" + file
+	publicfile := "public-" + file
+	generatePrivateKey(curve, privatefile, format)
+	generatePublicKey(publicfile, format, privatefile)
+}
+func generatePublicKey(file, format, keyfile string)  {
+	if keyfile == "" {
+		panic("need private key")
+	}else {
+		if !strings.HasSuffix(keyfile, "PEM"){
+			panic("private invalid")
+		}else {
+			privateString := readFromFile(keyfile)
+			privateKey, err := gmssl.NewPrivateKeyFromPEM(privateString)
+			if nil != err {
+				panic(err)
+			}
+			switch format {
+			case "HEX":
+				public, err :=privateKey.GetPublicKeyHex()
+				if nil != err {
+					panic(err)
+				}
+				if file == "" {
+					fmt.Println(public)
+				}else {
+					ioutil.WriteFile(file, []byte(public), os.ModeCharDevice)
+				}
+			case "PEM":
+				if !strings.HasSuffix(file, "PEM"){
+					panic(err)
+				}else {
+					public, err :=privateKey.GetPublicKeyPEM()
+					if nil != err {
+						panic(err)
+					}
+					if file == "" {
+						fmt.Println(public)
+					}else {
+						ioutil.WriteFile(file, []byte(public), os.ModeCharDevice)
+					}
+				}
+			case "TXT":
+				public, err :=privateKey.GetPublicKeyPEM()
+				if nil != err {
+					panic(err)
+				}
+				publicKey, err := gmssl.NewPublicKeyFromPEM(public)
+				if nil != err {
+					panic(err)
+				}
+				result, err := publicKey.GetText()
+				if nil != err {
+					panic(err)
+				}
+				if file == "" {
+					fmt.Println(result)
+				}else {
+					ioutil.WriteFile(file, []byte(result), os.ModeCharDevice)
+				}
 
+
+			}
+		}
+	}
+}
+
+func generatePrivateKey(curve, file, format string)  {
 	prv, err := gmssl.GenerateECPrivateKey(curve)
 	if err != nil{
 		panic(err)
 	}
 
-	if format == "PEM" && target == "private" {
+	if format == "PEM" {
 		pem, err := prv.GetPEM()
 		if err != nil {
 			panic(err)
@@ -62,5 +137,20 @@ func generateKey(c *cli.Context) {
 		}
 	}
 }
+
+func generateKey(c *cli.Context) {
+	curve, file,target, format, keyfile := parseFlags(c)
+	switch target {
+	case "public":
+			generatePublicKey(file, format, keyfile)
+	case "private":
+			generatePrivateKey(curve, file, format )
+	case "both":
+			generateKeyPair(curve, file, format)
+
+	}
+}
+
+
 
 
