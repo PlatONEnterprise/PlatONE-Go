@@ -22,7 +22,7 @@ var (
 		},
 	}
 
-KeyGenerateCmd = cli.Command{
+	KeyGenerateCmd = cli.Command{
 		Name:      "generateKey",
 		Usage:     "generateKey",
 		ArgsUsage: "--file <output> --curve <curve> --target <target> --format <format>",
@@ -31,16 +31,27 @@ KeyGenerateCmd = cli.Command{
 		Description: `
 		platonecli ca generateKey`,
 	}
+	CSRGenerateCmd = cli.Command{
+		Name:      "generateCSR",
+		Usage:     "generateCSR",
+		ArgsUsage: "--file <output> --curve <curve> --target <target> --format <format>",
+		Action:    generateCSR,
+		Flags:     CaCmdFlags,
+		Description: `
+		platonecli ca generateCSR`,
+	}
 )
 
-func parseFlags (c *cli.Context) (string, string, string, string, string){
+func parseFlags (c *cli.Context) (string, string, string, string, string, string, string, string){
 	curve := c.String(CurveFlag.Name)
 	file := c.String(OutFileFlag.Name)
 	target := c.String(TargetFlag.Name)
 	format := c.String(FormatFlag.Name)
 	keyfile := c.String(KeyFileFlag.Name)
-
-	return curve, file,target, format, keyfile
+	organization := c.String(OrganizationFlags.Name)
+	commonName := c.String(CommonNameFlag.Name)
+	signatureAlg := c.String(SignatureAlgFlag.Name)
+	return curve, file,target, format, keyfile, organization, commonName, signatureAlg
 }
 func readFromFile(keyfile string) string {
 	res, err := ioutil.ReadFile(keyfile)
@@ -139,7 +150,7 @@ func generatePrivateKey(curve, file, format string)  {
 }
 
 func generateKey(c *cli.Context) {
-	curve, file,target, format, keyfile := parseFlags(c)
+	curve, file,target, format, keyfile, _, _, _ := parseFlags(c)
 	switch target {
 	case "public":
 			generatePublicKey(file, format, keyfile)
@@ -151,6 +162,29 @@ func generateKey(c *cli.Context) {
 	}
 }
 
+func generateCSR(c *cli.Context) {
+	_, file, _, _, keyfile, organization, commonName, signatureAlg := parseFlags(c)
+	generateCsr(file, keyfile, organization, commonName, signatureAlg)
+}
 
-
+func generateCsr(file, keyfile, organization, commonName, signatureAlg string){
+	privateString := readFromFile(keyfile)
+	privateKey, err := gmssl.NewPrivateKeyFromPEM(privateString)
+	if nil != err {
+		panic(err)
+	}
+	csr, err := gmssl.CreateCertRequest(privateKey, signatureAlg, organization, commonName)
+	if nil != err {
+		panic(err)
+	}
+	res, err := csr.GetPEM()
+	if nil != err {
+		panic(err)
+	}
+	if file == "" {
+		fmt.Println(csr)
+	}else {
+		ioutil.WriteFile(file, []byte(res), os.ModeCharDevice)
+	}
+}
 

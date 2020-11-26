@@ -320,7 +320,25 @@ var (
 		Usage:"PEM or HEX",
 	}
 
-//=============================================================================
+	CAOrganizationFlag = cli.StringFlag{
+		Name:"organization",
+		Usage:"organization",
+	}
+
+	CommonNameFlag = cli.StringFlag{
+		Name:"commonName",
+		Usage:"commonName",
+	}
+
+	SignatureAlgFlag = cli.StringFlag{
+		Name:"signatureAlg",
+		Usage:"sm3 or SHA256",
+	}
+
+
+
+
+	//=============================================================================
 	globalCmdFlags = []cli.Flag{
 		UrlFlags,
 		AccountFlags,
@@ -413,5 +431,8 @@ var (
 		OutFileFlag,
 		CurveFlag,
 		TargetFlag,
+		CAOrganizationFlag,
+		CommonNameFlag,
+		SignatureAlgFlag,
 	}
 )

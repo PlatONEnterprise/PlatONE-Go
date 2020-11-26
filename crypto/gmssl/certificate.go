@@ -31,6 +31,10 @@ func (cert *Certifacate) GetPEM() (string, error) {
 	return cert.cert.GetPEM()
 }
 
+func (req *CertificateRequest) GetPEM() (string, error) {
+	return req.req.GetPEM()
+}
+
 func NewCertificateFromPEM(pem string) (*Certifacate, error){
 	cert, err := gmssl.NewCertificateFromPEM(pem,"")
 	if err != nil{
