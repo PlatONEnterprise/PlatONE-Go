@@ -46,7 +46,6 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /* +build cgo */
-
 package gmssl
 
 /*

@@ -19,8 +19,8 @@ func CreateCerficate(pkey *PrivateKey,pub *PublicKey, digestAlg string,serialNum
 	return &Certifacate{cert:cert}, nil
 }
 
-func CreateCertificateForReq(prv *PrivateKey, req *CertificateRequest, digestAlg string, serialNumber int64) (*Certifacate, error){
-	cert, err := gmssl.CreateCertificateForReq(prv.sk,req.req, digestAlg, serialNumber)
+func CreateCertificateForReq(prv *PrivateKey, req *CertificateRequest, ca *Certifacate, digestAlg string, serialNumber int64) (*Certifacate, error){
+	cert, err := gmssl.CreateCertificateForReq(prv.sk,req.req, ca.cert,digestAlg, serialNumber)
 	if err != nil{
 		return nil, err
 	}
@@ -55,3 +55,4 @@ func NewCertRequestFromPEM(pem string) (*CertificateRequest, error){
 	}
 	return &CertificateRequest{req}, nil
 }
+

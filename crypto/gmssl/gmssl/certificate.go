@@ -63,6 +63,7 @@ package gmssl
 #include <openssl/engine.h>
 #include <openssl/objects.h>
 #include <openssl/opensslconf.h>
+#include <openssl/x509v3.h>
 
 extern long _BIO_get_mem_data(BIO *b, char **pp);
 extern void _OPENSSL_free(void *addr);
@@ -188,7 +189,7 @@ func CreateCertRequest(prv *PrivateKey, digestAlg string,orgnizationName, common
 
 	return &CertificateRequest{req:req}, nil
 }
-func CreateCertificateForReq(prv *PrivateKey, req *CertificateRequest, digestAlg string, serialNumber int64) (*Certificate, error) {
+func CreateCertificateForReq(prv *PrivateKey, req *CertificateRequest, ca *Certificate, digestAlg string, serialNumber int64) (*Certificate, error) {
 	var (
 		x509ss *C.X509
 	)
@@ -213,8 +214,11 @@ func CreateCertificateForReq(prv *PrivateKey, req *CertificateRequest, digestAlg
 	C.X509_set_pubkey(x509ss, pub);
 
 	var name *C.X509_NAME
-	name = C.X509_REQ_get_subject_name(req.req);
-	C.X509_set_issuer_name(x509ss, name);
+	name = C.X509_REQ_get_subject_name(req.req)
+	C.X509_set_subject_name(x509ss, name)
+
+	caName :=  C.X509_get_subject_name(ca.x509);
+	C.X509_set_issuer_name(x509ss, caName);
 
 	var md *C.EVP_MD
 	switch digestAlg {
@@ -283,16 +287,17 @@ func CreateCertificate(prv *PrivateKey, pub *PublicKey, digestAlg string,serialN
 func NewCertificateFromPEM(pem string, pass string) (*Certificate, error) {
 	cpem := C.CString(pem)
 	defer C.free(unsafe.Pointer(cpem))
-	cpass := C.CString(pass)
-	defer C.free(unsafe.Pointer(cpass))
+	//cpass := C.CString(pass)
+	//defer C.free(unsafe.Pointer(cpass))
 
-	bio := C.BIO_new(C.BIO_s_mem())
+	bio := C.BIO_new_mem_buf(unsafe.Pointer(cpem), -1)
 	if bio == nil {
 		return nil, GetErrors()
 	}
 	defer C.BIO_free(bio)
 
-	x509 := C.PEM_read_bio_X509(bio, nil, nil, unsafe.Pointer(cpass))
+	//x509 := C.PEM_read_bio_X509(bio, nil, nil, unsafe.Pointer(cpass))
+	x509 := C.PEM_read_bio_X509(bio, nil, nil, nil)
 	if x509 == nil {
 		return nil, GetErrors()
 	}
@@ -407,6 +412,31 @@ func (cert *Certificate) CheckPrivateKey(skey *PrivateKey) error {
 	return nil
 }
 
-func Verify(parent, child *Certificate) bool{
-	return true
+
+// FIXME: 验证证书本应使用X509_verify_cert()，但是此方法在cgo调用时会出现dso报错，因此使用对比证书验证签名的方式验证
+func VerifyCertificate(parent, cert *Certificate) (bool, error){
+
+	// TODO: 时间周期
+
+	// compare subject
+	subj0, err := parent.GetSubject()
+	if err != nil{
+		return false, err
+	}
+	subj1, err := cert.GetIssuer()
+	if err != nil{
+		return false, err
+	}
+	if subj0 != subj1 {
+		return false, nil
+	}
+
+	// verify signature
+	pk := C.X509_get_pubkey(parent.x509)
+	i := C.X509_verify(cert.x509, pk)
+	if i != 1 {
+		return false, GetErrors()
+	}
+
+	return true, nil
 }
