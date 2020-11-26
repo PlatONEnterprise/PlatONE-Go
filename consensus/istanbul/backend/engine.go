@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"crypto/ecdsa"
 	"errors"
+	"fmt"
 	"math/big"
 	"time"
 
@@ -400,7 +401,7 @@ func (sb *backend) Prepare(chain consensus.ChainReader, header *types.Header) er
 // Note, the block header and state database might be updated to reflect any
 // consensus rules that happen at finalization (e.g. block rewards).
 func (sb *backend) Finalize(chain consensus.ChainReader, header *types.Header, state *state.StateDB, txs []*types.Transaction, receipts []*types.Receipt) (*types.Block, error) {
-	//log.Error(fmt.Errorf("root before:%x", header.Root).Error())
+	log.Debug(fmt.Errorf("root before:%x", header.Root).Error())
 	// vrf election
 	scNode := vm.NewSCNode(state)
 	scNode.SetBlockNumber(header.Number)
@@ -409,7 +410,7 @@ func (sb *backend) Finalize(chain consensus.ChainReader, header *types.Header, s
 		return nil, err
 	}
 	header.Root = state.IntermediateRoot(true)
-	//log.Error(fmt.Errorf("root after:%x", header.Root).Error())
+	log.Debug(fmt.Errorf("root after:%x", header.Root).Error())
 	// Assemble and return the final block for sealing
 	return types.NewBlock(header, txs, receipts), nil
 }
