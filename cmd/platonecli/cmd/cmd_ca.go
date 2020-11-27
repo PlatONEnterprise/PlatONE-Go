@@ -62,10 +62,17 @@ func parseFlags (c *cli.Context) (string, string, string, string, string, string
 	keyfile := c.String(KeyFileFlag.Name)
 	organization := c.String(OrganizationFlags.Name)
 	commonName := c.String(CommonNameFlag.Name)
-	serialNumber, err := strconv.ParseInt(c.String(SerialNumberFlag.Name), 10, 64)
-	if nil!=err {
-		panic(err)
+	var serialNumber int64
+	var err error
+	if c.String(SerialNumberFlag.Name) != ""{
+		serialNumber, err = strconv.ParseInt(c.String(SerialNumberFlag.Name), 10, 64)
+		if nil != err {
+			panic(err)
+		}
+	}else {
+		serialNumber = -1
 	}
+
 	signatureAlg := c.String(SignatureAlgFlag.Name)
 	return curve, file,target, format, keyfile, organization, commonName, serialNumber, signatureAlg
 }
@@ -221,6 +228,10 @@ func generateSelfSignCA(file, keyfile, organization, commonName, signatureAlg st
 		panic(err)
 	}
 	publicKey := privateKey.GetPublicKey()
+	if serialNumber == -1 {
+		panic("serialNumber must > 0")
+	}
+
 	selfCA, err := gmssl.CreateCerficate(privateKey, publicKey, signatureAlg, serialNumber, organization, commonName)
 	if nil != err {
 		panic(err)
