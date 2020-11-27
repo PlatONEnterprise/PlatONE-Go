@@ -122,7 +122,7 @@ func TestGenerateKeyPair(t *testing.T) {
 		//wantErr bool
 	}{
 		// TODO: Add test cases.
-		{args:args{"SM2", "key1.PEM", "PEM"}},
+		{args:args{"SM2", "key111.PEM", "PEM"}},
 		//{args:args{"secp256k1"}},
 	}
 	for _, tt := range tests {

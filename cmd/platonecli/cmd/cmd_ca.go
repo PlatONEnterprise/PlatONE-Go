@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"syscall"
 )
 var (
 	CaCmd = cli.Command{
@@ -97,6 +98,8 @@ func generatePublicKey(file, format, keyfile string)  {
 		if !strings.HasSuffix(keyfile, "PEM"){
 			panic("private invalid")
 		}else {
+			syscall.Umask(0)
+			os.Chmod(keyfile, 0666)
 			privateString := readFromFile(keyfile)
 			privateKey, err := gmssl.NewPrivateKeyFromPEM(privateString)
 			if nil != err {
@@ -177,14 +180,16 @@ func generatePrivateKey(curve, file, format string)  {
 }
 
 func generateKey(c *cli.Context) {
-	curve, file,target, format, keyfile, _, _, _, _ := parseFlags(c)
+	curve, file, target, format, keyfile, _, _, _, _ := parseFlags(c)
 	switch target {
 	case "public":
 			generatePublicKey(file, format, keyfile)
 	case "private":
 			generatePrivateKey(curve, file, format )
-	case "both":
+	case "pair":
 			generateKeyPair(curve, file, format)
+	default:
+		panic("param invalid")
 
 	}
 }
@@ -195,6 +200,8 @@ func generateCSR(c *cli.Context) {
 }
 
 func generateCsr(file, keyfile, organization, commonName, signatureAlg string){
+	syscall.Umask(0)
+	os.Chmod(keyfile, 0666)
 	privateString := readFromFile(keyfile)
 	privateKey, err := gmssl.NewPrivateKeyFromPEM(privateString)
 	if nil != err {
@@ -222,6 +229,8 @@ func genSelfSignCA(c *cli.Context) {
 }
 
 func generateSelfSignCA(file, keyfile, organization, commonName, signatureAlg string, serialNumber int64) {
+	syscall.Umask(0)
+	os.Chmod(keyfile, 0666)
 	privateString := readFromFile(keyfile)
 	privateKey, err := gmssl.NewPrivateKeyFromPEM(privateString)
 	if nil != err {
