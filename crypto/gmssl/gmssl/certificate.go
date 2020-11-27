@@ -127,7 +127,7 @@ func NewCertRequestFromPEM(pem string) (*CertificateRequest, error){
 	cpem := C.CString(pem)
 	defer C.free(unsafe.Pointer(cpem))
 
-	bio := C.BIO_new(C.BIO_s_mem())
+	bio := C.BIO_new_mem_buf(unsafe.Pointer(cpem), -1)
 	if bio == nil {
 		return nil, GetErrors()
 	}

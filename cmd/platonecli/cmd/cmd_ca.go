@@ -5,7 +5,6 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto/gmssl"
 	"gopkg.in/urfave/cli.v1"
 	"io/ioutil"
-	"os"
 	"strconv"
 	"strings"
 )
@@ -21,6 +20,8 @@ var (
 			KeyGenerateCmd,
 			CSRGenerateCmd,
 			SelfCAGenerateCmd,
+			CaCreateCmd,
+			CaVerfyCmd,
 		},
 	}
 
@@ -52,9 +53,29 @@ var (
 		Description: `
 		platonecli ca genSelfSignCA`,
 	}
+
+	CaCreateCmd = cli.Command{
+		Name:      "create",
+		Usage:     "create",
+		ArgsUsage: "--file <file> --keyfile <keyfile> --organization <organization> --commonName <commonName> -- serialNumber <serialNumber> --signatureAlg <signatureAlg>",
+		Action:    generateCA,
+		Flags:     CaCmdFlags,
+		Description: `
+		platonecli ca create`,
+	}
+
+	CaVerfyCmd = cli.Command{
+		Name:      "verify",
+		Usage:     "verfiy",
+		ArgsUsage: "--file <file> --keyfile <keyfile> --organization <organization> --commonName <commonName> -- serialNumber <serialNumber> --signatureAlg <signatureAlg>",
+		Action:    verifyCa,
+		Flags:     CaCmdFlags,
+		Description: `
+		platonecli ca verify`,
+	}
 )
 
-func parseFlags (c *cli.Context) (string, string, string, string, string, string, string, int64, string){
+func parseFlags (c *cli.Context) (string, string, string, string, string, string, string, string, string,string,int64, string){
 	curve := c.String(CurveFlag.Name)
 	file := c.String(OutFileFlag.Name)
 	target := c.String(TargetFlag.Name)
@@ -62,19 +83,41 @@ func parseFlags (c *cli.Context) (string, string, string, string, string, string
 	keyfile := c.String(KeyFileFlag.Name)
 	organization := c.String(OrganizationFlags.Name)
 	commonName := c.String(CommonNameFlag.Name)
-	serialNumber, err := strconv.ParseInt(c.String(SerialNumberFlag.Name), 10, 64)
-	if nil!=err {
-		panic(err)
+	csr := c.String(CsrFileFlag.Name)
+	ca  := c.String(CaFileFlag.Name)
+	cert := c.String(CertFileFlag.Name)
+
+	serialNumberStr := c.String(SerialNumberFlag.Name)
+	serialNumber := int64(-1)
+	if serialNumberStr != ""{
+		var err error
+		serialNumber, err = strconv.ParseInt(serialNumberStr, 10, 64)
+		if nil!=err {
+			panic(err)
+		}
 	}
+
 	signatureAlg := c.String(SignatureAlgFlag.Name)
-	return curve, file,target, format, keyfile, organization, commonName, serialNumber, signatureAlg
+	return curve, file,target, format, keyfile, organization, commonName, csr, ca, cert,serialNumber, signatureAlg
 }
+
 func readFromFile(keyfile string) string {
 	res, err := ioutil.ReadFile(keyfile)
 	if err != nil {
 		fmt.Println("read fail", err)
 	}
 	return string(res)
+}
+
+func writeToFile(outfile ,content string) {
+	if outfile == "" {
+		fmt.Println(content)
+	} else {
+		err := ioutil.WriteFile(outfile, []byte(content), 0666)
+		if err != nil {
+			panic(err)
+		}
+	}
 }
 
 func generateKeyPair(curve, file, format string){
@@ -101,12 +144,7 @@ func generatePublicKey(file, format, keyfile string)  {
 				if nil != err {
 					panic(err)
 				}
-				if file == "" {
-					fmt.Println(public)
-				}else {
-					fmt.Println(public)
-					ioutil.WriteFile(file, []byte(public), os.ModeCharDevice)
-				}
+				writeToFile(file, public)
 			case "PEM":
 				if !strings.HasSuffix(file, "PEM"){
 					panic(err)
@@ -115,12 +153,7 @@ func generatePublicKey(file, format, keyfile string)  {
 					if nil != err {
 						panic(err)
 					}
-					if file == "" {
-						fmt.Println(public)
-					}else {
-						fmt.Println(public)
-						ioutil.WriteFile(file, []byte(public), os.ModeCharDevice)
-					}
+					writeToFile(file, public)
 				}
 			case "TXT":
 				public, err :=privateKey.GetPublicKeyPEM()
@@ -135,14 +168,7 @@ func generatePublicKey(file, format, keyfile string)  {
 				if nil != err {
 					panic(err)
 				}
-				if file == "" {
-					fmt.Println(result)
-				}else {
-					fmt.Println(result)
-					ioutil.WriteFile(file, []byte(result), os.ModeCharDevice)
-				}
-
-
+				writeToFile(file, result)
 			}
 		}
 	}
@@ -160,17 +186,12 @@ func generatePrivateKey(curve, file, format string)  {
 			panic(err)
 		}
 
-		if file == "" {
-			fmt.Println(pem)
-		}else {
-			fmt.Println(pem)
-			ioutil.WriteFile(file, []byte(pem), os.ModeCharDevice)
-		}
+		writeToFile(file, pem)
 	}
 }
 
 func generateKey(c *cli.Context) {
-	curve, file,target, format, keyfile, _, _, _, _ := parseFlags(c)
+	curve, file,target, format, keyfile, _, _, _,_,_,_, _ := parseFlags(c)
 	switch target {
 	case "public":
 			generatePublicKey(file, format, keyfile)
@@ -178,12 +199,11 @@ func generateKey(c *cli.Context) {
 			generatePrivateKey(curve, file, format )
 	case "both":
 			generateKeyPair(curve, file, format)
-
 	}
 }
 
 func generateCSR(c *cli.Context) {
-	_, file, _, _, keyfile, organization, commonName,_, signatureAlg := parseFlags(c)
+	_, file, _, _, keyfile, organization, commonName,_,_,_,_, signatureAlg := parseFlags(c)
 	generateCsr(file, keyfile, organization, commonName, signatureAlg)
 }
 
@@ -201,16 +221,11 @@ func generateCsr(file, keyfile, organization, commonName, signatureAlg string){
 	if nil != err {
 		panic(err)
 	}
-	if file == "" {
-		fmt.Println(res)
-	}else {
-		fmt.Println(res)
-		ioutil.WriteFile(file, []byte(res), os.ModeCharDevice)
-	}
+	writeToFile(file, res)
 }
 
 func genSelfSignCA(c *cli.Context) {
-	_, file, _, _, keyfile, organization, commonName, serialNumber, signatureAlg := parseFlags(c)
+	_, file, _, _, keyfile, organization, commonName, _,_,_,serialNumber, signatureAlg := parseFlags(c)
 	generateSelfSignCA(file, keyfile, organization, commonName, signatureAlg, serialNumber)
 }
 
@@ -229,12 +244,72 @@ func generateSelfSignCA(file, keyfile, organization, commonName, signatureAlg st
 	if nil != err {
 		panic(err)
 	}
-	if file == "" {
-		fmt.Println(res)
+	writeToFile(file, res)
+}
+
+func generateCA(c *cli.Context) {
+	_, outfile, _, _, keyfile, _, _, csrfile, cafile,_,serialNumber, alg := parseFlags(c)
+	generateCAForCRS(outfile, keyfile, csrfile, cafile, serialNumber, alg)
+}
+
+func generateCAForCRS(outfile string, keyfile string, csrfile string, cafile string, serialNumber int64, alg string) {
+	caPEM := readFromFile(cafile)
+	csrPEM := readFromFile(csrfile)
+	keyPEM := readFromFile(keyfile)
+
+	ca, err := gmssl.NewCertificateFromPEM(caPEM)
+	if err != nil{
+		panic(err)
+	}
+
+	csr, err := gmssl.NewCertRequestFromPEM(csrPEM)
+	if err != nil{
+		fmt.Println("NewCertRequestFromPEM FAILED")
+		panic(err)
+	}
+
+	prv, err := gmssl.NewPrivateKeyFromPEM(keyPEM)
+
+	cert, err := gmssl.CreateCertificateForReq(prv, csr, ca, alg, serialNumber)
+	if err != nil{
+		panic(err)
+	}
+
+	certPEM, err := cert.GetPEM()
+	if err != nil{
+		panic(err)
+	}
+
+	writeToFile(outfile, certPEM)
+}
+
+func verifyCa(c *cli.Context) {
+	_, _, _, _, _, _, _, _, cafile, certfile,_, _ := parseFlags(c)
+	verify(cafile, certfile)
+}
+
+func verify(cafile , certfile string) {
+	caPEM := readFromFile(cafile)
+	ca, err := gmssl.NewCertificateFromPEM(caPEM)
+	if err != nil{
+		panic(err)
+	}
+
+	certPEM := readFromFile(cafile)
+	cert, err := gmssl.NewCertificateFromPEM(certPEM)
+	if err != nil{
+		panic(err)
+	}
+
+	ret, err := gmssl.Verify(ca, cert)
+
+	if !ret {
+		fmt.Println("verify failed!")
+		if err != nil {
+			fmt.Println(err)
+		}
 	}else {
-		fmt.Println(res)
-		ioutil.WriteFile(file, []byte(res), os.ModeCharDevice)
+		fmt.Println("verify success!")
 	}
 }
 
-//func generateCA(c *cli.Context)

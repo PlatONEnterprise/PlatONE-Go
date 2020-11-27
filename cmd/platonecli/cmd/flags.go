@@ -340,8 +340,20 @@ var (
 		Usage:"sm3 or SHA256",
 	}
 
+	CsrFileFlag = cli.StringFlag{
+		Name:"csr",
+		Usage:"csr file",
+	}
 
+	CaFileFlag = cli.StringFlag{
+		Name:"ca",
+		Usage:"ca file",
+	}
 
+	CertFileFlag = cli.StringFlag{
+		Name:"cert",
+		Usage:"cert file",
+	}
 
 	//=============================================================================
 	globalCmdFlags = []cli.Flag{
@@ -440,5 +452,8 @@ var (
 		CommonNameFlag,
 		SignatureAlgFlag,
 		SerialNumberFlag,
+		CsrFileFlag,
+		CaFileFlag,
+		CertFileFlag,
 	}
 )

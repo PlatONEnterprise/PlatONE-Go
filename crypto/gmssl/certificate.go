@@ -60,3 +60,7 @@ func NewCertRequestFromPEM(pem string) (*CertificateRequest, error){
 	return &CertificateRequest{req}, nil
 }
 
+func Verify(ca, cert *Certifacate) (bool, error) {
+	return gmssl.VerifyCertificate(ca.cert, cert.cert)
+}
+

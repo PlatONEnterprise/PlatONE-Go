@@ -29,7 +29,7 @@ func init() {
 		cmd.RoleCmd,      // see cmd_role.go
 		cmd.NodeCmd,      // see cmd_node.go
 		cmd.SysConfigCmd, // see cmd_sysconfig.go
-
+		cmd.CaCmd,
 		StartRest, // see rest
 	}
 	sort.Sort(cli.CommandsByName(app.Commands))
