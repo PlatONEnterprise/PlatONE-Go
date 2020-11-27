@@ -330,6 +330,11 @@ var (
 		Usage:"commonName",
 	}
 
+	SerialNumberFlag = cli.StringFlag{
+		Name:"serialNumber",
+		Usage:"uint32",
+	}
+
 	SignatureAlgFlag = cli.StringFlag{
 		Name:"signatureAlg",
 		Usage:"sm3 or SHA256",
@@ -434,5 +439,6 @@ var (
 		CAOrganizationFlag,
 		CommonNameFlag,
 		SignatureAlgFlag,
+		SerialNumberFlag,
 	}
 )

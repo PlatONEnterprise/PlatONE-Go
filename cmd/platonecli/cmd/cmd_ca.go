@@ -6,6 +6,7 @@ import (
 	"gopkg.in/urfave/cli.v1"
 	"io/ioutil"
 	"os"
+	"strconv"
 	"strings"
 )
 var (
@@ -18,7 +19,8 @@ var (
 	`,
 		Subcommands: []cli.Command{
 			KeyGenerateCmd,
-
+			CSRGenerateCmd,
+			SelfCAGenerateCmd,
 		},
 	}
 
@@ -34,15 +36,25 @@ var (
 	CSRGenerateCmd = cli.Command{
 		Name:      "generateCSR",
 		Usage:     "generateCSR",
-		ArgsUsage: "--file <output> --curve <curve> --target <target> --format <format>",
+		ArgsUsage: "--file <file> --keyfile <keyfile> --organization <organization> --commonName <commonName> --signatureAlg <signatureAlg>",
 		Action:    generateCSR,
 		Flags:     CaCmdFlags,
 		Description: `
 		platonecli ca generateCSR`,
 	}
+
+	SelfCAGenerateCmd = cli.Command{
+		Name:      "genSelfSignCA",
+		Usage:     "genSelfSignCA",
+		ArgsUsage: "--file <file> --keyfile <keyfile> --organization <organization> --commonName <commonName> -- serialNumber <serialNumber> --signatureAlg <signatureAlg>",
+		Action:    genSelfSignCA,
+		Flags:     CaCmdFlags,
+		Description: `
+		platonecli ca genSelfSignCA`,
+	}
 )
 
-func parseFlags (c *cli.Context) (string, string, string, string, string, string, string, string){
+func parseFlags (c *cli.Context) (string, string, string, string, string, string, string, int64, string){
 	curve := c.String(CurveFlag.Name)
 	file := c.String(OutFileFlag.Name)
 	target := c.String(TargetFlag.Name)
@@ -50,8 +62,12 @@ func parseFlags (c *cli.Context) (string, string, string, string, string, string
 	keyfile := c.String(KeyFileFlag.Name)
 	organization := c.String(OrganizationFlags.Name)
 	commonName := c.String(CommonNameFlag.Name)
+	serialNumber, err := strconv.ParseInt(c.String(SerialNumberFlag.Name), 10, 64)
+	if nil!=err {
+		panic(err)
+	}
 	signatureAlg := c.String(SignatureAlgFlag.Name)
-	return curve, file,target, format, keyfile, organization, commonName, signatureAlg
+	return curve, file,target, format, keyfile, organization, commonName, serialNumber, signatureAlg
 }
 func readFromFile(keyfile string) string {
 	res, err := ioutil.ReadFile(keyfile)
@@ -88,6 +104,7 @@ func generatePublicKey(file, format, keyfile string)  {
 				if file == "" {
 					fmt.Println(public)
 				}else {
+					fmt.Println(public)
 					ioutil.WriteFile(file, []byte(public), os.ModeCharDevice)
 				}
 			case "PEM":
@@ -101,6 +118,7 @@ func generatePublicKey(file, format, keyfile string)  {
 					if file == "" {
 						fmt.Println(public)
 					}else {
+						fmt.Println(public)
 						ioutil.WriteFile(file, []byte(public), os.ModeCharDevice)
 					}
 				}
@@ -120,6 +138,7 @@ func generatePublicKey(file, format, keyfile string)  {
 				if file == "" {
 					fmt.Println(result)
 				}else {
+					fmt.Println(result)
 					ioutil.WriteFile(file, []byte(result), os.ModeCharDevice)
 				}
 
@@ -144,13 +163,14 @@ func generatePrivateKey(curve, file, format string)  {
 		if file == "" {
 			fmt.Println(pem)
 		}else {
+			fmt.Println(pem)
 			ioutil.WriteFile(file, []byte(pem), os.ModeCharDevice)
 		}
 	}
 }
 
 func generateKey(c *cli.Context) {
-	curve, file,target, format, keyfile, _, _, _ := parseFlags(c)
+	curve, file,target, format, keyfile, _, _, _, _ := parseFlags(c)
 	switch target {
 	case "public":
 			generatePublicKey(file, format, keyfile)
@@ -163,7 +183,7 @@ func generateKey(c *cli.Context) {
 }
 
 func generateCSR(c *cli.Context) {
-	_, file, _, _, keyfile, organization, commonName, signatureAlg := parseFlags(c)
+	_, file, _, _, keyfile, organization, commonName,_, signatureAlg := parseFlags(c)
 	generateCsr(file, keyfile, organization, commonName, signatureAlg)
 }
 
@@ -182,9 +202,39 @@ func generateCsr(file, keyfile, organization, commonName, signatureAlg string){
 		panic(err)
 	}
 	if file == "" {
-		fmt.Println(csr)
+		fmt.Println(res)
 	}else {
+		fmt.Println(res)
 		ioutil.WriteFile(file, []byte(res), os.ModeCharDevice)
 	}
 }
 
+func genSelfSignCA(c *cli.Context) {
+	_, file, _, _, keyfile, organization, commonName, serialNumber, signatureAlg := parseFlags(c)
+	generateSelfSignCA(file, keyfile, organization, commonName, signatureAlg, serialNumber)
+}
+
+func generateSelfSignCA(file, keyfile, organization, commonName, signatureAlg string, serialNumber int64) {
+	privateString := readFromFile(keyfile)
+	privateKey, err := gmssl.NewPrivateKeyFromPEM(privateString)
+	if nil != err {
+		panic(err)
+	}
+	publicKey := privateKey.GetPublicKey()
+	selfCA, err := gmssl.CreateCerficate(privateKey, publicKey, signatureAlg, serialNumber, organization, commonName)
+	if nil != err {
+		panic(err)
+	}
+	res, err := selfCA.GetPEM()
+	if nil != err {
+		panic(err)
+	}
+	if file == "" {
+		fmt.Println(res)
+	}else {
+		fmt.Println(res)
+		ioutil.WriteFile(file, []byte(res), os.ModeCharDevice)
+	}
+}
+
+//func generateCA(c *cli.Context)
