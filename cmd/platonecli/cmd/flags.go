@@ -312,7 +312,7 @@ var (
 
 	TargetFlag = cli.StringFlag{
 		Name:"target",
-		Usage: "private or public or both",
+		Usage: "private or public or pair",
 	}
 
 	FormatFlag = cli.StringFlag{

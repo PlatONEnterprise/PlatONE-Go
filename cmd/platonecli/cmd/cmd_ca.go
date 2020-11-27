@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"strconv"
 	"strings"
+	"syscall"
 )
 var (
 	CaCmd = cli.Command{
@@ -83,18 +84,15 @@ func parseFlags (c *cli.Context) (string, string, string, string, string, string
 	keyfile := c.String(KeyFileFlag.Name)
 	organization := c.String(OrganizationFlags.Name)
 	commonName := c.String(CommonNameFlag.Name)
-	csr := c.String(CsrFileFlag.Name)
-	ca  := c.String(CaFileFlag.Name)
-	cert := c.String(CertFileFlag.Name)
-
-	serialNumberStr := c.String(SerialNumberFlag.Name)
-	serialNumber := int64(-1)
-	if serialNumberStr != ""{
-		var err error
-		serialNumber, err = strconv.ParseInt(serialNumberStr, 10, 64)
-		if nil!=err {
+	var serialNumber int64
+	var err error
+	if c.String(SerialNumberFlag.Name) != ""{
+		serialNumber, err = strconv.ParseInt(c.String(SerialNumberFlag.Name), 10, 64)
+		if nil != err {
 			panic(err)
 		}
+	}else {
+		serialNumber = -1
 	}
 
 	signatureAlg := c.String(SignatureAlgFlag.Name)
@@ -133,6 +131,8 @@ func generatePublicKey(file, format, keyfile string)  {
 		if !strings.HasSuffix(keyfile, "PEM"){
 			panic("private invalid")
 		}else {
+			syscall.Umask(0)
+			os.Chmod(keyfile, 0666)
 			privateString := readFromFile(keyfile)
 			privateKey, err := gmssl.NewPrivateKeyFromPEM(privateString)
 			if nil != err {
@@ -197,8 +197,11 @@ func generateKey(c *cli.Context) {
 			generatePublicKey(file, format, keyfile)
 	case "private":
 			generatePrivateKey(curve, file, format )
-	case "both":
+	case "pair":
 			generateKeyPair(curve, file, format)
+	default:
+		panic("param invalid")
+
 	}
 }
 
@@ -208,6 +211,8 @@ func generateCSR(c *cli.Context) {
 }
 
 func generateCsr(file, keyfile, organization, commonName, signatureAlg string){
+	syscall.Umask(0)
+	os.Chmod(keyfile, 0666)
 	privateString := readFromFile(keyfile)
 	privateKey, err := gmssl.NewPrivateKeyFromPEM(privateString)
 	if nil != err {
@@ -230,12 +235,18 @@ func genSelfSignCA(c *cli.Context) {
 }
 
 func generateSelfSignCA(file, keyfile, organization, commonName, signatureAlg string, serialNumber int64) {
+	syscall.Umask(0)
+	os.Chmod(keyfile, 0666)
 	privateString := readFromFile(keyfile)
 	privateKey, err := gmssl.NewPrivateKeyFromPEM(privateString)
 	if nil != err {
 		panic(err)
 	}
 	publicKey := privateKey.GetPublicKey()
+	if serialNumber == -1 {
+		panic("serialNumber must > 0")
+	}
+
 	selfCA, err := gmssl.CreateCerficate(privateKey, publicKey, signatureAlg, serialNumber, organization, commonName)
 	if nil != err {
 		panic(err)
