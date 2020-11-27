@@ -346,8 +346,12 @@ func (sb *backend) Prepare(chain consensus.ChainReader, header *types.Header) er
 	if parent == nil {
 		return consensus.ErrUnknownAncestor
 	}
-	// use the same difficulty for all blocks
-	//header.Difficulty = defaultDifficulty
+
+	nonce, err := sb.GenerateNonce(parent.Nonce[:])
+	if err != nil {
+		return err
+	}
+	header.Nonce = types.EncodeByteNonce(nonce)
 
 	// Assemble the voting snapshot
 	snap, err := sb.snapshot(chain, number-1, header.ParentHash, nil)
@@ -355,31 +359,6 @@ func (sb *backend) Prepare(chain consensus.ChainReader, header *types.Header) er
 		return err
 	}
 
-	/*
-		// get valid candidate list
-		sb.candidatesLock.RLock()
-		var addresses []common.Address
-		var authorizes []bool
-		for address, authorize := range sb.candidates {
-			if snap.checkVote(address, authorize) {
-				addresses = append(addresses, address)
-				authorizes = append(authorizes, authorize)
-			}
-		}
-		sb.candidatesLock.RUnlock()
-
-		// pick one of the candidates randomly
-		if len(addresses) > 0 {
-			index := rand.Intn(len(addresses))
-			// add validator voting in coinbase
-			header.Coinbase = addresses[index]
-			if authorizes[index] {
-				copy(header.Nonce[:], nonceAuthVote)
-			} else {
-				copy(header.Nonce[:], nonceDropVote)
-			}
-		}
-	*/
 	// add validators in snapshot to extraData's validators section
 	extra, err := prepareExtra(header, snap.validators())
 	if err != nil {
@@ -488,12 +467,6 @@ func (sb *backend) Seal(chain consensus.ChainReader, block *types.Block, sealRes
 // update timestamp and signature of the block based on its number of transactions
 func (sb *backend) updateBlock(parent *types.Header, block *types.Block) (*types.Block, error) {
 	header := block.Header()
-
-	nonce, err := sb.GenerateNonce(parent.Nonce[:])
-	if err != nil {
-		return nil, err
-	}
-	header.Nonce = types.EncodeByteNonce(nonce)
 
 	// sign the hash
 	seal, err := sb.Sign(sigHash(header).Bytes())
