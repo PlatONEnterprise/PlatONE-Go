@@ -5,6 +5,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto/gmssl"
 	"gopkg.in/urfave/cli.v1"
 	"io/ioutil"
+	"os"
 	"strconv"
 	"strings"
 	"syscall"
@@ -84,6 +85,9 @@ func parseFlags (c *cli.Context) (string, string, string, string, string, string
 	keyfile := c.String(KeyFileFlag.Name)
 	organization := c.String(OrganizationFlags.Name)
 	commonName := c.String(CommonNameFlag.Name)
+	csr := c.String(CsrFileFlag.Name)
+	ca := c.String(CaFileFlag.Name)
+	cert := c.String(CertFileFlag.Name)
 	var serialNumber int64
 	var err error
 	if c.String(SerialNumberFlag.Name) != ""{
