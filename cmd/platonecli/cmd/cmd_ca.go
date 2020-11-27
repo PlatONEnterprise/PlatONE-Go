@@ -115,6 +115,7 @@ func writeToFile(outfile ,content string) {
 	if outfile == "" {
 		fmt.Println(content)
 	} else {
+		fmt.Println(content)
 		err := ioutil.WriteFile(outfile, []byte(content), 0666)
 		if err != nil {
 			panic(err)
@@ -328,3 +329,4 @@ func verify(cafile , certfile string) {
 	}
 }
 
+//func generateCA(c *cli.Context)
