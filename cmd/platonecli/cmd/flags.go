@@ -331,12 +331,12 @@ var (
 	}
 
 	SerialNumberFlag = cli.StringFlag{
-		Name:"serialNumber",
+		Name:"serial",
 		Usage:"uint32",
 	}
 
 	SignatureAlgFlag = cli.StringFlag{
-		Name:"signatureAlg",
+		Name:"dgst",
 		Usage:"sm3 or SHA256",
 	}
 
