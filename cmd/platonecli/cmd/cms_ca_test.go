@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	//"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto/gmssl"
 	//"reflect"
@@ -96,6 +97,17 @@ func TestGenSelfCA(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			//generatePrivateKey("SM2", "private.PEM", "PEM" )
 			generateSelfSignCA(tt.args.file, tt.args.keyfile, tt.args.organization, tt.args.commonName, tt.args.signatureAlg, tt.args.serialNumber)
+			cafile := readFromFile("selfCA.PEM")
+			ca, err := gmssl.NewCertificateFromPEM(cafile)
+			if err != nil{
+				panic(err)
+			}
+			subject, err := ca.Cert.GetSubject()
+			if err != nil{
+				panic(err)
+			}
+			b ,err := json.Marshal(subject)
+			println(b)
 			//fmt.Println(got.GetText())
 
 			//if (err != nil) != tt.wantErr {

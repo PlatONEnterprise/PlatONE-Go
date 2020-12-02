@@ -18,6 +18,7 @@ var PlatONEPrecompiledContracts = map[common.Address]PrecompiledContract{
 	syscontracts.UserManagementAddress:        &UserManagement{},
 	syscontracts.NodeManagementAddress:        &scNodeWrapper{},
 	syscontracts.CnsManagementAddress:         &CnsWrapper{},
+	syscontracts.CAManagementAddress:          &CAWrapper{},
 	syscontracts.ParameterManagementAddress:   &ParamManager{},
 	syscontracts.FirewallManagementAddress:    &FwWrapper{},
 	syscontracts.GroupManagementAddress:       &GroupManagement{},
@@ -48,6 +49,13 @@ func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Cont
 			return um.Run(input)
 		case *scNodeWrapper:
 			node := newSCNodeWrapper(evm.StateDB)
+			node.base.caller = evm.Origin
+			node.base.blockNumber = evm.BlockNumber
+			node.base.contractAddr = *contract.CodeAddr
+
+			return node.Run(input)
+		case *CAWrapper:
+			node := newCAWrapper(evm.StateDB)
 			node.base.caller = evm.Origin
 			node.base.blockNumber = evm.BlockNumber
 			node.base.contractAddr = *contract.CodeAddr
