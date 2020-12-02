@@ -145,6 +145,11 @@ var (
 		Usage: `Blockchain sync mode ("fast", "full", or "light")`,
 		Value: &defaultSyncMode,
 	}
+	VersionFlag = cli.StringFlag{
+		Name:  "version",
+		Usage: `the version of current blockchain,default 1.0.0`,
+		Value: "1.0.0",
+	}
 	GCModeFlag = cli.StringFlag{
 		Name:  "gcmode",
 		Usage: `Blockchain garbage collection mode ("full", "archive")`,

@@ -170,7 +170,7 @@ func (api *PrivateAdminAPI) ExportChain(file string) (bool, error) {
 	}
 
 	// Export the blockchain
-	if err := api.eth.BlockChain().Export(writer); err != nil {
+	if err := api.eth.BlockChain().Export(writer, "1.0.0"); err != nil {
 		return false, err
 	}
 	return true, nil

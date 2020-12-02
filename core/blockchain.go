@@ -31,7 +31,6 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/common/mclock"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/prque"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
-	"github.com/PlatONEnetwork/PlatONE-Go/core"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
@@ -443,14 +442,19 @@ func (bc *BlockChain) repair(head **types.Block, sortedMissingStateBlocks *types
 }
 
 // Export writes the active chain to the given writer.
-func (bc *BlockChain) Export(w io.Writer) error {
-	return bc.ExportN(w, uint64(0), bc.CurrentBlock().NumberU64())
+func (bc *BlockChain) Export(w io.Writer, version string) error {
+	return bc.ExportN(w, version, uint64(0), bc.CurrentBlock().NumberU64())
 }
 
 // ExportN writes a subset of the active chain to the given writer.
-func (bc *BlockChain) ExportN(w io.Writer, first uint64, last uint64) error {
+func (bc *BlockChain) ExportN(w io.Writer, version string, first uint64, last uint64) error {
 	bc.mu.RLock()
 	defer bc.mu.RUnlock()
+
+	_state, err := bc.State()
+	if err != nil {
+		return err
+	}
 
 	if first > last {
 		return fmt.Errorf("export failed: first (%d) is greater than last (%d)", first, last)
@@ -460,36 +464,36 @@ func (bc *BlockChain) ExportN(w io.Writer, first uint64, last uint64) error {
 	// export pivot
 	rlp.Encode(w, last)
 
-	// export possible old system contracts
+	//export possible old system contracts
+	CnsManagementAddress := syscontracts.CnsManagementAddress
 	m := make(map[string]common.Address)
-	_state, err := bc.State()
-	if err != nil {
-		return err
-	}
 	for k, v := range vm.CnsSysContractsMap {
 		if k == "cnsManager" {
 			continue
 		}
-		msg := types.NewMessage(common.Address{}, nil, 1, big.NewInt(1), 0x1, big.NewInt(1), nil, false, types.NormalTxType)
-		context := core.NewEVMContext(msg, bc.CurrentHeader(), bc, nil)
-		evm := vm.NewEVM(context, _state, bc.Config(), vm.Config{})
-		callContract := func(conAddr common.Address, data []byte) []byte {
-			res, _, err := evm.Call(vm.AccountRef(common.Address{}), conAddr, data, uint64(0xffffffffff), big.NewInt(0))
-			if err != nil {
-				return nil
-			}
-			return res
-		}
 
-		callParams := []interface{}{k, "latest"}
-		btsRes := callContract(syscontracts.CnsManagementAddress, common.GenCallData("getContractAddress", callParams))
-		strRes := common.CallResAsString(btsRes)
-		if len(strRes) == 0 || common.IsHexZeroAddress(strRes) {
-			log.Warn("call system contract address fail")
-			return nil
+		if version < "1.0.0" {
+			msg := types.NewMessage(common.Address{}, nil, 1, big.NewInt(1), 0x1, big.NewInt(1), nil, false, types.NormalTxType)
+			context := NewEVMContext(msg, bc.CurrentHeader(), bc, nil)
+			evm := vm.NewEVM(context, _state, bc.Config(), vm.Config{})
+
+			input := common.GenCallData("getContractAddress", []interface{}{k, "latest"})
+			contract := vm.NewContract(vm.AccountRef(common.Address{}), vm.AccountRef(CnsManagementAddress), big.NewInt(0), uint64(0xffffffffff))
+			contract.SetCallCode(&CnsManagementAddress, evm.StateDB.GetCodeHash(CnsManagementAddress), evm.StateDB.GetCode(CnsManagementAddress))
+			btsRes, err := bc.runInterpreter(evm, contract, input)
+			if err != nil {
+				return err
+			}
+			strRes := common.CallResAsString(btsRes)
+			if len(strRes) == 0 || common.IsHexZeroAddress(strRes) {
+				return errors.New("call system contract address fail")
+			}
+			m[k] = common.HexToAddress(strRes)
+		} else {
+			m[k] = v
 		}
-		contractAddr := common.HexToAddress(strRes)
 	}
+	rlp.Encode(w, m)
 
 	start, reported := time.Now(), time.Now()
 	for nr := first; nr <= last; nr++ {
@@ -507,6 +511,20 @@ func (bc *BlockChain) ExportN(w io.Writer, first uint64, last uint64) error {
 	}
 
 	return nil
+}
+
+func (bc *BlockChain) runInterpreter(evm *vm.EVM, contract *vm.Contract, input []byte) ([]byte, error) {
+	for _, interpreter := range evm.Interpreters() {
+		var ok bool
+		ok, input = interpreter.CanRun(contract.Code, input, contract)
+		if ok {
+			btsRes, err := interpreter.Run(contract, input, true)
+			if err != nil {
+				return btsRes, err
+			}
+		}
+	}
+	return nil, errors.New("no interpreters can run this contract")
 }
 
 // insert injects a new head block into the current block chain. This method

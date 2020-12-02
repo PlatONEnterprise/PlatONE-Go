@@ -167,8 +167,8 @@ func (evm *EVM) Cancel() {
 }
 
 // Interpreter returns the current interpreter
-func (evm *EVM) Interpreter() Interpreter {
-	return evm.interpreter
+func (evm *EVM) Interpreters() []Interpreter {
+	return evm.interpreters
 }
 
 // Call executes the contract associated with the addr with the given input as

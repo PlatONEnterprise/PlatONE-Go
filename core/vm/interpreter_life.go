@@ -138,6 +138,8 @@ func (in *WASMInterpreter) Run(contract *Contract, input []byte, readOnly bool) 
 		return nil, er
 	}
 
+	// 2020.12.2 yzk
+	// this is reserved because we depend on it to extract cns info from old version chain(0.9.x)
 	if contract.self.Address() == common.HexToAddress("0x0000000000000000000000000000000000000011") {
 		containFunction, addr, err := in.preCheckFunction(contract, input, abi)
 		if err != nil {
