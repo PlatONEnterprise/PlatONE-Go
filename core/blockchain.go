@@ -31,6 +31,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/common/mclock"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/prque"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
+	"github.com/PlatONEnetwork/PlatONE-Go/core"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/rawdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
@@ -455,6 +456,40 @@ func (bc *BlockChain) ExportN(w io.Writer, first uint64, last uint64) error {
 		return fmt.Errorf("export failed: first (%d) is greater than last (%d)", first, last)
 	}
 	log.Info("Exporting batch of blocks", "count", last-first+1)
+
+	// export pivot
+	rlp.Encode(w, last)
+
+	// export possible old system contracts
+	m := make(map[string]common.Address)
+	_state, err := bc.State()
+	if err != nil {
+		return err
+	}
+	for k, v := range vm.CnsSysContractsMap {
+		if k == "cnsManager" {
+			continue
+		}
+		msg := types.NewMessage(common.Address{}, nil, 1, big.NewInt(1), 0x1, big.NewInt(1), nil, false, types.NormalTxType)
+		context := core.NewEVMContext(msg, bc.CurrentHeader(), bc, nil)
+		evm := vm.NewEVM(context, _state, bc.Config(), vm.Config{})
+		callContract := func(conAddr common.Address, data []byte) []byte {
+			res, _, err := evm.Call(vm.AccountRef(common.Address{}), conAddr, data, uint64(0xffffffffff), big.NewInt(0))
+			if err != nil {
+				return nil
+			}
+			return res
+		}
+
+		callParams := []interface{}{k, "latest"}
+		btsRes := callContract(syscontracts.CnsManagementAddress, common.GenCallData("getContractAddress", callParams))
+		strRes := common.CallResAsString(btsRes)
+		if len(strRes) == 0 || common.IsHexZeroAddress(strRes) {
+			log.Warn("call system contract address fail")
+			return nil
+		}
+		contractAddr := common.HexToAddress(strRes)
+	}
 
 	start, reported := time.Now(), time.Now()
 	for nr := first; nr <= last; nr++ {

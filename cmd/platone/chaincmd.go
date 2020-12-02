@@ -209,6 +209,7 @@ func importChain(ctx *cli.Context) error {
 	}
 	stack := makeFullNode(ctx)
 	chain, chainDb := utils.MakeChain(ctx, stack)
+	core.UpdateSysContractConfig(chain, common.SysCfg)
 	defer chainDb.Close()
 	//InitInnerCallFuncFromChain(chain)
 	// Start periodically gathering memory profiles

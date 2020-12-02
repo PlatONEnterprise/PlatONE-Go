@@ -42,7 +42,7 @@ var (
 )
 
 var (
-	cnsSysContractsMap = map[string]common.Address{
+	CnsSysContractsMap = map[string]common.Address{
 		"__sys_ParamManager": syscontracts.ParameterManagementAddress,
 		"__sys_NodeManager":  syscontracts.NodeManagementAddress,
 		"__sys_UserManager":  syscontracts.UserManagementAddress,
@@ -264,7 +264,7 @@ func (cns *CnsManager) cnsRedirect(name, version string) error {
 
 // getContractAddress returns the address of a cns name at specific version
 func (cns *CnsManager) getContractAddress(name, version string) (common.Address, error) {
-	if sysCon, ok := cnsSysContractsMap[name]; ok {
+	if sysCon, ok := CnsSysContractsMap[name]; ok {
 		return sysCon, nil
 	}
 
