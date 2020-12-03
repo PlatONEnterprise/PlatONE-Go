@@ -170,7 +170,7 @@ echo '
 '
 
 flag_datadir="--datadir ${NODE_DIR}"
-flag_nodekey="--nodekey ${NODE_DIR}/node.prikey"
+flag_nodekey="--nodekey ${NODE_DIR}/node.prikey  --nodecert ${NODE_DIR}/node.crt"
 flag_rpc="--rpc --rpcaddr 0.0.0.0 --rpcport ${RPC_PORT}  --rpcapi db,eth,net,web3,admin,personal,txpool,istanbul "
 flag_ws="--ws --wsaddr 0.0.0.0 --wsport ${WS_PORT} "
 flag_logs=" --wasmlog  ${LOG_DIR}/wasm_log --wasmlogsize ${LOG_SIZE} "

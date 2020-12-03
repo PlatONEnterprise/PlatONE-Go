@@ -33,6 +33,17 @@ function check_ip() {
     return 1
 }
 
+function create_ca_cert() {
+    mkdir -p ${WORKSPACE_PATH}/ca-certs
+
+    ${BIN_PATH}/platonecli ca generateKey --file ${CA_PATH}/rootkey.pem --curve secp256k1 --target private --format PEM
+    ${BIN_PATH}/platonecli ca genSelfSignCA --organization wxbc --commonName rootCA --signatureAlg sha256 --serialNumber 1 --file ${CA_PATH}/root.crt --keyfile ${CA_PATH}/rootkey.pem
+
+    ${BIN_PATH}/platonecli ca generateKey --file ${CA_PATH}/orgkey.pem --curve secp256k1 --target private --format PEM 
+    ${BIN_PATH}/platonecli ca generateCSR --organization wxbc --commonName defaultOrg --signatureAlg sha256 --keyfile ${CA_PATH}/orgkey.pem --file ${CA_PATH}/org.csr
+    ${BIN_PATH}/platonecli  ca create  --ca  ${CA_PATH}/root.crt --csr ${CA_PATH}/org.csr  --keyfile ${CA_PATH}/orgkey.pem --serialNumber 100 --file ${CA_PATH}/org.crt
+}
+
 function create_node_key() {
     keyinfo=`${BIN_PATH}/ethkey genkeypair | sed s/[[:space:]]//g`
     keyinfo=${keyinfo,,}
@@ -114,6 +125,7 @@ function create_genesis() {
 
 function setup_genesis() {
     if [ "${AUTO}" = "true" ]; then 
+        create_ca_cert
         echo "[INFO]: auto create node key, and create genesis.json"
         create_node_key
         echo $IP > ${NODE_DIR}/node.ip
@@ -248,6 +260,7 @@ cd ${CURRENT_PATH}
 BIN_PATH=${WORKSPACE_PATH}/bin
 CONF_PATH=${WORKSPACE_PATH}/conf
 SCRIPT_PATH=${WORKSPACE_PATH}/scripts
+CA_PATH=${WORKSPACE_PATH}/ca-certs
 
 if [[ ! -d ${WORKSPACE_PATH}/conf/contracts ]];then
     echo "[INFO]: create contracts dir in: ${WORKSPACE_PATH}/conf/contracts"

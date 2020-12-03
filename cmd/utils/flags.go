@@ -20,6 +20,7 @@ package utils
 import (
 	"crypto/ecdsa"
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto/gmssl"
 	"io/ioutil"
 	"math/big"
 	"os"
@@ -482,6 +483,10 @@ var (
 		Usage: "Comma separated enode URLs for P2P v5 discovery bootstrap (light server, light nodes)",
 		Value: "",
 	}
+	NodeCertFileFlag = cli.StringFlag{
+		Name:  "nodecert",
+		Usage: "P2P node cert file",
+	}
 	NodeKeyFileFlag = cli.StringFlag{
 		Name:  "nodekey",
 		Usage: "P2P node key file",
@@ -594,6 +599,27 @@ func MakeDataDir(ctx *cli.Context) string {
 	Fatalf("Cannot determine default data directory, please set manually (--datadir)")
 	return ""
 }
+
+func setNodeCert(ctx *cli.Context, cfg *p2p.Config) {
+	var (
+		file = ctx.GlobalString(NodeCertFileFlag.Name)
+		cert  *gmssl.Certificate
+	)
+
+	switch {
+	case file != "":
+		pem, err := ioutil.ReadFile(file)
+		if err != nil{
+			Fatalf("Option %q: %v", NodeCertFileFlag.Name, err)
+		}
+
+		if cert, err = gmssl.NewCertificateFromPEM(string(pem)); err != nil {
+			Fatalf("Option %q: %v", NodeCertFileFlag.Name, err)
+		}
+		cfg.Certificate = cert
+	}
+}
+
 
 // setNodeKey creates a node key from set command line flags, either loading it
 // from a file or as a specified hex value. If neither flags were provided, this
@@ -855,6 +881,7 @@ func MakePasswordList(ctx *cli.Context) []string {
 }
 
 func SetP2PConfig(ctx *cli.Context, cfg *p2p.Config) {
+	setNodeCert(ctx, cfg)
 	setNodeKey(ctx, cfg)
 	setNAT(ctx, cfg)
 	setListenAddress(ctx, cfg)

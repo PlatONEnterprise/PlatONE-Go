@@ -23,6 +23,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto/gmssl"
 	"net"
 	"strings"
 	"sync"
@@ -62,6 +63,8 @@ var errServerSelfInDelList = errors.New("self in deleteList")
 type Config struct {
 	// This field must be set to a valid secp256k1 private key.
 	PrivateKey *ecdsa.PrivateKey `toml:"-"`
+
+	Certificate *gmssl.Certificate
 
 	// MaxPeers is the maximum number of peers that can be
 	// connected. It must be greater than zero.
@@ -703,6 +706,14 @@ func (srv *Server) Start() (err error) {
 	srv.ourHandshake = &protoHandshake{Version: baseProtocolVersion, Name: srv.Name, ID: nodeID}
 	for _, p := range srv.Protocols {
 		srv.ourHandshake.Caps = append(srv.ourHandshake.Caps, p.cap())
+	}
+
+	if srv.Certificate != nil {
+		if cert, err := srv.Certificate.GetPEM(); err == nil {
+			srv.ourHandshake.Cert = cert
+		} else {
+			return err
+		}
 	}
 	// listen/dial
 	if srv.ListenAddr != "" {

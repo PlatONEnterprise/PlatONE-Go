@@ -20,6 +20,22 @@ function shiftOption2() {
     fi
 }
 
+function create_node_cert(){
+
+    echo '
+    ++++++++++++++++++++++
+    create node cert
+    ++++++++++++++++++++++
+    '
+
+    ${BIN_PATH}/platonecli ca generateKey --file ${NODE_DIR}/nodekey.pem --curve secp256k1 --target private --format PEM 
+    ${BIN_PATH}/platonecli ca generateCSR --organization wxbc --commonName ${NODE_ID} --signatureAlg sha256 --keyfile ${NODE_DIR}/nodekey.pem --file ${NODE_DIR}/node.csr
+
+    ${BIN_PATH}/platonecli  ca create  --ca ${CA_PATH}/org.crt --csr ${NODE_DIR}/node.csr  --keyfile ${CA_PATH}/orgkey.pem --serialNumber 10 --file ${NODE_DIR}/node.crt
+
+    cat ${NODE_DIR}/node.crt
+}
+
 function create_node_key() {
     keyinfo=`${BIN_PATH}/ethkey genkeypair | sed s/[[:space:]]//g`
     keyinfo=${keyinfo,,}
@@ -118,6 +134,8 @@ function main() {
     fi
     setup_node_datadir
 
+    create_node_cert
+
     ${BIN_PATH}/platone --datadir ${NODE_DIR} init  ${CONF_PATH}/genesis.json
 }
 
@@ -161,6 +179,8 @@ cd ${CURRENT_PATH}
 BIN_PATH=${WORKSPACE_PATH}/bin
 CONF_PATH=${WORKSPACE_PATH}/conf
 SCRIPT_PATH=${WORKSPACE_PATH}/scripts
+CA_PATH=${WORKSPACE_PATH}/ca-certs
+
 
 while [ ! $# -eq 0 ]
 do

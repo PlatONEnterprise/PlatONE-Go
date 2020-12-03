@@ -27,6 +27,8 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto/gmssl"
+	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"hash"
 	"io"
 	"io/ioutil"
@@ -137,6 +139,32 @@ func (t *rlpx) doProtoHandshake(our *protoHandshake) (their *protoHandshake, err
 	}
 	// If the protocol version supports Snappy encoding, upgrade immediately
 	t.rw.snappy = their.Version >= snappyProtocolVersion
+
+	orgCertPEM := `-----BEGIN CERTIFICATE-----
+MIIBPjCB5QICAMgwCgYIKoZIzj0EAwIwKzELMAkGA1UEBhMCQ04xDTALBgNVBAoM
+BHd4YmMxDTALBgNVBAMMBHRlc3QwHhcNMjAxMjAzMDEzMjI4WhcNMzAxMjAxMDEz
+MjI4WjAuMQswCQYDVQQGEwJDTjENMAsGA1UECgwEd3hiYzEQMA4GA1UEAwwHb3Jn
+Y2VydDBWMBAGByqGSM49AgEGBSuBBAAKA0IABIfD0//laM7kPO9ZJat9QAN4rphs
+CiBi23P0ZIM8do/md0Q76K+p/Im4JyxeM5eqHIXhxWDSx6FRrdFrlG8UGjAwCgYI
+KoZIzj0EAwIDSAAwRQIgKJCenzqkA2kexvPf3/TcqOJKnWlNsfdZhxglU6klTWAC
+IQCE2usxHlpU/uw74rsONvMrFarXtMXCY0HKk98dTh6BqQ==
+-----END CERTIFICATE-----
+`
+	orgCert, err := gmssl.NewCertificateFromPEM(orgCertPEM)
+	if err != nil {
+		return nil, err
+	}
+
+	nodeCert, err := gmssl.NewCertificateFromPEM(their.Cert)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Warn("cert content", "orgCert", orgCertPEM, "nodeCert", their.Cert)
+
+	if b, err := gmssl.Verify(orgCert, nodeCert); !b {
+		return nil, fmt.Errorf("verify certificate error: %v", err)
+	}
 
 	return their, nil
 }

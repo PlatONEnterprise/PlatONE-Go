@@ -4,30 +4,30 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto/gmssl/gmssl"
 )
 
-type Certifacate struct{
+type Certificate struct{
 	cert *gmssl.Certificate
 }
 type CertificateRequest struct{
 	req *gmssl.CertificateRequest
 }
 
-func CreateCerficate(pkey *PrivateKey,pub *PublicKey, digestAlg string,serialNumber int64, orgnizationName, commonName string) (*Certifacate, error){
+func CreateCerficate(pkey *PrivateKey,pub *PublicKey, digestAlg string,serialNumber int64, orgnizationName, commonName string) (*Certificate, error){
 	cert, err := gmssl.CreateCertificate(pkey.sk, pub.pk, digestAlg,serialNumber, orgnizationName,commonName)
 	if err != nil{
 		return nil, err
 	}
-	return &Certifacate{cert:cert}, nil
+	return &Certificate{cert: cert}, nil
 }
 
-func CreateCertificateForReq(prv *PrivateKey, req *CertificateRequest, ca *Certifacate, digestAlg string, serialNumber int64) (*Certifacate, error){
+func CreateCertificateForReq(prv *PrivateKey, req *CertificateRequest, ca *Certificate, digestAlg string, serialNumber int64) (*Certificate, error){
 	cert, err := gmssl.CreateCertificateForReq(prv.sk,req.req, ca.cert,digestAlg, serialNumber)
 	if err != nil{
 		return nil, err
 	}
-	return &Certifacate{cert:cert}, nil
+	return &Certificate{cert: cert}, nil
 }
 
-func (cert *Certifacate) GetPEM() (string, error) {
+func (cert *Certificate) GetPEM() (string, error) {
 	return cert.cert.GetPEM()
 }
 
@@ -35,12 +35,12 @@ func (req *CertificateRequest) GetPEM() (string, error) {
 	return req.req.GetPEM()
 }
 
-func NewCertificateFromPEM(pem string) (*Certifacate, error){
+func NewCertificateFromPEM(pem string) (*Certificate, error){
 	cert, err := gmssl.NewCertificateFromPEM(pem,"")
 	if err != nil{
 		return nil, err
 	}
-	return &Certifacate{cert:cert}, nil
+	return &Certificate{cert: cert}, nil
 }
 
 func CreateCertRequest(prv *PrivateKey, digestAlg string,orgnizationName, commonName string) (*CertificateRequest, error){
@@ -60,7 +60,7 @@ func NewCertRequestFromPEM(pem string) (*CertificateRequest, error){
 	return &CertificateRequest{req}, nil
 }
 
-func Verify(ca, cert *Certifacate) (bool, error) {
+func Verify(ca, cert *Certificate) (bool, error) {
 	return gmssl.VerifyCertificate(ca.cert, cert.cert)
 }
 
