@@ -39,7 +39,7 @@ var (
 	CSRGenerateCmd = cli.Command{
 		Name:      "generateCSR",
 		Usage:     "generateCSR",
-		ArgsUsage: "--file <file> --keyfile <keyfile> --organization <organization> --commonName <commonName> --signatureAlg <signatureAlg>",
+		ArgsUsage: "--file <file> --keyfile <keyfile> --organization <organization> --commonName <commonName> --dgst <dgst>",
 		Action:    generateCSR,
 		Flags:     CaCmdFlags,
 		Description: `
@@ -49,7 +49,7 @@ var (
 	SelfCAGenerateCmd = cli.Command{
 		Name:      "genSelfSignCA",
 		Usage:     "genSelfSignCA",
-		ArgsUsage: "--file <file> --keyfile <keyfile> --organization <organization> --commonName <commonName> -- serialNumber <serialNumber> --signatureAlg <signatureAlg>",
+		ArgsUsage: "--file <file> --keyfile <keyfile> --organization <organization> --commonName <commonName> -- serial <serial> --dgst <dgst>",
 		Action:    genSelfSignCA,
 		Flags:     CaCmdFlags,
 		Description: `
@@ -59,7 +59,7 @@ var (
 	CaCreateCmd = cli.Command{
 		Name:      "create",
 		Usage:     "create",
-		ArgsUsage: "--file <file> --keyfile <keyfile> --organization <organization> --commonName <commonName> -- serialNumber <serialNumber> --signatureAlg <signatureAlg>",
+		ArgsUsage: "--file <file> --keyfile <keyfile> --organization <organization> --commonName <commonName> -- serial <serial> --dgst <dgst>",
 		Action:    generateCA,
 		Flags:     CaCmdFlags,
 		Description: `
@@ -68,8 +68,8 @@ var (
 
 	CaVerfyCmd = cli.Command{
 		Name:      "verify",
-		Usage:     "verfiy",
-		ArgsUsage: "--file <file> --keyfile <keyfile> --organization <organization> --commonName <commonName> -- serialNumber <serialNumber> --signatureAlg <signatureAlg>",
+		Usage:     "verify",
+		ArgsUsage: "--file <file> --keyfile <keyfile> --organization <organization> --commonName <commonName> -- serial <serial> --dgst <dgst>",
 		Action:    verifyCa,
 		Flags:     CaCmdFlags,
 		Description: `
@@ -115,6 +115,7 @@ func writeToFile(outfile ,content string) {
 	if outfile == "" {
 		fmt.Println(content)
 	} else {
+		fmt.Println(content)
 		err := ioutil.WriteFile(outfile, []byte(content), 0666)
 		if err != nil {
 			panic(err)
@@ -328,3 +329,4 @@ func verify(cafile , certfile string) {
 	}
 }
 
+//func generateCA(c *cli.Context)

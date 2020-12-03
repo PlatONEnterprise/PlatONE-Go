@@ -1,6 +1,8 @@
 package vm
 
 import (
+	"fmt"
+	"io/ioutil"
 	"math/big"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
@@ -53,4 +55,12 @@ func MakeReturnBytes(ret []byte) []byte {
 	finalData = append(finalData, dataByt...)
 
 	return finalData
+}
+
+func readFromFile(file string) string {
+	res, err := ioutil.ReadFile(file)
+	if err != nil {
+		fmt.Println("read fail", err)
+	}
+	return string(res)
 }

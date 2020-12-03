@@ -1,0 +1,87 @@
+## 1. CA 系统合约接口
+### 1.1. setRootCA(certfile)
+
++ 接口名称： setRootCA
++ 入参： cert.PEM
++ 返回值：int类型，
+    + 0: 成功
+    + 1： 失败
++ Event事件：
+    + setSuperAdmin(int code, string msg)
+    + topic: "0x7e901ebc26b576bc08715c4d41c6a7732dd47c98452d104a8b6d4b15f0cd7cbb"
++ 说明： 链只有一个RootCA，若已设置，则该调用无效。
+
+
+platonecli调用示例：
+```shell
+# 调用
+
+```
+
+### 1.2. addIssuer(cert)
+
++ 接口名称： addIssuer
++ 入参： cert.PEM
++ 返回值：int类型，
+    + 0: 成功
+    + 1： 失败
++ Event事件：
+    + setSuperAdmin(int code, string msg)
+    + topic: "0x7e901ebc26b576bc08715c4d41c6a7732dd47c98452d104a8b6d4b15f0cd7cbb"
+
+platonecli调用示例：
+```shell
+# 调用
+
+```
+
+### 1.3. getCA(commonName)
+
++ 接口名称： getCA
++ 入参： string
++ 返回值：int类型，
+    + 0: 成功
+    + 1： 失败
++ Event事件：
+    + setSuperAdmin(int code, string msg)
+    + topic: "0x7e901ebc26b576bc08715c4d41c6a7732dd47c98452d104a8b6d4b15f0cd7cbb"
+
+platonecli调用示例：
+```shell
+# 调用
+
+```
+
+### 1.4. getAllCA()
+
++ 接口名称： getAllCA
++ 入参： 无
++ 返回值：int类型，
+    + 0: 成功
+    + 1： 失败
++ Event事件：
+    + setSuperAdmin(int code, string msg)
+    + topic: "0x7e901ebc26b576bc08715c4d41c6a7732dd47c98452d104a8b6d4b15f0cd7cbb"
+
+platonecli调用示例：
+```shell
+# 调用
+
+```
+
+### 1.5. getRootCA()
+
++ 接口名称： getRootCA
++ 入参： 无
++ 返回值：int类型，
+    + 0: 成功
+    + 1： 失败
++ Event事件：
+    + setSuperAdmin(int code, string msg)
+    + topic: "0x7e901ebc26b576bc08715c4d41c6a7732dd47c98452d104a8b6d4b15f0cd7cbb"
+
+platonecli调用示例：
+```shell
+# 调用
+
+```
