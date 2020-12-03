@@ -41,7 +41,7 @@ function create_ca_cert() {
 
     ${BIN_PATH}/platonecli ca generateKey --file ${CA_PATH}/orgkey.pem --curve secp256k1 --target private --format PEM 
     ${BIN_PATH}/platonecli ca generateCSR --organization wxbc --commonName defaultOrg --signatureAlg sha256 --keyfile ${CA_PATH}/orgkey.pem --file ${CA_PATH}/org.csr
-    ${BIN_PATH}/platonecli  ca create  --ca  ${CA_PATH}/root.crt --csr ${CA_PATH}/org.csr  --keyfile ${CA_PATH}/orgkey.pem --serialNumber 100 --file ${CA_PATH}/org.crt
+    ${BIN_PATH}/platonecli  ca create  --ca  ${CA_PATH}/root.crt --csr ${CA_PATH}/org.csr  --keyfile ${CA_PATH}/rootkey.pem --serialNumber 100 --file ${CA_PATH}/org.crt
 }
 
 function create_node_key() {

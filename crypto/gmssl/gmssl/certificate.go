@@ -433,6 +433,8 @@ func VerifyCertificate(parent, cert *Certificate) (bool, error){
 
 	// verify signature
 	pk := C.X509_get_pubkey(parent.x509)
+	defer C.EVP_PKEY_free(pk);
+
 	i := C.X509_verify(cert.x509, pk)
 	if i != 1 {
 		return false, GetErrors()
