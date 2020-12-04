@@ -35,7 +35,14 @@ func TestGenerateECPrivateKey(t *testing.T) {
 			//	t.Errorf("GenerateECPrivateKey() got = %v, want %v", got, tt.want)
 			//}
 			//generatePrivateKey("SM2", "prv.PEM", "PEM")
-			generatePublicKey("pub.PEM", "PEM", "prv.PEM")
+			//generatePublicKey("pub.PEM", "PEM", "prv.PEM")
+			rootPem := readFromFile("selfCA.PEM")
+			certPem := readFromFile("targetCA.PEM")
+			root, _ := NewCertificateFromPEM(rootPem)
+			cert, _ := NewCertificateFromPEM(certPem)
+
+			res, _ := Verify(root, cert)
+			println(res)
 		})
 	}
 }

@@ -46,6 +46,8 @@ var (
 		"__sys_ParamManager": syscontracts.ParameterManagementAddress,
 		"__sys_NodeManager":  syscontracts.NodeManagementAddress,
 		"__sys_UserManager":  syscontracts.UserManagementAddress,
+		"__sys_CAManager":    syscontracts.CAManagementAddress,
+
 		"cnsManager":         syscontracts.CnsManagementAddress,
 	}
 )

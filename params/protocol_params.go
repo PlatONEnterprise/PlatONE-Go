@@ -95,6 +95,7 @@ const (
 	ParamManagerGas   uint64 = 80000 //
 	FireWall          uint64 = 10000
 	CnsInvokeGas      uint64 = 80000 //
+	CAManagerGas     uint64 = 80000 //
 
 )
 

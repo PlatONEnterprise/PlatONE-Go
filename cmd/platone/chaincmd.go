@@ -19,6 +19,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto/gmssl"
 	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
 	"math/big"
 	"os"
@@ -560,6 +561,36 @@ func InitInnerCallFuncFromChain(bc *core.BlockChain) {
 			}
 		}
 
+
+		//get ca list
+		caAddr := sc.ContractAddress["__sys_CAManager"]
+		if caAddr != (common.Address{}) {
+			funcName := "getAllCA"
+			funcParams := []interface{}{}
+			res := callContract(paramAddr, common.GenCallData(funcName, funcParams))
+			//if res != nil {
+			//	caPemList :=
+			//}
+			strRes := common.CallResAsString(res)
+			var tmp common.CAResult
+			var caMapList map[string]*gmssl.Certifacate
+			if err := json.Unmarshal(lutils.String2bytes(strRes), &tmp); err != nil {
+				log.Warn("unmarshal ca list failed", "result", strRes, "err", err.Error())
+			} else if tmp.RetCode != 0 {
+				log.Debug("contract inner error", "code", tmp.RetCode, "msg", tmp.RetMsg)
+			} else {
+				//sc.Nodes = tmp.Data
+				//sc.GenerateNodeData()
+				//p2p.UpdatePeer()
+				for _, v := range tmp.Data{
+					subject, _ := v.Cert.GetSubject()
+					caMapList[subject] = v
+				}
+				sc.CaMap = caMapList
+			}
+
+		}
+
 		if sc.SysParam.GasContractName != "" {
 			cnsAddr := syscontracts.CnsManagementAddress
 			funcName := "getContractAddress"
@@ -576,10 +607,6 @@ func InitInnerCallFuncFromChain(bc *core.BlockChain) {
 			funcName := "getAllNodes"
 			funcParams := []interface{}{}
 			res := callContract(nodeManagerAddr, common.GenCallData(funcName, funcParams))
-			if res != nil {
-				sc.SysParam.GasContractAddr = common.HexToAddress(common.CallResAsString(res))
-			}
-
 			strRes := common.CallResAsString(res)
 
 			var tmp common.CommonResult

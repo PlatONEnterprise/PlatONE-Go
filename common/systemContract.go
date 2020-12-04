@@ -1,6 +1,7 @@
 package common
 
 import (
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto/gmssl"
 	"math/big"
 	"sync"
 )
@@ -11,7 +12,8 @@ var (
 	SystemContractList = []string{
 		"__sys_NodeManager",
 		"__sys_UserManager",
-		"__sys_ParamManager"}
+		"__sys_ParamManager",
+		"__sys_CAManager"}
 )
 
 func SetSysContractCallFunc(f func(*SystemConfig)) {
@@ -22,6 +24,12 @@ type CommonResult struct {
 	RetCode int32      `json:"code"`
 	RetMsg  string     `json:"msg"`
 	Data    []NodeInfo `json:"data"`
+}
+
+type CAResult struct {
+	RetCode int32      `json:"code"`
+	RetMsg  string     `json:"msg"`
+	Data    []*gmssl.Certifacate `json:"data"`
 }
 
 type NodeInfo struct {
@@ -59,6 +67,7 @@ type SystemConfig struct {
 	DeleteNodes     []*NodeInfo
 	HighsetNumber   *big.Int
 	ContractAddress map[string]Address
+	CaMap           map[string]*gmssl.Certifacate
 }
 
 var SysCfg = &SystemConfig{
@@ -73,6 +82,8 @@ var SysCfg = &SystemConfig{
 		TxGasLimit:    100000000000000,
 	},
 	ContractAddress: make(map[string]Address),
+	CaMap:         make(map[string]*gmssl.Certifacate),
+
 }
 
 func InitSystemconfig(root NodeInfo) {
@@ -85,6 +96,7 @@ func InitSystemconfig(root NodeInfo) {
 			TxGasLimit:    10000000000000,
 		},
 		ContractAddress: make(map[string]Address),
+		CaMap:         make(map[string]*gmssl.Certifacate),
 	}
 	if root.Types == 1 {
 		SysCfg.Nodes = append(SysCfg.Nodes, root)
@@ -164,6 +176,24 @@ func (sc *SystemConfig) GetNormalNodes() []NodeInfo {
 		}
 	}
 	return normalNodes
+}
+
+func (sc *SystemConfig) IsCaExistBySubject(subject string) bool{
+	sc.SystemConfigMu.RLock()
+	defer sc.SystemConfigMu.RUnlock()
+	if _, ok := sc.CaMap[subject]; ok {
+		return true
+	}
+	return false
+}
+
+func (sc *SystemConfig) GetCaBySubject(subject string) *gmssl.Certifacate{
+	sc.SystemConfigMu.RLock()
+	defer sc.SystemConfigMu.RUnlock()
+	if ca, ok := sc.CaMap[subject]; ok {
+		return ca
+	}
+	return nil
 }
 
 func (sc *SystemConfig) IsValidJoinNode(publicKey string) bool {

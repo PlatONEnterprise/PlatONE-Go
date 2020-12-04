@@ -225,6 +225,18 @@ func loadLastConsensusNodesList(chain consensus.ChainReader, sb *backend, header
 			}
 		}
 
+		// Get contract parameters from contract
+		caAddr := sc.ContractAddress["__sys_CAManager"]
+		if caAddr != (common.Address{}) {
+			funcName := "getAllCertificate"
+			funcParams := []interface{}{}
+			res := callContract(paramAddr, common.GenCallData(funcName, funcParams))
+			if res != nil {
+				sc.SysParam.GasContractAddr = common.HexToAddress(common.CallResAsString(res))
+			}
+
+		}
+
 		// Get nodes from contract
 		nodeManagerAddr := sc.ContractAddress["__sys_NodeManager"]
 		if nodeManagerAddr != (common.Address{}) {

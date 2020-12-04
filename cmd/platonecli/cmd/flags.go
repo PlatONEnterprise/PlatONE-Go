@@ -355,6 +355,15 @@ var (
 		Usage:"cert file",
 	}
 
+	SubjectFlag = cli.StringFlag{
+		Name:"subject",
+		Usage:"subject",
+	}
+
+	RootCAFlags = cli.BoolFlag{
+		Name:  "root",
+		Usage: "List root ca",
+	}
 	//=============================================================================
 	globalCmdFlags = []cli.Flag{
 		UrlFlags,
@@ -455,5 +464,6 @@ var (
 		CsrFileFlag,
 		CaFileFlag,
 		CertFileFlag,
+		ShowAllFlags,
 	}
 )

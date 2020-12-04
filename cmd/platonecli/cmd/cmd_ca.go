@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	cmd_common "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/common"
+	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/precompiled"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto/gmssl"
 	"gopkg.in/urfave/cli.v1"
 	"io/ioutil"
@@ -74,6 +76,36 @@ var (
 		Flags:     CaCmdFlags,
 		Description: `
 		platonecli ca verify`,
+	}
+
+	SetRootCACmd = cli.Command{
+		Name:      "setRootCA",
+		Usage:     "setRootCA",
+		ArgsUsage: " --ca",
+		Action:    setRootCA,
+		Flags:     CaCmdFlags,
+		Description: `
+		platonecli ca setRootCA`,
+	}
+
+	AddIssuerCmd = cli.Command{
+		Name:      "addIssuer",
+		Usage:     "addIssuer",
+		ArgsUsage: "--ca",
+		Action:    addIssuer,
+		Flags:     CaCmdFlags,
+		Description: `
+		platonecli ca addIssuer`,
+	}
+
+	GetCACmd = cli.Command{
+		Name:      "getCA",
+		Usage:     "getCA",
+		ArgsUsage: "--all --root --subject",
+		Action:    getCA,
+		Flags:     CaCmdFlags,
+		Description: `
+		platonecli ca getCA`,
 	}
 )
 
@@ -311,7 +343,7 @@ func verify(cafile , certfile string) {
 		panic(err)
 	}
 
-	certPEM := readFromFile(cafile)
+	certPEM := readFromFile(certfile)
 	cert, err := gmssl.NewCertificateFromPEM(certPEM)
 	if err != nil{
 		panic(err)
@@ -328,5 +360,42 @@ func verify(cafile , certfile string) {
 		fmt.Println("verify success!")
 	}
 }
+
+func setRootCA (c *cli.Context) {
+	_, _, _, _, _, _, _, _, cafile, _,_, _ := parseFlags(c)
+	funcParams := cmd_common.CombineFuncParams(cafile)
+	result := contractCall(c, funcParams, "setRootCA", precompile.CAManagementAddress)
+	fmt.Printf("%v\n", result)
+}
+
+func addIssuer (c *cli.Context) {
+	_, _, _, _, _, _, _, _, cafile, _,_, _ := parseFlags(c)
+	funcParams := cmd_common.CombineFuncParams(cafile)
+	result := contractCall(c, funcParams, "addIssuer", precompile.CAManagementAddress)
+	fmt.Printf("%v\n", result)
+}
+
+func getCA (c *cli.Context) {
+	all := c.Bool(ShowAllFlags.Name)
+	if all {
+		result := contractCall(c, nil, "getAllCA", precompile.CAManagementAddress)
+		strResult := PrintJson([]byte(result.(string)))
+		fmt.Printf("result:\n%s\n", strResult)
+		return
+	}
+	root := c.Bool(RootCAFlags.Name)
+	if root {
+		result := contractCall(c, nil, "getRootCA", precompile.CAManagementAddress)
+		fmt.Printf("%v\n", result)
+		return
+	}
+	subject := c.String(SubjectFlag.Name)
+	funcParams := cmd_common.CombineFuncParams(subject)
+	result := contractCall(c, funcParams, "getCA", precompile.CAManagementAddress)
+	fmt.Printf("%v\n", result)
+}
+
+
+
 
 //func generateCA(c *cli.Context)

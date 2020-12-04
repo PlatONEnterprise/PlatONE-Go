@@ -106,7 +106,14 @@ func TestGenSelfCA(t *testing.T) {
 			if err != nil{
 				panic(err)
 			}
+			issuer, err := ca.Cert.GetIssuer()
+			if err!=nil{
+				panic(err)
+			}
+			println(issuer)
 			b ,err := json.Marshal(subject)
+			println(subject)
+
 			println(b)
 			//fmt.Println(got.GetText())
 

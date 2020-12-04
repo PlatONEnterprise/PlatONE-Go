@@ -3,13 +3,14 @@ package vm
 import (
 	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto/gmssl"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 )
 
 const (
 	success = 0
-	fail = 1
+	fail = -1
 )
 type CAWrapper struct {
 	base *CAManager
@@ -22,7 +23,7 @@ func (ca *CAWrapper) RequiredGas(input []byte) uint64 {
 	if common.IsBytesEmpty(input) {
 		return 0
 	}
-	return params.CnsManagerGas
+	return params.CAManagerGas
 }
 
 func (ca *CAWrapper) Run(input []byte) ([]byte, error) {
@@ -38,7 +39,6 @@ func (ca *CAWrapper) Run(input []byte) ([]byte, error) {
 		if fnName == "" {
 			fnName = "Notify"
 		}
-		//ca.base.emitEvent(fnName, operateFail, err.Error())
 	}
 
 	return ret, nil
@@ -51,6 +51,7 @@ func (ca *CAWrapper) AllExportFns() SCExportFns {
 		"getCA":                 ca.getCA,
 		"getAllCA":              ca.getAllCA,
 		"getRootCA":             ca.getRootCA,
+		//"getAllCertificate":     ca.getAllCertificate,
 	}
 }
 
@@ -68,28 +69,45 @@ func (ca *CAWrapper) addIssuer(cert string)  (int32, error){
 	if nil != err {
 		return fail, err
 	}
-	return 0, nil
+	return success, nil
 }
 
-func (ca *CAWrapper) getCA(commonName string)  (string, error){
-	castring, err := ca.base.getCA(commonName)
+func (ca *CAWrapper) getCA(subject string)  (string, error){
+	caStruct, err := ca.base.getCA(subject)
 	if nil != err {
 		return "", err
 	}
-	return castring, nil
+	res, err := caStruct.GetPEM()
+	if nil != err {
+		return "", err
+	}
+	return res, nil
 
 }
 
 func (ca *CAWrapper) getAllCA()  (string, error){
 	caList, err := ca.base.getAllCA()
 	if nil != err {
-		return "", err
+		return newInternalErrorResult(err).String(), err
 	}
 	return newSuccessResult(caList).String(), nil
 
 }
 
+func (ca *CAWrapper) getAllCertificate() ([]*gmssl.Certifacate, error){
+	caList, err := ca.base.getAllCA()
+	if nil != err {
+		return nil, err
+	}
+	return caList, nil
+}
+
 func (ca *CAWrapper) getRootCA()  (string, error){
-	return "", nil
+	rootCa, err := ca.base.getRootCA()
+	if nil != err {
+		return "", err
+	}
+	res, _ := rootCa.GetPEM()
+	return res, nil
 
 }
