@@ -85,7 +85,7 @@ processing will proceed even if an individual RLP-file import failure occurs.`,
 		ArgsUsage: "<filename> [<blockNumFirst> <blockNumLast>]",
 		Flags: []cli.Flag{
 			utils.DataDirFlag,
-			utils.VersionFlag,
+			utils.ReleaseFlag,
 			utils.CacheFlag,
 			utils.SyncModeFlag,
 		},
@@ -210,7 +210,7 @@ func importChain(ctx *cli.Context) error {
 	}
 	stack := makeFullNode(ctx)
 	chain, chainDb := utils.MakeChain(ctx, stack)
-	core.UpdateSysContractConfig(chain, common.SysCfg)
+
 	defer chainDb.Close()
 	//InitInnerCallFuncFromChain(chain)
 	// Start periodically gathering memory profiles
@@ -306,11 +306,14 @@ func exportChain(ctx *cli.Context) error {
 	stack := makeFullNode(ctx)
 	chain, _ := utils.MakeChain(ctx, stack)
 	start := time.Now()
-
+	version := ctx.String(utils.ReleaseFlag.Name)
+	if version == "" {
+		utils.Fatalf("\"relese\" flag is required\n")
+	}
 	var err error
 	fp := ctx.Args().First()
 	if len(ctx.Args()) < 3 {
-		err = utils.ExportChain(chain, fp, ctx.GlobalString(utils.VersionFlag.Name))
+		err = utils.ExportChain(chain, fp, version)
 	} else {
 		// This can be improved to allow for numbers larger than 9223372036854775807
 		first, ferr := strconv.ParseInt(ctx.Args().Get(1), 10, 64)
@@ -321,7 +324,7 @@ func exportChain(ctx *cli.Context) error {
 		if first < 0 || last < 0 {
 			utils.Fatalf("Export error: block number must be greater than 0\n")
 		}
-		err = utils.ExportAppendChain(chain, fp, ctx.GlobalString(utils.VersionFlag.Name), uint64(first), uint64(last))
+		err = utils.ExportAppendChain(chain, fp, ctx.GlobalString(utils.ReleaseFlag.Name), uint64(first), uint64(last))
 	}
 
 	if err != nil {

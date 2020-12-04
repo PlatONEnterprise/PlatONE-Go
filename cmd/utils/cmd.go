@@ -19,6 +19,7 @@ package utils
 
 import (
 	"compress/gzip"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -130,11 +131,17 @@ func ImportChain(chain *core.BlockChain, fn string) error {
 	if err := stream.Decode(&pivot); err != nil {
 		return fmt.Errorf("at import pivot: %v", err)
 	}
-
-	var mapSysContractAddr map[string]common.Address
-	if err := stream.Decode(&mapSysContractAddr); err != nil {
+	
+	mapSysContractAddr := make(map[string]common.Address)
+	var b []byte
+	if err := stream.Decode(&b); err != nil {
 		return fmt.Errorf("at import system contract: %v", err)
 	}
+	if err := json.Unmarshal(b,&mapSysContractAddr);err != nil{
+		return fmt.Errorf("at import system contract: %v", err)
+	}
+
+	core.UpdateSysContractConfig(chain, common.SysCfg)
 
 	// Run actual the import.
 	blocks := make(types.Blocks, importBatchSize)

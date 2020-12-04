@@ -4,7 +4,10 @@ import (
 	"math/big"
 	"sync"
 )
-
+const  (
+	Sys_pivot_key = string("sys_pivot_key")
+	Sys_old_system_contract_key = string("sys_old_system_contract_key")
+)
 type CommonResult struct {
 	RetCode int32      `json:"code"`
 	RetMsg  string     `json:"msg"`

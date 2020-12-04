@@ -18,6 +18,7 @@
 package core
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
@@ -493,7 +494,11 @@ func (bc *BlockChain) ExportN(w io.Writer, version string, first uint64, last ui
 			m[k] = v
 		}
 	}
-	rlp.Encode(w, m)
+	b, err := json.Marshal(m)
+	if err != nil {
+		return err
+	}
+	rlp.Encode(w, b)
 
 	start, reported := time.Now(), time.Now()
 	for nr := first; nr <= last; nr++ {
@@ -519,9 +524,7 @@ func (bc *BlockChain) runInterpreter(evm *vm.EVM, contract *vm.Contract, input [
 		ok, input = interpreter.CanRun(contract.Code, input, contract)
 		if ok {
 			btsRes, err := interpreter.Run(contract, input, true)
-			if err != nil {
-				return btsRes, err
-			}
+			return btsRes, err
 		}
 	}
 	return nil, errors.New("no interpreters can run this contract")
@@ -1525,4 +1528,14 @@ func (bc *BlockChain) SubscribeChainHeadEvent(ch chan<- ChainHeadEvent) event.Su
 // SubscribeLogsEvent registers a subscription of []*types.Log.
 func (bc *BlockChain) SubscribeLogsEvent(ch chan<- []*types.Log) event.Subscription {
 	return bc.scope.Track(bc.logsFeed.Subscribe(ch))
+}
+
+// Put put key/value pair into db directly
+func (bc *BlockChain) Put(key []byte, value []byte) error{
+	return bc.db.Put(key, value)
+}
+
+// Get get value from db directly
+func (bc *BlockChain) Get(key []byte)([]byte,error){
+	return bc.db.Get(key)
 }
