@@ -29,7 +29,7 @@ type CommonResult struct {
 type CAResult struct {
 	RetCode int32      `json:"code"`
 	RetMsg  string     `json:"msg"`
-	Data    []*gmssl.Certifacate `json:"data"`
+	Data    []*gmssl.Certificate `json:"data"`
 }
 
 type NodeInfo struct {
@@ -67,7 +67,7 @@ type SystemConfig struct {
 	DeleteNodes     []*NodeInfo
 	HighsetNumber   *big.Int
 	ContractAddress map[string]Address
-	CaMap           map[string]*gmssl.Certifacate
+	CaMap           map[string]*gmssl.Certificate
 }
 
 var SysCfg = &SystemConfig{
@@ -82,7 +82,7 @@ var SysCfg = &SystemConfig{
 		TxGasLimit:    100000000000000,
 	},
 	ContractAddress: make(map[string]Address),
-	CaMap:         make(map[string]*gmssl.Certifacate),
+	CaMap:         make(map[string]*gmssl.Certificate),
 
 }
 
@@ -96,7 +96,7 @@ func InitSystemconfig(root NodeInfo) {
 			TxGasLimit:    10000000000000,
 		},
 		ContractAddress: make(map[string]Address),
-		CaMap:         make(map[string]*gmssl.Certifacate),
+		CaMap:         make(map[string]*gmssl.Certificate),
 	}
 	if root.Types == 1 {
 		SysCfg.Nodes = append(SysCfg.Nodes, root)
@@ -187,7 +187,7 @@ func (sc *SystemConfig) IsCaExistBySubject(subject string) bool{
 	return false
 }
 
-func (sc *SystemConfig) GetCaBySubject(subject string) *gmssl.Certifacate{
+func (sc *SystemConfig) GetCaBySubject(subject string) *gmssl.Certificate{
 	sc.SystemConfigMu.RLock()
 	defer sc.SystemConfigMu.RUnlock()
 	if ca, ok := sc.CaMap[subject]; ok {

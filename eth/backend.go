@@ -172,7 +172,7 @@ func InitInnerCallFunc(ethPtr *Ethereum) {
 			//}
 			strRes := common.CallResAsString(res)
 			var tmp common.CAResult
-			var caMapList map[string]*gmssl.Certifacate
+			var caMapList map[string]*gmssl.Certificate
 			if err := json.Unmarshal(lutils.String2bytes(strRes), &tmp); err != nil {
 				log.Warn("unmarshal ca list failed", "result", strRes, "err", err.Error())
 			} else if tmp.RetCode != 0 {

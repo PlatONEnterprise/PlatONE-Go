@@ -94,7 +94,7 @@ func (ca *CAWrapper) getAllCA()  (string, error){
 
 }
 
-func (ca *CAWrapper) getAllCertificate() ([]*gmssl.Certifacate, error){
+func (ca *CAWrapper) getAllCertificate() ([]*gmssl.Certificate, error){
 	caList, err := ca.base.getAllCA()
 	if nil != err {
 		return nil, err
