@@ -39,7 +39,7 @@ func TestCa_GetCA(t *testing.T) {
 	//list, _ := c.getList()
 	subject := "/C=CN/O=wxbc/CN=test1"
 	res, _ := c.getCA(subject)
-	cert, _ := res.GetPEM()
+	cert, _ :=res.GetPEM()
 	//rootCA, _ := c.getRootCA()
 	//rootCAString, _ := rootCA.GetPEM()
 

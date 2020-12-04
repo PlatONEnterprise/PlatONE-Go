@@ -6,6 +6,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto/gmssl"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+
 	"math/big"
 	"sort"
 	"strings"
@@ -180,7 +181,7 @@ func (ca *CAManager) getPem(sub string) string{
 	return string(ca.getState(sub))
 }
 
-func (ca *CAManager) getCA(subject string) (*gmssl.Certifacate, error){
+func (ca *CAManager) getCA(subject string) (*gmssl.Certificate, error){
 
 	caPem := ca.getState(subject)
 	caDoc, err := gmssl.NewCertificateFromPEM(string(caPem))
@@ -190,8 +191,8 @@ func (ca *CAManager) getCA(subject string) (*gmssl.Certifacate, error){
 	return caDoc, nil
 }
 
-func (ca *CAManager) getAllCA()  ([]*gmssl.Certifacate, error){
-	certDocList := make([]*gmssl.Certifacate, 0)
+func (ca *CAManager) getAllCA()  ([]*gmssl.Certificate, error){
+	certDocList := make([]*gmssl.Certificate, 0)
 	caList, _ := ca.getList()
 	for _, v := range caList{
 		pem := ca.getState(v)
@@ -204,8 +205,8 @@ func (ca *CAManager) getAllCA()  ([]*gmssl.Certifacate, error){
 	return certDocList, nil
 }
 
-func (ca *CAManager) getAllCertificate()  ([]*gmssl.Certifacate, error){
-	certDocList := make([]*gmssl.Certifacate, 0)
+func (ca *CAManager) getAllCertificate()  ([]*gmssl.Certificate, error){
+	certDocList := make([]*gmssl.Certificate, 0)
 	caList, _ := ca.getList()
 	for _, v := range caList{
 		pem := ca.getState(v)
@@ -219,7 +220,7 @@ func (ca *CAManager) getAllCertificate()  ([]*gmssl.Certifacate, error){
 }
 
 
-func (ca *CAManager) getRootCA() (*gmssl.Certifacate, error){
+func (ca *CAManager) getRootCA() (*gmssl.Certificate, error){
 
 	rootSub := ca.getState("root")
 	rootCA := ca.getState(string(rootSub))
