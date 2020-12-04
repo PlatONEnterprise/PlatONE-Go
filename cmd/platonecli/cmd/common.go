@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"encoding/json"
-
 	//"github.com/PlatONEnetwork/PlatONE-Go/build/_workspace/pkg/mod/gopkg.in/urfave/cli.v1@v1.20.0"
 	//"log"
 	"strings"
@@ -34,7 +33,6 @@ func contractCallWrap(c *cli.Context, funcParams []string, funcName, contract st
 	methodAbi, _ := contractAbi.GetFuncFromAbi(funcName)
 	// convert user input string to args in Golang
 	funcArgs, _ := methodAbi.StringToArgs(funcParams)
-
 	// judge whether the input string is contract address or contract name
 	cns, to, err := cmd_common.CnsParse(contract)
 	if err != nil {
@@ -45,7 +43,6 @@ func contractCallWrap(c *cli.Context, funcParams []string, funcName, contract st
 	data := packet.NewData(funcArgs, methodAbi)
 	dataGenerator := packet.NewContractDataGen(data, contractAbi, cns.TxType)
 	dataGenerator.SetInterpreter(vm, cns.Name, cns.TxType)
-
 	return clientCommonV2(c, dataGenerator, &to)
 }
 

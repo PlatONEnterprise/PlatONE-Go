@@ -11,6 +11,7 @@ var (
 	GroupManagementAddress       = syscontracts.GroupManagementAddress.String()       // The PlatONE Precompiled contract addr for group management
 	ContractDataProcessorAddress = syscontracts.ContractDataProcessorAddress.String() // The PlatONE Precompiled contract addr for group management
 	CnsInvokeAddress             = syscontracts.CnsInvokeAddress.String()             // The PlatONE Precompiled contract addr for group management
+	CaManagerAddress             = syscontracts.CAManagementAddress.String()
 )
 
 const (
@@ -28,6 +29,8 @@ var List = map[string]string{
 	FirewallManagementAddress:    "../../release/linux/conf/contracts/fireWall.abi.json",
 	GroupManagementAddress:       "../../release/linux/conf/contracts/groupManager.cpp.abi.json",
 	ContractDataProcessorAddress: "../../release/linux/conf/contracts/contractData.cpp.abi.json",
+	CaManagerAddress :            "../../release/linux/conf/contracts/caManager.cpp.abi.json",
+
 
 	CnsInitRegEvent: "../../release/linux/conf/contracts/cnsInitRegEvent.json",
 	CnsInvokeEvent:  "../../release/linux/conf/contracts/cnsInvokeEvent.json",

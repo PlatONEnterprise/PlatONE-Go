@@ -18,7 +18,6 @@ import (
 )
 
 func clientCommonV2(c *cli.Context, dataGen packet.MsgDataGen, to *common.Address) []interface{} {
-
 	// get the client global parameters
 	keyfile, isSync, isDefault, url := getClientConfig(c)
 
@@ -26,12 +25,10 @@ func clientCommonV2(c *cli.Context, dataGen packet.MsgDataGen, to *common.Addres
 	if err != nil {
 		utl.Fatalf("set up client failed: %s\n", err.Error())
 	}
-
 	// form transaction
 	tx := getTxParams(c)
 	tx.From = common.HexToAddress(keyfile.Address)
 	tx.To = to
-
 	result, err := pc.MessageCallV2(dataGen, tx, keyfile, isSync)
 	if err != nil {
 		utl.Fatalf("to do: %s\n", err.Error())

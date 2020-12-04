@@ -51,6 +51,7 @@ func (ca *CAWrapper) AllExportFns() SCExportFns {
 		"getCA":                 ca.getCA,
 		"getAllCA":              ca.getAllCA,
 		"getRootCA":             ca.getRootCA,
+
 		//"getAllCertificate":     ca.getAllCertificate,
 	}
 }
@@ -86,12 +87,12 @@ func (ca *CAWrapper) getCA(subject string)  (string, error){
 }
 
 func (ca *CAWrapper) getAllCA()  (string, error){
-	caList, err := ca.base.getAllCA()
-	if nil != err {
-		return newInternalErrorResult(err).String(), err
-	}
-	return newSuccessResult(caList).String(), nil
-
+	//caList, err := ca.base.getAllCA()
+	//if nil != err {
+	//	return newInternalErrorResult(err).String(), err
+	//}
+	//return newSuccessResult(caList).String(), nil
+	return "123", nil
 }
 
 func (ca *CAWrapper) getAllCertificate() ([]*gmssl.Certificate, error){
@@ -101,6 +102,9 @@ func (ca *CAWrapper) getAllCertificate() ([]*gmssl.Certificate, error){
 	}
 	return caList, nil
 }
+func (ca *CAWrapper) test() (string, error){
+	return "test", nil
+}
 
 func (ca *CAWrapper) getRootCA()  (string, error){
 	rootCa, err := ca.base.getRootCA()
@@ -108,6 +112,8 @@ func (ca *CAWrapper) getRootCA()  (string, error){
 		return "", err
 	}
 	res, _ := rootCa.GetPEM()
-	return res, nil
+	return newSuccessResult(res).String(), nil
+
+	//return res, nil
 
 }

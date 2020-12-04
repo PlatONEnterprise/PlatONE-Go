@@ -160,3 +160,33 @@ func TestGenerateKeyPair(t *testing.T) {
 		})
 	}
 }
+
+func TestCreate(t *testing.T) {
+	type args struct {
+		curve string
+		file string
+		format string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		//want    *gmssl.PrivateKey
+		//wantErr bool
+	}{
+		{args:args{"SM2", "key111.PEM", "PEM"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			//generateSelfSignCA("test-selfCA.PEM", "private.PEM", "wxbc", "ljj", "sm3", 12)
+			//generateCsr("test-csr.PEM", "private.PEM", "wxbc", "user", "sm3")
+			//generateCAForCRS("test-CA.PEM", "private.PEM", "test-csr.PEM", "test-selfCA.PEM", 123, "sm3")
+			cafile := readFromFile("test-selfCA.PEM")
+			certfile := readFromFile("test-CA.PEM")
+			ca, _ := gmssl.NewCertificateFromPEM(cafile)
+			cert, _ := gmssl.NewCertificateFromPEM(certfile)
+			bool, _ := gmssl.Verify(ca, cert)
+			println(bool)
+		})
+	}
+}

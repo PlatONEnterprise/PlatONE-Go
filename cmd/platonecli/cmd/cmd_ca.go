@@ -4,6 +4,7 @@ import (
 	"fmt"
 	cmd_common "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/common"
 	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/precompiled"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/byteutil"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto/gmssl"
 	"gopkg.in/urfave/cli.v1"
 	"io/ioutil"
@@ -26,6 +27,10 @@ var (
 			SelfCAGenerateCmd,
 			CaCreateCmd,
 			CaVerfyCmd,
+			SetRootCACmd,
+			AddIssuerCmd,
+			GetCACmd,
+
 		},
 	}
 
@@ -380,19 +385,29 @@ func getCA (c *cli.Context) {
 	if all {
 		result := contractCall(c, nil, "getAllCA", precompile.CAManagementAddress)
 		strResult := PrintJson([]byte(result.(string)))
-		fmt.Printf("result:\n%s\n", strResult)
+		fmt.Printf("result:\n%02x\n", []byte(strResult))
 		return
 	}
 	root := c.Bool(RootCAFlags.Name)
+
 	if root {
 		result := contractCall(c, nil, "getRootCA", precompile.CAManagementAddress)
-		fmt.Printf("%v\n", result)
+		//strResult := PrintJson([]byte(result.(string)))
+		fmt.Printf("result:\n%s\n", result)
+
+		strResult := result.(string)
+
+		fmt.Printf("result:\n%s\n", strResult)
 		return
 	}
+
 	subject := c.String(SubjectFlag.Name)
+
 	funcParams := cmd_common.CombineFuncParams(subject)
 	result := contractCall(c, funcParams, "getCA", precompile.CAManagementAddress)
-	fmt.Printf("%v\n", result)
+	//strResult := PrintJson([]byte(result.(string)))
+	strResult := byteutil.BytesToString([]byte(result.(string)))
+	fmt.Printf("result:\n%s\n", strResult)
 }
 
 

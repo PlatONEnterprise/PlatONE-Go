@@ -465,5 +465,7 @@ var (
 		CaFileFlag,
 		CertFileFlag,
 		ShowAllFlags,
+		RootCAFlags,
+		SubjectFlag,
 	}
 )
