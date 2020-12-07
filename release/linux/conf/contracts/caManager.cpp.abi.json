@@ -1,0 +1,89 @@
+[
+    {
+        "name": "setRootCA",
+        "inputs": [
+            {
+                "name": "cert",
+                "type": "string"
+            }
+        ],
+
+        "outputs": [
+            {
+		        "name": "",
+                "type": "int32"
+            }
+	    ],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "addIssuer",
+        "inputs": [
+            {
+                "name": "subject",
+                "type": "string"
+            }
+        ],
+
+        "outputs": [
+            {
+                "name": "",
+                "type": "int32"
+            }
+		        
+	],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "getCA",
+        "inputs": [
+            {
+                "name": "subject",
+                "type": "string"
+            }
+        ],
+
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+		        
+	],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "getAllCA",
+        "inputs": [],
+
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+		        
+	],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "getRootCA",
+        "inputs": [
+        ],
+
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+		        
+	],
+        "constant": "true",
+        "type": "function"
+    }
+  
+]
+
