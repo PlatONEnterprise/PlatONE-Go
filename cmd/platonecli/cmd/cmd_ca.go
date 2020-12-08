@@ -370,14 +370,16 @@ func verify(cafile , certfile string) {
 
 func setRootCert (c *cli.Context) {
 	_, _, _, _, _, _, _, _, cafile, _,_, _ := parseFlags(c)
-	funcParams := cmd_common.CombineFuncParams(cafile)
+	cert:= readFromFile(cafile)
+	funcParams := cmd_common.CombineFuncParams(cert)
 	result := contractCall(c, funcParams, "setRootCert", precompile.CAManagementAddress)
 	fmt.Printf("%v\n", result)
 }
 
 func addIssuer (c *cli.Context) {
 	_, _, _, _, _, _, _, _, cafile, _,_, _ := parseFlags(c)
-	funcParams := cmd_common.CombineFuncParams(cafile)
+	cert:= readFromFile(cafile)
+	funcParams := cmd_common.CombineFuncParams(cert)
 	result := contractCall(c, funcParams, "addIssuer", precompile.CAManagementAddress)
 	fmt.Printf("%v\n", result)
 }

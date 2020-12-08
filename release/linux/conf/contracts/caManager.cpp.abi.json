@@ -83,6 +83,34 @@
 	],
         "constant": "true",
         "type": "function"
+    },
+    {   
+        "name":"SetRootCert", 
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {   
+        "name":"AddIssuer", 
+        "inputs":[
+            {"type":"uint32"},
+            {"type":"string"}
+        ],
+        "type":"event"
+    },
+    {
+        "name": "Notify",
+        "inputs": [
+            {
+                "type": "uint64"
+            },
+            {
+                "type": "string"
+            }
+        ],
+        "type": "event"
     }
   
 ]

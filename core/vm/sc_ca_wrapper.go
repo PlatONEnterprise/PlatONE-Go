@@ -38,6 +38,7 @@ func (ca *CAWrapper) Run(input []byte) ([]byte, error) {
 		if fnName == "" {
 			fnName = "Notify"
 		}
+		ca.base.emitNotifyEventInCA(fnName, operateFail, err.Error())
 	}
 
 	return ret, nil

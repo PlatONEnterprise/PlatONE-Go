@@ -49,6 +49,14 @@ var (
 	errOrgnizationUnsupported = errors.New("Unsupported Orgnization ")
 	errEmailUnsupported       = errors.New("Unsupported email address ")
 	errPhoneUnsupported       = errors.New("Unsupported phone number ")
+
+	errNewCert   = errors.New("new certificate error")
+	errGetSubject   = errors.New("fail to get subject")
+	errAlreadySetRootCert = errors.New("already set root cert")
+	errAlreadySetIssuerCert = errors.New("already set issuer cert")
+
+
+
 )
 
 var (
