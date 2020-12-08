@@ -4,7 +4,6 @@ import (
 	"fmt"
 	cmd_common "github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/common"
 	precompile "github.com/PlatONEnetwork/PlatONE-Go/cmd/platoneclient/precompiled"
-	"github.com/PlatONEnetwork/PlatONE-Go/common/byteutil"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto/gmssl"
 	"gopkg.in/urfave/cli.v1"
 	"io/ioutil"
@@ -395,7 +394,6 @@ func getCert (c *cli.Context) {
 
 	if root {
 		result := contractCall(c, nil, "getRootCert", precompile.CAManagementAddress)
-		//strResult := PrintJson([]byte(result.(string)))
 
 		strResult := result.(string)
 
@@ -404,11 +402,9 @@ func getCert (c *cli.Context) {
 	}
 
 	subject := c.String(SubjectFlag.Name)
-
 	funcParams := cmd_common.CombineFuncParams(subject)
 	result := contractCall(c, funcParams, "getCert", precompile.CAManagementAddress)
-	//strResult := PrintJson([]byte(result.(string)))
-	strResult := byteutil.BytesToString([]byte(result.(string)))
+	strResult := PrintJson([]byte(result.(string)))
 	fmt.Printf("result:\n%s\n", strResult)
 }
 
@@ -433,4 +429,3 @@ func CertToString(res interface{}) interface{} {
 }
 
 
-//func generateCA(c *cli.Context)

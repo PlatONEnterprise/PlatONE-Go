@@ -60,14 +60,16 @@ func BytesToInt(bys []byte) int {
 }
 func TestWrapperCA(t *testing.T) {
 	db := newMockStateDB()
-	fnNameInput := "setRootCA"
-	params := "/home/night/go/src/github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/cmd/test-CA.PEM"
+	fnNameInput := "setRootCert"
+	params := "/home/night/go/src/github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/cmd/selfCA.PEM"
 	c := CAWrapper{NewCAManager(db)}
 	var input = MakeInput(fnNameInput, string(params))
 	ret, _ := c.Run(input)
 
-	fnNameInput1 := "getRootCA"
-	var input1 = MakeInput(fnNameInput1)
+	fnNameInput1 := "getCert"
+	params1 := "/C=CN/O=wxbc/CN=test1"
+
+	var input1 = MakeInput(fnNameInput1, params1)
 	ret2, _ := c.Run(input1)
 
 	log.Println(BytesToInt(ret))

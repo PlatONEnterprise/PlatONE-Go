@@ -79,7 +79,7 @@ func (ca *CAWrapper) getCert(subject string)  (string, error){
 	if nil != err {
 		return "", err
 	}
-	return res, nil
+	return newSuccessResult(res).String(), nil
 
 }
 
@@ -91,13 +91,6 @@ func (ca *CAWrapper) getAllCert() (string, error){
 	return newSuccessResult(caList).String(), nil
 }
 
-//func (ca *CAWrapper) getAllCertificate() ([]*gmssl.Certificate, error){
-//	caList, err := ca.base.getAllCert()
-//	if nil != err {
-//		return nil, err
-//	}
-//	return caList, nil
-//}
 func (ca *CAWrapper) test() (string, error){
 	return "test", nil
 }
