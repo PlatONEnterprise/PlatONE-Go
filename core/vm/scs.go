@@ -55,12 +55,12 @@ func RunPlatONEPrecompiledSC(p PrecompiledContract, input []byte, contract *Cont
 
 			return node.Run(input)
 		case *CAWrapper:
-			node := newCAWrapper(evm.StateDB)
-			node.base.caller = evm.Origin
-			node.base.blockNumber = evm.BlockNumber
-			node.base.contractAddr = *contract.CodeAddr
+			ca := newCAWrapper(evm.StateDB)
+			ca.base.caller = evm.Origin
+			ca.base.blockNumber = evm.BlockNumber
+			ca.base.contractAddr = *contract.CodeAddr
 
-			return node.Run(input)
+			return ca.Run(input)
 		case *CnsWrapper:
 			cns := newCnsManager(evm.StateDB)
 			cns.caller = contract.CallerAddress

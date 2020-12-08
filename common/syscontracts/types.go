@@ -10,7 +10,7 @@ var (
 	UserManagementAddress        = common.HexToAddress("0x1000000000000000000000000000000000000001") // The PlatONE Precompiled contract addr for user management
 	NodeManagementAddress        = common.HexToAddress("0x1000000000000000000000000000000000000002") // The PlatONE Precompiled contract addr for node management
 	CnsManagementAddress         = common.HexToAddress("0x0000000000000000000000000000000000000011") // The PlatONE Precompiled contract addr for CNS
-	CAManagementAddress         = common.HexToAddress("0x0000000000000000000000000000000000000003") // The PlatONE Precompiled contract addr for CA
+	CAManagementAddress          = common.HexToAddress("0x1000000000000000000000000000000000000003") // The PlatONE Precompiled contract addr for CA
 	ParameterManagementAddress   = common.HexToAddress("0x1000000000000000000000000000000000000004") // The PlatONE Precompiled contract addr for parameter management
 	FirewallManagementAddress    = common.HexToAddress("0x1000000000000000000000000000000000000005") // The PlatONE Precompiled contract addr for fire wall management
 	GroupManagementAddress       = common.HexToAddress("0x1000000000000000000000000000000000000006") // The PlatONE Precompiled contract addr for group management

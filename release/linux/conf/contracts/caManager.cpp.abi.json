@@ -1,6 +1,6 @@
 [
     {
-        "name": "setRootCA",
+        "name": "setRootCert",
         "inputs": [
             {
                 "name": "cert",
@@ -37,7 +37,7 @@
         "type": "function"
     },
     {
-        "name": "getCA",
+        "name": "getCert",
         "inputs": [
             {
                 "name": "subject",
@@ -56,7 +56,7 @@
         "type": "function"
     },
     {
-        "name": "getAllCA",
+        "name": "getAllCert",
         "inputs": [],
 
         "outputs": [
@@ -70,7 +70,7 @@
         "type": "function"
     },
     {
-        "name": "getRootCA",
+        "name": "getRootCert",
         "inputs": [
         ],
 

@@ -96,7 +96,7 @@ func TestGenSelfCA(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			//generatePrivateKey("SM2", "private.PEM", "PEM" )
-			generateSelfSignCA(tt.args.file, tt.args.keyfile, tt.args.organization, tt.args.commonName, tt.args.signatureAlg, tt.args.serialNumber)
+			generateSelfSignCert(tt.args.file, tt.args.keyfile, tt.args.organization, tt.args.commonName, tt.args.signatureAlg, tt.args.serialNumber)
 			cafile := readFromFile("selfCA.PEM")
 			ca, err := gmssl.NewCertificateFromPEM(cafile)
 			if err != nil{

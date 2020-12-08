@@ -9,6 +9,7 @@ import (
 	"gopkg.in/urfave/cli.v1"
 	"io/ioutil"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
 	"syscall"
@@ -54,20 +55,20 @@ var (
 	}
 
 	SelfCAGenerateCmd = cli.Command{
-		Name:      "genSelfSignCA",
-		Usage:     "genSelfSignCA",
+		Name:      "genSelfSignCert",
+		Usage:     "genSelfSignCert",
 		ArgsUsage: "--file <file> --keyfile <keyfile> --organization <organization> --commonName <commonName> -- serial <serial> --dgst <dgst>",
-		Action:    genSelfSignCA,
+		Action:    genSelfSignCert,
 		Flags:     CaCmdFlags,
 		Description: `
-		platonecli ca genSelfSignCA`,
+		platonecli ca genSelfSignCert`,
 	}
 
 	CaCreateCmd = cli.Command{
 		Name:      "create",
 		Usage:     "create",
 		ArgsUsage: "--file <file> --keyfile <keyfile> --organization <organization> --commonName <commonName> -- serial <serial> --dgst <dgst>",
-		Action:    generateCA,
+		Action:    generateCert,
 		Flags:     CaCmdFlags,
 		Description: `
 		platonecli ca create`,
@@ -77,20 +78,20 @@ var (
 		Name:      "verify",
 		Usage:     "verify",
 		ArgsUsage: "--file <file> --keyfile <keyfile> --organization <organization> --commonName <commonName> -- serial <serial> --dgst <dgst>",
-		Action:    verifyCa,
+		Action:    verifyCert,
 		Flags:     CaCmdFlags,
 		Description: `
 		platonecli ca verify`,
 	}
 
 	SetRootCACmd = cli.Command{
-		Name:      "setRootCA",
-		Usage:     "setRootCA",
+		Name:      "setRootCert",
+		Usage:     "setRootCert",
 		ArgsUsage: " --ca",
-		Action:    setRootCA,
+		Action:    setRootCert,
 		Flags:     CaCmdFlags,
 		Description: `
-		platonecli ca setRootCA`,
+		platonecli ca setRootCert`,
 	}
 
 	AddIssuerCmd = cli.Command{
@@ -104,13 +105,13 @@ var (
 	}
 
 	GetCACmd = cli.Command{
-		Name:      "getCA",
-		Usage:     "getCA",
+		Name:      "getCert",
+		Usage:     "getCert",
 		ArgsUsage: "--all --root --subject",
-		Action:    getCA,
+		Action:    getCert,
 		Flags:     CaCmdFlags,
 		Description: `
-		platonecli ca getCA`,
+		platonecli ca getCert`,
 	}
 )
 
@@ -119,7 +120,7 @@ func parseFlags (c *cli.Context) (string, string, string, string, string, string
 	file := c.String(OutFileFlag.Name)
 	target := c.String(TargetFlag.Name)
 	format := c.String(FormatFlag.Name)
-	keyfile := c.String(KeyFileFlag.Name)
+	private := c.String(PrivateFlag.Name)
 	organization := c.String(OrganizationFlags.Name)
 	commonName := c.String(CommonNameFlag.Name)
 	csr := c.String(CsrFileFlag.Name)
@@ -137,7 +138,7 @@ func parseFlags (c *cli.Context) (string, string, string, string, string, string
 	}
 
 	signatureAlg := c.String(SignatureAlgFlag.Name)
-	return curve, file,target, format, keyfile, organization, commonName, csr, ca, cert,serialNumber, signatureAlg
+	return curve, file,target, format, private, organization, commonName, csr, ca, cert,serialNumber, signatureAlg
 }
 
 func readFromFile(keyfile string) string {
@@ -229,6 +230,8 @@ func generatePrivateKey(curve, file, format string)  {
 		}
 
 		writeToFile(file, pem)
+	} else {
+		panic("format error")
 	}
 }
 
@@ -271,12 +274,12 @@ func generateCsr(file, keyfile, organization, commonName, signatureAlg string){
 	writeToFile(file, res)
 }
 
-func genSelfSignCA(c *cli.Context) {
+func genSelfSignCert(c *cli.Context) {
 	_, file, _, _, keyfile, organization, commonName, _,_,_,serialNumber, signatureAlg := parseFlags(c)
-	generateSelfSignCA(file, keyfile, organization, commonName, signatureAlg, serialNumber)
+	generateSelfSignCert(file, keyfile, organization, commonName, signatureAlg, serialNumber)
 }
 
-func generateSelfSignCA(file, keyfile, organization, commonName, signatureAlg string, serialNumber int64) {
+func generateSelfSignCert(file, keyfile, organization, commonName, signatureAlg string, serialNumber int64) {
 	syscall.Umask(0)
 	os.Chmod(keyfile, 0666)
 	privateString := readFromFile(keyfile)
@@ -300,7 +303,7 @@ func generateSelfSignCA(file, keyfile, organization, commonName, signatureAlg st
 	writeToFile(file, res)
 }
 
-func generateCA(c *cli.Context) {
+func generateCert(c *cli.Context) {
 	_, outfile, _, _, keyfile, _, _, csrfile, cafile,_,serialNumber, alg := parseFlags(c)
 	generateCAForCRS(outfile, keyfile, csrfile, cafile, serialNumber, alg)
 }
@@ -336,7 +339,7 @@ func generateCAForCRS(outfile string, keyfile string, csrfile string, cafile str
 	writeToFile(outfile, certPEM)
 }
 
-func verifyCa(c *cli.Context) {
+func verifyCert(c *cli.Context) {
 	_, _, _, _, _, _, _, _, cafile, certfile,_, _ := parseFlags(c)
 	verify(cafile, certfile)
 }
@@ -366,10 +369,10 @@ func verify(cafile , certfile string) {
 	}
 }
 
-func setRootCA (c *cli.Context) {
+func setRootCert (c *cli.Context) {
 	_, _, _, _, _, _, _, _, cafile, _,_, _ := parseFlags(c)
 	funcParams := cmd_common.CombineFuncParams(cafile)
-	result := contractCall(c, funcParams, "setRootCA", precompile.CAManagementAddress)
+	result := contractCall(c, funcParams, "setRootCert", precompile.CAManagementAddress)
 	fmt.Printf("%v\n", result)
 }
 
@@ -380,20 +383,19 @@ func addIssuer (c *cli.Context) {
 	fmt.Printf("%v\n", result)
 }
 
-func getCA (c *cli.Context) {
+func getCert (c *cli.Context) {
 	all := c.Bool(ShowAllFlags.Name)
 	if all {
-		result := contractCall(c, nil, "getAllCA", precompile.CAManagementAddress)
+		result := contractCall(c, nil, "getAllCert", precompile.CAManagementAddress)
 		strResult := PrintJson([]byte(result.(string)))
-		fmt.Printf("result:\n%02x\n", []byte(strResult))
+		fmt.Printf("result:\n%s\n", strResult)
 		return
 	}
 	root := c.Bool(RootCAFlags.Name)
 
 	if root {
-		result := contractCall(c, nil, "getRootCA", precompile.CAManagementAddress)
+		result := contractCall(c, nil, "getRootCert", precompile.CAManagementAddress)
 		//strResult := PrintJson([]byte(result.(string)))
-		fmt.Printf("result:\n%s\n", result)
 
 		strResult := result.(string)
 
@@ -404,13 +406,31 @@ func getCA (c *cli.Context) {
 	subject := c.String(SubjectFlag.Name)
 
 	funcParams := cmd_common.CombineFuncParams(subject)
-	result := contractCall(c, funcParams, "getCA", precompile.CAManagementAddress)
+	result := contractCall(c, funcParams, "getCert", precompile.CAManagementAddress)
 	//strResult := PrintJson([]byte(result.(string)))
 	strResult := byteutil.BytesToString([]byte(result.(string)))
 	fmt.Printf("result:\n%s\n", strResult)
 }
 
+func CertToString(res interface{}) interface{} {
+	value := reflect.TypeOf(res)
 
+	switch value.Kind() {
+	case reflect.Uint64:
+
+		return strconv.FormatUint(res.(uint64), 10)
+
+	case reflect.Uint32:
+		return strconv.FormatUint(uint64(res.(uint32)), 10)
+
+	case reflect.String:
+		fmt.Printf("string")
+		return res
+
+	default:
+		panic("not support, please add the corresponding type")
+	}
+}
 
 
 //func generateCA(c *cli.Context)

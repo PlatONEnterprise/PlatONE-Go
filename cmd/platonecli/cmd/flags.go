@@ -295,9 +295,9 @@ var (
 	}
 
 	// ca
-	KeyFileFlag = cli.StringFlag{
-		Name:"keyfile",
-		Usage: "keyfile for private key, only support PEM format",
+	PrivateFlag = cli.StringFlag{
+		Name:"private",
+		Usage: "private key, only support PEM format",
 	}
 
 	OutFileFlag = cli.StringFlag{
@@ -451,8 +451,9 @@ var (
 	roleCmdFlags = globalCmdFlags
 
 	// ca
-	CaCmdFlags = []cli.Flag{
-		KeyFileFlag,
+	CaCmdFlags =append(
+		globalCmdFlags,
+		PrivateFlag,
 		FormatFlag,
 		OutFileFlag,
 		CurveFlag,
@@ -467,5 +468,5 @@ var (
 		ShowAllFlags,
 		RootCAFlags,
 		SubjectFlag,
-	}
+	)
 )

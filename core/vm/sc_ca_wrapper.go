@@ -3,7 +3,6 @@ package vm
 import (
 	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto/gmssl"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 )
@@ -46,18 +45,16 @@ func (ca *CAWrapper) Run(input []byte) ([]byte, error) {
 
 func (ca *CAWrapper) AllExportFns() SCExportFns {
 	return SCExportFns{
-		"setRootCA":             ca.setRootCA,
-		"addIssuer":             ca.addIssuer,
-		"getCA":                 ca.getCA,
-		"getAllCA":              ca.getAllCA,
-		"getRootCA":             ca.getRootCA,
-
-		//"getAllCertificate":     ca.getAllCertificate,
-	}
+		"setRootCert":             ca.setRootCert,
+		"addIssuer":               ca.addIssuer,
+		"getCert":                 ca.getCert,
+		"getAllCert":              ca.getAllCert,
+		"getRootCert":             ca.getRootCert,
+		}
 }
 
-func (ca *CAWrapper) setRootCA(cert string)  (int32, error){
-	err := ca.base.setRootCA(cert)
+func (ca *CAWrapper) setRootCert(cert string)  (int32, error){
+	err := ca.base.setRootCert(cert)
 	if nil != err {
 		return fail, err
 	}
@@ -73,8 +70,8 @@ func (ca *CAWrapper) addIssuer(cert string)  (int32, error){
 	return success, nil
 }
 
-func (ca *CAWrapper) getCA(subject string)  (string, error){
-	caStruct, err := ca.base.getCA(subject)
+func (ca *CAWrapper) getCert(subject string)  (string, error){
+	caStruct, err := ca.base.getCert(subject)
 	if nil != err {
 		return "", err
 	}
@@ -86,28 +83,27 @@ func (ca *CAWrapper) getCA(subject string)  (string, error){
 
 }
 
-func (ca *CAWrapper) getAllCA()  (string, error){
-	//caList, err := ca.base.getAllCA()
-	//if nil != err {
-	//	return newInternalErrorResult(err).String(), err
-	//}
-	//return newSuccessResult(caList).String(), nil
-	return "123", nil
+func (ca *CAWrapper) getAllCert() (string, error){
+	caList, err := ca.base.getAllCert()
+	if nil != err {
+		return newInternalErrorResult(err).String(), err
+	}
+	return newSuccessResult(caList).String(), nil
 }
 
-func (ca *CAWrapper) getAllCertificate() ([]*gmssl.Certificate, error){
-	caList, err := ca.base.getAllCA()
-	if nil != err {
-		return nil, err
-	}
-	return caList, nil
-}
+//func (ca *CAWrapper) getAllCertificate() ([]*gmssl.Certificate, error){
+//	caList, err := ca.base.getAllCert()
+//	if nil != err {
+//		return nil, err
+//	}
+//	return caList, nil
+//}
 func (ca *CAWrapper) test() (string, error){
 	return "test", nil
 }
 
-func (ca *CAWrapper) getRootCA()  (string, error){
-	rootCa, err := ca.base.getRootCA()
+func (ca *CAWrapper) getRootCert()  (string, error){
+	rootCa, err := ca.base.getRootCert()
 	if nil != err {
 		return "", err
 	}

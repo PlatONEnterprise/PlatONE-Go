@@ -80,8 +80,10 @@ func MakeInput(fnName string, params ...interface{}) []byte {
 			input = append(input, param)
 		case string:
 			input = append(input, []byte(v.(string)))
+
 		default:
-			panic("unsupported type")
+			println(input)
+			//panic("unsupported type")
 		}
 	}
 

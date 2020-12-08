@@ -43,7 +43,7 @@ func isPem(cert string) bool{
 	return strings.HasSuffix(cert, "PEM")
 }
 
-func (ca *CAManager) setRootCA(cert string) error{
+func (ca *CAManager) setRootCert(cert string) error{
 
 	if !isPem(cert){
 		return errParamsInvalid
@@ -181,7 +181,7 @@ func (ca *CAManager) getPem(sub string) string{
 	return string(ca.getState(sub))
 }
 
-func (ca *CAManager) getCA(subject string) (*gmssl.Certificate, error){
+func (ca *CAManager) getCert(subject string) (*gmssl.Certificate, error){
 
 	caPem := ca.getState(subject)
 	caDoc, err := gmssl.NewCertificateFromPEM(string(caPem))
@@ -191,16 +191,27 @@ func (ca *CAManager) getCA(subject string) (*gmssl.Certificate, error){
 	return caDoc, nil
 }
 
-func (ca *CAManager) getAllCA()  ([]*gmssl.Certificate, error){
-	certDocList := make([]*gmssl.Certificate, 0)
+func (ca *CAManager) getAllCert()  ([]string, error){
+	//certDocList := make([]*gmssl.Certificate, 0)
+	//caList, _ := ca.getList()
+	//for _, v := range caList{
+	//	pem := ca.getState(v)
+	//	ca, err := gmssl.NewCertificateFromPEM(string(pem))
+	//	if err != nil{
+	//		return nil, err
+	//	}
+	//	certDocList = append(certDocList, ca)
+	//}
+	//return certDocList, nil
+	certDocList := make([]string, 0)
 	caList, _ := ca.getList()
 	for _, v := range caList{
 		pem := ca.getState(v)
-		ca, err := gmssl.NewCertificateFromPEM(string(pem))
-		if err != nil{
-			return nil, err
-		}
-		certDocList = append(certDocList, ca)
+		//ca, err := gmssl.NewCertificateFromPEM(string(pem))
+		//if err != nil{
+		//	return nil, err
+		//}
+		certDocList = append(certDocList, string(pem))
 	}
 	return certDocList, nil
 }
@@ -220,7 +231,7 @@ func (ca *CAManager) getAllCertificate()  ([]*gmssl.Certificate, error){
 }
 
 
-func (ca *CAManager) getRootCA() (*gmssl.Certificate, error){
+func (ca *CAManager) getRootCert() (*gmssl.Certificate, error){
 
 	rootSub := ca.getState("root")
 	rootCA := ca.getState(string(rootSub))

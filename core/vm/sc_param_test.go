@@ -1,6 +1,8 @@
 package vm
 
 import (
+	"github.com/PlatONEnetwork/PlatONE-Go/common/byteutil"
+	"log"
 	"math/big"
 	"testing"
 
@@ -182,6 +184,29 @@ func TestParamManager_contractPer(t *testing.T) {
 	}
 	t.Logf("%d", ret)
 }
+
+func TestWrapperParam(t *testing.T) {
+	db := newMockStateDB()
+	//fnNameInput := "getGasContractName"
+	//params := "/home/night/go/src/github.com/PlatONEnetwork/PlatONE-Go/cmd/platonecli/cmd/test-CA.PEM"
+	//c := CAWrapper{NewCAManager(db)}
+	addr := syscontracts.ParameterManagementAddress
+	caller := common.HexToAddress("0x62fb664c49cfa4fa35931760c704f9b3ab664666")
+
+	p := ParamManager{contractAddr: &addr, stateDB: db, caller: caller, blockNumber: big.NewInt(100)}
+	//var input = MakeInput(fnNameInput, string(params))
+	//ret, _ := p.Run(input)
+
+	fnNameInput1 := "getGasContractName"
+	var input1 = MakeInput(fnNameInput1)
+	ret2, _ := p.Run(input1)
+
+	//log.Println(BytesToInt(ret))
+	log.Println(byteutil.BytesToString(ret2))
+
+
+}
+
 
 //func TestParamManager_getFn(t *testing.T) {
 //	db := newMockDB()

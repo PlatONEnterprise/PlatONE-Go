@@ -29,9 +29,9 @@ function create_node_cert(){
     '
 
     ${BIN_PATH}/platonecli ca generateKey --file ${NODE_DIR}/nodekey.pem --curve secp256k1 --target private --format PEM 
-    ${BIN_PATH}/platonecli ca generateCSR --organization wxbc --commonName ${NODE_ID} --dgst sha256 --keyfile ${NODE_DIR}/nodekey.pem --file ${NODE_DIR}/node.csr
+    ${BIN_PATH}/platonecli ca generateCSR --organization wxbc --commonName ${NODE_ID} --dgst sha256 --private ${NODE_DIR}/nodekey.pem --file ${NODE_DIR}/node.csr
 
-    ${BIN_PATH}/platonecli  ca create  --ca ${CA_PATH}/org.crt --csr ${NODE_DIR}/node.csr  --keyfile ${CA_PATH}/orgkey.pem --serial 10 --file ${NODE_DIR}/node.crt
+    ${BIN_PATH}/platonecli  ca create  --ca ${CA_PATH}/org.crt --csr ${NODE_DIR}/node.csr  --private ${CA_PATH}/orgkey.pem --serial 10 --file ${NODE_DIR}/node.crt
 
     cat ${NODE_DIR}/node.crt
 }
