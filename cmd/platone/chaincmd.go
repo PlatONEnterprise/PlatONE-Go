@@ -565,9 +565,9 @@ func InitInnerCallFuncFromChain(bc *core.BlockChain) {
 		//get ca list
 		caAddr := sc.ContractAddress["__sys_CAManager"]
 		if caAddr != (common.Address{}) {
-			funcName := "getAllCA"
+			funcName := "getAllCert"
 			funcParams := []interface{}{}
-			res := callContract(paramAddr, common.GenCallData(funcName, funcParams))
+			res := callContract(caAddr, common.GenCallData(funcName, funcParams))
 			//if res != nil {
 			//	caPemList :=
 			//}
@@ -583,8 +583,14 @@ func InitInnerCallFuncFromChain(bc *core.BlockChain) {
 				//sc.GenerateNodeData()
 				//p2p.UpdatePeer()
 				for _, v := range tmp.Data{
-					subject, _ := v.Cert.GetSubject()
-					caMapList[subject] = v
+					cert, err := gmssl.NewCertificateFromPEM(v)
+					if err != nil{
+						log.Warn(err.Error())
+					}
+
+					subject, _ := cert.Cert.GetSubject()
+					caMapList[subject] = cert
+
 				}
 				sc.CaMap = caMapList
 			}

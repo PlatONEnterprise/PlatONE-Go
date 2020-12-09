@@ -139,6 +139,11 @@ function add_chain_admin(){
     ${BIN_PATH}/ctool invoke --config ${CONF_PATH}/ctool.json --abi ${CONF_PATH}/contracts/userManager.cpp.abi.json --addr 0x1000000000000000000000000000000000000001 --func addChainAdminByAddress --param ${ACCOUNT}
 }
 
+function add_ca_certs(){
+     ${BIN_PATH}/platonecli ca setRootCert --ca ${CA_PATH}/root.crt --keyfile ${CONF_PATH}/keyfile.json
+     ${BIN_PATH}/platonecli ca addIssuer --ca ${CA_PATH}/org.crt --keyfile ${CONF_PATH}/keyfile.json
+}
+
 function main() {
     readEnv
 
@@ -160,6 +165,8 @@ function main() {
     add_chain_admin
 
     add_first_node
+
+    add_ca_certs
 
     echo "[INFO]: ========================= update first node id: ${NODE_ID} to consensus node =========================="
     ./update_to_consensus_node.sh -n $NODE_ID
@@ -205,6 +212,7 @@ BIN_PATH=${WORKSPACE_PATH}/bin
 CONF_PATH=${WORKSPACE_PATH}/conf
 SCRIPT_PATH=${WORKSPACE_PATH}/scripts
 DATA_DIR=${WORKSPACE_PATH}/data
+CA_PATH=${WORKSPACE_PATH}/ca-certs
 
 while [ ! $# -eq 0 ]
 do

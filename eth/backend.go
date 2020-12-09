@@ -164,15 +164,15 @@ func InitInnerCallFunc(ethPtr *Ethereum) {
 		//get ca list
 		caAddr := sc.ContractAddress["__sys_CAManager"]
 		if caAddr != (common.Address{}) {
-			funcName := "getAllCA"
+			funcName := "getAllCert"
 			funcParams := []interface{}{}
-			res := callContract(paramAddr, common.GenCallData(funcName, funcParams))
+			res := callContract(caAddr, common.GenCallData(funcName, funcParams))
 			//if res != nil {
 			//	caPemList :=
 			//}
 			strRes := common.CallResAsString(res)
 			var tmp common.CAResult
-			var caMapList map[string]*gmssl.Certificate
+			var caMapList = make(map[string]*gmssl.Certificate)
 			if err := json.Unmarshal(lutils.String2bytes(strRes), &tmp); err != nil {
 				log.Warn("unmarshal ca list failed", "result", strRes, "err", err.Error())
 			} else if tmp.RetCode != 0 {
@@ -182,8 +182,13 @@ func InitInnerCallFunc(ethPtr *Ethereum) {
 				//sc.GenerateNodeData()
 				//p2p.UpdatePeer()
 				for _, v := range tmp.Data{
-					subject, _ := v.Cert.GetSubject()
-					caMapList[subject] = v
+					cert, err := gmssl.NewCertificateFromPEM(v)
+					if err != nil{
+						log.Warn(err.Error())
+					}
+
+					subject, _ := cert.Cert.GetSubject()
+					caMapList[subject] = cert
 				}
 				sc.CaMap = caMapList
 			}

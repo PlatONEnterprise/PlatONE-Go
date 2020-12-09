@@ -29,7 +29,7 @@ type CommonResult struct {
 type CAResult struct {
 	RetCode int32      `json:"code"`
 	RetMsg  string     `json:"msg"`
-	Data    []*gmssl.Certificate `json:"data"`
+	Data    []string `json:"data"`
 }
 
 type NodeInfo struct {

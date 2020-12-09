@@ -37,10 +37,10 @@ function create_ca_cert() {
     mkdir -p ${WORKSPACE_PATH}/ca-certs
 
     ${BIN_PATH}/platonecli ca generateKey --file ${CA_PATH}/rootkey.pem --curve secp256k1 --target private --format PEM
-    ${BIN_PATH}/platonecli ca genSelfSignCA --organization wxbc --commonName rootCA --dgst sha256 --serial 1 --file ${CA_PATH}/root.crt --private ${CA_PATH}/rootkey.pem
+    ${BIN_PATH}/platonecli ca genSelfSignCert --organization wxbc --commonName rootCA --dgst sha256 --serial 1 --file ${CA_PATH}/root.crt --private ${CA_PATH}/rootkey.pem
 
     ${BIN_PATH}/platonecli ca generateKey --file ${CA_PATH}/orgkey.pem --curve secp256k1 --target private --format PEM 
-    ${BIN_PATH}/platonecli ca generateCSR --organization wxbc --commonName defaultOrg --dgst sha256 --keyfile ${CA_PATH}/orgkey.pem --file ${CA_PATH}/org.csr
+    ${BIN_PATH}/platonecli ca generateCSR --organization wxbc --commonName defaultOrg --dgst sha256 --private ${CA_PATH}/orgkey.pem --file ${CA_PATH}/org.csr
     ${BIN_PATH}/platonecli  ca create  --ca  ${CA_PATH}/root.crt --csr ${CA_PATH}/org.csr  --private ${CA_PATH}/rootkey.pem --serial 100 --file ${CA_PATH}/org.crt
 }
 

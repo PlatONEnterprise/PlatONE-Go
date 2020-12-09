@@ -19,10 +19,8 @@ package p2p
 
 import (
 	"crypto/ecdsa"
-	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto/gmssl"
 	"net"
 	"strings"
@@ -1111,15 +1109,40 @@ func (srv *Server) setupConn(c *conn, flags connFlag, dialDest *discover.Node) e
 		return DiscUnexpectedIdentity
 	}
 
-	pubk, err := c.id.Pubkey()
-	pubkr := crypto.FromECDSAPub(pubk)
-	pubStr := hex.EncodeToString(pubkr[1:])
-	if dialDest != nil || common.SysCfg.IsValidJoinNode(pubStr) {
-		log.Info("setupConn success", "PeerInfo_pubStr", pubStr)
-	} else {
-		log.Info("setupConn fail: joined node is a invalid node ", "pubStr", pubStr)
-		return errors.New("Invalid Node Connection")
+	if dialDest == nil {
+		nodeCert, err := gmssl.NewCertificateFromPEM(phs.Cert)
+		if err != nil {
+			return err
+		}
+
+		issuer,err := nodeCert.Cert.GetIssuer()
+		if err != nil {
+			return err
+		}
+
+		orgCert := common.SysCfg.GetCaBySubject(issuer)
+		if orgCert == nil{
+			return errors.New("No Cert Issur")
+		}
+
+		orgCertPem, _ := orgCert.GetPEM()
+
+		log.Warn("cert content", "orgCert",orgCertPem , "nodeCert", phs.Cert)
+
+		if b, err := gmssl.Verify(orgCert, nodeCert); !b {
+			return fmt.Errorf("verify certificate error: %v", err)
+		}
 	}
+
+	//pubk, err := c.id.Pubkey()
+	//pubkr := crypto.FromECDSAPub(pubk)
+	//pubStr := hex.EncodeToString(pubkr[1:])
+	//if dialDest != nil || common.SysCfg.IsValidJoinNode(pubStr) {
+	//	log.Info("setupConn success", "PeerInfo_pubStr", pubStr)
+	//} else {
+	//	log.Info("setupConn fail: joined node is a invalid node ", "pubStr", pubStr)
+	//	return errors.New("Invalid Node Connection")
+	//}
 
 	c.caps, c.name = phs.Caps, phs.Name
 	err = srv.checkpoint(c, srv.addpeer)
