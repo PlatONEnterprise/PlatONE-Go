@@ -156,6 +156,18 @@ func (n *scNodeWrapper) nodesNum(query *syscontracts.NodeInfo) (int, error) {
 	return num, nil
 }
 
+func (n *scNodeWrapper) getVrfConsensusNodes() (string, error) {
+	nodes, err := n.base.GetVrfConsensusNodes()
+	if err != nil {
+		if errNodeNotFound == err {
+			return newInternalErrorResult(err).String(), err
+		}
+		return "", err
+	}
+
+	return newSuccessResult(nodes).String(), nil
+}
+
 //for access control
 func (n *scNodeWrapper) allExportFns() SCExportFns {
 	return SCExportFns{
@@ -168,5 +180,6 @@ func (n *scNodeWrapper) allExportFns() SCExportFns {
 		"validJoinNode":        n.isPublicKeyExist,
 		"nodesNum":             n.nodesNum,
 		"importOldNodesData":   n.importOldNodesData,
+		"getVrfConsensusNodes": n.getVrfConsensusNodes,
 	}
 }

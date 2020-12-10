@@ -19,6 +19,7 @@ package backend
 import (
 	"bytes"
 	"encoding/json"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
@@ -180,7 +181,7 @@ func (s *Snapshot) apply(chain consensus.ChainReader, sb *backend, headers []*ty
 	// Iterate through the headers and create a new snapshot
 	snap := s.copy()
 
-	validatorNodesList, _ := getConsensusNodesList(chain, sb, headers, snap.Number+uint64(len(headers)))
+	validatorNodesList, _ := getConsensusNodesList(chain, sb, snap.Number+uint64(len(headers)))
 	if len(validatorNodesList) == 0 {
 		snap.Number += uint64(len(headers))
 		snap.Hash = headers[len(headers)-1].Hash()

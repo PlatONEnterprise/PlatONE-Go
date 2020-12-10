@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"fmt"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
 	"github.com/PlatONEnetwork/PlatONE-Go/core"
@@ -888,7 +889,7 @@ func (w *worker) commit(interval func(), update bool, start time.Time) error {
 		receipts[i] = new(types.Receipt)
 		*receipts[i] = *l
 	}
-	s := w.current.state.Copy()
+	s := w.current.state
 	block, err := w.engine.Finalize(w.chain, w.current.header, s, w.current.txs, w.current.receipts)
 	if err != nil {
 		return err

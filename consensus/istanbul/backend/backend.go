@@ -19,13 +19,14 @@ package backend
 import (
 	"crypto/ecdsa"
 	"errors"
+	"math/big"
+	"sync"
+	"time"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 	"github.com/PlatONEnetwork/PlatONE-Go/p2p"
 	"github.com/PlatONEnetwork/PlatONE-Go/params"
-	"math/big"
-	"sync"
-	"time"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
@@ -38,7 +39,7 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/ethdb"
 	"github.com/PlatONEnetwork/PlatONE-Go/event"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
-	"github.com/hashicorp/golang-lru"
+	lru "github.com/hashicorp/golang-lru"
 )
 
 const (
@@ -52,31 +53,19 @@ func New(config *params.IstanbulConfig, privateKey *ecdsa.PrivateKey, db ethdb.D
 	recents, _ := lru.NewARC(inmemorySnapshots)
 	recentMessages, _ := lru.NewARC(inmemoryPeers)
 	knownMessages, _ := lru.NewARC(inmemoryMessages)
+
+	var address common.Address
 	if privateKey == nil {
-		backend := &backend{
-			config:           config,
-			istanbulEventMux: new(event.TypeMux),
-			msgFeed:          new(event.Feed),
-			privateKey:       privateKey,
-			address:          common.BytesToAddress([]byte("0x0000000000000000000000000000000000000112")),
-			logger:           log.New(),
-			db:               db,
-			commitCh:         make(chan *types.Block, 1),
-			recents:          recents,
-			candidates:       make(map[common.Address]bool),
-			coreStarted:      false,
-			recentMessages:   recentMessages,
-			knownMessages:    knownMessages,
-		}
-		backend.core = istanbulCore.New(backend, backend.config)
-		return backend
+		address = common.BytesToAddress([]byte("0x0000000000000000000000000000000000000112"))
+	} else {
+		address = crypto.PubkeyToAddress(privateKey.PublicKey)
 	}
 	backend := &backend{
 		config:           config,
 		istanbulEventMux: new(event.TypeMux),
 		msgFeed:          new(event.Feed),
 		privateKey:       privateKey,
-		address:          crypto.PubkeyToAddress(privateKey.PublicKey),
+		address:          address,
 		logger:           log.New(),
 		db:               db,
 		commitCh:         make(chan *types.Block, 1),
@@ -94,7 +83,7 @@ func New(config *params.IstanbulConfig, privateKey *ecdsa.PrivateKey, db ethdb.D
 // environment is the engine's current environment and holds all of the current state information.
 type environment struct {
 	//signer types.Signer
-	block  *types.Block
+	block *types.Block
 
 	state   *state.StateDB // apply state changes here
 	tcount  int            // tx count in cycle
@@ -413,11 +402,17 @@ func (sb *backend) excuteBlock(proposal istanbul.Proposal) error {
 			sb.current.state.Finalise(true)
 		}
 
-		if sb.current.state.IntermediateRoot(true) != block.Root() {
+		cblock, err := sb.Finalize(chain, header, sb.current.state, block.Transactions(), sb.current.receipts)
+		if err != nil {
+			return err
+		}
+
+		if cblock.Root() != block.Root() {
 			sb.current = nil
 			return errors.New("Invalid block root")
 		}
 		sb.current.block = block
+		sb.current.header = block.Header()
 	}
 
 	return nil

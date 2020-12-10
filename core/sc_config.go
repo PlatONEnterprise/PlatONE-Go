@@ -2,6 +2,7 @@ package core
 
 import (
 	"encoding/json"
+
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 	"github.com/PlatONEnetwork/PlatONE-Go/life/utils"
@@ -54,6 +55,21 @@ func UpdateParamSysContractConfig(bc *BlockChain, sysContractConf *common.System
 	if res != nil && nil == err {
 		ret := common.CallResAsInt64(res)
 		sysContractConf.SysParam.IsTxUseGas = ret == 1
+	}
+
+	funcName = "getVRFParams"
+	funcParams = []interface{}{}
+	res, err = InnerCallContractReadOnly(bc, paramAddr, funcName, funcParams)
+	if res != nil && nil == err {
+		strRes := common.CallResAsString(res)
+		var tmpVrfParam common.VRFParams
+		if err := json.Unmarshal(utils.String2bytes(strRes), &tmpVrfParam); err != nil {
+			log.Warn("unmarshal vrf params failed", "result", strRes, "err", err.Error())
+		} else {
+			sysContractConf.SysParam.VRF.ElectionEpoch = tmpVrfParam.ElectionEpoch
+			sysContractConf.SysParam.VRF.NextElectionBlock = tmpVrfParam.NextElectionBlock
+			sysContractConf.SysParam.VRF.ValidatorCount = tmpVrfParam.ValidatorCount
+		}
 	}
 
 	funcName = "getGasContractName"

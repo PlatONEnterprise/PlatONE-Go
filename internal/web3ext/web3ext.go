@@ -30,6 +30,7 @@ var Modules = map[string]string{
 	"shh":        Shh_JS,
 	"swarmfs":    SWARMFS_JS,
 	"txpool":     TxPool_JS,
+	"istanbul":   Istanbul_JS,
 }
 
 const Chequebook_JS = `
@@ -655,5 +656,25 @@ web3._extend({
 			}
 		}),
 	]
+});
+`
+
+const Istanbul_JS = `
+web3._extend({
+	property: 'istanbul',
+	methods: [
+		new web3._extend.Method({
+			name: 'getValidators',
+			call: 'istanbul_getValidators',
+			params: 0
+		}),
+		new web3._extend.Method({
+			name: 'getCandidates',
+			call: 'istanbul_candidates',
+			params: 0
+		}),
+	],
+	properties:
+	[]
 });
 `

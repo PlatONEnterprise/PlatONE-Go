@@ -258,6 +258,30 @@
             }
         ],
         "type": "event"
+    },
+    {
+        "name": "getVRFParams",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name": "setVRFParams",
+        "inputs": [
+            {
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "outputs": [],
+        "constant": "false",
+        "type": "function"
     }
 ]
 

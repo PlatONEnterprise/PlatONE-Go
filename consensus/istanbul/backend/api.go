@@ -20,6 +20,8 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/p2p/discover"
 	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
 )
 
@@ -88,15 +90,29 @@ func (api *API) GetValidatorsAtHash(hash common.Hash) ([]common.Address, error) 
 }
 
 // Candidates returns the current candidates the node tries to uphold and vote on.
-func (api *API) Candidates() map[common.Address]bool {
-	api.istanbul.candidatesLock.RLock()
-	defer api.istanbul.candidatesLock.RUnlock()
-
-	proposals := make(map[common.Address]bool)
-	for address, auth := range api.istanbul.candidates {
-		proposals[address] = auth
+func (api *API) Candidates(number *rpc.BlockNumber) ([]common.Address, error) {
+	// Retrieve the requested block number (or current if none requested)
+	var header *types.Header
+	if number == nil || *number == rpc.LatestBlockNumber {
+		header = api.chain.CurrentHeader()
+	} else {
+		header = api.chain.GetHeaderByNumber(uint64(number.Int64()))
 	}
-	return proposals
+	nodes := getCandidateNodesAtNumber(api.chain, api.istanbul, header.Number.Uint64())
+	addrs := make([]common.Address, 0)
+	for _, node := range nodes {
+		pubHex, err := discover.HexID(node.PublicKey)
+		if err != nil {
+			return nil, err
+		}
+		pub, err := pubHex.Pubkey()
+		if err != nil {
+			return nil, err
+		}
+		addr := crypto.PubkeyToAddress(*pub)
+		addrs = append(addrs, addr)
+	}
+	return addrs, nil
 }
 
 // Propose injects a new authorization candidate that the validator will attempt to

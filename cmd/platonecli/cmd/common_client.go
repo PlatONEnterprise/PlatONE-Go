@@ -29,7 +29,9 @@ func clientCommonV2(c *cli.Context, dataGen packet.MsgDataGen, to *common.Addres
 
 	// form transaction
 	tx := getTxParams(c)
-	tx.From = common.HexToAddress(keyfile.Address)
+	if keyfile.Address != ""{
+		tx.From = common.HexToAddress(keyfile.Address)
+	}
 	tx.To = to
 
 	result, err := pc.MessageCallV2(dataGen, tx, keyfile, isSync)
@@ -76,6 +78,9 @@ func getClientConfig(c *cli.Context) (*utils.Keyfile, bool, bool, string) {
 		if err != nil {
 			utl.Fatalf(err.Error())
 		}
+	}else{
+		account = &utils.Keyfile{}
+		address = account.Address
 	}
 
 	if !isTxAccountMatch(address, account) {
