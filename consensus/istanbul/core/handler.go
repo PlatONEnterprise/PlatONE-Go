@@ -150,7 +150,9 @@ func (c *core) handleMsg(payload []byte) error {
 	// Decode message and check its signature
 	msg := new(message)
 	if err := msg.FromPayload(payload, c.validateFn); err != nil {
-		logger.Error("Failed to decode message from payload", "err", err)
+		if msg.Address != c.Address() {
+			logger.Error("Failed to decode message from payload", "err", err)
+		}
 		return err
 	}
 	// Only accept message if the address is valid

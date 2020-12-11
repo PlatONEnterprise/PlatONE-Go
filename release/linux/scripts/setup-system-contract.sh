@@ -158,7 +158,7 @@ function add_ca_certs(){
     echo `
     
     `
-    
+
     ${BIN_PATH}/platonecli ca setRootCert --ca ${ROOT_CERT} --keyfile ${CONF_PATH}/keyfile.json 
     ${BIN_PATH}/platonecli ca addIssuer --ca ${ORG_CERT} --keyfile ${CONF_PATH}/keyfile.json 
 }
@@ -267,6 +267,4 @@ done
 
 NODE_DIR=${WORKSPACE_PATH}/data/node-${NODE_ID}
 
-#main
-
-add_ca_certs
+main
