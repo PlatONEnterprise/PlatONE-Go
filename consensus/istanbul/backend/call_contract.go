@@ -3,6 +3,7 @@ package backend
 import (
 	"encoding/json"
 	"math/big"
+	"reflect"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
@@ -33,16 +34,14 @@ func (cc *ChainContext) Engine() consensus.Engine {
 
 // getInitialNodesList catch initial nodes List from paramManager contract when
 // new a dpos and miner a new block
-func getConsensusNodesList(chain consensus.ChainReader, sb *backend, headers []*types.Header, number uint64) ([]discover.NodeID, error) {
+func getConsensusNodesList(chain consensus.ChainReader, sb *backend, number uint64) ([]discover.NodeID, error) {
 	var tmp []common.NodeInfo
-	isOldBlock := number < chain.CurrentHeader().Number.Uint64()
-
-	if !isOldBlock {
-		tmp = common.SysCfg.GetConsensusNodesFilterDelay(number, []common.NodeInfo{}, isOldBlock)
+	tmpVrfParam := getVRFParamsAtNumber(chain, sb, number)
+	if tmpVrfParam.ElectionEpoch != 0 {
+		// vrf feature is active
+		tmp = getVrfConsensusNodesAtNumber(chain, sb, number)
 	} else {
-		res := CallSystemContractAtBlockNumber(chain, sb, number, "__sys_NodeManager", CallSystemContractRes)
-		nodes := ParseResultToNodeInfos(res)
-		tmp = common.SysCfg.GetConsensusNodesFilterDelay(number, nodes, isOldBlock)
+		tmp = getCandidateNodesAtNumber(chain, sb, number)
 	}
 
 	nodeIDs := make([]discover.NodeID, 0, len(tmp))
@@ -57,22 +56,52 @@ func getConsensusNodesList(chain consensus.ChainReader, sb *backend, headers []*
 	return nodeIDs, nil
 }
 
-func ParseResultToNodeInfos(res []byte) []common.NodeInfo {
-	strRes := common.CallResAsString(res)
-	var tmp common.CommonResult
-	if err := json.Unmarshal(utils.String2bytes(strRes), &tmp); err != nil {
-		log.Warn("ParseResultToNodeInfos: unmarshal consensus node list failed", "result", strRes, "err", err.Error())
-		return nil
-	} else if tmp.RetCode != 0 {
-		log.Debug("ParseResultToNodeInfos: contract inner error", "code", tmp.RetCode, "msg", tmp.RetMsg)
-		return nil
-	} else {
-		return tmp.Data
+func getVRFParamsAtNumber(chain consensus.ChainReader, sb *backend, number uint64) *common.VRFParams {
+	isOldBlock := number < chain.CurrentHeader().Number.Uint64()
+	if !isOldBlock {
+		return &common.SysCfg.SysParam.VRF
 	}
+
+	resVRF := CallSystemContractAtBlockNumber(chain, sb, number, "__sys_ParamManager", "getVRFParams", []interface{}{})
+	vrf := ParseResultToExtractType(resVRF, common.VRFParams{})
+	if vrf != nil {
+		return vrf.(*common.VRFParams)
+	}
+	return nil
 }
 
-func CallSystemContractRes(conAddr common.Address, callContract func(conAddr common.Address, data []byte) []byte) []byte {
-	return callContract(conAddr, common.GenCallData("getAllNodes", []interface{}{}))
+func getVrfConsensusNodesAtNumber(chain consensus.ChainReader, sb *backend, number uint64) []common.NodeInfo {
+	resVrfConsensusNodes := CallSystemContractAtBlockNumber(chain, sb, number, "__sys_NodeManager", "getVrfConsensusNodes", []interface{}{})
+	nodes := ParseResultToExtractType(resVrfConsensusNodes, common.CommonResult{})
+	if nodes != nil {
+		return nodes.(*common.CommonResult).Data
+	}
+	return []common.NodeInfo{}
+}
+
+func getCandidateNodesAtNumber(chain consensus.ChainReader, sb *backend, number uint64) []common.NodeInfo {
+	isOldBlock := number < chain.CurrentHeader().Number.Uint64()
+	nodes := make([]common.NodeInfo, 0)
+	if isOldBlock {
+		resNodes := CallSystemContractAtBlockNumber(chain, sb, number, "__sys_NodeManager", "getAllNodes", []interface{}{})
+		tmp := ParseResultToExtractType(resNodes, common.CommonResult{})
+		if tmp != nil {
+			nodes = tmp.(*common.CommonResult).Data
+		}
+	}
+
+	return common.SysCfg.GetConsensusNodesFilterDelay(number, nodes, isOldBlock)
+}
+
+func ParseResultToExtractType(res []byte, v interface{}) interface{} {
+	t := reflect.TypeOf(v)
+	d := reflect.New(t).Interface()
+	strRes := common.CallResAsString(res)
+	if err := json.Unmarshal(utils.String2bytes(strRes), &d); err != nil {
+		log.Warn("ParseResultToNodeInfos: unmarshal consensus node list failed", "result", strRes, "err", err.Error())
+		return nil
+	}
+	return d
 }
 
 func CallSystemContractAtBlockNumber(
@@ -80,7 +109,8 @@ func CallSystemContractAtBlockNumber(
 	sb *backend,
 	number uint64,
 	sysContractName string,
-	fn func(conAddr common.Address, callContract func(conAddr common.Address, data []byte) []byte) []byte,
+	sysFuncName string,
+	sysFuncParams []interface{},
 ) []byte {
 	_state, _ := state.New(chain.GetHeaderByNumber(number).Root, state.NewDatabase(sb.db))
 	if _state == nil {
@@ -107,5 +137,5 @@ func CallSystemContractAtBlockNumber(
 		return nil
 	}
 	contractAddr := common.HexToAddress(strRes)
-	return fn(contractAddr, callContract)
+	return callContract(contractAddr, common.GenCallData(sysFuncName, sysFuncParams))
 }

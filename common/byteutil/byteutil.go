@@ -36,6 +36,7 @@ var Bytes2X_CMD = map[string]interface{}{
 	"*syscontracts.UserInfo":     BytesToUserInfo,
 	"*syscontracts.UserDescInfo": BytesToUserDescInfo,
 	"common.Address":             HexBytesToAddress,
+	"common.VRFParams":           BytesToVRFParams,
 }
 
 func HexBytesToAddress(curByte []byte) common.Address {
@@ -58,6 +59,13 @@ func BytesToNodeInfo(curByte []byte) *syscontracts.NodeInfo {
 		panic("BytesToNodeInfo:" + err.Error() + " bytes:" + string(curByte))
 	}
 	return &info
+}
+func BytesToVRFParams(curByte []byte) common.VRFParams {
+	var info common.VRFParams
+	if err := json.Unmarshal(curByte, &info); nil != err {
+		panic("BytesToVRFParams:" + err.Error() + " bytes:" + string(curByte))
+	}
+	return info
 }
 
 func BytesToUserInfo(curByte []byte) *syscontracts.UserInfo {

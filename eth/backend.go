@@ -185,7 +185,7 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 	eth.APIBackend.gpo = gasprice.NewOracle(eth.APIBackend, gpoParams)
 
 	// set init system param function, then reload system param before start up miner
-	core.UpdateSysContractConfig(eth.blockchain,common.SysCfg)
+	core.UpdateSysContractConfig(eth.blockchain, common.SysCfg)
 
 	if len(missingStateBlocks) != 0 {
 		log.Info("start to replay blocks!", "Number", len(missingStateBlocks))

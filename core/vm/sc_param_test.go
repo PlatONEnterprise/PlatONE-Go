@@ -165,6 +165,26 @@ func TestParamManager_emptyBlock(t *testing.T) {
 	}
 	t.Logf("%d", ret)
 }
+
+func TestParamManager_vrf(t *testing.T) {
+	db := newMockStateDB()
+	addr := syscontracts.ParameterManagementAddress
+	addr1 := syscontracts.UserManagementAddress
+	caller := common.HexToAddress("0x62fb664c49cfa4fa35931760c704f9b3ab664666")
+	um := UserManagement{stateDB: db, caller: caller, contractAddr: addr1, blockNumber: big.NewInt(100)}
+	um.setSuperAdmin()
+	um.addChainAdminByAddress(caller)
+	p := ParamManager{contractAddr: &addr, stateDB: db, caller: caller, blockNumber: big.NewInt(100)}
+	param := common.VRFParams{ElectionEpoch: 10, NextElectionBlock: big.NewInt(10), ValidatorCount: 5}
+	p.setVRFParams(param)
+	ret, err := p.getVRFParams()
+	if nil != err || ret.ElectionEpoch != param.ElectionEpoch {
+		t.Error(err)
+		return
+	}
+	t.Logf("%d", ret)
+}
+
 func TestParamManager_contractPer(t *testing.T) {
 	db := newMockStateDB()
 	addr := syscontracts.ParameterManagementAddress

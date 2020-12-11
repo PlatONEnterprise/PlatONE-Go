@@ -30,6 +30,12 @@ type NodeInfo struct {
 	DelayNum uint64 `json:"delayNum,omitempty"`
 }
 
+type VRFParams struct {
+	ElectionEpoch     uint64 `json:"electionEpoch"`
+	NextElectionBlock uint64 `json:"nextElectionBlock"`
+	ValidatorCount    uint64 `json:"validatorCount"`
+}
+
 type SystemParameter struct {
 	BlockGasLimit                 int64
 	TxGasLimit                    int64
@@ -38,6 +44,7 @@ type SystemParameter struct {
 	CheckContractDeployPermission int64
 	IsTxUseGas                    bool
 	IsProduceEmptyBlock           bool
+	VRF                           VRFParams
 }
 
 type SystemConfig struct {
@@ -61,6 +68,11 @@ var SysCfg = &SystemConfig{
 	SysParam: &SystemParameter{
 		BlockGasLimit: 0xffffffffffff,
 		TxGasLimit:    100000000000000,
+		VRF: VRFParams{
+			ElectionEpoch:     0,
+			NextElectionBlock: 0,
+			ValidatorCount:    0,
+		},
 	},
 	ContractAddress: make(map[string]Address),
 }

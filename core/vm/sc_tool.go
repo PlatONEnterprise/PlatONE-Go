@@ -49,6 +49,8 @@ var (
 	errOrgnizationUnsupported = errors.New("Unsupported Orgnization ")
 	errEmailUnsupported       = errors.New("Unsupported email address ")
 	errPhoneUnsupported       = errors.New("Unsupported phone number ")
+
+	errValidatorCountInvalid = errors.New("Validator Count Invalid")
 )
 
 var (

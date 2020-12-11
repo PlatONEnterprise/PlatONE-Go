@@ -18,10 +18,13 @@ package backend
 
 import (
 	"bytes"
+	"crypto/ecdsa"
 	"errors"
-	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"fmt"
 	"math/big"
 	"time"
+
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
@@ -31,11 +34,12 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus/istanbul/validator"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto/sha3"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"github.com/PlatONEnetwork/PlatONE-Go/rpc"
-	"github.com/hashicorp/golang-lru"
+	lru "github.com/hashicorp/golang-lru"
 )
 
 const (
@@ -93,6 +97,7 @@ var (
 
 	inmemoryAddresses  = 20 // Number of recent addresses from ecrecover
 	recentAddresses, _ = lru.NewARC(inmemoryAddresses)
+	recentPubkeys, _ = lru.NewARC(inmemoryAddresses)
 )
 
 // Author retrieves the Ethereum address of the account that minted the given
@@ -126,11 +131,6 @@ func (sb *backend) verifyHeader(chain consensus.ChainReader, header *types.Heade
 	if _, err := types.ExtractIstanbulExtra(header); err != nil {
 		// TODO: 先不检查header的extra字段
 		//return errInvalidExtraDataFormat
-	}
-
-	// Ensure that the coinbase is valid
-	if header.Nonce != (emptyNonce) && !bytes.Equal(header.Nonce[:], nonceAuthVote) && !bytes.Equal(header.Nonce[:], nonceDropVote) {
-		return errInvalidNonce
 	}
 
 	return sb.verifyCascadingFields(chain, header, parents)
@@ -171,6 +171,13 @@ func (sb *backend) verifyCascadingFields(chain consensus.ChainReader, header *ty
 	}
 	if err := sb.verifySigner(chain, header, parents); err != nil {
 		return err
+	}
+
+	//// Verify VRF Nonce
+	if common.SysCfg.SysParam.VRF.ElectionEpoch != 0 {
+		if err := sb.verifyVRF(chain, header); err != nil {
+			return err
+		}
 	}
 
 	return sb.verifyCommittedSeals(chain, header, parents)
@@ -223,6 +230,27 @@ func (sb *backend) verifySigner(chain consensus.ChainReader, header *types.Heade
 		return errUnauthorized
 	}
 	return nil
+}
+
+// verifyVRF checks whether the Nonce is a valid VRF Nonce
+func (sb *backend) verifyVRF(chain consensus.ChainReader, header *types.Header) error {
+	// Verifying the genesis block is not supported
+	number := header.Number.Uint64()
+	if number == 0 {
+		return errUnknownBlock
+	}
+
+	parent := chain.GetHeader(header.ParentHash, number-1)
+	if parent == nil {
+		return consensus.ErrUnknownAncestor
+	}
+
+	pubkey, err := recoverPubkey(header)
+	if err != nil {
+		return err
+	}
+
+	return sb.VerifyVrf(&pubkey, parent.Nonce[:], header.Nonce[:])
 }
 
 // verifyCommittedSeals checks whether every committed seal is signed by one of the parent's validators
@@ -303,7 +331,12 @@ func (sb *backend) Prepare(chain consensus.ChainReader, header *types.Header) er
 	if parent == nil {
 		return consensus.ErrUnknownAncestor
 	}
-	// use the same difficulty for all blocks
+
+	nonce, err := sb.GenerateNonce(parent.Nonce[:])
+	if err != nil {
+		return err
+	}
+	header.Nonce = types.EncodeByteNonce(nonce)
 
 	// Assemble the voting snapshot
 	snap, err := sb.snapshot(chain, number-1, header.ParentHash, nil)
@@ -332,10 +365,16 @@ func (sb *backend) Prepare(chain consensus.ChainReader, header *types.Header) er
 // Note, the block header and state database might be updated to reflect any
 // consensus rules that happen at finalization (e.g. block rewards).
 func (sb *backend) Finalize(chain consensus.ChainReader, header *types.Header, state *state.StateDB, txs []*types.Transaction, receipts []*types.Receipt) (*types.Block, error) {
-	// No block rewards in Istanbul, so the state remains as is and uncles are dropped
+	log.Debug(fmt.Errorf("root before:%x", header.Root).Error())
+	// vrf election
+	scNode := vm.NewSCNode(state)
+	scNode.SetBlockNumber(header.Number)
+	parent := chain.GetHeader(header.ParentHash, header.Number.Uint64()-1)
+	if _, err := scNode.VrfElection(parent.Nonce[:]); err != nil {
+		return nil, err
+	}
 	header.Root = state.IntermediateRoot(true)
-	//header.UncleHash = nilUncleHash
-
+	log.Debug(fmt.Errorf("root after:%x", header.Root).Error())
 	// Assemble and return the final block for sealing
 	return types.NewBlock(header, txs, receipts), nil
 }
@@ -381,7 +420,7 @@ func (sb *backend) Seal(chain consensus.ChainReader, block *types.Block, sealRes
 		sb.sealMu.Unlock()
 	}
 	defer clear()
-	sb.logger.Debug("post seal", "block number",block.Number(),"hash",block.Hash())
+	sb.logger.Debug("post seal", "block number", block.Number(), "hash", block.Hash())
 
 	// post block into Istanbul engine
 	go sb.EventMux().Post(istanbul.RequestEvent{
@@ -614,6 +653,27 @@ func ecrecover(header *types.Header) (common.Address, error) {
 	}
 	recentAddresses.Add(hash, addr)
 	return addr, nil
+}
+
+// recoverPubkey extracts the Ethereum account pubkey from a signed header.
+func recoverPubkey(header *types.Header) (ecdsa.PublicKey, error) {
+	hash := header.Hash()
+	if pubkey, ok := recentPubkeys.Get(hash); ok {
+		return pubkey.(ecdsa.PublicKey), nil
+	}
+
+	// Retrieve the signature from the header extra-data
+	istanbulExtra, err := types.ExtractIstanbulExtra(header)
+	if err != nil {
+		return ecdsa.PublicKey{}, err
+	}
+
+	pubkey, err := istanbul.GetSignaturePubkey(sigHash(header).Bytes(), istanbulExtra.Seal)
+	if err != nil {
+		return *pubkey, err
+	}
+	recentPubkeys.Add(hash, *pubkey)
+	return *pubkey, nil
 }
 
 // prepareExtra returns a extra-data of the given header and validators

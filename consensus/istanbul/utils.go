@@ -17,6 +17,7 @@
 package istanbul
 
 import (
+	"crypto/ecdsa"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto/sha3"
@@ -31,12 +32,20 @@ func RLPHash(v interface{}) (h common.Hash) {
 	return h
 }
 
-// GetSignatureAddress gets the signer address from the signature
-func GetSignatureAddress(data []byte, sig []byte) (common.Address, error) {
+func GetSignaturePubkey(data []byte, sig []byte) (*ecdsa.PublicKey, error) {
 	// 1. Keccak data
 	hashData := crypto.Keccak256([]byte(data))
 	// 2. Recover public key
 	pubkey, err := crypto.SigToPub(hashData, sig)
+	if err != nil {
+		return nil, err
+	}
+	return pubkey, nil
+}
+
+// GetSignatureAddress gets the signer address from the signature
+func GetSignatureAddress(data []byte, sig []byte) (common.Address, error) {
+	pubkey, err := GetSignaturePubkey(data, sig)
 	if err != nil {
 		return common.Address{}, err
 	}
