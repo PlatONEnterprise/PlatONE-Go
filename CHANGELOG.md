@@ -14,6 +14,7 @@
 * [other] 删除whisper,swarm,mobile,cmd/wnode（Whisper node）- 杜满想
 * [other] 删除pow相关逻辑(reorg,sidechain),删除cbft - 杜满想
 * [contract] 系统合约缓存机制重构。
+* [contract] 禁止利用CNS调用系统预编译合约。
 
 ### Features
 * [chain] 添加一链多账本功能（群组预编译化系统合约等等）
