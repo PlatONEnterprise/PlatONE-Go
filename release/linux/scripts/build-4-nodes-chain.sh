@@ -16,7 +16,7 @@ echo '
 
 ./start-node.sh --nodeid 0 
 
-./deploy-system-contract.sh --auto "true"
+./setup-system-contract.sh --auto "true"
 
 ./start-node.sh --nodeid 1
 ./start-node.sh --nodeid 2

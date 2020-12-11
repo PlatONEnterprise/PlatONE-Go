@@ -140,8 +140,27 @@ function add_chain_admin(){
 }
 
 function add_ca_certs(){
-     ${BIN_PATH}/platonecli ca setRootCert --ca ${CA_PATH}/root.crt --keyfile ${CONF_PATH}/keyfile.json
-     ${BIN_PATH}/platonecli ca addIssuer --ca ${CA_PATH}/org.crt --keyfile ${CONF_PATH}/keyfile.json
+
+    if [ $ORG_CERT=="" ]; then 
+        ORG_CERT=${CA_PATH}/org.crt
+    fi 
+
+    if [ $ROOT_CERT=="" ]; then 
+        ROOT_CERT=${CA_PATH}/root.crt
+    fi 
+
+    root=`cat $ROOT_CERT`
+    org=`cat $ORG_CERT`
+
+    echo $root 
+    echo $org
+
+    echo `
+    
+    `
+    
+    ${BIN_PATH}/platonecli ca setRootCert --ca ${ROOT_CERT} --keyfile ${CONF_PATH}/keyfile.json 
+    ${BIN_PATH}/platonecli ca addIssuer --ca ${ORG_CERT} --keyfile ${CONF_PATH}/keyfile.json 
 }
 
 function main() {
@@ -179,6 +198,8 @@ USAGE: platonectl.sh deploysys [options]
 
         OPTIONS:
             --nodeid, -n                 the specified node id (default: 0)
+            --root_cert                  root cert
+            --node_cert                  node cert
             --auto                       auto=true: will use the default node password: 0
                                          to create the account and also
                                          to unlock the account. (default: false)
@@ -214,12 +235,23 @@ SCRIPT_PATH=${WORKSPACE_PATH}/scripts
 DATA_DIR=${WORKSPACE_PATH}/data
 CA_PATH=${WORKSPACE_PATH}/ca-certs
 
+ROOT_CERT=""
+ORG_CERT=""
+
 while [ ! $# -eq 0 ]
 do
     case "$1" in
         --nodeid | -n)
             echo "nodeid: $2"
             NODE_ID=$2
+            ;;
+        --root_cert)
+            echo "root cert: $2"
+            ROOT_CERT=$2
+            ;;
+        --org_cert)
+            echo "org cert: $2"
+            ORG_CERT=$2
             ;;
         --auto)
             AUTO=$2
@@ -235,4 +267,6 @@ done
 
 NODE_DIR=${WORKSPACE_PATH}/data/node-${NODE_ID}
 
-main
+#main
+
+add_ca_certs

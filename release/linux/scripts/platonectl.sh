@@ -11,6 +11,7 @@ ENABLE=""
 DISENABLE=""
 NODE_ID=0
 cd ${CURRENT_PATH}
+CA_PATH=${WORKSPACE_PATH}/ca-certs
 
 VERSION=`${BIN_PATH}/platone --version`
 
@@ -197,7 +198,7 @@ function one() {
     ./setup-genesis.sh --auto "true"      # 不加auto 会重新编译合约
     ./init-node.sh --auto "true"          # 不加auto 将会创建nodekey的时候进行提示
     ./start-node.sh
-    ./deploy-system-contract.sh  --auto "true"  # 不加auto 将不会使用默认的密码0 创建和解锁账号; 此时会创建第一个账号; 部署会默认把第一节点加入合约
+    ./setup-system-contract.sh  --auto "true"  # 不加auto 将不会使用默认的密码0 创建和解锁账号; 此时会创建第一个账号; 部署会默认把第一节点加入合约
 }
 
 function four() {
@@ -387,7 +388,7 @@ function deploySys() {
         showUsage 8
         return
     fi
-    ./deploy-system-contract.sh "$@"
+    ./setup-system-contract.sh "$@"
 }
 
 function updateSys() {
@@ -542,6 +543,7 @@ function clear() {
         echo "[INFO]: clear all nodes data"
         data=${WORKSPACE_PATH}/data
         rm -rf ${data}/*
+        rm -rf ${CA_PATH}/*
         clearConf ctool.json
         clearConf genesis.json
         ;;

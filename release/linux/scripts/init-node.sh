@@ -134,9 +134,15 @@ function main() {
     fi
     setup_node_datadir
 
-    create_node_cert
+    #create_node_cert
 
-    ${BIN_PATH}/platone --datadir ${NODE_DIR} init  ${CONF_PATH}/genesis.json
+    cp $NODE_CERT ${NODE_DIR}/node.crt
+
+    if [ $GENESIS = "" ]; then 
+        GENESIS=${CONF_PATH}/genesis.json
+    fi
+
+    ${BIN_PATH}/platone --datadir ${NODE_DIR} init  ${GENESIS}
 }
 
 function help() {
@@ -150,6 +156,7 @@ USAGE: platonectl.sh init [options]
             --rpc_port                   set node rpc port (default=6791)
             --p2p_port                   set node p2p port (default=16791)
             --ws_port                    set node ws port (default=26791)
+            --node_cert                  set node cert
             --auto                       auto=true: will no prompt to create
                                          the node key and init (default: false)
             --help, -h                   show help
@@ -181,6 +188,9 @@ CONF_PATH=${WORKSPACE_PATH}/conf
 SCRIPT_PATH=${WORKSPACE_PATH}/scripts
 CA_PATH=${WORKSPACE_PATH}/ca-certs
 
+NODE_CERT=""
+GENESIS=""
+
 
 while [ ! $# -eq 0 ]
 do
@@ -197,6 +207,10 @@ do
             echo "rpc_port: $2"
             RPC_PORT=$2
             ;;
+        --node_cert)
+            echo "node_cert: $2"
+            NODE_CERT=$2
+            ;;
         --ws_port)
             echo "ws_port: $2"
             WS_PORT=$2
@@ -204,6 +218,10 @@ do
         --p2p_port)
             echo "p2p_port: $2"
             P2P_PORT=$2
+            ;;
+        --genesis)
+            echo "genesis: $2"
+            GENESIS=$2
             ;;
         --auto)
             echo "auto $2"

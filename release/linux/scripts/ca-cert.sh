@@ -9,6 +9,7 @@ function shiftOption2() {
     fi
 }
 
+
 function yes_or_no() {
     read -p "Yes or No(y/n): " anw
     case $anw in
@@ -123,103 +124,101 @@ function create_genesis() {
     echo "[INFO]: Create genesis succ. File: ${CONF_PATH}/genesis.json"
 }
 
-function setup_genesis() {
-    if [ "${AUTO}" = "true" ]; then 
-        #create_ca_cert
-        echo "[INFO]: auto create node key, and create genesis.json"
-        create_node_key
-        echo $IP > ${NODE_DIR}/node.ip
-        echo; echo "[Create genesis]"
-        create_genesis $IP ${P2P_PORT}
+function generateKey(){
+    if [ "$OUT_FILE" = "" ]; then 
+        echo "must input the out file name!"
         return
-    else
-        echo "AUTO: ${AUTO}"  
     fi
 
-    ## 1. create node key
-    echo; echo "Do You What To Create a new node key ?"
-    yes_or_no
-    if [ $? -eq 1 ]; then        
-        if [ -f ${NODE_DIR}/node.pubkey ]; then
-            echo "[INFO]: Node key already exists, re create?"
-            yes_or_no
-            if [ $? -eq 1 ]; then
-                create_node_key
-            fi
-        else
-            create_node_key
-        fi
-    else
-        if [ -f ${NODE_DIR}/node.pubkey ]; then
-            pubkey=`cat ${NODE_DIR}/node.pubkey`
-            echo "Node's public key: ${pubkey}"
-        else
-            echo; echo "!!! No node's public key file !!!"
-            echo "[WARN]: Please Put Your Nodekey file \"node.pubkey\" to the directory ${NODE_DIR}"
-            exit
-        fi
+    outdir=`(dirname "${OUT_FILE}")`
+    if [ ! -d "$outdir" ]; then
+        mkdir -p $outdir
     fi
 
-
-    ## 2. Input public ip addr
-    echo "first node ip: ${IP}"
-    check_ip $IP
-    if [ $? -eq 0 ]; then
-        echo $IP > ${NODE_DIR}/node.ip
-    else
-        echo "[WARN]: Invalid ip! Please input a valid ip address."
-        echo; echo "[Input public ip addr]"
-        while true
-        do
-            read -p "Your node ip: " ip_input 
-            check_ip $ip_input
-            if [ $? -eq 0 ]; then
-                echo $ip_input > ${NODE_DIR}/node.ip
-                break
-            else
-                echo "[ERROR]: Invalid ip. Please re input."
-            fi
-        done
-    fi
-
-    IP=`cat ${NODE_DIR}/node.ip`
-
-    echo; echo "[Create genesis]"
-    create_genesis $IP ${P2P_PORT}
+    ${BIN_PATH}/platonecli ca generateKey --file ${OUT_FILE} --curve secp256k1 --target private --format PEM
 }
 
-function compile_system_contracts() {
-    if [ "${AUTO}" = "true" ]; then 
-        echo "[INFO]: auto skip compile sys contract, Use existing"
-        return
-    else
-        echo "AUTO: ${AUTO}"  
-    fi
+function genSelfSignCert(){
+    if [ "$PRIVATE" = "" ]; then
+        echo "must input private key file!"
+        return 
+    fi 
 
-    # recompile the system contracts
-    echo "[INFO]: Do You What To Recompile The System Contracts ? (Make sure to put the source code of the system contract in ${SYS_CONTRACTS_PATH})"
-    yes_or_no
-    if [ $? -eq 0 ]; then
+    if [ ! -f $PRIVATE ]; then 
+        echo "private key file not exist!"
         return
     fi
 
-    if [[ -d ${SYS_CONTRACTS_PATH} ]]; then
-        # Recompile system contract
-        cd ${SYS_CONTRACTS_PATH}
-
-        rm -rf ${SYS_CONTRACTS_PATH}/build
-        ./script/build_system_contracts.sh .
-        cp ${SYS_CONTRACTS_PATH}/build/systemContract/*/*json ${SYS_CONTRACTS_PATH}/build/systemContract/*/*wasm  ${WORKSPACE_PATH}/conf/contracts
-
-        cd ${CURRENT_PATH}
-    else
-        echo "[ERROR]: not found the source code of the system contract; check the source code path: ${SYS_CONTRACTS_PATH}"
+    if [ "$OUT_FILE" = "" ]; then 
+        echo "must input the out file name!"
+        return
     fi
+
+    outdir=`(dirname "${OUT_FILE}")`
+    if [ ! -d "$outdir" ]; then
+        mkdir -p $outdir
+    fi
+
+    ${BIN_PATH}/platonecli ca genSelfSignCert --organization $ORG --commonName $CNAME --dgst sha256 --serial 1 --file $OUT_FILE --private $PRIVATE
+}
+
+function genRequest() {
+    if [ "$PRIVATE" = "" ]; then
+        echo "must input private key file!"
+        return 
+    fi 
+
+    if [ ! -f $PRIVATE ]; then 
+        echo "private key file not exist!"
+        return
+    fi
+
+    if [ "$OUT_FILE" = "" ]; then 
+        echo "must input the out file name!"
+        return
+    fi
+
+    outdir=`(dirname "${OUT_FILE}")`
+    if [ ! -d "$outdir" ]; then
+        mkdir -p $outdir
+    fi
+
+    ${BIN_PATH}/platonecli ca generateCSR --organization $ORG --commonName $CNAME --dgst sha256  --file $OUT_FILE --private $PRIVATE
+}
+
+function createCert() {
+    if [ "$PRIVATE" = "" ]; then
+        echo "must input private key file!"
+        return 
+    fi 
+
+    if [ ! -f $PRIVATE ]; then 
+        echo "private key file not exist!"
+        return
+    fi
+
+    if [ "$OUT_FILE" = "" ]; then 
+        echo "must input the out file name!"
+        return
+    fi
+
+    if [ "$CSR_FILE" = "" ]; then 
+        echo "must input the csr file name!"
+        return
+    fi
+
+
+    outdir=`(dirname "${OUT_FILE}")`
+    if [ ! -d "$outdir" ]; then
+        mkdir -p $outdir
+    fi
+
+    ${BIN_PATH}/platonecli  ca create  --ca  $CA --csr $CSR_FILE  --private $PRIVATE --serial 100 --file $OUT_FILE
 }
 
 
 ###########################################
-#### Setup the genesis.json of a chain ####
+#### Ca-cert operations ####
 ###########################################
 
 function help() {
@@ -228,14 +227,19 @@ function help() {
 USAGE: platonectl.sh setupgen [options]
 
         OPTIONS:
+           --genkey                     generate key pair
+           --selfsign                   private key of issuer
+           --request                    generate cert request file
+           --create                     create cert for request
+           --private                    private key of issuer
+           --ca                         cert of isuuer
+           --out                        output of cert file
+           --type                       type of cert(root, org or node)
            --nodeid, -n                 the first node id (default: 0)
-           --ip                         the first node ip (default: 127.0.0.1)
-           --p2p_port                   the first node p2p_port (default: 16791)
+           --org                        orgnization of the cert
+           --cname                      common name of the cert
            --auto                       auto=true: Will auto create new node keys and will
                                         not compile system contracts again (default=false)
-           --observerNodes, -o          set the genesis suggestObserverNodes
-                                        (default is the first node enode code)
-           --validatorNodes, -v         set the genesis validatorNodes
                                         (default is the first node enode code)
            --help, -h                   show help
 "
@@ -262,71 +266,123 @@ CONF_PATH=${WORKSPACE_PATH}/conf
 SCRIPT_PATH=${WORKSPACE_PATH}/scripts
 CA_PATH=${WORKSPACE_PATH}/ca-certs
 
-if [[ ! -d ${WORKSPACE_PATH}/conf/contracts ]];then
-    echo "[INFO]: create contracts dir in: ${WORKSPACE_PATH}/conf/contracts"
-    echo "[WARN]: Please compile the system contract next, will auto put the bytecode and abi in this directory: ${WORKSPACE_PATH}/conf/contracts"
-    mkdir ${WORKSPACE_PATH}/conf/contracts
-fi
-
-SYS_CONTRACTS_PATH=${WORKSPACE_PATH}/../../cmd/SysContracts
+GENKEY=false
+SELFSIGN=false
+REQUEST=false 
+CREATE=false
+PRIVATE=""
+CA=""
+OUT_FILE=""
+CSR_FILE=""
+CERT_TYPE=""
+ORG="PlatONE-ORG"
+CNAME="PlatONE-CNAME"
 
 while [ ! $# -eq 0 ]
 do
+    shiftCnt=1
     case "$1" in
         --nodeid | -n)
             echo "nodeid: $2"
             NODE_ID=$2
+            shiftCnt=2
             ;;
-        --ip)
-            echo "ip: $2"
-            IP=$2
+        --genkey | -g)
+            echo "genkey: true"
+            GENKEY=true
+            shiftCnt=1
             ;;
-        --p2p_port | -p)
-            echo "p2p_port: $2"
-            P2P_PORT=$2
+        --selfsign)
+            echo "selfsign: true"
+            SELFSIGN=true
+            shiftCnt=1
             ;;
+        --request)
+            echo "request: true"
+            REQUEST=true
+            shiftCnt=1
+            ;;        
+        --create)
+            echo "request: true"
+            CREATE=true
+            shiftCnt=1
+            ;;  
+        --private | -p)
+            echo "private: $2"
+            PRIVATE=$2
+            shiftCnt=2
+            ;;
+        --csr)
+            echo "csr: $2"
+            CSR_FILE=$2
+            shiftCnt=2
+            ;;        
+        --ca)
+            echo "ca: $2"
+            CA=$2
+            shiftCnt=2
+            ;;
+        --type)
+            echo "cert type: $2"
+            CERT_TYPE=$2
+            shiftCnt=2
+            ;;            
+        --org)
+            echo "orgnization: $2"
+            ORG=$2
+            shiftCnt=2
+            ;; 
+        --cname)
+            echo "common name: $2"
+            CNAME=$2
+            shiftCnt=2
+            ;;             
+        --out)
+            echo "output: $2"
+            OUT_FILE=$2
+            shiftCnt=2
+            ;;         
         --auto)
             echo "auto: $2"
             AUTO=$2
-            ;;
-        --observerNodes | -o)
-            echo "bootnodes: $2"
-            OBSERVE_NODES=$2
-            ;;
-        --validatorNodes | -v)
-            echo "bootnodes: $2"
-            VALIDATOR_NODES=$2
-            ;;
-        --interpreter | -i)
-            echo "interpreter: #${2}#"
-            INTERPRETER=${2}
+            shiftCnt=2
             ;;
         *)
             help
             exit
             ;;
     esac
-    shiftOption2 $#
-    shift 2
+    # shiftOption2 $#
+    shift $shiftCnt
 done
 
-NODE_DIR=${WORKSPACE_PATH}/data/node-${NODE_ID}
+# NODE_DIR=${WORKSPACE_PATH}/data/node-${NODE_ID}
 
-if [ -d ${NODE_DIR} ]; then
-    echo "root node datadir: ${NODE_DIR}"
-else
-    echo '[INFO]: The node directory have not been created, Now to create it'
-    mkdir -p ${NODE_DIR}
+# if [ -d ${NODE_DIR} ]; then
+#     echo "root node datadir: ${NODE_DIR}"
+# else
+#     echo '[INFO]: The node directory have not been created, Now to create it'
+#     mkdir -p ${NODE_DIR}
+# fi
+
+
+if [ "$GENKEY" = true ] ; then
+    generateKey
+    exit
 fi
 
-echo ${P2P_PORT} > ${NODE_DIR}/node.p2p_port
+if [ "$SELFSIGN" = true ]; then
+    genSelfSignCert
+    exit
+fi 
 
-echo '
-###########################################
-#### Setup the genesis.json of a chain ####
-###########################################
-'
+if [ "$REQUEST" = true ]; then
+    genRequest
+    exit
+fi 
 
-compile_system_contracts
+if [ "$CREATE" = true ]; then
+    createCert
+    exit
+fi 
 
-setup_genesis
