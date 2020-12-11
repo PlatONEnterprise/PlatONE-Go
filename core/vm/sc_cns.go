@@ -40,15 +40,15 @@ var (
 	/// regName = regexp.MustCompile(namePattern)
 	regVer = regexp.MustCompile(versionRegPattern)
 )
-
-var (
-	cnsSysContractsMap = map[string]common.Address{
-		"__sys_ParamManager": syscontracts.ParameterManagementAddress,
-		"__sys_NodeManager":  syscontracts.NodeManagementAddress,
-		"__sys_UserManager":  syscontracts.UserManagementAddress,
-		"cnsManager":         syscontracts.CnsManagementAddress,
-	}
-)
+//
+//var (
+//	cnsSysContractsMap = map[string]common.Address{
+//		"__sys_ParamManager": syscontracts.ParameterManagementAddress,
+//		"__sys_NodeManager":  syscontracts.NodeManagementAddress,
+//		"__sys_UserManager":  syscontracts.UserManagementAddress,
+//		"cnsManager":         syscontracts.CnsManagementAddress,
+//	}
+//)
 
 // CnsManager
 type CnsManager struct {
@@ -264,9 +264,9 @@ func (cns *CnsManager) cnsRedirect(name, version string) error {
 
 // getContractAddress returns the address of a cns name at specific version
 func (cns *CnsManager) getContractAddress(name, version string) (common.Address, error) {
-	if sysCon, ok := cnsSysContractsMap[name]; ok {
-		return sysCon, nil
-	}
+	//if sysCon, ok := cnsSysContractsMap[name]; ok {
+	//	return sysCon, nil
+	//}
 
 	if strings.EqualFold(version, "latest") {
 		version = cns.cMap.getCurrentVer(name)
