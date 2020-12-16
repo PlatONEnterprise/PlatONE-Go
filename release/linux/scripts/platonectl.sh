@@ -506,18 +506,19 @@ function restart() {
 function getAllNodes() {
     config="${CONF_PATH}/ctool.json"
     abi="${CONF_PATH}/contracts/nodeManager.cpp.abi.json"
-    abiCNS="${CONF_PATH}/contracts/cnsManager.cpp.abi.json"
-    addrCNS="0x0000000000000000000000000000000000000011"
-    func="getContractAddress"
-    param1="__sys_NodeManager"
-    param2="latest"
+#    abiCNS="${CONF_PATH}/contracts/cnsManager.cpp.abi.json"
+#    addrCNS="0x0000000000000000000000000000000000000011"
+#    func="getContractAddress"
+#    param1="__sys_NodeManager"
+#    param2="latest"
+#
+#    echo "${BIN_PATH}/ctool invoke --config $config --abi $abiCNS --addr $addrCNS --func $func --param $param1 --param $param2 | sed s/[[:space:]]//g"
+#    ret=`${BIN_PATH}/ctool invoke --config $config --abi $abiCNS --addr $addrCNS --func $func --param $param1 --param $param2 | sed s/[[:space:]]//g`
+#    addr=${ret#*result:}
 
-    echo "${BIN_PATH}/ctool invoke --config $config --abi $abiCNS --addr $addrCNS --func $func --param $param1 --param $param2 | sed s/[[:space:]]//g"
-    ret=`${BIN_PATH}/ctool invoke --config $config --abi $abiCNS --addr $addrCNS --func $func --param $param1 --param $param2 | sed s/[[:space:]]//g`
-    addr=${ret#*result:}
-
+    node_manager_addr="0x1000000000000000000000000000000000000002"
     echo "[INFO]: get all nodes from nodeManager system contract"
-    ${BIN_PATH}/ctool invoke --config $config --addr $addr --abi $abi --func getAllNodes
+    ${BIN_PATH}/ctool invoke --config $config --addr $node_manager_addr --abi $abi --func getAllNodes
 }
 
 function clearConf() {

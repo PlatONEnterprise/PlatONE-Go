@@ -191,20 +191,21 @@ check
 config="${CONF_PATH}/ctool.json"
 node_manager_abi="${CONF_PATH}/contracts/nodeManager.cpp.abi.json"
 
-cns_manager_abi="${CONF_PATH}/contracts/cnsManager.cpp.abi.json"
-cns_addr="0x0000000000000000000000000000000000000011"
-func="getContractAddress"
-param1="__sys_NodeManager"
-param2="latest"
-ret=`${BIN_PATH}/ctool invoke --config $config --abi $cns_manager_abi --addr $cns_addr --func $func --param $param1 --param $param2 | sed s/[[:space:]]//g`
-
-addr=${ret#*result:}
-echo "[INFO]: nodeManager's address: ${addr}"
+#cns_manager_abi="${CONF_PATH}/contracts/cnsManager.cpp.abi.json"
+#cns_addr="0x0000000000000000000000000000000000000011"
+#func="getContractAddress"
+#param1="__sys_NodeManager"
+#param2="latest"
+#ret=`${BIN_PATH}/ctool invoke --config $config --abi $cns_manager_abi --addr $cns_addr --func $func --param $param1 --param $param2 | sed s/[[:space:]]//g`
+#
+#addr=${ret#*result:}
+#echo "[INFO]: nodeManager's address: ${addr}"
+node_manager_addr="0x1000000000000000000000000000000000000002"
 
 nodeJsonStr_string="{\"name\":\"${NODE_ID}\",\"type\":${NODE_TYPE},\"publicKey\":\"${PUBKEY}\",\"desc\":\"$DESC\",\"externalIP\":\"${IP}\",\"internalIP\":\"${IP}\",\"rpcPort\":${RPC_PORT},\"p2pPort\":${P2P_PORT},\"owner\":\"0x${ACCOUNT}\",\"status\":1}"
 
-${BIN_PATH}/ctool invoke --config $config --addr $addr --abi $node_manager_abi --func "add" --param $nodeJsonStr_string
+${BIN_PATH}/ctool invoke --config $config --addr $node_manager_addr --abi $node_manager_abi --func "add" --param $nodeJsonStr_string
 
 sleep 2
 
-${BIN_PATH}/ctool invoke --config $config --addr $addr --abi $node_manager_abi --func getAllNodes 
+${BIN_PATH}/ctool invoke --config $config --addr $node_manager_addr --abi $node_manager_abi --func getAllNodes
