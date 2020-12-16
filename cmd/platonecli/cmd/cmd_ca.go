@@ -27,9 +27,9 @@ var (
 			SelfCAGenerateCmd,
 			CaCreateCmd,
 			CaVerfyCmd,
-			SetRootCACmd,
+			SetRootCertCmd,
 			AddIssuerCmd,
-			GetCACmd,
+			GetCertCmd,
 
 		},
 	}
@@ -39,16 +39,17 @@ var (
 		Usage:     "generateKey",
 		ArgsUsage: "--file <output> --curve <curve> --target <target> --format <format>",
 		Action:    generateKey,
-		Flags:     CaCmdFlags,
+		Flags:     KeyGenerateFlags,
 		Description: `
 		platonecli ca generateKey`,
 	}
+
 	CSRGenerateCmd = cli.Command{
 		Name:      "generateCSR",
 		Usage:     "generateCSR",
 		ArgsUsage: "--file <file> --keyfile <keyfile> --organization <organization> --commonName <commonName> --dgst <dgst>",
 		Action:    generateCSR,
-		Flags:     CaCmdFlags,
+		Flags:     CSRGenerateFlags,
 		Description: `
 		platonecli ca generateCSR`,
 	}
@@ -56,19 +57,19 @@ var (
 	SelfCAGenerateCmd = cli.Command{
 		Name:      "genSelfSignCert",
 		Usage:     "genSelfSignCert",
-		ArgsUsage: "--file <file> --keyfile <keyfile> --organization <organization> --commonName <commonName> -- serial <serial> --dgst <dgst>",
+		ArgsUsage: "--file <file> --private <private> --organization <organization> --commonName <commonName> -- serial <serial> --dgst <dgst>",
 		Action:    genSelfSignCert,
-		Flags:     CaCmdFlags,
+		Flags:     SelfCAGenerateFlags,
 		Description: `
-		platonecli ca genSelfSignCert`,
+		platonecli ca selfCert`,
 	}
 
 	CaCreateCmd = cli.Command{
 		Name:      "create",
 		Usage:     "create",
-		ArgsUsage: "--file <file> --keyfile <keyfile> --organization <organization> --commonName <commonName> -- serial <serial> --dgst <dgst>",
+		ArgsUsage: "--file <file> --private <private> --csr <csr file> -- serial <serial> --dgst <dgst>",
 		Action:    generateCert,
-		Flags:     CaCmdFlags,
+		Flags:     CaCreateFlags,
 		Description: `
 		platonecli ca create`,
 	}
@@ -78,17 +79,17 @@ var (
 		Usage:     "verify",
 		ArgsUsage: "--file <file> --keyfile <keyfile> --organization <organization> --commonName <commonName> -- serial <serial> --dgst <dgst>",
 		Action:    verifyCert,
-		Flags:     CaCmdFlags,
+		Flags:     CaVerfyFlags,
 		Description: `
 		platonecli ca verify`,
 	}
 
-	SetRootCACmd = cli.Command{
+	SetRootCertCmd = cli.Command{
 		Name:      "setRootCert",
 		Usage:     "setRootCert",
 		ArgsUsage: " --ca",
 		Action:    setRootCert,
-		Flags:     CaCmdFlags,
+		Flags:     SetRootCertFlags,
 		Description: `
 		platonecli ca setRootCert`,
 	}
@@ -98,17 +99,17 @@ var (
 		Usage:     "addIssuer",
 		ArgsUsage: "--ca",
 		Action:    addIssuer,
-		Flags:     CaCmdFlags,
+		Flags:     AddIssuerFlags,
 		Description: `
 		platonecli ca addIssuer`,
 	}
 
-	GetCACmd = cli.Command{
+	GetCertCmd = cli.Command{
 		Name:      "getCert",
 		Usage:     "getCert",
 		ArgsUsage: "--all --root --subject",
 		Action:    getCert,
-		Flags:     CaCmdFlags,
+		Flags:     GetCertFlags,
 		Description: `
 		platonecli ca getCert`,
 	}
@@ -392,7 +393,7 @@ func getCert (c *cli.Context) {
 		fmt.Printf("result:\n%s\n", strResult)
 		return
 	}
-	root := c.Bool(RootCAFlags.Name)
+	root := c.Bool(RootCertFlags.Name)
 
 	if root {
 		result := contractCall(c, nil, "getRootCert", precompile.CAManagementAddress)

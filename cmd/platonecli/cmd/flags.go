@@ -360,7 +360,7 @@ var (
 		Usage:"subject",
 	}
 
-	RootCAFlags = cli.BoolFlag{
+	RootCertFlags = cli.BoolFlag{
 		Name:  "root",
 		Usage: "List root ca",
 	}
@@ -451,6 +451,73 @@ var (
 	roleCmdFlags = globalCmdFlags
 
 	// ca
+	KeyGenerateFlags = append(
+		globalCmdFlags,
+		CurveFlag,
+		TargetFlag,
+		FormatFlag,
+		PrivateFlag,
+		OutFileFlag,
+	)
+
+
+	CSRGenerateFlags = append(
+		globalCmdFlags,
+		PrivateFlag,
+		OutFileFlag,
+		OrganizationFlags,
+		CommonNameFlag,
+		SignatureAlgFlag,
+	)
+
+
+	SelfCAGenerateFlags = append(
+		globalCmdFlags,
+		PrivateFlag,
+		OutFileFlag,
+		OrganizationFlags,
+		CommonNameFlag,
+		SerialNumberFlag,
+		SignatureAlgFlag,
+	)
+
+
+	CaCreateFlags = append(
+		globalCmdFlags,
+		PrivateFlag,
+		OutFileFlag,
+		CsrFileFlag,
+		CaFileFlag,
+		SerialNumberFlag,
+		SignatureAlgFlag,
+	)
+
+
+	CaVerfyFlags = append(
+		globalCmdFlags,
+		CaFileFlag,
+		CertFileFlag,
+	)
+
+
+	SetRootCertFlags = append(
+		globalCmdFlags,
+		CaFileFlag,
+	)
+
+
+	AddIssuerFlags = append(
+		globalCmdFlags,
+		CaFileFlag,
+	)
+
+	GetCertFlags = append(
+		globalCmdFlags,
+		ShowAllFlags,
+		RootCertFlags,
+		SubjectFlag,
+	)
+
 	CaCmdFlags =append(
 		globalCmdFlags,
 		PrivateFlag,

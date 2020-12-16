@@ -51,7 +51,7 @@ function create_account() {
         echo "New account: "${ACCOUNT}
         echo "passphrase: "${phrase}
         unlock_account ${ACCOUNT} ${phrase}
-        cp $DATA_DIR/node-0/keystore/UTC* $CONF_PATH/keyfile.json
+        cp $DATA_DIR/node-A/keystore/UTC* $CONF_PATH/keyfile.json
     else
         echo "[ERROR]: create account failed!!!"
         exit
@@ -160,6 +160,9 @@ function add_ca_certs(){
     `
 
     ${BIN_PATH}/platonecli ca setRootCert --ca ${ROOT_CERT} --keyfile ${CONF_PATH}/keyfile.json 
+
+    sleep 10
+    
     ${BIN_PATH}/platonecli ca addIssuer --ca ${ORG_CERT} --keyfile ${CONF_PATH}/keyfile.json 
 }
 
