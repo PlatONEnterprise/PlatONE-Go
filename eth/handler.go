@@ -298,6 +298,35 @@ func (pm *ProtocolManager) handle(p *peer) error {
 		p.Log().Debug("Ethereum handshake failed", "err", err)
 		return err
 	}
+	if pm.blockchain.CurrentHeader().Number.Cmp(big.NewInt(0)) == 0 &&
+		p.GetReplayParam().Pivot != 0 &&
+		common.SysCfg.ReplayParam.Pivot == 0 {
+
+		b, err := rlp.EncodeToBytes(p.GetReplayParam().Pivot)
+		if err != nil {
+			return err
+		}
+		pm.blockchain.Put(common.Sys_pivot_key, b)
+
+		b, err = json.Marshal(p.GetReplayParam().OldSysContracts)
+		if err != nil {
+			return err
+		}
+		b, err = rlp.EncodeToBytes(b)
+		if err != nil {
+			return err
+		}
+		pm.blockchain.Put(common.Sys_old_system_contract_key, b)
+
+		b, err = rlp.EncodeToBytes(p.GetReplayParam().OldSuperAdmin)
+		if err != nil {
+			return err
+		}
+		pm.blockchain.Put(common.Sys_old_super_admin_key, b)
+
+		core.InitBlockReplayConfig(pm.blockchain, common.SysCfg)
+	}
+
 	if rw, ok := p.rw.(*meteredMsgReadWriter); ok {
 		rw.Init(p.version)
 	}

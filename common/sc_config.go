@@ -1,13 +1,17 @@
 package common
 
 import (
+	"github.com/PlatONEnetwork/PlatONE-Go/common/bcwasmutil"
 	"math/big"
 	"sync"
 )
-const  (
-	Sys_pivot_key = string("sys_pivot_key")
-	Sys_old_system_contract_key = string("sys_old_system_contract_key")
+
+var (
+	Sys_pivot_key               = bcwasmutil.SerilizString("sys_pivot_key")
+	Sys_old_system_contract_key = bcwasmutil.SerilizString("sys_old_system_contract_key")
+	Sys_old_super_admin_key     = bcwasmutil.SerilizString("sys_old_super_admin_key")
 )
+
 type CommonResult struct {
 	RetCode int32      `json:"code"`
 	RetMsg  string     `json:"msg"`
@@ -47,6 +51,12 @@ type SystemParameter struct {
 	VRF                           VRFParams
 }
 
+type ReplayParam struct {
+	Pivot           uint64             `json:"povit"`
+	OldSysContracts map[Address]string `json:"oldSysContracts"`
+	OldSuperAdmin   Address            `json:"oldSuperAdmin"`
+}
+
 type SystemConfig struct {
 	SystemConfigMu  *sync.RWMutex
 	SysParam        *SystemParameter
@@ -56,6 +66,7 @@ type SystemConfig struct {
 	DeleteNodes     []*NodeInfo
 	HighsetNumber   *big.Int
 	ContractAddress map[string]Address
+	ReplayParam     *ReplayParam
 }
 
 var SysCfg = &SystemConfig{
@@ -75,6 +86,7 @@ var SysCfg = &SystemConfig{
 		},
 	},
 	ContractAddress: make(map[string]Address),
+	ReplayParam:     nil,
 }
 
 func (sc *SystemConfig) IsProduceEmptyBlock() bool {

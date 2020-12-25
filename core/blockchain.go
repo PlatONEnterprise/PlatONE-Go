@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
+	"github.com/PlatONEnetwork/PlatONE-Go/life/utils"
 	"io"
 	"math/big"
 	"sync"
@@ -452,11 +453,6 @@ func (bc *BlockChain) ExportN(w io.Writer, version string, first uint64, last ui
 	bc.mu.RLock()
 	defer bc.mu.RUnlock()
 
-	_state, err := bc.State()
-	if err != nil {
-		return err
-	}
-
 	if first > last {
 		return fmt.Errorf("export failed: first (%d) is greater than last (%d)", first, last)
 	}
@@ -466,32 +462,53 @@ func (bc *BlockChain) ExportN(w io.Writer, version string, first uint64, last ui
 	rlp.Encode(w, last)
 
 	//export possible old system contracts
-	CnsManagementAddress := syscontracts.CnsManagementAddress
-	m := make(map[string]common.Address)
-	for k, v := range vm.CnsSysContractsMap {
-		if k == "cnsManager" {
-			continue
-		}
-
+	var addrSuperAdmin string
+	m := make(map[common.Address]string)
+	CnsSysContractsMap := map[string]common.Address{
+		"__sys_ParamManager": syscontracts.ParameterManagementAddress,
+		"__sys_NodeManager":  syscontracts.NodeManagementAddress,
+		"__sys_UserManager":  syscontracts.UserManagementAddress,
+		"__sys_RoleManager":  syscontracts.UserManagementAddress,
+	}
+	for k, v := range CnsSysContractsMap {
 		if version < "1.0.0" {
-			msg := types.NewMessage(common.Address{}, nil, 1, big.NewInt(1), 0x1, big.NewInt(1), nil, false, types.NormalTxType)
-			context := NewEVMContext(msg, bc.CurrentHeader(), bc, nil)
-			evm := vm.NewEVM(context, _state, bc.Config(), vm.Config{})
-
 			input := common.GenCallData("getContractAddress", []interface{}{k, "latest"})
-			contract := vm.NewContract(vm.AccountRef(common.Address{}), vm.AccountRef(CnsManagementAddress), big.NewInt(0), uint64(0xffffffffff))
-			contract.SetCallCode(&CnsManagementAddress, evm.StateDB.GetCodeHash(CnsManagementAddress), evm.StateDB.GetCode(CnsManagementAddress))
-			btsRes, err := bc.runInterpreter(evm, contract, input)
+			btsRes, err := bc.RunInterpreterDirectly(common.Address{}, syscontracts.CnsManagementAddress, input)
 			if err != nil {
-				return err
+				continue
 			}
 			strRes := common.CallResAsString(btsRes)
 			if len(strRes) == 0 || common.IsHexZeroAddress(strRes) {
-				return errors.New("call system contract address fail")
+				continue
 			}
-			m[k] = common.HexToAddress(strRes)
+			taddr := common.HexToAddress(strRes)
+			m[taddr] = k
+
+			if k == "__sys_RoleManager" {
+				input = common.GenCallData("getAccountsByRole", []interface{}{"chainCreator"})
+				btsRes, err = bc.RunInterpreterDirectly(common.Address{}, taddr, input)
+				if err != nil {
+					continue
+				}
+				strRes = common.CallResAsString(btsRes)
+
+				type tmpResInfo struct {
+					Name    string `json:"name"`
+					Address string `json:"address"`
+				}
+				type tmpResType struct {
+					Code int          `json:"code"`
+					Msg  string       `json:"msg"`
+					Data []tmpResInfo `json:"data"`
+				}
+				var tmp tmpResType
+				if err := json.Unmarshal(utils.String2bytes(strRes), &tmp); err != nil || tmp.Code != 0 || len(tmp.Data) < 1 {
+					continue
+				}
+				addrSuperAdmin = tmp.Data[0].Address
+			}
 		} else {
-			m[k] = v
+			m[v] = k
 		}
 	}
 	b, err := json.Marshal(m)
@@ -499,6 +516,7 @@ func (bc *BlockChain) ExportN(w io.Writer, version string, first uint64, last ui
 		return err
 	}
 	rlp.Encode(w, b)
+	rlp.Encode(w, addrSuperAdmin)
 
 	start, reported := time.Now(), time.Now()
 	for nr := first; nr <= last; nr++ {
@@ -514,7 +532,6 @@ func (bc *BlockChain) ExportN(w io.Writer, version string, first uint64, last ui
 			reported = time.Now()
 		}
 	}
-
 	return nil
 }
 
@@ -559,6 +576,7 @@ func (bc *BlockChain) insert(block *types.Block) {
 }
 
 func (bc *BlockChain) UpdateSystemConfig(block *types.Block) {
+	common.SysCfg.HighsetNumber = block.Number()
 	for _, tx := range block.Body().Transactions {
 		//not deploy tx
 		if nil == tx.To() {
@@ -1077,7 +1095,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 	}
 	// Do a sanity check that the provided chain is actually ordered and linked
 	for i := 1; i < len(chain); i++ {
-		if chain[i].NumberU64() != chain[i-1].NumberU64()+1 || chain[i].ParentHash() != chain[i-1].Hash() {
+		if chain[i].NumberU64() != chain[i-1].NumberU64()+1 || (chain[i].NumberU64() > common.SysCfg.ReplayParam.Pivot && chain[i].ParentHash() != chain[i-1].Hash()) {
 			// Chain broke ancestry, log a message (programming error) and skip insertion
 			log.Error("Non contiguous block insert", "number", chain[i].Number(), "hash", chain[i].Hash(),
 				"parent", chain[i].ParentHash(), "prevnumber", chain[i-1].Number(), "prevhash", chain[i-1].Hash())
@@ -1192,8 +1210,14 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		// Create a new statedb using the parent block and report an
 		// error if it fails.
 		var parent *types.Block
-		if i == 0 {
-			parent = bc.GetBlock(block.ParentHash(), block.NumberU64()-1)
+		if i == 0 || block.NumberU64() <= common.SysCfg.ReplayParam.Pivot {
+			parent = bc.GetBlockByNumber(block.NumberU64() - 1)
+			// block replay in different version may cause different Merkle root and hash,we should make the parent hash correct
+			if block.ParentHash() != parent.Hash() {
+				h := block.Header()
+				h.ParentHash = parent.Hash()
+				block = block.WithSeal(h)
+			}
 		} else {
 			parent = chain[i-1]
 		}
@@ -1201,8 +1225,25 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		if err != nil {
 			return i, events, coalescedLogs, err
 		}
+
+		//set super_admin for 0.9 version in block 1 import
+		if block.NumberU64() == 1 && common.SysCfg.ReplayParam.OldSuperAdmin != common.NullAddress {
+			_, err = InnerCallContractWithState(state, bc, common.SysCfg.ReplayParam.OldSuperAdmin,
+				syscontracts.UserManagementAddress, "setSuperAdmin", []interface{}{})
+			if err != nil {
+				bc.reportBlock(block, nil, err)
+				return i, events, coalescedLogs, err
+			}
+
+			_, err = InnerCallContractWithState(state, bc, common.SysCfg.ReplayParam.OldSuperAdmin,
+				syscontracts.UserManagementAddress, "addChainAdminByAddress", []interface{}{common.SysCfg.ReplayParam.OldSuperAdmin.String()})
+			if err != nil {
+				bc.reportBlock(block, nil, err)
+				return i, events, coalescedLogs, err
+			}
+		}
 		// Process block using the parent state as reference point.
-		receipts, logs, usedGas, err := bc.processor.Process(block, state, bc.vmConfig)
+		fblock, receipts, logs, usedGas, err := bc.processor.Process(block, state, bc.vmConfig)
 		if err != nil {
 			bc.reportBlock(block, receipts, err)
 			return i, events, coalescedLogs, err
@@ -1216,29 +1257,29 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		proctime := time.Since(bstart)
 
 		// Write the block to the chain and get the status.
-		status, err := bc.WriteBlockWithState(block, receipts, state)
+		status, err := bc.WriteBlockWithState(fblock, receipts, state)
 		if err != nil {
 			return i, events, coalescedLogs, err
 		}
 		switch status {
 		case CanonStatTy:
-			log.Debug("Inserted new block", "number", block.Number(), "hash", block.Hash(),
-				"txs", len(block.Transactions()), "gas", block.GasUsed(), "elapsed", common.PrettyDuration(time.Since(bstart)))
+			log.Debug("Inserted new block", "number", fblock.Number(), "hash", fblock.Hash(),
+				"txs", len(fblock.Transactions()), "gas", fblock.GasUsed(), "elapsed", common.PrettyDuration(time.Since(bstart)))
 
 			coalescedLogs = append(coalescedLogs, logs...)
 			blockInsertTimer.UpdateSince(bstart)
-			events = append(events, ChainEvent{block, block.Hash(), logs})
-			lastCanon = block
+			events = append(events, ChainEvent{fblock, fblock.Hash(), logs})
+			lastCanon = fblock
 
 			// Only count canonical blocks for GC processing time
 			bc.gcproc += proctime
 
 		case SideStatTy:
-			log.Debug("Inserted forked block", "number", block.Number(), "hash", block.Hash(), "elapsed",
-				common.PrettyDuration(time.Since(bstart)), "txs", len(block.Transactions()), "gas", block.GasUsed())
+			log.Debug("Inserted forked block", "number", fblock.Number(), "hash", fblock.Hash(), "elapsed",
+				common.PrettyDuration(time.Since(bstart)), "txs", len(fblock.Transactions()), "gas", fblock.GasUsed())
 
 			blockInsertTimer.UpdateSince(bstart)
-			events = append(events, ChainSideEvent{block})
+			events = append(events, ChainSideEvent{fblock})
 		}
 		stats.processed++
 		stats.usedGas += usedGas
@@ -1251,29 +1292,6 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		events = append(events, ChainHeadEvent{lastCanon})
 	}
 	return 0, events, coalescedLogs, nil
-}
-
-//joey.lyu
-func (bc *BlockChain) ProcessDirectly(block *types.Block, state *state.StateDB, parent *types.Block) (types.Receipts, error) {
-	// Process block using the parent state as reference point.
-	receipts, logs, usedGas, err := bc.processor.Process(block, state, bc.vmConfig)
-	if err != nil {
-		bc.reportBlock(block, receipts, err)
-		return nil, err
-	}
-
-	// Validate the state using the default validator
-	err = bc.Validator().ValidateState(block, parent, state, receipts, usedGas)
-	if err != nil {
-		bc.reportBlock(block, receipts, err)
-		return nil, err
-	}
-	//logs
-	if logs != nil {
-		bc.logsFeed.Send(logs)
-	}
-
-	return receipts, nil
 }
 
 // insertStats tracks and reports on block insertion.
@@ -1531,11 +1549,26 @@ func (bc *BlockChain) SubscribeLogsEvent(ch chan<- []*types.Log) event.Subscript
 }
 
 // Put put key/value pair into db directly
-func (bc *BlockChain) Put(key []byte, value []byte) error{
+func (bc *BlockChain) Put(key []byte, value []byte) error {
 	return bc.db.Put(key, value)
 }
 
 // Get get value from db directly
-func (bc *BlockChain) Get(key []byte)([]byte,error){
+func (bc *BlockChain) Get(key []byte) ([]byte, error) {
 	return bc.db.Get(key)
+}
+
+func (bc *BlockChain) RunInterpreterDirectly(caller common.Address, contractAddr common.Address, input []byte) ([]byte, error) {
+	state, err := bc.State()
+	if err != nil {
+		return nil, err
+	}
+
+	msg := types.NewMessage(caller, &contractAddr, 1, big.NewInt(1), 0x1, big.NewInt(1), input, false, types.NormalTxType)
+	context := NewEVMContext(msg, bc.CurrentHeader(), bc, nil)
+	evm := vm.NewEVM(context, state, bc.Config(), vm.Config{})
+
+	contract := vm.NewContract(vm.AccountRef(caller), vm.AccountRef(contractAddr), big.NewInt(0), uint64(0xffffffffff))
+	contract.SetCallCode(&contractAddr, evm.StateDB.GetCodeHash(contractAddr), evm.StateDB.GetCode(contractAddr))
+	return bc.runInterpreter(evm, contract, input)
 }

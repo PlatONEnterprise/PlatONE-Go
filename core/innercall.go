@@ -2,6 +2,7 @@ package core
 
 import (
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
+	"github.com/PlatONEnetwork/PlatONE-Go/core/state"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/vm"
 	"math/big"
@@ -9,15 +10,9 @@ import (
 
 var InnerCallFromAddress = common.HexToAddress("0x1000000000000000000000000000000000000000")
 
-func innerCallContractReadOnly(bc *BlockChain, contractAddr common.Address, input []byte) ([]byte, error) {
+func innerCallContract(state *state.StateDB, bc *BlockChain, caller common.Address, contractAddr common.Address, input []byte) ([]byte, error) {
 	// Create new call message
-	msg := types.NewMessage(InnerCallFromAddress, &contractAddr, 1, big.NewInt(1), uint64(0xffffffffff), big.NewInt(1), input, false, types.NormalTxType)
-
-	// Get the state
-	state, err := bc.State()
-	if state == nil || err != nil {
-		return nil, err
-	}
+	msg := types.NewMessage(caller, &contractAddr, 1, big.NewInt(1), uint64(0xffffffffff), big.NewInt(1), input, false, types.NormalTxType)
 	header := bc.CurrentHeader()
 
 	context := NewEVMContext(msg, header, bc, nil)
@@ -32,6 +27,17 @@ func innerCallContractReadOnly(bc *BlockChain, contractAddr common.Address, inpu
 }
 
 func InnerCallContractReadOnly(bc *BlockChain, contractAddr common.Address, funcName string, funcParams []interface{}) ([]byte, error) {
+	// Get the state
+	state, err := bc.State()
+	if state == nil || err != nil {
+		return nil, err
+	}
 	input := common.GenCallData(funcName, funcParams)
-	return innerCallContractReadOnly(bc, contractAddr, input)
+	res, err := innerCallContract(state.Copy(), bc, InnerCallFromAddress, contractAddr, input)
+	return res, err
+}
+
+func InnerCallContractWithState(state *state.StateDB, bc *BlockChain, caller common.Address, contractAddr common.Address, funcName string, funcParams []interface{}) ([]byte, error) {
+	input := common.GenCallData(funcName, funcParams)
+	return innerCallContract(state, bc, caller, contractAddr, input)
 }

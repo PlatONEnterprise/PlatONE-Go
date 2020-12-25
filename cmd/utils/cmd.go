@@ -126,19 +126,33 @@ func ImportChain(chain *core.BlockChain, fn string) error {
 		}
 	}
 	stream := rlp.NewStream(reader, 0)
-	// import pivot and system contract info
+	// import pivot,system contract info,super admin
 	var pivot uint64
 	if err := stream.Decode(&pivot); err != nil {
 		return fmt.Errorf("at import pivot: %v", err)
+	} else {
+		b, _ := rlp.EncodeToBytes(pivot)
+		chain.Put(common.Sys_pivot_key, b)
 	}
-	
-	mapSysContractAddr := make(map[string]common.Address)
+
+	mapSysContractAddr := make(map[common.Address]string)
 	var b []byte
 	if err := stream.Decode(&b); err != nil {
 		return fmt.Errorf("at import system contract: %v", err)
 	}
-	if err := json.Unmarshal(b,&mapSysContractAddr);err != nil{
+	if err := json.Unmarshal(b, &mapSysContractAddr); err != nil {
 		return fmt.Errorf("at import system contract: %v", err)
+	} else {
+		b, _ := rlp.EncodeToBytes(b)
+		chain.Put(common.Sys_old_system_contract_key, b)
+	}
+
+	var superAdmin string
+	if err := stream.Decode(&superAdmin); err != nil {
+		return fmt.Errorf("at import super admin: %v", err)
+	} else {
+		b, _ := rlp.EncodeToBytes(common.HexToAddress(superAdmin))
+		chain.Put(common.Sys_old_super_admin_key, b)
 	}
 
 	core.UpdateSysContractConfig(chain, common.SysCfg)

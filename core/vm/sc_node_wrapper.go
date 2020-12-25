@@ -73,12 +73,10 @@ func (n *scNodeWrapper) update(name string, node *syscontracts.UpdateNode) (int,
 
 func (n *scNodeWrapper) getAllNodes() (string, error) {
 	nodes, err := n.base.GetAllNodes()
-	if err != nil {
-		if errNodeNotFound == err {
-			return newInternalErrorResult(err).String(), err
-		}
-
+	if err != nil && err != errNodeNotFound{
 		return "", err
+	} else if errNodeNotFound == err {
+		nodes = []*syscontracts.NodeInfo{}
 	}
 
 	return newSuccessResult(nodes).String(), nil

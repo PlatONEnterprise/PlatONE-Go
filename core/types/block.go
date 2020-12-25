@@ -19,6 +19,7 @@ package types
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 	"math/big"
@@ -68,6 +69,30 @@ func (n BlockNonce) MarshalText() ([]byte, error) {
 // UnmarshalText implements encoding.TextUnmarshaler.
 func (n *BlockNonce) UnmarshalText(input []byte) error {
 	return hexutil.UnmarshalFixedText("BlockNonce", input, n[:])
+}
+
+// DecodeRLP implements rlp.Decoder
+func (n BlockNonce) DecodeRLP(s *rlp.Stream) error {
+	kind, size, err := s.Kind()
+	if err != nil {
+		return err
+	}
+	if kind != rlp.String {
+		return errors.New("rlp input for BlockNonce is not string")
+	}
+	if uint64(len(n[:])) < size {
+		return errors.New("input string for BlockNonce too long")
+	}
+
+	slice := n[: int(size)]
+	if err := s.ReadFull(slice); err != nil {
+		return err
+	}
+	// Reject cases where single byte encoding should have been used.
+	if size == 1 && slice[0] < 128 {
+		return rlp.ErrCanonSize
+	}
+	return nil
 }
 
 //go:generate gencodec -type Header -field-override headerMarshaling -out gen_header_json.go

@@ -17,6 +17,7 @@
 package eth
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
@@ -108,6 +109,7 @@ type peer struct {
 	term               chan struct{}             // Termination channel to stop the broadcaster
 	queuedPreBlock     chan *preBlockEvent
 	types              int32 // remote node's types   consensus(1) / observer(0)
+	replayParam        common.ReplayParam
 }
 
 func newPeer(version int, p *p2p.Peer, rw p2p.MsgReadWriter) *peer {
@@ -233,6 +235,19 @@ func (p *peer) SetHead(hash common.Hash, bn *big.Int) {
 
 	copy(p.head[:], hash[:])
 	p.bn.Set(bn)
+}
+
+func (p *peer) SetReplayParam(param common.ReplayParam) {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+
+	p.replayParam = param
+}
+
+func (p *peer) GetReplayParam() common.ReplayParam {
+	p.lock.RLock()
+	defer p.lock.RUnlock()
+	return p.replayParam
 }
 
 // MarkBlock marks a block as known for the peer, ensuring that the block will
@@ -453,12 +468,20 @@ func (p *peer) Handshake(network uint64, bn *big.Int, head common.Hash, genesis 
 	var status statusData // safe to read after two values have been received from errc
 
 	go func() {
+		scb, err := json.Marshal(common.SysCfg.ReplayParam.OldSysContracts)
+		if err != nil {
+			errc <- err
+			return
+		}
 		errc <- p2p.Send(p.rw, StatusMsg, &statusData{
-			ProtocolVersion: uint32(p.version),
-			NetworkId:       network,
-			BN:              bn,
-			CurrentBlock:    head,
-			GenesisBlock:    genesis,
+			ProtocolVersion:       uint32(p.version),
+			NetworkId:             network,
+			BN:                    bn,
+			CurrentBlock:          head,
+			GenesisBlock:          genesis,
+			ReplayPovit:           common.SysCfg.ReplayParam.Pivot,
+			ReplayOldSuperAdmin:   common.SysCfg.ReplayParam.OldSuperAdmin,
+			ReplayOldSysContracts: scb,
 		})
 	}()
 	go func() {
@@ -477,6 +500,14 @@ func (p *peer) Handshake(network uint64, bn *big.Int, head common.Hash, genesis 
 		}
 	}
 	p.bn, p.head = status.BN, status.CurrentBlock
+	p.replayParam.Pivot = status.ReplayPovit
+	p.replayParam.OldSuperAdmin = status.ReplayOldSuperAdmin
+
+	m := make(map[common.Address]string)
+	if err := json.Unmarshal(status.ReplayOldSysContracts, &m); err != nil {
+		return err
+	}
+	p.replayParam.OldSysContracts = m
 	return nil
 }
 

@@ -18,6 +18,7 @@ package core
 
 import (
 	"fmt"
+	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/consensus"
@@ -57,7 +58,7 @@ func NewStateProcessor(config *params.ChainConfig, bc *BlockChain, engine consen
 // Process returns the receipts and logs accumulated during the process and
 // returns the amount of gas that was used in the process. If any of the
 // transactions failed to execute due to insufficient gas it will return an error.
-func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg vm.Config) (types.Receipts, []*types.Log, uint64, error) {
+func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg vm.Config) (*types.Block, types.Receipts, []*types.Log, uint64, error) {
 	var (
 		receipts types.Receipts
 		usedGas  = new(uint64)
@@ -76,18 +77,18 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 		rpc.MonitorWriteData(rpc.TransactionExecuteEndTime, tx.Hash().String(), "", p.bc.extdb)
 		if err != nil {
 			rpc.MonitorWriteData(rpc.TransactionExecuteStatus, tx.Hash().String(), "false", p.bc.extdb)
-			return nil, nil, 0, err
+			return nil, nil, nil, 0, err
 		}
 		rpc.MonitorWriteData(rpc.TransactionExecuteStatus, tx.Hash().String(), "true", p.bc.extdb)
 		receipts = append(receipts, receipt)
 		allLogs = append(allLogs, receipt.Logs...)
 	}
 	// Finalize the block, applying any consensus engine specific extras (e.g. block rewards)
-	block, err := p.engine.Finalize(p.bc, header, statedb, block.Transactions(), receipts)
+	cblock, err := p.engine.Finalize(p.bc, header, statedb, block.Transactions(), receipts)
 	if err != nil {
-		return nil, nil, 0, err
+		return nil, nil, nil, 0, err
 	}
-	return receipts, allLogs, *usedGas, nil
+	return cblock, receipts, allLogs, *usedGas, nil
 }
 
 // ApplyTransaction attempts to apply a transaction to the given state database
@@ -98,6 +99,17 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	msg, err := tx.AsMessage(types.MakeSigner(config))
 	if err != nil {
 		return nil, 0, err
+	}
+
+	// Replay situation,reflect address
+	if header.Number.Uint64() < common.SysCfg.ReplayParam.Pivot && msg.To() != nil {
+		if n := common.SysCfg.ReplayParam.OldSysContracts[*msg.To()]; n != "" {
+			msg.SetTo(vm.CnsSysContractsMap[n])
+		} else if msg.TxType() == types.CnsTxType {
+			msg.SetTo(syscontracts.CnsInvokeAddress)
+		} else if msg.TxType() == types.FwTxType {
+			msg.SetTo(syscontracts.FirewallManagementAddress)
+		}
 	}
 
 	// Create a new context to be used in the EVM environment

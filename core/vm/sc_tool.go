@@ -37,11 +37,12 @@ var (
 	errEncodeFailure        = errors.New("encode failure ")
 	errContactNameNotExist  = errors.New("contract name not exist")
 
-	errNameInvalid    = errors.New("[CNS] name format is invalid")
-	errVersionInvalid = errors.New("[CNS] version format is invalid")
-	errAddressInvalid = errors.New("[CNS] address format is invalid")
-	errNotOwner       = errors.New("[CNS] not owner of registered contract")
-	errEmptyValue     = errors.New("Empty value")
+	errNameInvalid           = errors.New("[CNS] name format is invalid")
+	errVersionInvalid        = errors.New("[CNS] version format is invalid")
+	errAddressInvalid        = errors.New("[CNS] address format is invalid")
+	errNotOwner              = errors.New("[CNS] not owner of registered contract")
+	errSysContractCNSInvoked = errors.New("[CNS] system contract can not be cns invoked")
+	errEmptyValue            = errors.New("Empty value")
 
 	errIPUnsupported          = errors.New("Unsupported IP address ")
 	errUsernameUnsupported    = errors.New("Unsupported Username ")

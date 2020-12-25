@@ -97,7 +97,7 @@ var (
 
 	inmemoryAddresses  = 20 // Number of recent addresses from ecrecover
 	recentAddresses, _ = lru.NewARC(inmemoryAddresses)
-	recentPubkeys, _ = lru.NewARC(inmemoryAddresses)
+	recentPubkeys, _   = lru.NewARC(inmemoryAddresses)
 )
 
 // Author retrieves the Ethereum address of the account that minted the given
@@ -111,6 +111,9 @@ func (sb *backend) Author(header *types.Header) (common.Address, error) {
 // given engine. Verifying the seal may be done optionally here, or explicitly
 // via the VerifySeal method.
 func (sb *backend) VerifyHeader(chain consensus.ChainReader, header *types.Header, seal bool) error {
+	if header.Number.Uint64() <= common.SysCfg.ReplayParam.Pivot {
+		return nil
+	}
 	return sb.verifyHeader(chain, header, nil)
 }
 
@@ -369,10 +372,13 @@ func (sb *backend) Finalize(chain consensus.ChainReader, header *types.Header, s
 	// vrf election
 	scNode := vm.NewSCNode(state)
 	scNode.SetBlockNumber(header.Number)
-	parent := chain.GetHeader(header.ParentHash, header.Number.Uint64()-1)
-	if _, err := scNode.VrfElection(parent.Nonce[:]); err != nil {
-		return nil, err
+	parent := chain.GetHeaderByNumber(header.Number.Uint64()-1)
+	if parent != nil {
+		if _, err := scNode.VrfElection(parent.Nonce[:]); err != nil {
+			return nil, err
+		}
 	}
+
 	header.Root = state.IntermediateRoot(true)
 	log.Debug(fmt.Errorf("root after:%x", header.Root).Error())
 	// Assemble and return the final block for sealing

@@ -2,6 +2,7 @@ package core
 
 import (
 	"encoding/json"
+	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
@@ -112,7 +113,53 @@ func UpdateNodeSysContractConfig(bc *BlockChain, sysContractConf *common.SystemC
 	}
 }
 
+func InitBlockReplayConfig(bc *BlockChain, sysContractConf *common.SystemConfig) {
+	sysContractConf.SystemConfigMu.Lock()
+	defer sysContractConf.SystemConfigMu.Unlock()
+	
+	if sysContractConf.ReplayParam != nil {
+		return
+	}
+
+	sysContractConf.ReplayParam = &common.ReplayParam{
+		Pivot:           0,
+		OldSysContracts: make(map[common.Address]string),
+		OldSuperAdmin:   common.NullAddress,
+	}
+
+	b, err := bc.Get(common.Sys_pivot_key)
+	if err != nil {
+		return
+	}
+	if err := rlp.DecodeBytes(b, &sysContractConf.ReplayParam.Pivot); err != nil {
+		return
+	}
+
+	b, err = bc.Get(common.Sys_old_system_contract_key)
+	if err != nil {
+		return
+	}
+
+	var mb []byte
+
+	if err := rlp.DecodeBytes(b, &mb); err != nil {
+		return
+	}
+	if err = json.Unmarshal(mb, &sysContractConf.ReplayParam.OldSysContracts); err != nil {
+		return
+	}
+
+	b,err = bc.Get(common.Sys_old_super_admin_key)
+	if err != nil {
+		return
+	}
+	if err := rlp.DecodeBytes(b, &sysContractConf.ReplayParam.OldSuperAdmin); err != nil {
+		return
+	}
+}
+
 func UpdateSysContractConfig(bc *BlockChain, sysContractConf *common.SystemConfig) {
+	InitBlockReplayConfig(bc, sysContractConf)
 	UpdateParamSysContractConfig(bc, sysContractConf)
 	UpdateNodeSysContractConfig(bc, sysContractConf)
 }

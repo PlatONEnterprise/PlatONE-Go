@@ -32,7 +32,6 @@ var (
 	// EOL is returned when the end of the current list
 	// has been reached during streaming.
 	EOL = errors.New("rlp: end of list")
-
 	// Actual Errors
 	ErrExpectedString   = errors.New("rlp: expected String or Byte")
 	ErrExpectedList     = errors.New("rlp: expected List")
@@ -1000,6 +999,10 @@ func (s *Stream) readFull(buf []byte) (err error) {
 		err = io.ErrUnexpectedEOF
 	}
 	return err
+}
+
+func (s *Stream) ReadFull(buf []byte) (err error) {
+	return s.readFull(buf)
 }
 
 func (s *Stream) readByte() (byte, error) {
