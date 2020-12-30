@@ -54,6 +54,7 @@ require (
 	github.com/robertkrimen/otto v0.0.0-20170205013659-6a77b7cbc37d
 	github.com/rs/cors v0.0.0-20160617231935-a62a804a8a00
 	github.com/rs/xhandler v0.0.0-20160618193221-ed27b6fd6521
+	github.com/shirou/gopsutil v3.20.11+incompatible
 	github.com/stretchr/testify v1.1.5-0.20170809224252-890a5c3458b4
 	github.com/syndtr/goleveldb v0.0.0-20181105012736-f9080354173f
 	github.com/uber/jaeger-client-go v2.14.1-0.20180607151842-f7e0d4744fa6+incompatible
@@ -62,7 +63,7 @@ require (
 	golang.org/x/net v0.0.0-20200202094626-16171245cfb2
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
 	golang.org/x/sys v0.0.0-20190412213103-97732733099d
-	golang.org/x/tools v0.0.0-20180917221912-90fa682c2a6e // indirect
+	golang.org/x/tools v0.0.0-20180917221912-90fa682c2a6e
 	gopkg.in/check.v1 v1.0.0-20161208181325-20d25e280405
 	gopkg.in/karalabe/cookiejar.v2 v2.0.0-20150724131613-8dcd6a7f4951
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce
