@@ -3,6 +3,7 @@ package common
 import (
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto/gmssl"
 	"math/big"
+	"sort"
 	"sync"
 )
 
@@ -68,6 +69,7 @@ type SystemConfig struct {
 	HighsetNumber   *big.Int
 	ContractAddress map[string]Address
 	CaMap           map[string]*gmssl.Certificate
+	CaRevokeList    []string
 }
 
 var SysCfg = &SystemConfig{
@@ -186,6 +188,18 @@ func (sc *SystemConfig) IsCaExistBySubject(subject string) bool{
 	}
 	return false
 }
+
+func (sc *SystemConfig) IsRevokedBySubject(subject string) bool{
+	sc.SystemConfigMu.RLock()
+	defer sc.SystemConfigMu.RUnlock()
+	index := sort.SearchStrings(sc.CaRevokeList, subject)
+
+	if index < len(sc.CaRevokeList) && sc.CaRevokeList[index] == subject {
+		return true
+	}
+	return false
+}
+
 
 func (sc *SystemConfig) GetCaBySubject(subject string) *gmssl.Certificate{
 	sc.SystemConfigMu.RLock()

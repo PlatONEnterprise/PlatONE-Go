@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/syscontracts"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto/gmssl"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 	"strings"
@@ -15,6 +16,8 @@ import (
 
 const (
 	keyOfCAList = "CA-list"
+	root        = "root"
+	revoke      = "revokeList"
 )
 
 const (
@@ -49,10 +52,6 @@ func (ca *CAManager) getState(key string) []byte {
 	return ca.stateDB.GetState(ca.contractAddr, []byte(key))
 }
 
-func isPem(cert string) bool {
-	return strings.HasSuffix(cert, "PEM")
-}
-
 func (ca *CAManager) returnSuccess(topic string) (int32, error) {
 	ca.emitEvent(topic, operateSuccess, "Success")
 	return int32(operateSuccess), nil
@@ -65,12 +64,30 @@ func (ca *CAManager) returnFail(topic string, err error) (int32, error) {
 	return int32(operateFail), returnErr
 }
 
-func (ca *CAManager) setRootCert(cert string) error {
+func (ca *CAManager) isRootCertExists() bool {
+	if ca.getState(root) != nil {
+		return true
+	} else {
+		return false
+	}
+}
 
-	//if !isPem(cert){
-	//	return errParamsInvalid
-	//}
-	//
+func (ca *CAManager) doSetRoot(subject, cert string) {
+	ca.setState(root, []byte(subject))
+	ca.setState(subject, []byte(cert))
+}
+
+func (ca *CAManager) setRootCert(cert string) error {
+	//todo string 过长问题
+	if ca.isRootCertExists() {
+		ca.emitNotifyEventInCA("SetRootCert", RootCertExist, fmt.Sprintf("root cert exists."))
+		return errAlreadySetRootCert
+	}
+
+	if !hasCaOpPermission(ca.stateDB, ca.caller) {
+		return errNoPermission
+	}
+
 	cert = ca.ParseCert(cert)
 
 	rootCert, err := gmssl.NewCertificateFromPEM(cert)
@@ -83,18 +100,9 @@ func (ca *CAManager) setRootCert(cert string) error {
 		ca.emitNotifyEventInCA("SetRootCert", GetSubjectFailure, fmt.Sprintf("get subject fail."))
 		return errGetSubject
 	}
-	root := "root"
-	if ca.getState(root) != nil {
-		ca.emitNotifyEventInCA("SetRootCert", RootCertExist, fmt.Sprintf("root cert exists."))
+	ca.doSetRoot(subject, cert)
 
-		return errAlreadySetRootCert
-	}
-
-	ca.setState(root, []byte(subject))
-	ca.setState(subject, []byte(cert))
-
-	var caList []string
-	err = ca.appendToCaList(caList, subject)
+	err = ca.appendToCaList(subject)
 	if err != nil {
 		ca.emitNotifyEventInCA("SetRootCert", RootCertExist, fmt.Sprintf("root cert exists."))
 		return err
@@ -105,14 +113,20 @@ func (ca *CAManager) setRootCert(cert string) error {
 }
 
 func (ca *CAManager) addIssuer(cert string) error {
+
+	if !hasCaOpPermission(ca.stateDB, ca.caller) {
+		return errNoPermission
+	}
+
 	cert = ca.ParseCert(cert)
 	issuerCert, err := gmssl.NewCertificateFromPEM(cert)
 	if nil != err {
 		ca.emitNotifyEventInCA("AddIssuer", NewCertFailure, fmt.Sprintf("new cert fail"))
 		return errNewCert
 	}
+	//todo 提取出两个方法
+	issuerSubject, err := issuerCert.Cert.GetSubject()
 
-	issuer, err := issuerCert.Cert.GetSubject()
 	if nil != err {
 		ca.emitNotifyEventInCA("AddIssuer", GetSubjectFailure, fmt.Sprintf("get subject fail."))
 		return errGetSubject
@@ -123,8 +137,6 @@ func (ca *CAManager) addIssuer(cert string) error {
 		ca.emitNotifyEventInCA("AddIssuer", GetSubjectFailure, fmt.Sprintf("get issuer fail."))
 		return errGetSubject
 	}
-
-	root := "root"
 
 	rootSub := string(ca.getState(root))
 	if rootSub != rootCASub {
@@ -145,29 +157,21 @@ func (ca *CAManager) addIssuer(cert string) error {
 	if !result {
 		ca.emitNotifyEventInCA("AddIssuer", NoPermission, fmt.Sprintf("root cert verify fail."))
 		return errNoPermission
+
 	}
 
-	list, err := ca.getList()
-
-	if err != nil {
-		if err != errCANotFound {
-			return err
-		}
-		list = []string{}
-	}
-
-	if ca.isIssuerExist(list, issuer) {
+	if ca.isIssuerExist(issuerSubject) {
 
 		ca.emitNotifyEventInCA("AddIssuer", IssuerCertExist, fmt.Sprintf("issuer exsits."))
 		return errAlreadySetIssuerCert
 	}
-	err = ca.appendToCaList(list, issuer)
+	err = ca.appendToCaList(issuerSubject)
 	if err != nil {
 
 		return err
 	}
 
-	ca.setState(issuer, []byte(cert))
+	ca.setState(issuerSubject, []byte(cert))
 	ca.emitNotifyEventInCA("AddIssuer", SetRootCertSuccess, fmt.Sprintf("set issuer cert success."))
 
 	return nil
@@ -183,9 +187,92 @@ func (ca *CAManager) getCert(subject string) (*gmssl.Certificate, error) {
 	return caDoc, nil
 }
 
+func (ca *CAManager) AuthJudg(cer *gmssl.Certificate) bool {
+	issuer, _ := cer.Cert.GetIssuer()
+
+	if ca.isIssuerExist(issuer) {
+
+		ca.emitNotifyEventInCA("AddIssuer", IssuerCertExist, fmt.Sprintf("issuer exsits."))
+		return false
+	}
+	pk, err := cer.Cert.GetPublicKey()
+	if err != nil {
+		return false
+	}
+	pkHex, err := pk.GetHex()
+	print(pkHex)
+	if err != nil {
+		return false
+
+	}
+	pkBytes := []byte(pkHex)
+	authAddr := common.BytesToAddress(crypto.Keccak256(pkBytes[1:])[12:])
+	if authAddr != ca.caller{
+		return false
+	}
+	return true
+}
+
+func (ca *CAManager) ifIsConsensusNode(certPem *gmssl.Certificate) bool {
+	public, _ := certPem.Cert.GetPublicKey()
+	publicHex, _ := public.GetHex()
+
+	err := judgeConsensus(ca.stateDB, publicHex)
+	if err != nil {
+		return false
+	}
+	return true
+}
+
+func (ca *CAManager) revoke(cert string) error {
+
+	certPem, err := gmssl.NewCertificateFromPEM(cert)
+	if err != nil {
+		return err
+	}
+	subject, err := certPem.Cert.GetSubject()
+	if err != nil {
+		return err
+	}
+	if ca.isRootCert(subject) {
+		return errParamsInvalid
+	}
+	//权限判断
+	if !ca.AuthJudg(certPem) {
+		return errNoPermission
+	}
+
+	//can not revoke consensus node
+	if ca.ifIsConsensusNode(certPem) {
+		return errNoPermission
+	}
+	err = ca.appendToRevokeList(subject)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (ca *CAManager) isRevoked(subject string) bool {
+	list, err := ca.getList(revoke)
+
+	if err != nil {
+		if err != errCANotFound {
+			return false
+		}
+		list = []string{}
+	}
+	index := sort.SearchStrings(list, subject)
+
+	if index < len(list) && list[index] == subject {
+		return true
+	}
+	return false
+}
+
 func (ca *CAManager) getAllCert() ([]string, error) {
 	certDocList := make([]string, 0)
-	caList, _ := ca.getList()
+	caList, _ := ca.getList(keyOfCAList)
 	for _, v := range caList {
 		pem := ca.getState(v)
 		certDocList = append(certDocList, string(pem))
@@ -194,8 +281,10 @@ func (ca *CAManager) getAllCert() ([]string, error) {
 }
 
 func (ca *CAManager) getAllCertificate() ([]*gmssl.Certificate, error) {
-	certDocList := make([]*gmssl.Certificate, 0)
-	caList, _ := ca.getList()
+
+	caList, _ := ca.getList(keyOfCAList)
+	len := len(caList)
+	certDocList := make([]*gmssl.Certificate, len)
 	for _, v := range caList {
 		pem := ca.getState(v)
 		ca, err := gmssl.NewCertificateFromPEM(string(pem))
@@ -208,13 +297,18 @@ func (ca *CAManager) getAllCertificate() ([]*gmssl.Certificate, error) {
 }
 
 func (ca *CAManager) getRootCert() (*gmssl.Certificate, error) {
-	rootSub := ca.getState("root")
+	rootSub := ca.getState(root)
 	rootCA := ca.getState(string(rootSub))
 	rootCa, err := gmssl.NewCertificateFromPEM(string(rootCA))
 	if err != nil {
 		return nil, err
 	}
 	return rootCa, nil
+}
+
+func (ca *CAManager) isRootCert(subject string) bool {
+	rootSub := ca.getState(root)
+	return subject == string(rootSub)
 }
 
 func (ca *CAManager) emitNotifyEventInCA(topic string, code CodeType, msg string) {
@@ -235,11 +329,18 @@ func (ca *CAManager) ParseCert(cert string) string {
 	return cert
 }
 
-func (ca *CAManager) appendToCaList(caList []string, subject string) error {
+func (ca *CAManager) appendToCaList(subject string) error {
+	list, err := ca.getList(keyOfCAList)
 
-	caList = append(caList, subject)
-	sort.Strings(caList)
-	encodedCaList, err := rlp.EncodeToBytes(caList)
+	if err != nil {
+		if err != errCANotFound {
+			return err
+		}
+		list = []string{}
+	}
+	list = append(list, subject)
+	sort.Strings(list)
+	encodedCaList, err := rlp.EncodeToBytes(list)
 	if err != nil {
 		return err
 	}
@@ -247,8 +348,23 @@ func (ca *CAManager) appendToCaList(caList []string, subject string) error {
 	return nil
 }
 
-func (ca *CAManager) getList() ([]string, error) {
-	bin := ca.getState(keyOfCAList)
+func (ca *CAManager) appendToRevokeList(subject string) error {
+	revokeList, err := ca.getList(revoke)
+	if err != nil {
+		revokeList = []string{}
+	}
+	revokeList = append(revokeList, subject)
+	sort.Strings(revokeList)
+	encodedCaList, err := rlp.EncodeToBytes(revokeList)
+	if err != nil {
+		return err
+	}
+	ca.setState(revoke, encodedCaList)
+	return nil
+}
+
+func (ca *CAManager) getList(key string) ([]string, error) {
+	bin := ca.getState(key)
 	if len(bin) == 0 {
 		return nil, errCANotFound
 	}
@@ -261,13 +377,21 @@ func (ca *CAManager) getList() ([]string, error) {
 	return list, err
 }
 
-func (ca *CAManager) isIssuerExist(list []string, issuer string) bool {
+func (ca *CAManager) isIssuerExist(issuer string) bool {
+	list, err := ca.getList(keyOfCAList)
+
+	if err != nil {
+		if err != errCANotFound {
+			return false
+		}
+		list = []string{}
+	}
+
 	index := sort.SearchStrings(list, issuer)
-	//not found
+
 	if index < len(list) && list[index] == issuer {
 		return true
 	}
-
 	return false
 }
 

@@ -18,7 +18,7 @@ platonecli调用示例：
 
 ```
 
-### 1.2. addIssuer(cert)
+### 1.2. addIssuer(cert)//deleteIssuer]
 
 + 接口名称： addIssuer
 + 入参： cert.PEM

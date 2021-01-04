@@ -264,6 +264,28 @@ func (n *SCNode) checkPublicKeyExist(pub string) error {
 
 	return nil
 }
+func (n *SCNode) judgeConsenNodeByPublicKey(pub string) error {
+	if err := CheckPublicKeyFormat(pub); err != nil {
+		return err
+	}
+	query := &syscontracts.NodeInfo{}
+	query.PublicKey = pub
+	nodes, err := n.GetNodes(query)
+	if err != nil {
+		if errNodeNotFound == err {
+			return nil
+		}
+		return err
+	}
+	for _, v := range nodes{
+		if v.Status == 0{
+			return errNoPermission
+		}
+	}
+
+	return nil
+}
+
 
 func (n *SCNode) checkPermissionForAdd() error {
 	//internal call, do not check permission
@@ -541,4 +563,9 @@ func (n *SCNode) emitNotifyEvent(code CodeType, msg string) {
 
 func (n *SCNode) emitEvent(topic string, code CodeType, msg string) {
 	emitEvent(n.contractAddr, n.stateDB, n.blockNumber.Uint64(), topic, code, msg)
+}
+
+func judgeConsensus(stateDB StateDB, pub string) error {
+	node := NewSCNode(stateDB)
+	return node.judgeConsenNodeByPublicKey(pub)
 }

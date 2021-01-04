@@ -8,7 +8,6 @@ import (
 	"gopkg.in/urfave/cli.v1"
 	"io/ioutil"
 	"os"
-	"reflect"
 	"strconv"
 	"strings"
 	"syscall"
@@ -112,6 +111,26 @@ var (
 		Flags:     GetCertFlags,
 		Description: `
 		platonecli ca getCert`,
+	}
+
+	RevokeCmd = cli.Command{
+		Name:      "revoke",
+		Usage:     "revoke",
+		ArgsUsage: "--ca",
+		Action:    revoke,
+		Flags:     RevokeFlags,
+		Description: `
+		platonecli ca revoke`,
+	}
+
+	IsRevokedCmd = cli.Command{
+		Name:      "checkIsRevoked",
+		Usage:     "checkIsRevoked",
+		ArgsUsage: "--ca",
+		Action:    checkIsRevoked,
+		Flags:     RevokeFlags,
+		Description: `
+		platonecli ca checkIsRevoked`,
 	}
 )
 
@@ -385,6 +404,22 @@ func addIssuer (c *cli.Context) {
 	fmt.Printf("%v\n", result)
 }
 
+func revoke (c *cli.Context) {
+
+	subject := c.String(SubjectFlag.Name)
+	funcParams := cmd_common.CombineFuncParams(subject)
+	result := contractCall(c, funcParams, "revoke", precompile.CAManagementAddress)
+	fmt.Printf("%v\n", result)
+}
+
+func checkIsRevoked (c *cli.Context) {
+
+	subject := c.String(SubjectFlag.Name)
+	funcParams := cmd_common.CombineFuncParams(subject)
+	result := contractCall(c, funcParams, "revoke", precompile.CAManagementAddress)
+	fmt.Printf("%v\n", result)
+}
+
 func getCert (c *cli.Context) {
 	all := c.Bool(ShowAllFlags.Name)
 	if all {
@@ -411,24 +446,6 @@ func getCert (c *cli.Context) {
 	fmt.Printf("result:\n%s\n", strResult)
 }
 
-func CertToString(res interface{}) interface{} {
-	value := reflect.TypeOf(res)
 
-	switch value.Kind() {
-	case reflect.Uint64:
-
-		return strconv.FormatUint(res.(uint64), 10)
-
-	case reflect.Uint32:
-		return strconv.FormatUint(uint64(res.(uint32)), 10)
-
-	case reflect.String:
-		fmt.Printf("string")
-		return res
-
-	default:
-		panic("not support, please add the corresponding type")
-	}
-}
 
 

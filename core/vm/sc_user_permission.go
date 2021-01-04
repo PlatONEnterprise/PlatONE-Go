@@ -11,6 +11,7 @@ const (
 	nodeOpPermission
 	contractDeployPermission
 	paramOpPermission
+	caOpPermission
 )
 
 var PermissionMap = map[int32]UserRoles{
@@ -19,6 +20,7 @@ var PermissionMap = map[int32]UserRoles{
 	nodeOpPermission:         1<<chainAdmin | 1<<nodeAdmin,
 	contractDeployPermission: 1<<chainAdmin | 1<<contractAdmin | 1<<contractDeployer,
 	paramOpPermission:        1 << chainAdmin,
+	caOpPermission:        1 << chainAdmin,
 }
 
 func checkPermission(state StateDB, user common.Address, permission int32) bool {
@@ -52,6 +54,10 @@ func HasContractDeployPermission(state StateDB, addr common.Address) bool {
 
 func hasParamOpPermission(state StateDB, addr common.Address) bool {
 	return checkPermission(state, addr, paramOpPermission)
+}
+
+func hasCaOpPermission(state StateDB, addr common.Address) bool {
+	return checkPermission(state, addr, caOpPermission)
 }
 
 func hasGroupCreatePermission(state StateDB, addr common.Address) bool {

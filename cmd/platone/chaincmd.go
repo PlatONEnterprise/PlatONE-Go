@@ -568,9 +568,7 @@ func InitInnerCallFuncFromChain(bc *core.BlockChain) {
 			funcName := "getAllCert"
 			funcParams := []interface{}{}
 			res := callContract(caAddr, common.GenCallData(funcName, funcParams))
-			//if res != nil {
-			//	caPemList :=
-			//}
+
 			strRes := common.CallResAsString(res)
 			var tmp common.CAResult
 			var caMapList map[string]*gmssl.Certificate
@@ -579,9 +577,7 @@ func InitInnerCallFuncFromChain(bc *core.BlockChain) {
 			} else if tmp.RetCode != 0 {
 				log.Debug("contract inner error", "code", tmp.RetCode, "msg", tmp.RetMsg)
 			} else {
-				//sc.Nodes = tmp.Data
-				//sc.GenerateNodeData()
-				//p2p.UpdatePeer()
+
 				for _, v := range tmp.Data{
 					cert, err := gmssl.NewCertificateFromPEM(v)
 					if err != nil{
@@ -593,6 +589,22 @@ func InitInnerCallFuncFromChain(bc *core.BlockChain) {
 
 				}
 				sc.CaMap = caMapList
+			}
+
+			funcName = "getlist"
+			funcParams = []interface{}{}
+			res = callContract(caAddr, common.GenCallData(funcName, funcParams))
+
+			strRes = common.CallResAsString(res)
+
+			//var caRevokeList []string
+			if err := json.Unmarshal(lutils.String2bytes(strRes), &tmp); err != nil {
+				log.Warn("unmarshal ca list failed", "result", strRes, "err", err.Error())
+			} else if tmp.RetCode != 0 {
+				log.Debug("contract inner error", "code", tmp.RetCode, "msg", tmp.RetMsg)
+			} else {
+
+				sc.CaRevokeList = tmp.Data
 			}
 
 		}
@@ -630,4 +642,8 @@ func InitInnerCallFuncFromChain(bc *core.BlockChain) {
 
 	common.SetSysContractCallFunc(sysContractCall)
 	common.InitSystemconfig(common.NodeInfo{})
+}
+
+func getAllCerts()  {
+
 }

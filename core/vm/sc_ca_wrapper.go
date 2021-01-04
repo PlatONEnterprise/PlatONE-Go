@@ -9,11 +9,13 @@ import (
 
 const (
 	success = 0
-	fail = -1
+	fail    = -1
 )
+
 type CAWrapper struct {
 	base *CAManager
 }
+
 func newCAWrapper(db StateDB) *CAWrapper {
 	return &CAWrapper{NewCAManager(db)}
 }
@@ -46,15 +48,16 @@ func (ca *CAWrapper) Run(input []byte) ([]byte, error) {
 
 func (ca *CAWrapper) AllExportFns() SCExportFns {
 	return SCExportFns{
-		"setRootCert":             ca.setRootCert,
-		"addIssuer":               ca.addIssuer,
-		"getCert":                 ca.getCert,
-		"getAllCert":              ca.getAllCert,
-		"getRootCert":             ca.getRootCert,
-		}
+		"setRootCert":   ca.setRootCert,
+		"addIssuerCert": ca.addIssuer,
+		"getCert":       ca.getCert,
+		"getAllCerts":   ca.getAllCert,
+		"getRootCert":   ca.getRootCert,
+		"getList":       ca.getList,
+	}
 }
 
-func (ca *CAWrapper) setRootCert(cert string)  (int32, error){
+func (ca *CAWrapper) setRootCert(cert string) (int32, error) {
 	err := ca.base.setRootCert(cert)
 	if nil != err {
 		return fail, err
@@ -62,8 +65,7 @@ func (ca *CAWrapper) setRootCert(cert string)  (int32, error){
 	return success, nil
 }
 
-
-func (ca *CAWrapper) addIssuer(cert string)  (int32, error){
+func (ca *CAWrapper) addIssuer(cert string) (int32, error) {
 	err := ca.base.addIssuer(cert)
 	if nil != err {
 		return fail, err
@@ -71,7 +73,7 @@ func (ca *CAWrapper) addIssuer(cert string)  (int32, error){
 	return success, nil
 }
 
-func (ca *CAWrapper) getCert(subject string)  (string, error){
+func (ca *CAWrapper) getCert(subject string) (string, error) {
 	caStruct, err := ca.base.getCert(subject)
 	if nil != err {
 		return "", err
@@ -84,7 +86,7 @@ func (ca *CAWrapper) getCert(subject string)  (string, error){
 
 }
 
-func (ca *CAWrapper) getAllCert() (string, error){
+func (ca *CAWrapper) getAllCert() (string, error) {
 	caList, err := ca.base.getAllCert()
 	if nil != err {
 		return newInternalErrorResult(err).String(), err
@@ -92,18 +94,19 @@ func (ca *CAWrapper) getAllCert() (string, error){
 	return newSuccessResult(caList).String(), nil
 }
 
-func (ca *CAWrapper) test() (string, error){
-	return "test", nil
-}
-
-func (ca *CAWrapper) getRootCert()  (string, error){
+func (ca *CAWrapper) getRootCert() (string, error) {
 	rootCa, err := ca.base.getRootCert()
 	if nil != err {
 		return "", err
 	}
 	res, _ := rootCa.GetPEM()
 	return newSuccessResult(res).String(), nil
+}
 
-	//return res, nil
-
+func (ca *CAWrapper) getList(name string) (string, error) {
+	list, err := ca.base.getList(name)
+	if nil != err {
+		return "", err
+	}
+	return newSuccessResult(list).String(), nil
 }

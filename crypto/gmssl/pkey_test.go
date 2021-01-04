@@ -40,9 +40,11 @@ func TestGenerateECPrivateKey(t *testing.T) {
 			certPem := readFromFile("targetCA.PEM")
 			root, _ := NewCertificateFromPEM(rootPem)
 			cert, _ := NewCertificateFromPEM(certPem)
-
+			pub, _ := root.Cert.GetPublicKey()
+			hex, _ := pub.GetHex()
 			res, _ := Verify(root, cert)
 			println(res)
+			println(hex)
 		})
 	}
 }

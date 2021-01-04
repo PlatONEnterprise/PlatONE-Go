@@ -296,68 +296,68 @@ var (
 
 	// ca
 	PrivateFlag = cli.StringFlag{
-		Name:"private",
+		Name:  "private",
 		Usage: "private key, only support PEM format",
 	}
 
 	OutFileFlag = cli.StringFlag{
-		Name: "file",
-		Usage:"file to store the key or certificate",
+		Name:  "file",
+		Usage: "file to store the key or certificate",
 	}
 
 	CurveFlag = cli.StringFlag{
-		Name:"curve",
+		Name:  "curve",
 		Usage: "curve to generate key",
 	}
 
 	TargetFlag = cli.StringFlag{
-		Name:"target",
+		Name:  "target",
 		Usage: "private or public or pair",
 	}
 
 	FormatFlag = cli.StringFlag{
-		Name:"format",
-		Usage:"PEM or HEX",
+		Name:  "format",
+		Usage: "PEM or HEX",
 	}
 
 	CAOrganizationFlag = cli.StringFlag{
-		Name:"organization",
-		Usage:"organization",
+		Name:  "organization",
+		Usage: "organization",
 	}
 
 	CommonNameFlag = cli.StringFlag{
-		Name:"commonName",
-		Usage:"commonName",
+		Name:  "commonName",
+		Usage: "commonName",
 	}
 
 	SerialNumberFlag = cli.StringFlag{
-		Name:"serial",
-		Usage:"uint32",
+		Name:  "serial",
+		Usage: "uint32",
 	}
 
 	SignatureAlgFlag = cli.StringFlag{
-		Name:"dgst",
-		Usage:"sm3 or SHA256",
+		Name:  "dgst",
+		Usage: "sm3 or SHA256",
 	}
 
 	CsrFileFlag = cli.StringFlag{
-		Name:"csr",
-		Usage:"csr file",
+		Name:  "csr",
+		Usage: "csr file",
 	}
 
 	CaFileFlag = cli.StringFlag{
-		Name:"ca",
-		Usage:"ca file",
+		Name:  "ca",
+		Usage: "ca file",
 	}
 
 	CertFileFlag = cli.StringFlag{
-		Name:"cert",
-		Usage:"cert file",
+		Name:  "cert",
+		Usage: "cert file",
 	}
 
 	SubjectFlag = cli.StringFlag{
-		Name:"subject",
-		Usage:"subject",
+		Name:  "subject",
+		Usage: "subject",
 	}
 
 	RootCertFlags = cli.BoolFlag{
@@ -460,7 +460,6 @@ var (
 		OutFileFlag,
 	)
 
-
 	CSRGenerateFlags = append(
 		globalCmdFlags,
 		PrivateFlag,
@@ -469,7 +468,6 @@ var (
 		CommonNameFlag,
 		SignatureAlgFlag,
 	)
-
 
 	SelfCAGenerateFlags = append(
 		globalCmdFlags,
@@ -481,7 +479,6 @@ var (
 		SignatureAlgFlag,
 	)
 
-
 	CaCreateFlags = append(
 		globalCmdFlags,
 		PrivateFlag,
@@ -492,23 +489,25 @@ var (
 		SignatureAlgFlag,
 	)
 
-
 	CaVerfyFlags = append(
 		globalCmdFlags,
 		CaFileFlag,
 		CertFileFlag,
 	)
 
-
 	SetRootCertFlags = append(
 		globalCmdFlags,
 		CaFileFlag,
 	)
 
-
 	AddIssuerFlags = append(
 		globalCmdFlags,
 		CaFileFlag,
+	)
+
+	RevokeFlags = append(
+		globalCmdFlags,
+		SubjectFlag,
 	)
 
 	GetCertFlags = append(
@@ -518,7 +517,7 @@ var (
 		SubjectFlag,
 	)
 
-	CaCmdFlags =append(
+	CaCmdFlags = append(
 		globalCmdFlags,
 		PrivateFlag,
 		FormatFlag,
@@ -533,7 +532,7 @@ var (
 		CaFileFlag,
 		CertFileFlag,
 		ShowAllFlags,
-		RootCAFlags,
+		RootCertFlags,
 		SubjectFlag,
 	)
 )
