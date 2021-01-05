@@ -67,3 +67,22 @@ func TestBlockEncoding(t *testing.T) {
 		t.Errorf("encoded block mismatch:\ngot:  %x\nwant: %x", ourBlockEnc, blockEnc)
 	}
 }
+
+func TestBlockNonceEncoding(t *testing.T) {
+	b := EncodeByteNonce([]byte("this is a test string,we can transfer it to block nonce bytes"))
+
+	e1,err := rlp.EncodeToBytes(&b)
+	if err != nil {
+		t.Fatal("encode error: ", err)
+	}
+
+	var d BlockNonce
+	err = rlp.DecodeBytes(e1,&d)
+	if err != nil {
+		t.Fatal("decode error: ", err)
+	}
+
+	if !bytes.Equal(b[:], d[:]) {
+		t.Errorf("encoded BlockNonce mismatch:\ngot:  %x\nwant: %x", d, b)
+	}
+}

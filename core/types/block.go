@@ -38,9 +38,17 @@ var (
 	EmptyRootHash = DeriveSha(Transactions{})
 )
 
+var (
+	ErrInvalidBlockNonce = errors.New("invalid Block Nonce length")
+)
+
 // BlockNonce is an 81-byte vrf proof containing random numbers
 // Used to verify the block when receiving the block
-type BlockNonce [81]byte
+const (
+	BlockNonceLen = 81
+)
+type BlockNonce [BlockNonceLen]byte
+
 
 // EncodeNonce converts the given integer to a block nonce.
 func EncodeNonce(i uint64) BlockNonce {
@@ -71,20 +79,17 @@ func (n *BlockNonce) UnmarshalText(input []byte) error {
 	return hexutil.UnmarshalFixedText("BlockNonce", input, n[:])
 }
 
-// DecodeRLP implements rlp.Decoder
-func (n BlockNonce) DecodeRLP(s *rlp.Stream) error {
-	kind, size, err := s.Kind()
+
+func (n *BlockNonce) DecodeRLP(s *rlp.Stream) error {
+	_, size, err := s.Kind()
 	if err != nil {
 		return err
 	}
-	if kind != rlp.String {
-		return errors.New("rlp input for BlockNonce is not string")
-	}
-	if uint64(len(n[:])) < size {
-		return errors.New("input string for BlockNonce too long")
-	}
 
-	slice := n[: int(size)]
+	if BlockNonceLen < size {
+		return errors.New(fmt.Sprint("input string too long"))
+	}
+	slice := n[:size]
 	if err := s.ReadFull(slice); err != nil {
 		return err
 	}

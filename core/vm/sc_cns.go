@@ -264,9 +264,8 @@ func (cns *CnsManager) cnsRedirect(name, version string) error {
 
 // getContractAddress returns the address of a cns name at specific version
 func (cns *CnsManager) getContractAddress(name, version string) (common.Address, error) {
-	// system contract can not be cns invoked
-	if _, ok := CnsSysContractsMap[name]; ok {
-		return common.Address{}, errSysContractCNSInvoked
+	if sysCon, ok := CnsSysContractsMap[name]; ok {
+		return sysCon, nil
 	}
 
 	if strings.EqualFold(version, "latest") {
