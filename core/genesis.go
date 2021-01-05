@@ -212,7 +212,7 @@ func (g *Genesis) ToBlock(db ethdb.Database) *types.Block {
 		head.GasLimit = params.GenesisGasLimit
 	}
 	if head.Time.Uint64() == 0 {
-		head.Time = big.NewInt(time.Now().Unix())
+		head.Time = big.NewInt(time.Now().UnixNano() / 1e6)
 	}
 	statedb.Commit(false)
 	statedb.Database().TrieDB().Commit(root, true)

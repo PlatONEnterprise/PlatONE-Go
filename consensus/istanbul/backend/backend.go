@@ -452,7 +452,8 @@ func (sb *backend) Verify(proposal istanbul.Proposal, isProposer bool) (time.Dur
 	if err == nil || err == errEmptyCommittedSeals {
 		return 0, nil
 	} else if err == consensus.ErrFutureBlock {
-		return time.Unix(block.Header().Time.Int64(), 0).Sub(now()), consensus.ErrFutureBlock
+		headTime := block.Header().Time.Int64()
+		return time.Unix(headTime/1000, (headTime%1000)*1e6).Sub(now()), consensus.ErrFutureBlock
 	}
 	return 0, err
 }

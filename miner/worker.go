@@ -19,6 +19,7 @@ package miner
 import (
 	"math/big"
 	"sync"
+
 	"sync/atomic"
 	"time"
 
@@ -396,9 +397,9 @@ func (w *worker) newWorkLoop(recommit time.Duration) {
 				if eng.ShouldSeal() {
 					log.Debug("ShouldSeal() -> true")
 					commit(commitInterruptResubmit, nil)
-					timer.Reset(1000 * time.Millisecond)
+					timer.Reset(500 * time.Millisecond)
 				} else {
-					timer.Reset(100 * time.Millisecond)
+					timer.Reset(50 * time.Millisecond)
 				}
 			}
 
@@ -537,12 +538,16 @@ func (w *worker) resultLoop() {
 	for {
 		select {
 		case block := <-w.resultCh:
+			now := time.Now()
+			log.Info("result start ", "time", time.Now().Format("2006-01-02 15:04:05.999999999 -0700 MST"))
 			// Short circuit when receiving empty result.
 			if block == nil {
+				log.Info("block is null")
 				continue
 			}
 			// Short circuit when receiving duplicate result caused by resubmitting.
 			if w.chain.HasBlock(block.Hash(), block.NumberU64()) {
+				log.Info("duplicate result caused by resubmitting.")
 				continue
 			}
 			var (
@@ -556,14 +561,15 @@ func (w *worker) resultLoop() {
 				log.Error("Block found but no relative pending task", "number", block.Number(), "sealhash", sealhash, "hash", hash)
 				continue
 			}
+
 			// Different block could share same sealhash, deep copy here to prevent write-write conflict.
 			var (
-				receipts = make([]*types.Receipt, len(task.receipts))
-				logs     []*types.Log
+				//receipts = make([]*types.Receipt, len(task.receipts))
+				logs []*types.Log
 			)
-			for i, receipt := range task.receipts {
-				receipts[i] = new(types.Receipt)
-				*receipts[i] = *receipt
+			for _, receipt := range task.receipts {
+				//receipts[i] = new(types.Receipt)
+				//*receipts[i] = *receipt
 				// Update the block hash in all logs since it is now available and not when the
 				// receipt/log of individual transactions were created.
 				for _, log := range receipt.Logs {
@@ -572,7 +578,9 @@ func (w *worker) resultLoop() {
 				logs = append(logs, receipt.Logs...)
 			}
 			// Commit block and state to database.
-			stat, err := w.chain.WriteBlockWithState(block, receipts, task.state)
+			log.Info("commit start ", "time", time.Now().Format("2006-01-02 15:04:05.999999999 -0700 MST"))
+			stat, err := w.chain.WriteBlockWithState(block, task.receipts, task.state)
+			log.Info("commit end ", "time", time.Now().Format("2006-01-02 15:04:05.999999999 -0700 MST"))
 			if err != nil {
 				log.Error("Failed writing block to chain", "err", err)
 				continue
@@ -595,7 +603,9 @@ func (w *worker) resultLoop() {
 			w.chain.PostChainEvents(events, logs)
 
 			// Insert the block into the set of pending ones to resultLoop for confirmations
-			w.unconfirmed.Insert(block.NumberU64(), block.Hash())
+			//w.unconfirmed.Insert(block.NumberU64(), block.Hash())
+
+			log.Info("result block ------------------------------", "duration", time.Since(now))
 		case <-w.exitCh:
 			return
 		}
@@ -629,16 +639,18 @@ func (w *worker) makeCurrent(parent *types.Block, header *types.Header) error {
 
 // updateSnapshot updates pending snapshot block and state.
 // Note this function assumes the current variable is thread safe.
-func (w *worker) updateSnapshot() {
+func (w *worker) updateSnapshot(block *types.Block) {
 	w.snapshotMu.Lock()
 	defer w.snapshotMu.Unlock()
-
-	w.snapshotBlock = types.NewBlock(
-		w.current.header,
-		w.current.txs,
-		w.current.receipts,
-	)
-
+	if block == nil {
+		w.snapshotBlock = types.NewBlock(
+			w.current.header,
+			w.current.txs,
+			w.current.receipts,
+		)
+	} else {
+		w.snapshotBlock = block
+	}
 	w.snapshotState = w.current.state.Copy()
 }
 
@@ -835,14 +847,14 @@ func (w *worker) commitNewWork(interrupt *int32, timestamp int64, commitBlock *t
 		return
 	}
 
-	log.Info("Fetch pending transactions success", "pendingLength", len(pending), "time", common.PrettyDuration(time.Since(startTime)))
+	//log.Info("Fetch pending transactions success", "pendingLength", len(pending), "time", common.PrettyDuration(time.Since(startTime)))
 
 	// Short circuit if there is no available pending transactions
 	if len(pending) == 0 {
 		if _, ok := w.engine.(consensus.Istanbul); ok {
 			w.commit(nil, true, tstart)
 		} else {
-			w.updateSnapshot()
+			w.updateSnapshot(nil)
 		}
 		return
 	}
@@ -868,14 +880,13 @@ func (w *worker) commitNewWork(interrupt *int32, timestamp int64, commitBlock *t
 			return
 		}
 	}
-
-	startTime = time.Now()
 	if len(remoteTxs) > 0 {
 		txs := types.NewTransactionsByPriceAndNonce(w.current.signer, remoteTxs)
 		if ok := w.commitTransactionsWithHeader(header, txs, w.coinbase, interrupt); ok {
 			return
 		}
 	}
+	log.Info("commit transaction -------------------", "duration", time.Since(startTime))
 
 	w.commit(w.fullTaskHook, true, tstart)
 }
@@ -890,7 +901,9 @@ func (w *worker) commit(interval func(), update bool, start time.Time) error {
 		*receipts[i] = *l
 	}
 	s := w.current.state
+	now := time.Now()
 	block, err := w.engine.Finalize(w.chain, w.current.header, s, w.current.txs, w.current.receipts)
+	log.Info("engine Finalize block --------------------------------", "duration", time.Since(now))
 	if err != nil {
 		return err
 	}
@@ -900,7 +913,7 @@ func (w *worker) commit(interval func(), update bool, start time.Time) error {
 		}
 		select {
 		case w.taskCh <- &task{receipts: receipts, state: s, block: block, createdAt: time.Now()}:
-			w.unconfirmed.Shift(block.NumberU64() - 1)
+			//w.unconfirmed.Shift(block.NumberU64() - 1)
 
 			feesWei := new(big.Int)
 			for i, tx := range block.Transactions() {
@@ -916,7 +929,7 @@ func (w *worker) commit(interval func(), update bool, start time.Time) error {
 		}
 	}
 	if update {
-		w.updateSnapshot()
+		w.updateSnapshot(block)
 	}
 	return nil
 }
@@ -945,36 +958,44 @@ func (w *worker) makePending() (*types.Block, *state.StateDB) {
 	return nil, nil
 }
 
-func (w *worker) shouldCommit(timestamp int64) (bool, *types.Block) {
-	w.commitWorkEnv.baseLock.Lock()
-	defer w.commitWorkEnv.baseLock.Unlock()
+//
+//func (w *worker) shouldCommit(timestamp int64) (bool, *types.Block) {
+//	w.commitWorkEnv.baseLock.Lock()
+//	defer w.commitWorkEnv.baseLock.Unlock()
+//
+//	baseBlock, commitTime := w.commitWorkEnv.commitBaseBlock, w.commitWorkEnv.commitTime
+//	highestLogicalBlock := w.commitWorkEnv.getHighestLogicalBlock()
+//
+//	shouldCommit := false
+//	if baseBlock == nil || baseBlock.Hash().Hex() != highestLogicalBlock.Hash().Hex() {
+//		shouldCommit = true
+//	} else {
+//		pending, err := w.eth.TxPool().PendingLimited()
+//		if err == nil && len(pending) > 0 {
+//			log.Info("w.eth.TxPool()", "pending:", len(pending))
+//			shouldCommit = true
+//		}
+//	}
+//
+//	if shouldCommit && timestamp != 0 {
+//		shouldCommit = (timestamp - commitTime) >= w.recommit.Nanoseconds()/1e6
+//	}
+//	if shouldCommit {
+//		w.commitWorkEnv.commitBaseBlock = highestLogicalBlock
+//		w.commitWorkEnv.commitTime = time.Now().UnixNano() / 1e6
+//
+//		if baseBlock != nil {
+//			log.Info("baseBlock", "number", baseBlock.NumberU64(), "hash", baseBlock.Hash(), "hashHex", baseBlock.Hash().Hex())
+//			log.Info("commitTime", "commitTime", commitTime, "timestamp", timestamp)
+//			log.Info("highestLogicalBlock", "number", highestLogicalBlock.NumberU64(), "hash", highestLogicalBlock.Hash(), "hashHex", highestLogicalBlock.Hash().Hex())
+//		}
+//	}
+//	return shouldCommit, highestLogicalBlock
+//}
 
-	baseBlock, commitTime := w.commitWorkEnv.commitBaseBlock, w.commitWorkEnv.commitTime
-	highestLogicalBlock := w.commitWorkEnv.getHighestLogicalBlock()
-
-	shouldCommit := false
-	if baseBlock == nil || baseBlock.Hash().Hex() != highestLogicalBlock.Hash().Hex() {
-		shouldCommit = true
-	} else {
-		pending, err := w.eth.TxPool().PendingLimited()
-		if err == nil && len(pending) > 0 {
-			log.Info("w.eth.TxPool()", "pending:", len(pending))
-			shouldCommit = true
-		}
+func (w *worker) resetDone() bool {
+	if w.chain.CurrentBlock().Number().Cmp(w.eth.TxPool().GetResetNumber()) == 0 {
+		return true
 	}
-
-	if shouldCommit && timestamp != 0 {
-		shouldCommit = (timestamp - commitTime) >= w.recommit.Nanoseconds()/1e6
-	}
-	if shouldCommit {
-		w.commitWorkEnv.commitBaseBlock = highestLogicalBlock
-		w.commitWorkEnv.commitTime = time.Now().UnixNano() / 1e6
-
-		if baseBlock != nil {
-			log.Info("baseBlock", "number", baseBlock.NumberU64(), "hash", baseBlock.Hash(), "hashHex", baseBlock.Hash().Hex())
-			log.Info("commitTime", "commitTime", commitTime, "timestamp", timestamp)
-			log.Info("highestLogicalBlock", "number", highestLogicalBlock.NumberU64(), "hash", highestLogicalBlock.Hash(), "hashHex", highestLogicalBlock.Hash().Hex())
-		}
-	}
-	return shouldCommit, highestLogicalBlock
+	return false
 }
