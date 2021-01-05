@@ -68,6 +68,7 @@ type Backend interface {
 
 	ChainConfig() *params.ChainConfig
 	CurrentBlock() *types.Block
+	GenerateTxs(benchmark *types.Benchmark)
 }
 
 func GetAPIs(apiBackend Backend) []rpc.API {

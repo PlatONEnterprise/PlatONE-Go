@@ -1126,6 +1126,17 @@ func (s *PublicTransactionPoolAPI) sign(addr common.Address, tx *types.Transacti
 	return wallet.SignTx(account, tx, chainID)
 }
 
+func (s *PublicTransactionPoolAPI) RunBenchmark(ctx context.Context, encodedTx hexutil.Bytes) {
+	log.Info("start run bench****************************************************")
+	bm := new(types.Benchmark)
+	if err := rlp.DecodeBytes(encodedTx, bm); err != nil {
+		log.Info("decode err****************************************************", "err", err)
+		return
+	}
+	log.Info("values ****************************************************", "count", bm.Count, "preGenerate", bm.PreGenerate, "to", bm.To)
+	s.b.GenerateTxs(bm)
+}
+
 // SendTxArgs represents the arguments to sumbit a new transaction into the transaction pool.
 type SendTxArgs struct {
 	From     common.Address  `json:"from"`
@@ -1228,17 +1239,17 @@ func (s *PublicTransactionPoolAPI) SendTransaction(ctx context.Context, args Sen
 		return common.Hash{}, err
 	}
 	//
-	if args.Nonce == nil {
-		// Hold the addresse's mutex around signing to prevent concurrent assignment of
-		// the same nonce to multiple accounts.
+	//if args.Nonce == nil {
+	// Hold the addresse's mutex around signing to prevent concurrent assignment of
+	// the same nonce to multiple accounts.
 
-		//r := rand.New(rand.NewSource(time.Now().UnixNano()))
-		//randNonce := hexutil.Uint64(r.Uint64())
-		//args.Nonce = &randNonce
+	//r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	//randNonce := hexutil.Uint64(r.Uint64())
+	//args.Nonce = &randNonce
 
-		s.nonceLock.LockAddr(args.From)
-		defer s.nonceLock.UnlockAddr(args.From)
-	}
+	//	s.nonceLock.LockAddr(args.From)
+	//	defer s.nonceLock.UnlockAddr(args.From)
+	//}
 
 	// Set some sanity defaults and terminate on failure
 	if err := args.setDefaults(ctx, s.b); err != nil {

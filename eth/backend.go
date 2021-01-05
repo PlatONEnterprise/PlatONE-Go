@@ -199,7 +199,7 @@ func New(ctx *node.ServiceContext, config *Config) (*Ethereum, error) {
 		config.TxPool.Journal = ctx.ResolvePath(config.TxPool.Journal)
 	}
 	//eth.txPool = core.NewTxPool(config.TxPool, eth.chainConfig, eth.blockchain)
-	eth.txPool = core.NewTxPool(config.TxPool, eth.chainConfig, blockChainCache, chainDb, eth.extDb)
+	eth.txPool = core.NewTxPool(config.TxPool, eth.chainConfig, blockChainCache, chainDb, eth.extDb, ctx.NodeKey())
 	log.Debug("Transaction pool info", "pool", eth.txPool)
 
 	recommit := config.MinerRecommit

@@ -106,3 +106,7 @@ func WriteBloomBits(db DatabaseWriter, bit uint, section uint64, head common.Has
 		log.Crit("Failed to store bloom bits", "err", err)
 	}
 }
+
+func HasTransaction(db DatabaseReader, hash common.Hash) (bool, error) {
+	return db.Has(txLookupKey(hash))
+}

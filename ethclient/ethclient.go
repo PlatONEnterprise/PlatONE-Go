@@ -236,6 +236,10 @@ func (ec *Client) TransactionReceipt(ctx context.Context, txHash common.Hash) (*
 	return r, err
 }
 
+func (ec *Client) RunBenchmark(ctx context.Context, paras interface{}) error {
+	return ec.c.CallContext(ctx, nil, "eth_runBenchmark", paras)
+}
+
 func toBlockNumArg(number *big.Int) string {
 	if number == nil {
 		return "latest"
