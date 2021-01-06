@@ -56,7 +56,7 @@ const (
 	bodyCacheLimit      = 256
 	blockCacheLimit     = 256
 	maxFutureBlocks     = 256
-	maxTimeFutureBlocks = 30
+	maxTimeFutureBlocks = 30000
 	badBlockLimit       = 10
 	triesInMemory       = 128
 
@@ -70,6 +70,11 @@ type CacheConfig struct {
 	Disabled      bool          // Whether to disable trie write caching (archive node)
 	TrieNodeLimit int           // Memory limit (MB) at which to flush the current in-memory trie to disk
 	TrieTimeLimit time.Duration // Time limit after which to flush the current in-memory trie to disk
+}
+
+type ReceiptsTask struct {
+	block    *types.Block
+	receipts []*types.Receipt
 }
 
 // BlockChain represents the canonical chain given a database with a genesis
@@ -117,8 +122,9 @@ type BlockChain struct {
 	blockCache   *lru.Cache     // Cache for the most recent entire blocks
 	futureBlocks *lru.Cache     // future blocks are blocks added for later processing
 
-	quit    chan struct{} // blockchain quit channel
-	running int32         // running must be called atomically
+	quit     chan struct{} // blockchain quit channel
+	updateCh chan *ReceiptsTask
+	running  int32 // running must be called atomically
 	// procInterrupt must be atomically called
 	procInterrupt int32          // interrupt signaler for block processing
 	wg            sync.WaitGroup // chain processing wait group for shutting down
@@ -156,6 +162,7 @@ func NewBlockChain(db ethdb.Database, extdb ethdb.Database, cacheConfig *CacheCo
 		triegc:         prque.New(nil),
 		stateCache:     state.NewDatabase(db),
 		quit:           make(chan struct{}),
+		updateCh:       make(chan *ReceiptsTask, 1),
 		shouldPreserve: shouldPreserve,
 		bodyCache:      bodyCache,
 		bodyRLPCache:   bodyRLPCache,
@@ -197,6 +204,7 @@ func NewBlockChain(db ethdb.Database, extdb ethdb.Database, cacheConfig *CacheCo
 	}
 	// Take ownership of this particular state
 	go bc.update()
+	go bc.receiptsLoop()
 	return bc, missingStateBlocks, nil
 }
 
@@ -509,10 +517,10 @@ func (bc *BlockChain) UpdateSystemConfig(block *types.Block) {
 			continue
 		}
 
-		switch tx.To().Hex() {
-		case syscontracts.NodeManagementAddress.Hex():
+		switch *tx.To() {
+		case syscontracts.NodeManagementAddress:
 			UpdateNodeSysContractConfig(bc, common.SysCfg)
-		case syscontracts.ParameterManagementAddress.Hex():
+		case syscontracts.ParameterManagementAddress:
 			UpdateParamSysContractConfig(bc, common.SysCfg)
 		}
 	}
@@ -897,7 +905,7 @@ func (bc *BlockChain) WriteBlockWithoutState(block *types.Block) (err error) {
 }
 
 // WriteBlockWithState writes the block and all associated state to the database.
-func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.Receipt, state *state.StateDB) (status WriteStatus, err error) {
+func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.Receipt, state *state.StateDB, isSync bool) (status WriteStatus, err error) {
 	bc.wg.Add(1)
 	defer bc.wg.Done()
 
@@ -910,15 +918,24 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.
 		log.Warn("block lower than current block in chain", "blockHash", block.Hash(), "blockNumber", block.NumberU64(), "currentHash", currentBlock.Hash(), "currentNumber", currentBlock.NumberU64())
 		return NonStatTy, nil
 	}
-	//localBn := currentBlock.Number()
-	//externBn := block.Number()
 
-	// Irrelevant of the canonical status, write the block itself to the database
-	rawdb.WriteBlock(bc.db, block)
+	closeCh := make(chan struct{})
+	itemch := make(chan common.DBItems, 3)
+	count := 2
+	if isSync {
+		go rawdb.EncodeReceipts(itemch, closeCh, block.Hash(), block.NumberU64(), receipts)
+		go rawdb.EncodeTxLookupEntries(itemch, closeCh, block)
+		rawdb.WriteBlock(bc.db, block)
+	} else {
+		count = 0
+		rawdb.WriteBlock(bc.db, block)
+		bc.cacheData(block, receipts)
+	}
 
 	root, err := state.Commit(true)
 	if err != nil {
 		log.Error("check block is EIP158 error", "hash", block.Hash(), "number", block.NumberU64())
+		close(closeCh)
 		return NonStatTy, err
 	}
 	triedb := bc.stateCache.TrieDB()
@@ -927,6 +944,7 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.
 	if bc.cacheConfig.Disabled {
 		if err := triedb.Commit(root, false); err != nil {
 			log.Error("Commit to triedb error", "root", root)
+			close(closeCh)
 			return NonStatTy, err
 		}
 	} else {
@@ -973,14 +991,21 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.
 
 	// Write other block data using a batch.
 	batch := bc.db.NewBatch()
-	rawdb.WriteReceipts(batch, block.Hash(), block.NumberU64(), receipts)
+
+	//rawdb.WriteReceipts(batch, block.Hash(), block.NumberU64(), receipts)
 	if block.ConfirmSigns != nil {
 		rawdb.WriteBlockConfirmSigns(batch, block.Hash(), block.NumberU64(), block.ConfirmSigns)
 	}
-
-	// Write the positional metadata for transaction/receipt lookups and preimages
-	rawdb.WriteTxLookupEntries(batch, block)
+	//// Write the positional metadata for transaction/receipt lookups and preimages
+	//rawdb.WriteTxLookupEntries(batch, block)
 	rawdb.WritePreimages(batch, block.NumberU64(), state.Preimages())
+
+	for i := 0; i < count; i++ {
+		items := <-itemch
+		for _, item := range items {
+			batch.Put(item.Key, item.Value)
+		}
+	}
 
 	status = CanonStatTy
 	if err := batch.Write(); err != nil {
@@ -995,8 +1020,20 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.
 		// parse block and retrieves txs
 
 	}
+	log.Info("bc insert end ", "time", time.Now().Format("2006-01-02 15:04:05.999999999 -0700 MST"))
+
 	bc.futureBlocks.Remove(block.Hash())
 	return status, nil
+}
+
+func (bc *BlockChain) cacheData(block *types.Block, receipts []*types.Receipt) {
+	rawdb.SetBlockReceiptsCache(block.NumberU64(), block.Hash(), receipts)
+	rawdb.SetTxLookupEntryCache(block)
+	bc.insertData(block, receipts)
+}
+
+func (bc *BlockChain) insertData(block *types.Block, receipts []*types.Receipt) {
+	bc.updateCh <- &ReceiptsTask{block: block, receipts: receipts}
 }
 
 // InsertChain attempts to insert the given batch of blocks in to the canonical
@@ -1082,7 +1119,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		case err == consensus.ErrFutureBlock:
 			// Allow up to MaxFuture second in the future blocks. If this limit is exceeded
 			// the chain is discarded and processed at a later time if given.
-			max := big.NewInt(time.Now().Unix() + maxTimeFutureBlocks)
+			max := big.NewInt(time.Now().UnixNano()/1e6 + maxTimeFutureBlocks)
 			if block.Time().Cmp(max) > 0 {
 				return i, events, coalescedLogs, fmt.Errorf("future block: %v > %v", block.Time(), max)
 			}
@@ -1160,7 +1197,7 @@ func (bc *BlockChain) insertChain(chain types.Blocks) (int, []interface{}, []*ty
 		proctime := time.Since(bstart)
 
 		// Write the block to the chain and get the status.
-		status, err := bc.WriteBlockWithState(block, receipts, state)
+		status, err := bc.WriteBlockWithState(block, receipts, state, true)
 		if err != nil {
 			return i, events, coalescedLogs, err
 		}
@@ -1308,6 +1345,43 @@ func (bc *BlockChain) update() {
 			return
 		}
 	}
+}
+
+func (bc *BlockChain) receiptsLoop() {
+	for {
+		select {
+		case task := <-bc.updateCh:
+			bc.updateReceiptsAndTxEntry(task)
+		case <-bc.quit:
+			return
+		}
+	}
+}
+
+func (bc *BlockChain) updateReceiptsAndTxEntry(task *ReceiptsTask) {
+	closeCh := make(chan struct{})
+	itemch := make(chan common.DBItems, 2)
+	count := 2
+	go rawdb.EncodeReceipts(itemch, closeCh, task.block.Hash(), task.block.NumberU64(), task.receipts)
+	go rawdb.EncodeTxLookupEntries(itemch, closeCh, task.block)
+
+	batch := bc.db.NewBatch()
+
+	for i := 0; i < count; i++ {
+		items := <-itemch
+		//log.Info("batch put start ", "time", time.Now().Format("2006-01-02 15:04:05.999999999 -0700 MST"))
+		for _, item := range items {
+			batch.Put(item.Key, item.Value)
+		}
+		//log.Info("batch put end ", "time", time.Now().Format("2006-01-02 15:04:05.999999999 -0700 MST"))
+	}
+	//log.Info("tx entries end ", "time", time.Now().Format("2006-01-02 15:04:05.999999999 -0700 MST"))
+
+	//log.Info("batch write start ", "time", time.Now().Format("2006-01-02 15:04:05.999999999 -0700 MST"))
+	if err := batch.Write(); err != nil {
+		log.Error("updateReceiptsAndTxEntry error ", "err", err)
+	}
+
 }
 
 // BadBlocks returns a list of the last 'bad blocks' that the client has seen on the network

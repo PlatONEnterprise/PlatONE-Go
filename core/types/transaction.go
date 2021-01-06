@@ -19,21 +19,23 @@ package types
 import (
 	"container/heap"
 	"errors"
-	"io"
-	"math/big"
-	"sync/atomic"
-
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/common/hexutil"
 	"github.com/PlatONEnetwork/PlatONE-Go/crypto"
+	"github.com/PlatONEnetwork/PlatONE-Go/crypto/sha3"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	lru "github.com/hashicorp/golang-lru"
+	"io"
+	"math/big"
+	"sync/atomic"
 )
 
 //go:generate gencodec -type txdata -field-override txdataMarshaling -out gen_tx_json.go
 
 var (
-	ErrInvalidSig = errors.New("invalid transaction v, r, s values")
+	ErrInvalidSig           = errors.New("invalid transaction v, r, s values")
+	TransactionsRlpCache, _ = lru.NewARC(4)
 )
 
 // txType
@@ -295,6 +297,25 @@ func (s Transactions) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
 func (s Transactions) GetRlp(i int) []byte {
 	enc, _ := rlp.EncodeToBytes(s[i])
 	return enc
+}
+
+func (s Transactions) GetHash() common.Hash {
+	var h common.Hash
+	d := sha3.NewKeccak256()
+	body := &Body{s}
+	bytes, _ := rlp.EncodeToBytes(body)
+	d.Write(bytes)
+	d.Sum(h[:0])
+	//cache the rlp bytes
+	TransactionsRlpCache.Add(h, bytes)
+	return h
+}
+
+func GetbodyRlpByCache(h common.Hash) []byte {
+	if data, ok := TransactionsRlpCache.Get(h); ok {
+		return data.([]byte)
+	}
+	return nil
 }
 
 // TxDifference returns a new set which is the difference between a and b.

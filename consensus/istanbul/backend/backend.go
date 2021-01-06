@@ -188,11 +188,11 @@ func (sb *backend) Gossip(valSet istanbul.ValidatorSet, payload []byte) error {
 
 func (sb *backend) writeCommitedBlockWithState(block *types.Block) error {
 	var (
-		chain    *core.BlockChain
-		receipts = make([]*types.Receipt, len(sb.current.receipts))
-		logs     []*types.Log
-		events   []interface{}
-		ok       bool
+		chain *core.BlockChain
+		//receipts = make([]*types.Receipt, len(sb.current.receipts))
+		logs   []*types.Log
+		events []interface{}
+		ok     bool
 	)
 
 	if chain, ok = sb.chain.(*core.BlockChain); !ok {
@@ -205,9 +205,9 @@ func (sb *backend) writeCommitedBlockWithState(block *types.Block) error {
 		return nil
 	}
 
-	for i, receipt := range sb.current.receipts {
-		receipts[i] = new(types.Receipt)
-		*receipts[i] = *receipt
+	for _, receipt := range sb.current.receipts {
+		//receipts[i] = new(types.Receipt)
+		//*receipts[i] = *receipt
 		// Update the block hash in all logs since it is now available and not when the
 		// receipt/log of individual transactions were created.
 		for _, log := range receipt.Logs {
@@ -216,7 +216,9 @@ func (sb *backend) writeCommitedBlockWithState(block *types.Block) error {
 		logs = append(logs, receipt.Logs...)
 	}
 
-	stat, err := chain.WriteBlockWithState(block, sb.current.receipts, sb.current.state)
+	now := time.Now()
+	stat, err := chain.WriteBlockWithState(block, sb.current.receipts, sb.current.state, false)
+	log.Info("write block with state ----------------------", "duration", time.Since(now))
 	if err != nil {
 		return err
 	}

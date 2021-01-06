@@ -21,11 +21,49 @@ import (
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"sync"
 )
+
+var (
+	blockTxsCache = &txLookupCache{}
+)
+
+type txLookupCache struct {
+	lock sync.RWMutex
+	txs  map[common.Hash]TxLookupEntry
+}
+
+func (r *txLookupCache) setCache(block *types.Block) {
+	r.lock.Lock()
+	defer r.lock.Unlock()
+	r.txs = make(map[common.Hash]TxLookupEntry, block.Transactions().Len())
+	for i, tx := range block.Transactions() {
+		entry := TxLookupEntry{
+			BlockHash:  block.Hash(),
+			BlockIndex: block.NumberU64(),
+			Index:      uint64(i),
+		}
+		r.txs[tx.Hash()] = entry
+	}
+}
+
+func (r *txLookupCache) getCache(hash common.Hash) (TxLookupEntry, bool) {
+	r.lock.RLock()
+	defer r.lock.RUnlock()
+	entry, ok := r.txs[hash]
+	return entry, ok
+}
+
+func SetTxLookupEntryCache(block *types.Block) {
+	blockTxsCache.setCache(block)
+}
 
 // ReadTxLookupEntry retrieves the positional metadata associated with a transaction
 // hash to allow retrieving the transaction or receipt by hash.
 func ReadTxLookupEntry(db DatabaseReader, hash common.Hash) (common.Hash, uint64, uint64) {
+	if data, ok := blockTxsCache.getCache(hash); ok {
+		return data.BlockHash, data.BlockIndex, data.Index
+	}
 	data, _ := db.Get(txLookupKey(hash))
 	if len(data) == 0 {
 		return common.Hash{}, 0, 0
@@ -54,6 +92,31 @@ func WriteTxLookupEntries(db DatabaseWriter, block *types.Block) {
 		if err := db.Put(txLookupKey(tx.Hash()), data); err != nil {
 			log.Crit("Failed to store transaction lookup entry", "err", err)
 		}
+	}
+}
+
+// WriteTxLookupEntries stores a positional metadata for every transaction from
+// a block, enabling hash based transaction and receipt lookups.
+func EncodeTxLookupEntries(ch chan<- common.DBItems, close chan struct{}, block *types.Block) {
+
+	items := make(common.DBItems, block.Transactions().Len())
+	for i, tx := range block.Transactions() {
+		entry := TxLookupEntry{
+			BlockHash:  block.Hash(),
+			BlockIndex: block.NumberU64(),
+			Index:      uint64(i),
+		}
+		data, err := rlp.EncodeToBytes(entry)
+		if err != nil {
+			log.Crit("Failed to encode transaction lookup entry", "err", err)
+		}
+		items[i] = &common.DBItem{Key: txLookupKey(tx.Hash()), Value: data}
+	}
+	log.Info("EncodeTxLookupEntries complete")
+	select {
+	case <-close:
+		return
+	case ch <- items:
 	}
 }
 
@@ -93,6 +156,13 @@ func ReadReceipt(db DatabaseReader, hash common.Hash) (*types.Receipt, common.Ha
 	return &types.Receipt{}, common.Hash{}, blockNumber, receiptIndex
 }
 
+func HasTransaction(db DatabaseReader, hash common.Hash) (bool, error) {
+	if _, ok := blockTxsCache.getCache(hash); ok {
+		return true, nil
+	}
+	return db.Has(txLookupKey(hash))
+}
+
 // ReadBloomBits retrieves the compressed bloom bit vector belonging to the given
 // section and bit index from the.
 func ReadBloomBits(db DatabaseReader, bit uint, section uint64, head common.Hash) ([]byte, error) {
@@ -105,8 +175,4 @@ func WriteBloomBits(db DatabaseWriter, bit uint, section uint64, head common.Has
 	if err := db.Put(bloomBitsKey(bit, section, head), bits); err != nil {
 		log.Crit("Failed to store bloom bits", "err", err)
 	}
-}
-
-func HasTransaction(db DatabaseReader, hash common.Hash) (bool, error) {
-	return db.Has(txLookupKey(hash))
 }

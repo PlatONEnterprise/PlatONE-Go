@@ -579,7 +579,7 @@ func (w *worker) resultLoop() {
 			}
 			// Commit block and state to database.
 			log.Info("commit start ", "time", time.Now().Format("2006-01-02 15:04:05.999999999 -0700 MST"))
-			stat, err := w.chain.WriteBlockWithState(block, task.receipts, task.state)
+			stat, err := w.chain.WriteBlockWithState(block, task.receipts, task.state, false)
 			log.Info("commit end ", "time", time.Now().Format("2006-01-02 15:04:05.999999999 -0700 MST"))
 			if err != nil {
 				log.Error("Failed writing block to chain", "err", err)

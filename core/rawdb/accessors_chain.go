@@ -20,12 +20,46 @@ import (
 	"bytes"
 	"encoding/binary"
 	"math/big"
+	"sync"
+	"time"
 
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
 )
+
+var (
+	blockReceiptsCache = &receiptCache{}
+)
+
+type receiptCache struct {
+	lock     sync.RWMutex
+	number   uint64
+	hash     common.Hash
+	receipts types.Receipts
+}
+
+func (r *receiptCache) setCache(number uint64, hash common.Hash, receipts types.Receipts) {
+	r.lock.Lock()
+	defer r.lock.Unlock()
+	r.number = number
+	r.hash = hash
+	r.receipts = receipts
+}
+
+func (r *receiptCache) getCache(number uint64, hash common.Hash) types.Receipts {
+	r.lock.RLock()
+	defer r.lock.RUnlock()
+	if number == r.number && hash == r.hash {
+		return r.receipts
+	}
+	return nil
+}
+
+func SetBlockReceiptsCache(number uint64, hash common.Hash, receipts types.Receipts) {
+	blockReceiptsCache.setCache(number, hash, receipts)
+}
 
 // ReadCanonicalHash retrieves the hash assigned to a canonical block number.
 func ReadCanonicalHash(db DatabaseReader, number uint64) common.Hash {
@@ -241,6 +275,10 @@ func DeleteBody(db DatabaseDeleter, hash common.Hash, number uint64) {
 
 // ReadReceipts retrieves all the transaction receipts belonging to a block.
 func ReadReceipts(db DatabaseReader, hash common.Hash, number uint64) types.Receipts {
+
+	if c := blockReceiptsCache.getCache(number, hash); c != nil {
+		return c
+	}
 	// Retrieve the flattened receipt slice
 	data, _ := db.Get(blockReceiptsKey(number, hash))
 	if len(data) == 0 {
@@ -273,6 +311,25 @@ func WriteReceipts(db DatabaseWriter, hash common.Hash, number uint64, receipts 
 	// Store the flattened receipt slice
 	if err := db.Put(blockReceiptsKey(number, hash), bytes); err != nil {
 		log.Crit("Failed to store block receipts", "err", err)
+	}
+}
+
+// WriteReceipts stores all the transaction receipts belonging to a block.
+func EncodeReceipts(ch chan<- common.DBItems, close chan struct{}, hash common.Hash, number uint64, receipts types.Receipts) {
+	// Convert the receipts into their storage form and serialize them
+	storageReceipts := make([]*types.ReceiptForStorage, len(receipts))
+	for i, receipt := range receipts {
+		storageReceipts[i] = (*types.ReceiptForStorage)(receipt)
+	}
+	bytes, err := rlp.EncodeToBytes(storageReceipts)
+	if err != nil {
+		log.Crit("Failed to encode block receipts", "err", err)
+	}
+	log.Info("EncodeReceipts complete")
+	select {
+	case <-close:
+		return
+	case ch <- common.DBItems{{Key: blockReceiptsKey(number, hash), Value: bytes}}:
 	}
 }
 
@@ -329,8 +386,16 @@ func ReadBlock(db DatabaseReader, hash common.Hash, number uint64) *types.Block 
 
 // WriteBlock serializes a block into the database, header and body separately.
 func WriteBlock(db DatabaseWriter, block *types.Block) {
-	WriteBody(db, block.Hash(), block.NumberU64(), block.Body())
+	log.Info("write body start", "time", time.Now().Format("2006-01-02 15:04:05.999999999 -0700 MST"))
+	if bodyrlp := types.GetbodyRlpByCache(block.Header().TxHash); bodyrlp == nil {
+		WriteBody(db, block.Hash(), block.NumberU64(), block.Body())
+	} else {
+		log.Info("get cache body", "time", time.Now().Format("2006-01-02 15:04:05.999999999 -0700 MST"))
+		WriteBodyRLP(db, block.Hash(), block.NumberU64(), bodyrlp)
+	}
+	log.Info("write body end", "time", time.Now().Format("2006-01-02 15:04:05.999999999 -0700 MST"))
 	WriteHeader(db, block.Header())
+	log.Info("write header end", "time", time.Now().Format("2006-01-02 15:04:05.999999999 -0700 MST"))
 }
 
 // DeleteBlock removes all block data associated with a hash.

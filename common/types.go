@@ -411,3 +411,10 @@ func RlpHash(x interface{}) (h Hash) {
 	hw.Sum(h[:0])
 	return h
 }
+
+type DBItem struct {
+	Key   []byte
+	Value []byte
+}
+
+type DBItems []*DBItem
