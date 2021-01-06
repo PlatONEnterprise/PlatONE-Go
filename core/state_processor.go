@@ -95,18 +95,47 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 // for the transaction, gas used and an error if the transaction failed,
 // indicating the block was invalid.
 func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *common.Address, gp *GasPool, statedb *state.StateDB, header *types.Header, tx *types.Transaction, usedGas *uint64, cfg vm.Config) (*types.Receipt, uint64, error) {
-	msg, err := tx.AsMessage(types.MakeSigner(config))
-	if err != nil {
-		return nil, 0, err
-	}
+	var from common.Address
+	var gas uint64
+	var gasPrice int64
+	var failed bool
+	var err error
+	signer := types.MakeSigner(config)
+	to := *tx.To()
+	if tx.Data() == nil && len(statedb.GetCodeHash(to)) == 0 {
+		value := tx.Value()
+		from, _ = types.Sender(signer, tx)
+		if statedb.IsFwOpened(to) == false {
+			failed = true
+			err = PermissionErr
+		} else if statedb.GetBalance(from).Cmp(value) < 0 {
+			failed = true
+			err = vm.ErrInsufficientBalance
+		} else {
+			statedb.SubBalance(from, value)
+			statedb.AddBalance(to, value)
+			failed = false
+			err = nil
+		}
+		gp.AddGas(params.TxGas)
+		gas = params.TxGas
+		gasPrice = 0
+	} else {
+		msg, err := tx.AsMessage(signer)
+		from = msg.From()
+		if err != nil {
+			return nil, 0, err
+		}
 
-	// Create a new context to be used in the EVM environment
-	context := NewEVMContext(msg, header, bc, author)
-	// Create a new environment which holds all relevant information
-	// about the transaction and calling mechanisms.
-	vmenv := vm.NewEVM(context, statedb, config, cfg)
-	// Apply the transaction to the current state (included in the env)
-	_, gas, gasPrice, failed, err := ApplyMessage(vmenv, msg, gp)
+		// Create a new context to be used in the EVM environment
+		context := NewEVMContext(msg, header, bc, author)
+		// Create a new environment which holds all relevant information
+		// about the transaction and calling mechanisms.
+		vmenv := vm.NewEVM(context, statedb, config, cfg)
+		// Apply the transaction to the current state (included in the env)
+		_, gas, gasPrice, failed, err = ApplyMessage(vmenv, msg, gp)
+
+	}
 
 	if err != nil {
 		switch err {
@@ -116,26 +145,27 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 			encodeData, _ := rlp.EncodeToBytes(data)
 			topics := []common.Hash{common.BytesToHash(crypto.Keccak256([]byte("contract permission")))}
 			log := &types.Log{
-				Address:     msg.From(),
+				Address:     from,
 				Topics:      topics,
 				Data:        encodeData,
-				BlockNumber: vmenv.BlockNumber.Uint64(),
+				BlockNumber: header.Number.Uint64(),
 			}
 			statedb.AddLog(log)
 		default:
 			return nil, 0, err
 		}
 	}
+
 	if common.SysCfg.GetIsTxUseGas() {
 		data := [][]byte{}
 		data = append(data, []byte(common.Int64ToBytes(gasPrice)))
 		encodeData, _ := rlp.EncodeToBytes(data)
 		topics := []common.Hash{common.BytesToHash(crypto.Keccak256([]byte("GasPrice")))}
 		log := &types.Log{
-			Address:     msg.From(),
+			Address:     from,
 			Topics:      topics,
 			Data:        encodeData,
-			BlockNumber: vmenv.BlockNumber.Uint64(),
+			BlockNumber: header.Number.Uint64(),
 		}
 		statedb.AddLog(log)
 	}
@@ -150,8 +180,8 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	receipt.TxHash = tx.Hash()
 	receipt.GasUsed = gas
 	// if the transaction created a contract, store the creation address in the receipt.
-	if msg.To() == nil && err == nil {
-		receipt.ContractAddress = crypto.CreateAddress(vmenv.Context.Origin, statedb.GetNonce(msg.From())-1)
+	if tx.To() == nil && err == nil {
+		receipt.ContractAddress = crypto.CreateAddress(from, statedb.GetNonce(from)-1)
 	}
 	// Set the receipt logs and create a bloom for filtering
 

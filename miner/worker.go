@@ -542,12 +542,10 @@ func (w *worker) resultLoop() {
 			log.Info("result start ", "time", time.Now().Format("2006-01-02 15:04:05.999999999 -0700 MST"))
 			// Short circuit when receiving empty result.
 			if block == nil {
-				log.Info("block is null")
 				continue
 			}
 			// Short circuit when receiving duplicate result caused by resubmitting.
 			if w.chain.HasBlock(block.Hash(), block.NumberU64()) {
-				log.Info("duplicate result caused by resubmitting.")
 				continue
 			}
 			var (
@@ -903,7 +901,7 @@ func (w *worker) commit(interval func(), update bool, start time.Time) error {
 	s := w.current.state
 	now := time.Now()
 	block, err := w.engine.Finalize(w.chain, w.current.header, s, w.current.txs, w.current.receipts)
-	log.Info("engine Finalize block --------------------------------", "duration", time.Since(now))
+	log.Info("engine Finalize block -------------------------", "duration", time.Since(now))
 	if err != nil {
 		return err
 	}
