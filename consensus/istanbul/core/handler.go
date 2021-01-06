@@ -52,6 +52,7 @@ func (c *core) subscribeEvents() {
 	c.events = c.backend.EventMux().Subscribe(
 		// external events
 		istanbul.RequestEvent{},
+		istanbul.SingleCommittedEvent{},
 		// istanbul.MessageEvent{},
 		// internal events
 		backlogEvent{},
@@ -90,7 +91,7 @@ func (c *core) handleEvents() {
 			if err := c.handleMsg(ev.Payload); err == nil {
 				c.backend.Gossip(c.valSet, ev.Payload)
 			}
-		case <- c.msgFeedSub.Err():
+		case <-c.msgFeedSub.Err():
 			return
 		case event, ok := <-c.events.Chan():
 			if !ok {
@@ -121,6 +122,8 @@ func (c *core) handleEvents() {
 					}
 					c.backend.Gossip(c.valSet, p)
 				}
+			case istanbul.SingleCommittedEvent:
+				c.singleCommit(ev.Proposal)
 			}
 		case _, ok := <-c.timeoutSub.Chan():
 			if !ok {

@@ -405,7 +405,7 @@ func (sb *backend) Seal(chain consensus.ChainReader, block *types.Block, sealRes
 		return nil, err
 	}
 
-	// wait for the timestamp of header, use this to adjust the block period
+	//// wait for the timestamp of header, use this to adjust the block period
 	//delay := time.Unix(block.Header().Time.Int64(), 0).Sub(now())
 	//select {
 	//case <-time.After(delay):
@@ -423,15 +423,24 @@ func (sb *backend) Seal(chain consensus.ChainReader, block *types.Block, sealRes
 	defer clear()
 	sb.logger.Debug("post seal", "block number", block.Number(), "hash", block.Hash())
 
-	// post block into Istanbul engine
-	go sb.EventMux().Post(istanbul.RequestEvent{
-		Proposal: block,
-	})
-
+	if snap.ValSet.Size() == 1 {
+		// post block into Istanbul engine
+		go sb.EventMux().Post(istanbul.SingleCommittedEvent{
+			Proposal: block,
+		})
+	} else {
+		// post block into Istanbul engine
+		go sb.EventMux().Post(istanbul.RequestEvent{
+			Proposal: block,
+		})
+	}
+	now := time.Now()
+	log.Info("start proposal", "time", time.Now().Format("2006-01-02 15:04:05.999999999 -0700 MST"))
 	go func() {
 		for {
 			select {
 			case result := <-sb.commitCh:
+				log.Info("consensus complete --------------------------------", "time", time.Now().Format("2006-01-02 15:04:05.999999999 -0700 MST"), "duration", time.Since(now))
 				// if the block hash and the hash from channel are the same,
 				// return the result. Otherwise, keep waiting the next hash.
 				if result == nil {

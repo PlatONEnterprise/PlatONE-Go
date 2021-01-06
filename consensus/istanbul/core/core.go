@@ -249,6 +249,20 @@ func (c *core) commit() {
 	}
 }
 
+func (c *core) singleCommit(proposal istanbul.Proposal) {
+	seal := PrepareCommittedSeal(proposal.Hash())
+	committedSeals := make([][]byte, 1)
+	committedSeals[0], _ = c.backend.Sign(seal)
+	if err := c.backend.Commit(proposal, committedSeals); err != nil {
+		if err == ErrFirstCommitAtWrongTime || err == ErrEmpty && !common.SysCfg.IsProduceEmptyBlock() {
+			c.current.UnlockHash() //Unlock block when insertion fails
+			cur := c.currentView().Round
+			//time.Sleep(time.Second)
+			c.startNewRoundWhenEmpty(big.NewInt(0).Add(cur, big.NewInt(1)))
+		}
+	}
+}
+
 // startNewRound starts a new round. if round equals to 0, it means to starts a new sequence
 func (c *core) startNewRoundWhenEmpty(round *big.Int) {
 	var logger log.Logger

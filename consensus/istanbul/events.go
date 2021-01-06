@@ -21,6 +21,10 @@ type RequestEvent struct {
 	Proposal Proposal
 }
 
+type SingleCommittedEvent struct {
+	Proposal Proposal
+}
+
 // MessageEvent is posted for Istanbul engine communication
 type MessageEvent struct {
 	Payload []byte
