@@ -362,7 +362,7 @@ func (pool *TxPool) loop() {
 				pool.resetHead = ev.Block
 
 				pool.mu.Unlock()
-				log.Info("reset pool -------------------------------", "duration", time.Since(now))
+				log.Info("reset pool ----------------------------", "duration", time.Since(now))
 			}
 
 		case <-pool.exitCh:

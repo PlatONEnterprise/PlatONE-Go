@@ -1127,13 +1127,11 @@ func (s *PublicTransactionPoolAPI) sign(addr common.Address, tx *types.Transacti
 }
 
 func (s *PublicTransactionPoolAPI) RunBenchmark(ctx context.Context, encodedTx hexutil.Bytes) {
-	log.Info("start run bench****************************************************")
+	log.Info("start run bench***************")
 	bm := new(types.Benchmark)
 	if err := rlp.DecodeBytes(encodedTx, bm); err != nil {
-		log.Info("decode err****************************************************", "err", err)
 		return
 	}
-	log.Info("values ****************************************************", "count", bm.Count, "preGenerate", bm.PreGenerate, "to", bm.To)
 	s.b.GenerateTxs(bm)
 }
 

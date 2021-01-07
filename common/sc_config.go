@@ -42,6 +42,7 @@ type SystemParameter struct {
 	IsTxUseGas                    bool
 	IsProduceEmptyBlock           bool
 	VRF                           VRFParams
+	IsBlockUseTrieHash            bool
 }
 
 type SystemConfig struct {
@@ -70,6 +71,7 @@ var SysCfg = &SystemConfig{
 			NextElectionBlock: 0,
 			ValidatorCount:    0,
 		},
+		IsBlockUseTrieHash: true,
 	},
 	ContractAddress: make(map[string]Address),
 }
@@ -222,4 +224,10 @@ func (sc *SystemConfig) GetNodeTypes(publicKey string) int32 {
 		return node.Types
 	}
 	return 0
+}
+
+func (sc *SystemConfig) IsBlockUseTrieHash() bool {
+	sc.SystemConfigMu.RLock()
+	defer sc.SystemConfigMu.RUnlock()
+	return sc.SysParam.IsBlockUseTrieHash
 }

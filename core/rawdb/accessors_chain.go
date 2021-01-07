@@ -19,14 +19,12 @@ package rawdb
 import (
 	"bytes"
 	"encoding/binary"
-	"math/big"
-	"sync"
-	"time"
-
 	"github.com/PlatONEnetwork/PlatONE-Go/common"
 	"github.com/PlatONEnetwork/PlatONE-Go/core/types"
 	"github.com/PlatONEnetwork/PlatONE-Go/log"
 	"github.com/PlatONEnetwork/PlatONE-Go/rlp"
+	"math/big"
+	"sync"
 )
 
 var (
@@ -386,16 +384,12 @@ func ReadBlock(db DatabaseReader, hash common.Hash, number uint64) *types.Block 
 
 // WriteBlock serializes a block into the database, header and body separately.
 func WriteBlock(db DatabaseWriter, block *types.Block) {
-	log.Info("write body start", "time", time.Now().Format("2006-01-02 15:04:05.999999999 -0700 MST"))
 	if bodyrlp := types.GetbodyRlpByCache(block.Header().TxHash); bodyrlp == nil {
 		WriteBody(db, block.Hash(), block.NumberU64(), block.Body())
 	} else {
-		log.Info("get cache body", "time", time.Now().Format("2006-01-02 15:04:05.999999999 -0700 MST"))
 		WriteBodyRLP(db, block.Hash(), block.NumberU64(), bodyrlp)
 	}
-	log.Info("write body end", "time", time.Now().Format("2006-01-02 15:04:05.999999999 -0700 MST"))
 	WriteHeader(db, block.Header())
-	log.Info("write header end", "time", time.Now().Format("2006-01-02 15:04:05.999999999 -0700 MST"))
 }
 
 // DeleteBlock removes all block data associated with a hash.

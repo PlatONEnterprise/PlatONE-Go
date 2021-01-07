@@ -191,56 +191,80 @@
         "constant": "true",
         "type": "function"
     },
-    {   
-        "name":"GasContractName", 
+    {
+        "name": "setIsBlockUseTrieHash",
+        "inputs": [
+            {
+                "name": "isBlockUseTrieHash",
+                "type": "uint64"
+            }
+        ],
+        "outputs": [],
+        "constant": "false",
+        "type": "function"
+    },
+    {
+        "name": "getIsBlockUseTrieHash",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint64"
+            }
+        ],
+        "constant": "true",
+        "type": "function"
+    },
+    {
+        "name":"GasContractName",
         "inputs":[
             {"type":"uint32"},
             {"type":"string"}
         ],
         "type":"event"
     },
-    {   
-        "name":"IsProduceEmptyBlock", 
+    {
+        "name":"IsProduceEmptyBlock",
         "inputs":[
             {"type":"uint32"},
             {"type":"string"}
         ],
         "type":"event"
     },
-    {   
-        "name":"TxGasLimit", 
+    {
+        "name":"TxGasLimit",
         "inputs":[
             {"type":"uint32"},
             {"type":"string"}
         ],
         "type":"event"
     },
-    {   
-        "name":"BlockGasLimit", 
+    {
+        "name":"BlockGasLimit",
         "inputs":[
             {"type":"uint32"},
             {"type":"string"}
         ],
         "type":"event"
     },
-    {   
-        "name":"IsCheckContractDeployPermission", 
+    {
+        "name":"IsCheckContractDeployPermission",
         "inputs":[
             {"type":"uint32"},
             {"type":"string"}
         ],
         "type":"event"
     },
-    {   
-        "name":"IsApproveDeployedContract", 
+    {
+        "name":"IsApproveDeployedContract",
         "inputs":[
             {"type":"uint32"},
             {"type":"string"}
         ],
         "type":"event"
     },
-    {   
-        "name":"IsTxUseGas", 
+    {
+        "name":"IsTxUseGas",
         "inputs":[
             {"type":"uint32"},
             {"type":"string"}
@@ -282,6 +306,14 @@
         "outputs": [],
         "constant": "false",
         "type": "function"
+    },
+    {
+        "name":"IsBlockUseTrieHash",
+        "inputs":[
+            {"type":"uint64"},
+            {"type":"string"}
+        ],
+        "type":"event"
     }
 ]
 

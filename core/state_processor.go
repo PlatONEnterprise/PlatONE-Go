@@ -101,14 +101,14 @@ func ApplyTransaction(config *params.ChainConfig, bc ChainContext, author *commo
 	var failed bool
 	var err error
 	signer := types.MakeSigner(config)
-	to := *tx.To()
-	if tx.Data() == nil && len(statedb.GetCodeHash(to)) == 0 {
+	to := common.Address{}
+	if tx.To() != nil {
+		to = *tx.To()
+	}
+	if tx.Data() == nil && statedb.GetCode(to) == nil {
 		value := tx.Value()
 		from, _ = types.Sender(signer, tx)
-		if statedb.IsFwOpened(to) == false {
-			failed = true
-			err = PermissionErr
-		} else if statedb.GetBalance(from).Cmp(value) < 0 {
+		if statedb.GetBalance(from).Cmp(value) < 0 {
 			failed = true
 			err = vm.ErrInsufficientBalance
 		} else {

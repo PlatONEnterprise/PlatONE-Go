@@ -57,6 +57,14 @@ func UpdateParamSysContractConfig(bc *BlockChain, sysContractConf *common.System
 		sysContractConf.SysParam.IsTxUseGas = ret == 1
 	}
 
+	funcName = "getIsBlockUseTrieHash"
+	funcParams = []interface{}{}
+	res, err = InnerCallContractReadOnly(bc, paramAddr, funcName, funcParams)
+	if res != nil && nil == err {
+		ret := common.CallResAsInt64(res)
+		sysContractConf.SysParam.IsBlockUseTrieHash = ret == 1
+	}
+
 	funcName = "getVRFParams"
 	funcParams = []interface{}{}
 	res, err = InnerCallContractReadOnly(bc, paramAddr, funcName, funcParams)

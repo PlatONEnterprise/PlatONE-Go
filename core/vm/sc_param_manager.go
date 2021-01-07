@@ -19,7 +19,8 @@ var (
 	isApproveDeployedContractKey    = generateStateKey("IsApproveDeployedContract")
 	isTxUseGasKey                   = generateStateKey("IsTxUseGas")
 
-	vrfParamsKey = generateStateKey("VRFParamsKey")
+	vrfParamsKey          = generateStateKey("VRFParamsKey")
+	isBlockUseTrieHashKey = generateStateKey("IsBlockUseTrieHash")
 )
 
 const (
@@ -33,6 +34,7 @@ const (
 	isApproveDeployedContractDefault       = paramFalse
 	isProduceEmptyBlockDefault             = paramFalse
 	gasContractNameDefault                 = ""
+	isBlockUseTrieHashDefault              = paramTrue
 )
 
 const (
@@ -399,6 +401,39 @@ func (u *ParamManager) getIsTxUseGas() (uint32, error) {
 	}
 	return isUseGas, nil
 }
+
+// 1:  header 使用trie hash  // 0:
+func (u *ParamManager) setIsBlockUseTrieHash(isBlockUseTrieHash uint64) (int32, error) {
+	if isBlockUseTrieHash/2 != 0 {
+		u.emitNotifyEventInParam("IsBlockUseTrieHash", paramInvalid, fmt.Sprintf("param is invalid."))
+		return failFlag, errParamInvalid
+	}
+	ret, err := u.doParamSet(isBlockUseTrieHashKey, isBlockUseTrieHash)
+	if err != nil {
+		switch err {
+		case errNoPermission:
+			u.emitNotifyEventInParam("IsBlockUseTrieHash", callerHasNoPermission, fmt.Sprintf("%s has no permission to adjust param.", u.caller.String()))
+			return failFlag, err
+
+		case errEncodeFailure:
+			u.emitNotifyEventInParam("IsBlockUseTrieHash", encodeFailure, fmt.Sprintf("%v failed to encode.", isTxUseGasKey))
+			return failFlag, err
+		}
+	}
+	u.emitNotifyEventInParam("IsBlockUseTrieHash", doParamSetSuccess, fmt.Sprintf("param set successful."))
+
+	return ret, err
+}
+
+// 获取header是否使用trie hash
+func (u *ParamManager) getIsBlockUseTrieHash() (uint32, error) {
+	var isBlockUseTrieHash = isBlockUseTrieHashDefault
+	if err := u.getParam(isBlockUseTrieHashKey, &isBlockUseTrieHash); err != nil && err != errEmptyValue {
+		return isBlockUseTrieHashDefault, err
+	}
+	return isBlockUseTrieHash, nil
+}
+
 func (u *ParamManager) doParamSet(key []byte, value interface{}) (int32, error) {
 	if !hasParamOpPermission(u.stateDB, u.caller) {
 		return failFlag, errNoPermission
@@ -452,5 +487,7 @@ func (u *ParamManager) AllExportFns() SCExportFns {
 		"getIsTxUseGas":                    u.getIsTxUseGas,
 		"setVRFParams":                     u.setVRFParams,
 		"getVRFParams":                     u.getVRFParamsWrapper,
+		"setIsBlockUseTrieHash":            u.setIsBlockUseTrieHash,
+		"getIsBlockUseTrieHash":            u.getIsBlockUseTrieHash,
 	}
 }

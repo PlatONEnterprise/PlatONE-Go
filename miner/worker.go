@@ -539,7 +539,6 @@ func (w *worker) resultLoop() {
 		select {
 		case block := <-w.resultCh:
 			now := time.Now()
-			log.Info("result start ", "time", time.Now().Format("2006-01-02 15:04:05.999999999 -0700 MST"))
 			// Short circuit when receiving empty result.
 			if block == nil {
 				continue
@@ -576,9 +575,7 @@ func (w *worker) resultLoop() {
 				logs = append(logs, receipt.Logs...)
 			}
 			// Commit block and state to database.
-			log.Info("commit start ", "time", time.Now().Format("2006-01-02 15:04:05.999999999 -0700 MST"))
 			stat, err := w.chain.WriteBlockWithState(block, task.receipts, task.state, false)
-			log.Info("commit end ", "time", time.Now().Format("2006-01-02 15:04:05.999999999 -0700 MST"))
 			if err != nil {
 				log.Error("Failed writing block to chain", "err", err)
 				continue
@@ -603,7 +600,7 @@ func (w *worker) resultLoop() {
 			// Insert the block into the set of pending ones to resultLoop for confirmations
 			//w.unconfirmed.Insert(block.NumberU64(), block.Hash())
 
-			log.Info("result block ------------------------------", "duration", time.Since(now))
+			log.Info("result block ---------------------------", "duration", time.Since(now))
 		case <-w.exitCh:
 			return
 		}
@@ -901,7 +898,7 @@ func (w *worker) commit(interval func(), update bool, start time.Time) error {
 	s := w.current.state
 	now := time.Now()
 	block, err := w.engine.Finalize(w.chain, w.current.header, s, w.current.txs, w.current.receipts)
-	log.Info("engine Finalize block -------------------------", "duration", time.Since(now))
+	log.Info("engine Finalize block ---------------", "duration", time.Since(now))
 	if err != nil {
 		return err
 	}
