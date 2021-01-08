@@ -1243,7 +1243,7 @@ func (pool *TxPool) demoteUnexecutables(txs types.Transactions) {
 		// drop all transactions that do not have enough balance
 		for _, tx := range list.Get() {
 			bal := pool.currentState.GetBalance(addr)
-			if tx.Value().Cmp(bal) < 0 {
+			if tx.Value().Cmp(bal) > 0 {
 				hash := tx.Hash()
 				log.Trace("Removed unpayable queued transaction", "hash", hash)
 				list.Remove(hash)
@@ -1440,7 +1440,7 @@ func (pool *TxPool) generateTxs(cnt string, addr common.Address, preProducer boo
 		var gasLimit = 1 + threadNum
 		for i := 0; i < cnt; i++ {
 			nonce := time.Now().UnixNano()
-			tx := types.NewTransaction(uint64(nonce), addr, big.NewInt(0), uint64(gasLimit), big.NewInt(1), nil, 0)
+			tx := types.NewTransaction(uint64(nonce), addr, big.NewInt(1), uint64(gasLimit), big.NewInt(1), nil, 0)
 			signedTx, _ := types.SignTx(tx, types.HomesteadSigner{}, pool.pk)
 			types.Sender(pool.signer, signedTx) // already validated
 			tx.Hash()
@@ -1489,6 +1489,12 @@ func (pool *TxPool) generateTxs(cnt string, addr common.Address, preProducer boo
 		}
 	}
 
+	checkTxPool := func() {
+		if pool.GetTxCount() > int(pool.config.GlobalTxCount)*2 {
+			time.Sleep(50 * time.Millisecond)
+		}
+	}
+
 	if preProducer {
 		var sec = count / 5000
 		wait := time.NewTimer(time.Second * time.Duration(sec))
@@ -1506,6 +1512,7 @@ func (pool *TxPool) generateTxs(cnt string, addr common.Address, preProducer boo
 			case tx := <-txsCh:
 				receive++
 				if batch = append(batch, tx); batch.Len() > 500 {
+					checkTxPool()
 					addtx(batch)
 					batch = batch[:0]
 				}

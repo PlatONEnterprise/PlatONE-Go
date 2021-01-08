@@ -85,6 +85,7 @@ function create_genesis() {
 
 
     NODE_KEY=`cat ${NODE_DIR}/node.pubkey`
+    NODE_ADDRESS=`cat ${NODE_DIR}/node.address`
     default_enode="enode://${NODE_KEY}@${1}:${2}"
     if [[ $VALIDATOR_NODES != "" ]]; then
          replaceList "__VALIDATOR__" $VALIDATOR_NODES
@@ -92,7 +93,7 @@ function create_genesis() {
          replaceList "__VALIDATOR__" $default_enode
     fi
 
-     ${BIN_PATH}/repstr ${CONF_PATH}/genesis.json "DEFAULT-ACCOUNT" 0000000000000000000000000000000000000001
+     ${BIN_PATH}/repstr ${CONF_PATH}/genesis.json "DEFAULT-ACCOUNT" ${NODE_ADDRESS}
      ${BIN_PATH}/repstr ${CONF_PATH}/genesis.json "__INTERPRETER__" ${INTERPRETER}
 
 #    ${BIN_PATH}/ctool codegen --abi ${CONF_PATH}/contracts/cnsProxy.cpp.abi.json --code ${CONF_PATH}/contracts/cnsProxy.wasm > ${CONF_PATH}/cns-code.hex
